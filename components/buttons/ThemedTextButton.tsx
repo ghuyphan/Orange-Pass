@@ -1,0 +1,113 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
+import React, { useMemo } from 'react';
+import { StyleSheet, View, TouchableHighlight, StyleProp, ViewStyle, ActivityIndicator, TextStyle } from 'react-native';
+import { ThemedText } from '../ThemedText';
+import { useThemeColor } from '@/hooks/useThemeColor';
+import { useColorScheme } from '@/hooks/useColorScheme';
+import { Colors } from '@/constants/Colors';
+
+/**
+ * Props for ThemedTextButton component.
+ */
+export type ThemedTextButtonProps = {
+    /** Light color theme for the button text */
+    lightColor?: string;
+    /** Dark color theme for the button text */
+    darkColor?: string;
+    /** Label to display on the button */
+    label: string;
+    /** Label to display while the button is in a loading state */
+    loadingLabel?: string;
+    /** Name of the icon to display in the button */
+    iconName?: keyof typeof Ionicons.glyphMap;
+    /** Function to call when the button is pressed */
+    onPress: () => void;
+    /** Custom styles for the button */
+    style?: StyleProp<ViewStyle>;
+    /** Custom styles for the button text */
+    textStyle?: StyleProp<TextStyle>;
+    /** Whether the button is disabled */
+    disabled?: boolean;
+    /** Whether the button is in a loading state */
+    loading?: boolean;
+};
+
+/**
+ * ThemedTextButton is a reusable button component that adapts to the current theme.
+ * It supports light and dark color themes, displays an optional icon, and handles
+ * press events with customizable styles.
+ *
+ * @param {ThemedTextButtonProps} props - The properties for the ThemedTextButton component.
+ * @returns {JSX.Element} The ThemedTextButton component.
+ */
+export function ThemedTextButton({
+    lightColor,
+    darkColor,
+    label,
+    loadingLabel,
+    iconName,
+    onPress,
+    style = {},
+    textStyle = {},
+    disabled = false,
+    loading = false,
+}: ThemedTextButtonProps): JSX.Element {
+    const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
+    const colorScheme = useColorScheme();
+
+    const buttonStyle = useMemo(() => ([
+        {
+            opacity: disabled || loading ? 0.5 : 1,
+        },
+        styles.touchable,
+        style, // External styles should be applied last
+    ]), [colorScheme, disabled, loading, style]);
+
+    return (
+        <TouchableHighlight
+            onPress={onPress}
+            disabled={disabled || loading}
+            accessible
+            accessibilityLabel={label}
+            accessibilityRole="button"
+            accessibilityHint={`Press to ${label}`}
+            underlayColor={colorScheme === 'light' ? Colors.light.inputBackground : Colors.dark.inputBackground}
+            style={buttonStyle}
+        >
+            <View style={styles.buttonContainer}>
+                {loading ? (
+                    <>
+                        <ActivityIndicator size="small" color={color} />
+                        <ThemedText style={[styles.label, { color }, textStyle]} type='defaultSemiBold'>
+                            {loadingLabel}
+                        </ThemedText>
+                    </>
+                ) : (
+                    <>
+                        {iconName && <Ionicons name={iconName} size={20} color={color} />}
+                        <ThemedText style={[styles.label, { color }]} type='defaultSemiBold'>
+                            {label}
+                        </ThemedText>
+                    </>
+                )}
+            </View>
+        </TouchableHighlight>
+    );
+}
+
+const styles = StyleSheet.create({
+    touchable: {
+        flexDirection: 'row',
+        gap: 5,
+        alignSelf: 'flex-start',
+        padding: 5,
+        borderRadius: 50,
+    },
+    buttonContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    label: {
+        fontSize: 15,
+    },
+});

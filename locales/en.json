@@ -1,0 +1,123 @@
+{
+  "authRefresh": {
+    "errors": {
+      "401": "Session expired. Please log in again to continue.",
+      "403": "You don’t have permission to perform this action.",
+      "404": "Authorization error. Please log in and try again.",
+      "500": "Something went wrong on our end. Please try again later.",
+      "localUserDataNotFound": "Can't find local user data. Please log in again."
+    }
+  },
+  "loginScreen": {
+    "email": "Email",
+    "emailPlaceholder": "Enter your email",
+    "password": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "login": "Login",
+    "forgotPassword": "Forgot password?",
+    "dontHaveAnAccount": "Don't have an account?",
+    "register": "Register",
+    "registerNow": "Register now!",
+    "loggingIn": "Logging in...",
+    "errors": {
+      "invalidEmail": "Invalid email",
+      "emailRequired": "Username is required",
+      "invalidPassword": "Invalid password",
+      "passwordRequired": "Password is required",
+      "offlineNotice": "You are offline. Please connect to the internet to log in.",
+      "400": "Invalid email or password. Please check your details and try again.",
+      "500": "Something went wrong on our end. Please try again later."
+    }
+  },
+  "registerScreen": {
+    "fullName": "Full name",
+    "fullNamePlaceholder": "Enter your full name",
+    "email": "Email",
+    "emailPlaceholder": "Enter your email",
+    "password": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "confirmPassword": "Confirm password",
+    "confirmPasswordPlaceholder": "Confirm your password",
+    "registerNewAccount": "Create new account!",
+    "register": "Register",
+    "registering": "Registering...",
+    "registerSuccess": "Your account has been created successfully",
+    "errors": {
+      "fullNameRequired": "Full name is required",
+      "fullNameInvalid": "Invalid full name",
+      "invalidEmail": "Invalid email",
+      "emailRequired": "Email is required",
+      "invalidPassword": "Invalid password",
+      "invalidPasswordLength": "Password must be at least 8 characters long",
+      "passwordRequired": "Password is required",
+      "invalidPasswordLowerCase": "Password must contain at least one lowercase letter",
+      "invalidPasswordUpperCase": "Password must contain at least one uppercase letter",
+      "invalidPasswordNumber": "Password must contain at least one number",
+      "invalidPasswordSpecialChar": "Password must contain at least one special character (e.g., !@#$%^&*_)",
+      "passwordsDontMatch": "Passwords don't match",
+      "confirmPasswordRequired": "Confirm password is required",
+      "offlineNotice": "You are offline. Please connect to the internet to log in.",
+      "400": "This email is already registered. Please use a different email or log in.",
+      "403": "Account creation is disabled. Contact support if this is an error.",
+      "500": "Something went wrong on our end. Please try again later."
+    }
+  },
+  "forgotPasswordScreen": {
+    "forgotPassword": "Forgot password?",
+    "email": "Email",
+    "emailPlaceholder": "Enter your email",
+    "sendResetLink": "Send reset link",
+    "successMessage": "We have sent a password reset link to your email. Please check your inbox.",
+    "errors": {
+      "emailRequired": "Email is required",
+      "invalidEmail": "Invalid email",
+      "500": "Something went wrong on our end. Please try again later."
+    }
+  },
+  "homeScreen": {
+    "title": "Orange⁺ Wallet",
+    "searchPlaceholder": "Search",
+    "noItemFound": "Nothing found, please try again.",
+    "edit": "Edit card details", 
+    "delete": "Move to trash",
+    "syncing": "Syncing...",
+    "offline": "You are offline. Please connect to the internet to continue.",
+    "filters": {
+      "all": "All",
+      "bank": "Bank Accounts",
+      "store": "Loyalty Cards",
+      "ewallet": "Digital Wallets"
+    },
+    "emptyCard": {
+      "header": "Your QR Codes\nAll in one place",
+      "footer": "Add your first QR code",
+      "footerButton": "Add",
+      "content": "Keep your banks, wallet, membership QR codes, loyalty cards, and more all in one convenient place. Stay organized and access everything you need quickly and easily."
+    }
+  },
+  "scanScreen": {
+    "join": "Join",
+    "join2": "Network",
+    "goto": "Go to",
+    "momoPayment": "Add MoMo QR"
+  },
+  "permissionScreen": {
+    "cameraTitle": "Enable Camera Access",
+    "imageTitle": "Enable Photo Gallery Access",
+    "cameraSubtitle": "To scan QR codes, the app needs access to your device's camera.",
+    "imageSubtitle": "To scan QR codes, the app needs access to your device's photo gallery.",
+    "allowButton": "Allow Access",
+    "cancelButton": "Decline"
+  },
+  "onboardingScreen": {
+    "title1": "Manage QR Codes",
+    "subtitle1": "Manage and store QR codes for bank accounts, loyalty cards, and e-wallets.",
+    "title2": "Cloud Sync",
+    "subtitle2": "Your QR codes are securely stored and synced in the cloud.",
+    "finishTitle": "Ready to Use",
+    "finishSubtitle": "Manage and access your QR codes anytime, anywhere.",
+    "nextButton": "Next",
+    "skipButton": "Skip",
+    "finishButton": "Get Started"
+  }
+}

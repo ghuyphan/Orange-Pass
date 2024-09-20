@@ -1,0 +1,1007 @@
+{
+    "bank": [
+        {
+            "code": "ABB",
+            "name": "ABBank",
+            "full_name": "Ngân hàng Thương mại Cổ phần An Bình",
+            "color": {
+                "light": "#948473",
+                "dark": "#7A5E54"
+            },
+            "accent_color": {
+                "light": "#B6A695",
+                "dark": "#907C73"
+            }
+        },
+        {
+            "code": "ACB",
+            "name": "ACB",
+            "full_name": "Ngân hàng Thương mại Cổ phần Á Châu",
+            "color": {
+                "light": "#7A9DAB",
+                "dark": "#3A5C6B"
+            },
+            "accent_color": {
+                "light": "#A5BDC6",
+                "dark": "#506A79"
+            }
+        },
+        {
+            "code": "ANZ",
+            "name": "ANZ",
+            "full_name": "ANZ Bank",
+            "color": {
+                "light": "#9AAFB8",
+                "dark": "#7A5E54"
+            },
+            "accent_color": {
+                "light": "#B0CCD3",
+                "dark": "#8E8179"
+            }
+        },
+        {
+            "code": "AGR",
+            "name": "Agribank",
+            "full_name": "Ngân hàng Nông nghiệp và Phát triển Nông thôn Việt Nam",
+            "color": {
+                "light": "#C69A9A",
+                "dark": "#8E5E5E"
+            },
+            "accent_color": {
+                "light": "#D5B2B3",
+                "dark": "#A57A7B"
+            }
+        },
+        {
+            "code": "BAB",
+            "name": "Bac A Bank",
+            "full_name": "Ngân hàng Thương mại Cổ phần Bắc Á",
+            "color": {
+                "light": "#EBC99A",
+                "dark": "#9E7E54"
+            },
+            "accent_color": {
+                "light": "#F1DAC0",
+                "dark": "#B0957A"
+            }
+        },
+        {
+            "code": "BKB",
+            "name": "Bangkok Bank",
+            "full_name": "Bangkok Bank Public Company Limited",
+            "color": {
+                "light": "#8C9EB8",
+                "dark": "#7A5E54"
+            },
+            "accent_color": {
+                "light": "#A9BDD0",
+                "dark": "#8E8179"
+            }
+        },
+        {
+            "code": "BOC",
+            "name": "Bank of China",
+            "full_name": "Bank of China Limited",
+            "color": {
+                "light": "#CF9A9A",
+                "dark": "#8E5E5E"
+            },
+            "accent_color": {
+                "light": "#DCB0B1",
+                "dark": "#A57A7B"
+            }
+        },
+        {
+            "code": "BVB",
+            "name": "BaoViet Bank",
+            "full_name": "Ngân hàng Thương mại Cổ phần Bảo Việt",
+            "color": {
+                "light": "#8C9AB8",
+                "dark": "#7A5E54"
+            },
+            "accent_color": {
+                "light": "#A7B9D3",
+                "dark": "#8E8179"
+            }
+        },
+        {
+            "code": "BIC",
+            "name": "BIDC",
+            "full_name": "Ngân hàng Đầu tư và Phát triển Campuchia",
+            "color": {
+                "light": "#8E9BAF",
+                "dark": "#7A5E54"
+            },
+            "accent_color": {
+                "light": "#A9BDD0",
+                "dark": "#8E8179"
+            }
+        },
+        {
+            "code": "BIV",
+            "name": "BIDV",
+            "full_name": "Ngân hàng Thương mại Cổ phần Đầu tư và Phát triển Việt Nam",
+            "color": {
+                "light": "#8E9BAB",
+                "dark": "#7A5E54"
+            },
+            "accent_color": {
+                "light": "#A9BDD0",
+                "dark": "#8E8179"
+            }
+        },
+        {
+            "code": "CAK",
+            "name": "CAKE",
+            "full_name": "Cake by VPBank",
+            "color": {
+                "light": "#E0A3B5",
+                "dark": "#A06373"
+            },
+            "accent_color": {
+                "light": "#ECC2D2",
+                "dark": "#B68490"
+            }
+        },
+        {
+            "code": "CAT",
+            "name": "Cathay",
+            "full_name": "Cathay United Bank",
+            "color": {
+                "light": "#A0C5A8",
+                "dark": "#7A806C"
+            },
+            "accent_color": {
+                "light": "#BADAC7",
+                "dark": "#91B19A"
+            }
+        },
+        {
+            "code": "CBB",
+            "name": "CBBank",
+            "full_name": "Ngân hàng CB Vietnam",
+            "color": {
+                "light": "#D1C788",
+                "dark": "#8F825E"
+            },
+            "accent_color": {
+                "light": "#E2D7A9",
+                "dark": "#AA997A"
+            }
+        },
+        {
+            "code": "CHS",
+            "name": "Chase Bank",
+            "full_name": "JPMorgan Chase Bank",
+            "color": {
+                "light": "#8E9CB8",
+                "dark": "#7A5E54"
+            },
+            "accent_color": {
+                "light": "#A7BDD0",
+                "dark": "#8E8179"
+            }
+        },
+        {
+            "code": "CIM",
+            "name": "CIMB",
+            "full_name": "Ngân hàng CIMB",
+            "color": {
+                "light": "#CE8E95",
+                "dark": "#A05C61"
+            },
+            "accent_color": {
+                "light": "#DCAAAB",
+                "dark": "#B67A7F"
+            }
+        },
+        {
+            "code": "CIT",
+            "name": "CitiBank",
+            "full_name": "Citibank, N.A.",
+            "color": {
+                "light": "#A1BFC9",
+                "dark": "#7A806C"
+            },
+            "accent_color": {
+                "light": "#BFD9E0",
+                "dark": "#91A3AE"
+            }
+        },
+        {
+            "code": "CBA",
+            "name": "Commonwealth Bank",
+            "full_name": "Commonwealth Bank of Australia",
+            "color": {
+                "light": "#E8D28A",
+                "dark": "#B8945A"
+            },
+            "accent_color": {
+                "light": "#F0DDA1",
+                "dark": "#C8AC7A"
+            }
+        },
+        {
+            "code": "DBK",
+            "name": "Deutsche Bank",
+            "full_name": "Deutsche Bank AG",
+            "color": {
+                "light": "#8E91B5",
+                "dark": "#7A5E5E"
+            },
+            "accent_color": {
+                "light": "#A9AAD2",
+                "dark": "#8E8179"
+            }
+        },
+        {
+            "code": "DAB",
+            "name": "Dong A Bank",
+            "full_name": "Ngân hàng Thương mại Cổ phần Đông Á",
+            "color": {
+                "light": "#E09C7D",
+                "dark": "#A05739"
+            },
+            "accent_color": {
+                "light": "#F2B89B",
+                "dark": "#B67B59"
+            }
+        },
+        {
+            "code": "DSB",
+            "name": "DSB",
+            "full_name": "Ngân hàng Thương mại Cổ phần Sài Gòn - Hà Nội",
+            "color": {
+                "light": "#E68A89",
+                "dark": "#8F6060"
+            },
+            "accent_color": {
+                "light": "#ECA5A7",
+                "dark": "#A47A7C"
+            }
+        },
+        {
+            "code": "EIB",
+            "name": "Eximbank",
+            "full_name": "Ngân hàng Thương mại Cổ phần Xuất Nhập Khẩu Việt Nam",
+            "color": {
+                "light": "#8E90CB",
+                "dark": "#7A5E60"
+            },
+            "accent_color": {
+                "light": "#A9AAD7",
+                "dark": "#8E8195"
+            }
+        },
+        {
+            "code": "GPB",
+            "name": "GPBank",
+            "full_name": "Ngân hàng Thương mại Cổ phần Dầu Khí Toàn Cầu",
+            "color": {
+                "light": "#F5CB8A",
+                "dark": "#B8865A"
+            },
+            "accent_color": {
+                "light": "#F8DCAB",
+                "dark": "#C8A67A"
+            }
+        },
+        {
+            "code": "HDB",
+            "name": "HDBank",
+            "full_name": "Ngân hàng Thương mại Cổ phần Phát triển TP.HCM",
+            "color": {
+                "light": "#D78C8D",
+                "dark": "#7A5E54"
+            },
+            "accent_color": {
+                "light": "#E5A5A8",
+                "dark": "#907C7F"
+            }
+        },
+        {
+            "code": "HLB",
+            "name": "Hong Leong Bank",
+            "full_name": "Hong Leong Bank Berhad",
+            "color": {
+                "light": "#8E9ACB",
+                "dark": "#7A5E60"
+            },
+            "accent_color": {
+                "light": "#A7AAD7",
+                "dark": "#8E8195"
+            }
+        },
+        {
+            "code": "HSB",
+            "name": "HSBC",
+            "full_name": "Hongkong and Shanghai Banking Corporation",
+            "color": {
+                "light": "#E68C8F",
+                "dark": "#8F6060"
+            },
+            "accent_color": {
+                "light": "#ECA5A7",
+                "dark": "#A47A7C"
+            }
+        },
+        {
+            "code": "BOK",
+            "name": "Bank of Korea",
+            "full_name": "Ngân hàng Trung ương Hàn Quốc",
+            "color": {
+                "light": "#8F9BB2",
+                "dark": "#7A5E5E"
+            },
+            "accent_color": {
+                "light": "#A7B9CE",
+                "dark": "#8E8195"
+            }
+        },
+        {
+            "code": "IVB",
+            "name": "Indovina Bank",
+            "full_name": "Ngân hàng TNHH Indovina",
+            "color": {
+                "light": "#8F9BB2",
+                "dark": "#7A5E5E"
+            },
+            "accent_color": {
+                "light": "#A7B9CE",
+                "dark": "#8E8195"
+            }
+        },
+        {
+            "code": "KBK",
+            "name": "KB",
+            "full_name": "KB Kookmin Bank",
+            "color": {
+                "light": "#EBCF8A",
+                "dark": "#B88F5A"
+            },
+            "accent_color": {
+                "light": "#F2DEB1",
+                "dark": "#C7A97A"
+            }
+        },
+        {
+            "code": "KEB",
+            "name": "KEB",
+            "full_name": "Ngân hàng KEB Hàn Quốc",
+            "color": {
+                "light": "#8F9BB2",
+                "dark": "#7A5E5E"
+            },
+            "accent_color": {
+                "light": "#A7B9CE",
+                "dark": "#8E8195"
+            }
+        },
+        {
+            "code": "KLB",
+            "name": "KienLong Bank",
+            "full_name": "Ngân hàng Thương mại Cổ phần Kiên Long",
+            "color": {
+                "light": "#9095BA",
+                "dark": "#7A5E60"
+            },
+            "accent_color": {
+                "light": "#A7AACD",
+                "dark": "#8E8195"
+            }
+        },
+        {
+            "code": "LVB",
+            "name": "LienVietPostBank",
+            "full_name": "Ngân hàng Thương mại Cổ phần Bưu điện Liên Việt",
+            "color": {
+                "light": "#E78C8E",
+                "dark": "#8F6060"
+            },
+            "accent_color": {
+                "light": "#EDAAA8",
+                "dark": "#A57C7C"
+            }
+        },
+        {
+            "code": "MAY",
+            "name": "Maybank",
+            "full_name": "Malayan Banking Berhad",
+            "color": {
+                "light": "#EBCF8A",
+                "dark": "#B88F5A"
+            },
+            "accent_color": {
+                "light": "#F2DEB1",
+                "dark": "#C7A97A"
+            }
+        },
+        {
+            "code": "MBB",
+            "name": "MB Bank",
+            "full_name": "Ngân hàng Thương mại Cổ phần Quân Đội",
+            "color": {
+                "light": "#E68A8F",
+                "dark": "#8F6060"
+            },
+            "accent_color": {
+                "light": "#ECAAAD",
+                "dark": "#A57A7F"
+            }
+        },
+        {
+            "code": "MGB",
+            "name": "Mega International Commercial Bank",
+            "full_name": "Mega International Commercial Bank Co., Ltd",
+            "color": {
+                "light": "#8FA2C5",
+                "dark": "#7A5E5E"
+            },
+            "accent_color": {
+                "light": "#A7BAD3",
+                "dark": "#8E8195"
+            }
+        },
+        {
+            "code": "MZH",
+            "name": "Mizuho",
+            "full_name": "Mizuho Bank, Ltd.",
+            "color": {
+                "light": "#8E8FBD",
+                "dark": "#7A5E5E"
+            },
+            "accent_color": {
+                "light": "#A9ABD4",
+                "dark": "#8E8195"
+            }
+        },
+        {
+            "code": "MSB",
+            "name": "MSB",
+            "full_name": "Ngân hàng Thương mại Cổ phần Hàng Hải Việt Nam",
+            "color": {
+                "light": "#EE9F87",
+                "dark": "#A05C39"
+            },
+            "accent_color": {
+                "light": "#F3BEAB",
+                "dark": "#B67B59"
+            }
+        },
+        {
+            "code": "NAB",
+            "name": "NAB",
+            "full_name": "National Australia Bank",
+            "color": {
+                "light": "#E68C8F",
+                "dark": "#8F6060"
+            },
+            "accent_color": {
+                "light": "#ECAAAD",
+                "dark": "#A57A7F"
+            }
+        },
+        {
+            "code": "NCB",
+            "name": "NCB",
+            "full_name": "Ngân hàng Thương mại Cổ phần Quốc Dân",
+            "color": {
+                "light": "#8F9BB2",
+                "dark": "#7A5E5E"
+            },
+            "accent_color": {
+                "light": "#A7B9CE",
+                "dark": "#8E8195"
+            }
+        },
+        {
+            "code": "OCB",
+            "name": "OCB",
+            "full_name": "Ngân hàng Thương mại Cổ phần Phương Đông",
+            "color": {
+                "light": "#A5C3A4",
+                "dark": "#7A8E6C"
+            },
+            "accent_color": {
+                "light": "#B7D8C5",
+                "dark": "#91AA9A"
+            }
+        },
+        {
+            "code": "OCE",
+            "name": "OceanBank",
+            "full_name": "Ngân hàng Thương mại TNHH Một Thành Viên Đại Dương",
+            "color": {
+                "light": "#9CB5C8",
+                "dark": "#7A5E5E"
+            },
+            "accent_color": {
+                "light": "#AFCAD7",
+                "dark": "#8E8195"
+            }
+        },
+        {
+            "code": "PGB",
+            "name": "PG Bank",
+            "full_name": "Ngân hàng Thương mại Cổ phần Xăng Dầu Petrolimex",
+            "color": {
+                "light": "#EBC98A",
+                "dark": "#B88F5A"
+            },
+            "accent_color": {
+                "light": "#F2D9B1",
+                "dark": "#C7A97A"
+            }
+        },
+        {
+            "code": "PUB",
+            "name": "Public Bank",
+            "full_name": "Public Bank Berhad",
+            "color": {
+                "light": "#CE8E95",
+                "dark": "#A05C61"
+            },
+            "accent_color": {
+                "light": "#DCAAAB",
+                "dark": "#B67A7F"
+            }
+        },
+        {
+            "code": "PVB",
+            "name": "PVcomBank",
+            "full_name": "Ngân hàng Thương mại Cổ phần Đại Chúng Việt Nam",
+            "color": {
+                "light": "#E8CB8A",
+                "dark": "#B88F5A"
+            },
+            "accent_color": {
+                "light": "#F2D9B1",
+                "dark": "#C7A97A"
+            }
+        },
+        {
+            "code": "SCB",
+            "name": "SCB",
+            "full_name": "Ngân hàng Thương mại Cổ phần Sài Gòn",
+            "color": {
+                "light": "#8E90CB",
+                "dark": "#7A5E60"
+            },
+            "accent_color": {
+                "light": "#A9AAD7",
+                "dark": "#8E8195"
+            }
+        },
+        {
+            "code": "SEA",
+            "name": "SeaBank",
+            "full_name": "Ngân hàng Thương mại Cổ phần Đông Nam Á",
+            "color": {
+                "light": "#E88C8E",
+                "dark": "#8F6060"
+            },
+            "accent_color": {
+                "light": "#ECAAAD",
+                "dark": "#A57A7F"
+            }
+        },
+        {
+            "code": "SHB",
+            "name": "SHB",
+            "full_name": "Ngân hàng Thương mại Cổ phần Sài Gòn - Hà Nội",
+            "color": {
+                "light": "#F2AA8A",
+                "dark": "#A35D3A"
+            },
+            "accent_color": {
+                "light": "#F7C4AB",
+                "dark": "#B77B5F"
+            }
+        },
+        {
+            "code": "SHN",
+            "name": "SHN",
+            "full_name": "Ngân hàng Shinhan",
+            "color": {
+                "light": "#8F8FBD",
+                "dark": "#7A5E5E"
+            },
+            "accent_color": {
+                "light": "#A9ABD4",
+                "dark": "#8E8195"
+            }
+        },
+        {
+            "code": "SMF",
+            "name": "SMFG",
+            "full_name": "Sumitomo Mitsui Financial Group",
+            "color": {
+                "light": "#A4C3A4",
+                "dark": "#7A8E6C"
+            },
+            "accent_color": {
+                "light": "#B7D8C5",
+                "dark": "#91AA9A"
+            }
+        },
+        {
+            "code": "STC",
+            "name": "Standard Chartered",
+            "full_name": "Ngân hàng Standard Chartered",
+            "color": {
+                "light": "#B2D0A4",
+                "dark": "#7A8E6C"
+            },
+            "accent_color": {
+                "light": "#BFD8C5",
+                "dark": "#91AA9A"
+            }
+        },
+        {
+            "code": "TCB",
+            "name": "Techcombank",
+            "full_name": "Ngân hàng Thương mại Cổ phần Kỹ thương Việt Nam",
+            "color": {
+                "light": "#E88A8F",
+                "dark": "#8F6060"
+            },
+            "accent_color": {
+                "light": "#ECAAAD",
+                "dark": "#A57A7F"
+            }
+        },
+        {
+            "code": "TIM",
+            "name": "Timo",
+            "full_name": "Timo Digital Bank",
+            "color": {
+                "light": "#B8B8B8",
+                "dark": "#8F8F8F"
+            },
+            "accent_color": {
+                "light": "#D0D0D0",
+                "dark": "#A0A0A0"
+            }
+        },
+        {
+            "code": "TPB",
+            "name": "TPBank",
+            "full_name": "Ngân hàng Thương mại Cổ phần Tiên Phong",
+            "color": {
+                "light": "#A48CB5",
+                "dark": "#7A608B"
+            },
+            "accent_color": {
+                "light": "#BDA7C9",
+                "dark": "#9688A3"
+            }
+        },
+        {
+            "code": "TYM",
+            "name": "TymeBank",
+            "full_name": "TymeBank",
+            "color": {
+                "light": "#EBCF8A",
+                "dark": "#B88F5A"
+            },
+            "accent_color": {
+                "light": "#F2DEB1",
+                "dark": "#C7A97A"
+            }
+        },
+        {
+            "code": "TYB",
+            "name": "Tyme",
+            "full_name": "Tyme Digital",
+            "color": {
+                "light": "#B2D0A4",
+                "dark": "#7A8E6C"
+            },
+            "accent_color": {
+                "light": "#BFD8C5",
+                "dark": "#91AA9A"
+            }
+        },
+        {
+            "code": "UBB",
+            "name": "Ubank",
+            "full_name": "Ubank by VPBank",
+            "color": {
+                "light": "#EBCF8A",
+                "dark": "#B88F5A"
+            },
+            "accent_color": {
+                "light": "#F2DEB1",
+                "dark": "#C7A97A"
+            }
+        },
+        {
+            "code": "UBS",
+            "name": "UBSP",
+            "full_name": "UBS Group AG",
+            "color": {
+                "light": "#CE8E95",
+                "dark": "#A05C61"
+            },
+            "accent_color": {
+                "light": "#DCAAAB",
+                "dark": "#B67A7F"
+            }
+        },
+        {
+            "code": "VIB",
+            "name": "VIB",
+            "full_name": "Ngân hàng Thương mại Cổ phần Quốc tế Việt Nam",
+            "color": {
+                "light": "#8F9BB2",
+                "dark": "#7A5E5E"
+            },
+            "accent_color": {
+                "light": "#A7B9CE",
+                "dark": "#8E8195"
+            }
+        },
+        {
+            "code": "VAB",
+            "name": "VAB",
+            "full_name": "Ngân hàng Thương mại Cổ phần Việt Á",
+            "color": {
+                "light": "#B2D0A4",
+                "dark": "#7A8E6C"
+            },
+            "accent_color": {
+                "light": "#BFD8C5",
+                "dark": "#91AA9A"
+            }
+        },
+        {
+            "code": "VCP",
+            "name": "Viet Capital Bank",
+            "full_name": "Ngân hàng Thương mại Cổ phần Bản Việt",
+            "color": {
+                "light": "#E88C8E",
+                "dark": "#8F6060"
+            },
+            "accent_color": {
+                "light": "#ECAAAD",
+                "dark": "#A57A7F"
+            }
+        },
+        {
+            "code": "VCB",
+            "name": "Vietcombank",
+            "full_name": "Ngân hàng Thương mại Cổ phần Ngoại thương Việt Nam",
+            "color": {
+                "light": "#A8C8A8",
+                "dark": "#7A8E6C"
+            },
+            "accent_color": {
+                "light": "#C1D6C1",
+                "dark": "#8EA391"
+            }
+        },
+        {
+            "code": "VTB",
+            "name": "VietinBank",
+            "full_name": "Ngân hàng Thương mại Cổ phần Công Thương Việt Nam",
+            "color": {
+                "light": "#A8B9C2",
+                "dark": "#7A5E5E"
+            },
+            "accent_color": {
+                "light": "#C1CBD3",
+                "dark": "#8E8195"
+            }
+        },
+        {
+            "code": "VPB",
+            "name": "VPBank",
+            "full_name": "Ngân hàng Thương mại Cổ phần Việt Nam Thịnh Vượng",
+            "color": {
+                "light": "#A8C3A8",
+                "dark": "#7A8E6C"
+            },
+            "accent_color": {
+                "light": "#C1DAC1",
+                "dark": "#8EA391"
+            }
+        },
+        {
+            "code": "WOO",
+            "name": "Woori Bank",
+            "full_name": "Ngân hàng Woori",
+            "color": {
+                "light": "#8F9CB2",
+                "dark": "#7A5E5E"
+            },
+            "accent_color": {
+                "light": "#A7B9CE",
+                "dark": "#8E8195"
+            }
+        }
+    ],
+    "store": [
+        {
+            "code": "AEO",
+            "name": "AEON",
+            "full_name": "Siêu thị",
+            "color": {
+                "light": "#EDE2F5",
+                "dark": "#B8A1CC"
+            },
+            "accent_color": {
+                "light": "#F6F0FF",
+                "dark": "#D1B1E5"
+            }
+        },
+        {
+            "code": "BAX",
+            "name": "Bách hoá XANH",
+            "full_name": "Siêu thị",
+            "color": {
+                "light": "#C2E59B",
+                "dark": "#8AAF54"
+            },
+            "accent_color": {
+                "light": "#D5F2AF",
+                "dark": "#9EC86A"
+            }
+        },
+        {
+            "code": "CIR",
+            "name": "Circle K",
+            "full_name": "Cửa hàng tiện lợi",
+            "color": {
+                "light": "#F7DADA",
+                "dark": "#A97F7F"
+            },
+            "accent_color": {
+                "light": "#FFF0F0",
+                "dark": "#C2A3A3"
+            }
+        },
+        {
+            "code": "COO",
+            "name": "Co.opmart",
+            "full_name": "Siêu thị",
+            "color": {
+                "light": "#DBF2E2",
+                "dark": "#8EB9A3"
+            },
+            "accent_color": {
+                "light": "#ECF9F1",
+                "dark": "#A7D3BC"
+            }
+        },
+        {
+            "code": "EMM",
+            "name": "Emart",
+            "full_name": "Siêu thị",
+            "color": {
+                "light": "#F6E5D4",
+                "dark": "#A68A77"
+            },
+            "accent_color": {
+                "light": "#FFF0E5",
+                "dark": "#BFAE98"
+            }
+        },
+        {
+            "code": "FMI",
+            "name": "FamilyMart",
+            "full_name": "Cửa hàng tiện lợi",
+            "color": {
+                "light": "#D8F5EE",
+                "dark": "#8AAEA1"
+            },
+            "accent_color": {
+                "light": "#EBFFFB",
+                "dark": "#A7CDC4"
+            }
+        },
+        {
+            "code": "GOO",
+            "name": "GO",
+            "full_name": "Siêu thị",
+            "color": {
+                "light": "#F5EBD6",
+                "dark": "#A7A090"
+            },
+            "accent_color": {
+                "light": "#FFFAED",
+                "dark": "#BFBBA9"
+            }
+        },
+        {
+            "code": "GS2",
+            "name": "GS25",
+            "full_name": "Cửa hàng tiện lợi",
+            "color": {
+                "light": "#D8DAF5",
+                "dark": "#888CA3"
+            },
+            "accent_color": {
+                "light": "#E9ECFF",
+                "dark": "#A7AACC"
+            }
+        },
+        {
+            "code": "LOT",
+            "name": "Lotte Mart",
+            "full_name": "Siêu thị",
+            "color": {
+                "light": "#F7DADA",
+                "dark": "#A97F7F"
+            },
+            "accent_color": {
+                "light": "#FFF0F0",
+                "dark": "#C2A3A3"
+            }
+        },
+        {
+            "code": "MMM",
+            "name": "MM Mega Market",
+            "full_name": "Siêu thị",
+            "color": {
+                "light": "#DAF2E1",
+                "dark": "#8EB9A3"
+            },
+            "accent_color": {
+                "light": "#E5F9EE",
+                "dark": "#A7D3BC"
+            }
+        },
+        {
+            "code": "MIN",
+            "name": "Ministop",
+            "full_name": "Cửa hàng tiện lợi",
+            "color": {
+                "light": "#DAF2F2",
+                "dark": "#8EB3B3"
+            },
+            "accent_color": {
+                "light": "#E5F9F9",
+                "dark": "#A7CCCC"
+            }
+        },
+        {
+            "code": "SVL",
+            "name": "7-Eleven",
+            "full_name": "Cửa hàng tiện lợi",
+            "color": {
+                "light": "#D4F5D4",
+                "dark": "#7FA97F"
+            },
+            "accent_color": {
+                "light": "#E0FFE0",
+                "dark": "#A3C2A3"
+            }
+        },
+        {
+            "code": "TOP",
+            "name": "Tops Market",
+            "full_name": "Siêu thị",
+            "color": {
+                "light": "#DBF2E1",
+                "dark": "#8EB9A3"
+            },
+            "accent_color": {
+                "light": "#E5F9EE",
+                "dark": "#A7D3BC"
+            }
+        },
+        {
+            "code": "WNM",
+            "name": "WinMart",
+            "full_name": "Cửa hàng tiện lợi",
+            "color": {
+                "light": "#E5F5E7",
+                "dark": "#8EB3A3"
+            },
+            "accent_color": {
+                "light": "#F0FFFA",
+                "dark": "#A7CCC1"
+            }
+        }
+    ]
+}
