@@ -48,7 +48,7 @@ export default function ForgotPasswordScreen() {
         try {
           await forgot(values.email);
           setIsToastVisible(true);
-          setErrorMessage(t('forgotPasswordScreen.success'));
+          setErrorMessage(t('forgotPasswordScreen.successMessage'));
         } catch (error) {
           const errorAsError = error as Error;
           setIsToastVisible(true);
@@ -86,7 +86,7 @@ export default function ForgotPasswordScreen() {
             label={t('forgotPasswordScreen.sendResetLink')}
             style={styles.forgotButton}
             onPress={handleSubmit}
-            loadingLabel={t('loginScreen.loggingIn')}
+            loadingLabel={t('forgotPasswordScreen.sendingResetLink')}
             loading={isSubmitting}
           />
           <ThemedToast
@@ -111,14 +111,16 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     alignItems: 'center',
-    marginTop: 80,
+    marginTop: 90,
+    marginBottom: 10,
   },
   orangeLogo: {
-    width: width * 0.6,
-    height: height * 0.22,
+    width: width * 0.3,
+    height: height * 0.13,
     left: 0,
     right: 0,
     resizeMode: 'cover',
+    marginBottom: 20,
   },
   title: {
     marginBottom: 20,

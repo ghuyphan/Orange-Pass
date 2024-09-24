@@ -25,7 +25,7 @@
       "invalidPassword": "Invalid password",
       "passwordRequired": "Password is required",
       "offlineNotice": "You are offline. Please connect to the internet to log in.",
-      "400": "Invalid email or password. Please check your details and try again.",
+      "400": "Invalid email or password. Please check your credentials and try again.",
       "500": "Something went wrong on our end. Please try again later."
     }
   },
@@ -67,6 +67,7 @@
     "email": "Email",
     "emailPlaceholder": "Enter your email",
     "sendResetLink": "Send reset link",
+    "sendingResetLink": "Sending...",
     "successMessage": "We have sent a password reset link to your email. Please check your inbox.",
     "errors": {
       "emailRequired": "Email is required",
@@ -81,7 +82,8 @@
     "edit": "Edit card details", 
     "delete": "Move to trash",
     "syncing": "Syncing...",
-    "offline": "You are offline. Please connect to the internet to continue.",
+    "deleting": "Deleting...",
+    "offline": "You are offline. Please connect to the internet to sync your data.",
     "filters": {
       "all": "All",
       "bank": "Bank Accounts",
@@ -104,8 +106,12 @@
   "permissionScreen": {
     "cameraTitle": "Enable Camera Access",
     "imageTitle": "Enable Photo Gallery Access",
-    "cameraSubtitle": "To scan QR codes, the app needs access to your device's camera.",
-    "imageSubtitle": "To scan QR codes, the app needs access to your device's photo gallery.",
+    "brightnessTitle": "Allow Brightness Adjustment",
+    
+    "cameraSubtitle": "To scan QR codes, we need permission to access your device's camera.",
+    "imageSubtitle": "To scan QR codes from images, we need permission to access your photo gallery.",
+    "brightnessSubtitle": "To enhance visibility, we need permission to adjust your device's screen brightness.",
+  
     "allowButton": "Allow Access",
     "cancelButton": "Decline"
   },

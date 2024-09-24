@@ -22,7 +22,7 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const systemColorScheme = useColorScheme();  // Use system color scheme
   const [dark, setDark] = useMMKVBoolean('dark-mode', storage);
-  const [seenOnboard] = useMMKVBoolean('hasSeenOnboarding', storage);
+  // const [seenOnboard] = useMMKVBoolean('hasSeenOnboarding', storage);
   const [fontsLoaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
@@ -93,9 +93,9 @@ export default function RootLayout() {
   // Delay rendering the stack until the app is ready and status checks are done
   if (!isAppReady || isAuthenticated === null || hasSeenOnboarding === null) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: Colors.light.background }]}>
-        <Image source={require('@/assets/images/orange-icon.png')} style={styles.orangeLogo} />
-        <ActivityIndicator style={styles.activityIndicator} size="small" color={Colors.light.text} />
+      <View style={[styles.loadingContainer, { backgroundColor: systemColorScheme === 'dark' ? Colors.dark.background : Colors.light.background }]}>
+        <Image resizeMode='contain' source={require('@/assets/images/orange-icon.png')} style={styles.orangeLogo} />
+        <ActivityIndicator style={styles.activityIndicator} size="small" color='##8FCB8F' />
       </View>
     );
   }
@@ -137,13 +137,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   orangeLogo: {
-    height: height * 0.2,
-    width: width * 0.7,
-    resizeMode: 'cover',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: height * 0.15,
+    width: width * 0.28,
+    // aspectRatio: 1,
   },
   activityIndicator: {
     position: 'absolute',
-    bottom: 80,
+    bottom: 85,
     left: 0,
     right: 0,
   },

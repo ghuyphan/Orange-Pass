@@ -61,7 +61,7 @@ const ThemedBottomSheet = forwardRef<BottomSheet, ThemedBottomSheetProps>(
                     backdropComponent={(props) => (
                         <BottomSheetBackdrop
                             {...props}
-                            opacity={0.4}
+                            opacity={0.5}
                             appearsOnIndex={0}
                             disappearsOnIndex={-1}
                             style={styles.backdrop}

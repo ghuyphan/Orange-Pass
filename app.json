@@ -1,22 +1,37 @@
 {
   "expo": {
-    "name": "orange2",
+    "name": "Orange⁺",
     "slug": "orange2",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
-    "splash": {
-      "image": "./assets/images/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#FFF5E1"
-    },
     "ios": {
-      "supportsTablet": true,
+      "splash": {
+        "backgroundColor": "#FFF5E1",
+        "image": "./assets/images/splash.png",
+        "resizeMode": "contain",
+        "dark": {
+          "backgroundColor": "#2D2524",
+          "image": "./assets/images/splash.png",
+          "resizeMode": "contain"
+        }
+      },
+      "supportsTablet": false,
       "bundleIdentifier": "com.giahuyphan0110.orange2"
     },
     "android": {
+      "splash": {
+        "backgroundColor": "#FFF5E1",
+        "image": "./assets/images/splash.png",
+        "resizeMode": "contain",
+        "dark": {
+          "backgroundColor": "#2D2524",
+          "image": "./assets/images/splash.png",
+          "resizeMode": "contain"
+        }
+      },
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#FFF5E1"

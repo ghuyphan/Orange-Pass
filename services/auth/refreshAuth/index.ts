@@ -62,7 +62,7 @@ const checkInitialAuth = async (): Promise<boolean> => {
                 return true;
             } else {
                 // No local user data found
-                store.dispatch(setErrorMessage(t('authRefresh.errors.localUserDataNotFound')));
+                // store.dispatch(setErrorMessage(t('authRefresh.errors.localUserDataNotFound')));
                 return false; // Authentication failed due to missing local data
             }
         } else {

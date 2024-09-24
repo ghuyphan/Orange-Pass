@@ -138,13 +138,14 @@ export async function updateQrCode(qrData: QRRecord) {
 export async function deleteQrCode(id: string) {
     const db = await openDatabase();
     try {
-        await db.runAsync('UPDATE qrcodes SET is_deleted = 1, is_synced = 0 WHERE id = ?', id);
-        console.log('QR code marked as deleted');
+      // Mark the QR code as deleted
+      await db.runAsync('UPDATE qrcodes SET is_deleted = 1, is_synced = 0 WHERE id = ?', id);
+      console.log(`QR code ${id} marked as deleted`);
     } catch (error) {
-        console.error('Failed to delete QR code:', error);
+      console.error(`Failed to delete QR code ${id}:`, error);
     }
-}
-
+  }
+  
 // Optimized bulk insert with transaction handling
 export async function insertQrCodesBulk(qrDataArray: QRRecord[]): Promise<void> {
     const db = await openDatabase();
@@ -188,56 +189,73 @@ export async function insertQrCodesBulk(qrDataArray: QRRecord[]): Promise<void> 
 export async function syncQrCodes(userId: string) {
     const db = await openDatabase();
     try {
-        const unsyncedQrCodes = await db.getAllAsync<QRRecord>(
+      // Get all unsynced local QR codes (is_synced = 0)
+      const unsyncedQrCodes = await getUnsyncedQrCodes(userId);
+      if (unsyncedQrCodes.length === 0) {
+        console.log('No unsynced QR codes to sync for this user');
+        return;
+      }
+  
+      // Handle sync operations concurrently for each unsynced QR code
+      const promises = unsyncedQrCodes.map(async (qrCode) => {
+        try {
+            console.log(`Syncing QR code ${qrCode.id}`);
+          const data = {
+            code: qrCode.code,
+            metadata: qrCode.metadata,
+            metadata_type: qrCode.metadata_type,
+            account_name: qrCode.account_name,
+            account_number: qrCode.account_number,
+            type: qrCode.type,
+            userId: qrCode.user_id,
+            is_deleted: qrCode.is_deleted,
+            qr_index: qrCode.qr_index,
+          };
+  
+          // Check if the record exists on the server
+          const existingRecord = await pb.collection('qr').getOne(qrCode.id).catch(() => null);
+  
+          if (existingRecord) {
+            // Only update if the local record is newer than the server record
+            if (new Date(qrCode.updated) > new Date(existingRecord.updated)) {
+              await pb.collection('qr').update(qrCode.id, data);
+              console.log(`QR code ${qrCode.id} updated on PocketBase`);
+            } else {
+              console.log(`QR code ${qrCode.id} on the server is up-to-date, skipping update.`);
+            }
+          } else {
+            // Create the record on the server if it doesn't exist
+            await pb.collection('qr').create({ ...data, id: qrCode.id });
+            console.log(`QR code ${qrCode.id} created on PocketBase`);
+          }
+  
+          // Mark the QR code as synced in the local database after successful server sync
+          await db.runAsync('UPDATE qrcodes SET is_synced = 1 WHERE id = ?', qrCode.id);
+          console.log(`QR code ${qrCode.id} successfully synced and marked as synced.`);
+        } catch (syncError) {
+          console.error(`Failed to sync QR code ${qrCode.id}:`, syncError);
+        }
+      });
+  
+      // Await all sync operations
+      await Promise.all(promises);
+      console.log('All unsynced QR codes for this user have been processed for syncing.');
+    } catch (error) {
+      console.error('Error during sync:', error);
+    }
+  }
+  export async function getUnsyncedQrCodes(userId: string) {
+    const db = await openDatabase();
+    try {
+        return await db.getAllAsync<QRRecord>(
             'SELECT * FROM qrcodes WHERE is_synced = 0 AND user_id = ?',
             userId
         );
-
-        if (unsyncedQrCodes.length === 0) {
-            console.log('No unsynced QR codes to sync for this user');
-            return;
-        }
-
-        // Handle sync operations concurrently
-        const promises = unsyncedQrCodes.map(async (qrCode) => {
-            try {
-                if (qrCode.is_deleted) {
-                    await pb.collection('qr').delete(qrCode.id);
-                    console.log(`QR code ${qrCode.id} deleted from PocketBase`);
-                } else {
-                    const data = {
-                        code: qrCode.code,
-                        metadata: qrCode.metadata,
-                        metadata_type: qrCode.metadata_type,
-                        account_name: qrCode.account_name,
-                        account_number: qrCode.account_number,
-                        type: qrCode.type,
-                        userId: qrCode.user_id,
-                        is_synced: true,
-                    };
-
-                    const existingRecord = await pb.collection('qr').getOne(qrCode.id).catch(() => null);
-                    if (existingRecord) {
-                        await pb.collection('qr').update(qrCode.id, data);
-                        console.log(`QR code ${qrCode.id} updated on PocketBase`);
-                    } else {
-                        await pb.collection('qr').create({ ...data, id: qrCode.id });
-                        console.log(`QR code ${qrCode.id} created on PocketBase`);
-                    }
-                }
-                await db.runAsync('UPDATE qrcodes SET is_synced = 1 WHERE id = ?', qrCode.id);
-            } catch (syncError) {
-                console.error(`Failed to sync QR code ${qrCode.id}:`, syncError);
-            }
-        });
-
-        await Promise.all(promises);
-        console.log('All unsynced QR codes for this user have been processed for syncing.');
     } catch (error) {
-        console.error('Error during sync:', error);
+        console.error('Error retrieving unsynced QR codes:', error);
+        return [];
     }
 }
-
 // Function to close the database
 export async function closeDatabase() {
     const db = await openDatabase();
@@ -246,5 +264,80 @@ export async function closeDatabase() {
         console.log('Database closed');
     } catch (error) {
         console.error('Error closing the database:', error);
+    }
+}
+
+// Function to retrieve locally deleted QR codes by user ID
+export async function getLocallyDeletedQrCodes(userId: string) {
+    const db = await openDatabase();
+    try {
+        return await db.getAllAsync<QRRecord>('SELECT * FROM qrcodes WHERE user_id = ? AND is_deleted = 1', userId);
+    } catch (error) {
+        console.error('Error retrieving locally deleted QR codes:', error);
+        return [];
+    }
+}
+
+// Function to insert or update QR codes based on their existence in the local DB
+export async function insertOrUpdateQrCodes(qrDataArray: QRRecord[]): Promise<void> {
+    const db = await openDatabase();
+
+    try {
+        await db.runAsync('BEGIN TRANSACTION');
+
+        for (const qrData of qrDataArray) {
+            // Check if the QR code already exists in the database
+            const existingQr = await db.getFirstAsync<QRRecord>('SELECT * FROM qrcodes WHERE id = ?', qrData.id);
+
+            if (existingQr) {
+                // Update the record only if the server's data is newer
+                if (new Date(qrData.updated) > new Date(existingQr.updated)) {
+                    await db.runAsync(
+                        `UPDATE qrcodes 
+              SET qr_index = ?, code = ?, metadata = ?, metadata_type = ?, account_name = ?, account_number = ?, type = ?, updated = ?, is_synced = ?, is_deleted = ?
+              WHERE id = ?`,
+                        qrData.qr_index,
+                        qrData.code,
+                        qrData.metadata,
+                        qrData.metadata_type,
+                        qrData.account_name || '',
+                        qrData.account_number || '',
+                        qrData.type,
+                        qrData.updated,
+                        qrData.is_synced ? 1 : 0,
+                        qrData.is_deleted ? 1 : 0,
+                        qrData.id
+                    );
+                    console.log(`QR code ${qrData.id} updated successfully`);
+                }
+            } else {
+                // If the QR code doesn't exist, insert it
+                await db.runAsync(
+                    `INSERT INTO qrcodes 
+            (id, qr_index, user_id, code, metadata, metadata_type, account_name, account_number, type, created, updated, is_deleted, is_synced) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                    qrData.id,
+                    qrData.qr_index,
+                    qrData.user_id,
+                    qrData.code,
+                    qrData.metadata,
+                    qrData.metadata_type,
+                    qrData.account_name || '',
+                    qrData.account_number || '',
+                    qrData.type,
+                    qrData.created,
+                    qrData.updated,
+                    qrData.is_deleted ? 1 : 0,
+                    qrData.is_synced ? 1 : 0
+                );
+                console.log(`QR code ${qrData.id} inserted successfully`);
+            }
+        }
+
+        await db.runAsync('COMMIT');
+        console.log('Insert/Update operation completed successfully');
+    } catch (error) {
+        await db.runAsync('ROLLBACK');
+        console.error('Failed to insert/update QR codes:', error);
     }
 }

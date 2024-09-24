@@ -1,12 +1,12 @@
 import React, { useRef, useState } from 'react';
-import { StyleSheet, View, Dimensions, ScrollView, Alert } from 'react-native';
+import { StyleSheet, View, Dimensions, ScrollView } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import { ThemedButton } from '@/components/buttons/ThemedButton';
 import { ThemedTextButton } from '@/components/buttons/ThemedTextButton';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, runOnJS } from 'react-native-reanimated';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { useCameraPermission } from 'react-native-vision-camera';
 import { t } from '@/i18n';
@@ -19,37 +19,49 @@ const PermissionScreen = () => {
     const iconColor = useThemeColor({ light: '#D3B08C', dark: '#7B524A' }, 'buttonBackground');
     const router = useRouter();
     const scrollRef = useRef<ScrollView>(null);
-    const fadeValue = useSharedValue(0);
-
+    
+    const fadeValue = useSharedValue(1);
+    const swipeValue = useSharedValue(0); // New value for the horizontal translation
+    
     const handleCombinedPermission = async () => {
         if (step === 1) {
             const result = await requestCameraPermission();
             if (result === true) {
-                setStep(2);
+                animateSwipeAndFade(() => {
+                    setStep(2);
+                    proceedToNextPage();
+                });
             } else {
                 console.log('Camera permission not granted');
             }
         } else if (step === 2) {
             const { status } = await Brightness.requestPermissionsAsync();
-            console.log(status);
-            if (status === 'granted') {
-                router.replace('/(scan)/scan-main');
+            if (status == 'granted') {
+                router.replace('/(auth)/(scan)/scan-main');
             } else {
                 console.log('Brightness permission not granted');
             }
         }
     };
 
-    const proceedToNextPage = () => {
-        fadeValue.value = 0;
-        scrollRef.current?.scrollTo({ x: Dimensions.get('window').width, animated: true });
-        fadeValue.value = withTiming(1, { duration: 500 }); 
-        if (step === 3) {
-            console.log('Permission granted');
-        }
+    const animateSwipeAndFade = (onAnimationEnd: () => void) => {
+        const screenWidth = Dimensions.get('window').width;
+        // Animate swipe and fade simultaneously
+        swipeValue.value = withTiming(-screenWidth, { duration: 200 }, () => {
+            // Trigger the state update after animation completes
+            runOnJS(onAnimationEnd)();
+        });
+        fadeValue.value = withTiming(0, { duration: 200 });
     };
 
-    const animatedFadeStyle = useAnimatedStyle(() => ({
+    const proceedToNextPage = () => {
+        // Reset values after proceeding to the next page
+        swipeValue.value = 0;
+        fadeValue.value = withTiming(1, { duration: 500 });
+    };
+
+    const animatedStyle = useAnimatedStyle(() => ({
+        transform: [{ translateX: swipeValue.value }],
         opacity: fadeValue.value,
     }));
 
@@ -62,11 +74,8 @@ const PermissionScreen = () => {
                 showsHorizontalScrollIndicator={false}
                 ref={scrollRef}
                 style={styles.scrollView}
-                onLayout={() => {
-                    fadeValue.value = withTiming(1, { duration: 500 });
-                }}
             >
-                <Animated.View style={[styles.permissionSection, animatedFadeStyle]}>
+                <Animated.View style={[styles.permissionSection, animatedStyle]}>
                     <View style={[styles.iconContainer, { backgroundColor: iconColor }]}>
                         <Ionicons name={step === 1 ? "camera" : "sunny"} size={75} color={color} />
                     </View>
@@ -80,7 +89,6 @@ const PermissionScreen = () => {
                             ? t('permissionScreen.cameraSubtitle')
                             : t('permissionScreen.brightnessSubtitle')}
                     </ThemedText>
-
                 </Animated.View>
             </ScrollView>
 

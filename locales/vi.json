@@ -67,6 +67,7 @@
     "email": "Email",
     "emailPlaceholder": "Nhập email",
     "sendResetLink": "Gửi liên kết đặt lại mật khẩu",
+    "sendingResetLink": "Đang gửi...",
     "successMessage": "Chúng tôi đã gửi liên kết đặt lại mật khẩu. Vui lòng kiểm tra email của bạn.",
     "errors": {
       "emailRequired": "Vui lòng nhập email",
@@ -80,8 +81,9 @@
     "noItemFound": "Rất tiếc, không tìm thấy kết quả nào. \nVui lòng thử lại.",
     "edit": "Chỉnh sửa thông tin",
     "delete": "Chuyển vào thùng rấc",
-    "syncing": "Đang đồng bộ dữ liệu",
-    "offline": "Bạn đang ngoại tuyến. Vui lòng kết nối internet để tiếp tục.",
+    "syncing": "Đang đồng bộ...",
+    "deleting": "Đang xoá...",
+    "offline": "Bạn đang ngoại tuyến. Vui lòng kết nối internet để đồng bộ dữ liệu.",
     "filters": {
       "all": "Tất cả",
       "bank": "Ngân hàng",
@@ -103,10 +105,14 @@
   },
   "permissionScreen": {
     "cameraTitle": "Cho phép truy cập camera",
-    "cameraSubtitle": "Để quét mã QR, ứng dụng cần quyền truy cập camera của thiết bị.",
-    "imageTitle": "Cho phép truy cập thư viện",
-    "imageSubtitle": "Đặt quét mã QR, ứng dụng cần quyền truy cập thư viện ảnh của thiết bị.",
-    "allowButton": "Cho phép",
+    "imageTitle": "Cho phép truy cập vào thư viện ảnh",
+    "brightnessTitle": "Cho phép điều chỉnh độ sáng",
+    
+    "cameraSubtitle": "Để quét mã QR, chúng tôi cần quyền truy cập vào camera của thiết bị bạn.",
+    "imageSubtitle": "Để quét mã QR từ hình ảnh, chúng tôi cần quyền truy cập vào thư viện ảnh của bạn.",
+    "brightnessSubtitle": "Để cải thiện khả năng hiển thị, chúng tôi cần quyền điều chỉnh độ sáng màn hình của thiết bị bạn.",
+  
+    "allowButton": "Cho phép truy cập",
     "cancelButton": "Từ chối"
 
   },

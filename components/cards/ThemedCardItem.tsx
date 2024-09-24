@@ -73,7 +73,8 @@ export const ThemedCardItem = memo(function ThemedCardItem({
     const animatedStyle = useAnimatedStyle(() => ({
         transform: [{ scale: scale.value }],
         shadowOpacity: shadowOpacity.value,
-        elevation: elevation.value
+        elevation: elevation.value,
+        marginBottom: 30,
     }));
 
     return (
@@ -84,6 +85,7 @@ export const ThemedCardItem = memo(function ThemedCardItem({
                 onPress={handleItemPress}
                 onLongPress={onDrag}
                 delayLongPress={150}
+
             >
 
                 <ThemedView
@@ -142,7 +144,7 @@ export const ThemedCardItem = memo(function ThemedCardItem({
 const styles = StyleSheet.create({
     touchableHighlight: {
         borderRadius: 10,
-        marginBottom: 30,
+        // marginBottom: 30,
     },
     itemContainer: {
         // height: 230,
@@ -178,8 +180,8 @@ const styles = StyleSheet.create({
         flexDirection: 'column',
     },
     icon: {
-        width: '50%',
-        height: '50%',
+        width: '60%',
+        height: '60%',
 
     },
     companyName: {

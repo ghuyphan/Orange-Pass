@@ -314,7 +314,7 @@ export default function ScanScreen() {
     }
   }, [device]);
 
-  if (!hasPermission || brightnessStatus == 'granted') {
+  if (!hasPermission || brightnessStatus !== 'granted') {
     return (
       <ThemedView style={{ flex: 1 }}>
         <Redirect href="/(auth)/(scan)/permission" />

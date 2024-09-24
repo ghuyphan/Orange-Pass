@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import React, { useMemo } from 'react';
-import { StyleSheet, View, TouchableHighlight, StyleProp, ViewStyle, ActivityIndicator, TextStyle } from 'react-native';
+import { StyleSheet, View, TouchableHighlight, StyleProp, ViewStyle, ActivityIndicator, TextStyle, TouchableWithoutFeedback } from 'react-native';
 import { ThemedText } from '../ThemedText';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -64,34 +64,34 @@ export function ThemedTextButton({
     ]), [colorScheme, disabled, loading, style]);
 
     return (
-        <TouchableHighlight
-            onPress={onPress}
-            disabled={disabled || loading}
-            accessible
-            accessibilityLabel={label}
-            accessibilityRole="button"
-            accessibilityHint={`Press to ${label}`}
-            underlayColor={colorScheme === 'light' ? Colors.light.inputBackground : Colors.dark.inputBackground}
-            style={buttonStyle}
-        >
-            <View style={styles.buttonContainer}>
-                {loading ? (
-                    <>
-                        <ActivityIndicator size="small" color={color} />
-                        <ThemedText style={[styles.label, { color }, textStyle]} type='defaultSemiBold'>
-                            {loadingLabel}
-                        </ThemedText>
-                    </>
-                ) : (
-                    <>
-                        {iconName && <Ionicons name={iconName} size={20} color={color} />}
-                        <ThemedText style={[styles.label, { color }]} type='defaultSemiBold'>
-                            {label}
-                        </ThemedText>
-                    </>
-                )}
-            </View>
-        </TouchableHighlight>
+            <TouchableWithoutFeedback
+                onPress={onPress}
+                disabled={disabled || loading}
+                accessible
+                accessibilityLabel={label}
+                accessibilityRole="button"
+                accessibilityHint={`Press to ${label}`}
+                // underlayColor={colorScheme === 'light' ? Colors.light.inputBackground : Colors.dark.inputBackground}
+               
+            >
+                <View style={buttonStyle}>
+                    {loading ? (
+                        <>
+                            <ActivityIndicator size="small" color={color} />
+                            <ThemedText style={[styles.label, { color }, textStyle]} type='defaultSemiBold'>
+                                {loadingLabel}
+                            </ThemedText>
+                        </>
+                    ) : (
+                        <>
+                            {iconName && <Ionicons name={iconName} size={20} color={color} />}
+                            <ThemedText style={[styles.label, { color }, textStyle]} type='defaultSemiBold'>
+                                {label}
+                            </ThemedText>
+                        </>
+                    )}
+                </View>
+            </TouchableWithoutFeedback>
     );
 }
 

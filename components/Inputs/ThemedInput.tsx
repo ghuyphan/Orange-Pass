@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useState, useMemo } from 'react';
-import { TextInput, StyleSheet, TouchableHighlight, View } from 'react-native';
+import { TextInput, StyleSheet, TouchableHighlight, View, TouchableWithoutFeedback } from 'react-native';
 import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
 import { useThemeColor } from '@/hooks/useThemeColor';
@@ -33,7 +33,7 @@ export type ThemedInputProps = {
     /** Function to call when the input gains focus */
     onFocus?: () => void;
     /** Function to call when the clear button is pressed */
-    onSubmitEditing ?: () => void
+    onSubmitEditing?: () => void
 };
 
 export function ThemedInput({
@@ -46,16 +46,16 @@ export function ThemedInput({
     isError = false,
     errorMessage = '',
     secureTextEntry = false,
-    onChangeText = () => {},
-    onBlur = () => {},
-    onFocus = () => {},
-    onSubmitEditing = () => {}
+    onChangeText = () => { },
+    onBlur = () => { },
+    onFocus = () => { },
+    onSubmitEditing = () => { }
 }: ThemedInputProps) {
     const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
     const colorScheme = useColorScheme();
     const [localValue, setLocalValue] = useState(value);
     const [isSecure, setIsSecure] = useState(secureTextEntry);
-    
+
     const onClearValue = () => {
         setLocalValue('');
         onChangeText('');
@@ -83,7 +83,7 @@ export function ThemedInput({
     }), [colorScheme]);
 
     return (
-        <View style={[styles.container, { marginBottom: isError ? 0 : 30 }]}>
+        <View style={[styles.container, { marginBottom: isError ? 0 : 34 }]}>
             <ThemedView style={inputContainerStyle}>
                 <ThemedText style={[styles.label, { color }]} type='defaultSemiBold'>
                     {label}
@@ -103,30 +103,35 @@ export function ThemedInput({
                         aria-label={label}
                     />
                     {localValue.length > 0 && (
-                        <TouchableHighlight
+
+                        <TouchableWithoutFeedback
                             onPress={secureTextEntry ? onToggleSecureValue : onClearValue}
-                            activeOpacity={0.6}
-                            underlayColor="#FFF5E1"
-                            style={styles.iconTouchable}
+                        // activeOpacity={0.6}
+                        // underlayColor="#FFF5E1"
+
                         >
+                            <View style={styles.iconTouchable}>
                             <Ionicons
                                 name={secureTextEntry ? (isSecure ? 'eye-sharp' : 'eye-off-sharp') : 'close-circle-sharp'}
-                                size={20}
+                                size={18}
                                 color={color}
                             />
-                        </TouchableHighlight>
+                        </View>
+                            </TouchableWithoutFeedback>
+
                     )}
-                </View>
-            </ThemedView>
-            {isError && errorMessage.length > 0 && (
-                <View style={styles.errorLabelContainer}>
-                    <Ionicons name="alert-circle" size={18} color={errorLabelStyle.color} />
-                    <ThemedText style={[styles.errorLabel, errorLabelStyle]}>
-                        {errorMessage}
-                    </ThemedText>
-                </View>
-            )}
         </View>
+            </ThemedView >
+        { isError && errorMessage.length > 0 && (
+            <View style={styles.errorLabelContainer}>
+                <Ionicons name="alert-circle" size={16} color={errorLabelStyle.color} />
+                <ThemedText style={[styles.errorLabel, errorLabelStyle]}>
+                    {errorMessage}
+                </ThemedText>
+            </View>
+        )
+}
+        </View >
     );
 }
 
@@ -154,8 +159,9 @@ const styles = StyleSheet.create({
         flex: 1,  // Allows the input to take available space but not overlap the button
     },
     iconTouchable: {
-        padding: 5,
+        padding: 10,
         borderRadius: 50,
+        marginRight: -10
     },
     errorLabelContainer: {
         flexDirection: 'row',

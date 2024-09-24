@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
-import { StyleSheet, View, Platform, FlatList } from 'react-native';
+import { StyleSheet, View, Platform, FlatList, RefreshControl } from 'react-native';
 import { useSelector } from 'react-redux';
 import Animated, {
   useAnimatedStyle,
@@ -7,7 +7,7 @@ import Animated, {
   withSpring,
   withTiming,
   useAnimatedScrollHandler,
-  Easing
+  Easing,
 } from 'react-native-reanimated';
 import { router } from 'expo-router';
 import { BlurView } from 'expo-blur';
@@ -26,7 +26,7 @@ import { ThemedEmptyCard, ThemedCardItem } from '@/components/cards';
 import ThemedFilterSkeleton from '@/components/skeletons/ThemedFilterSkeleton';
 import ThemedCardSkeleton from '@/components/skeletons/ThemedCardSkeleton';
 import { ThemedStatusToast } from '@/components/toast/ThemedOfflineToast';
-import { fetchQrData } from '@/services/auth/fetchData/fetchQrData';
+import { fetchQrData } from '@/services/auth/fetchQrData';
 import { RootState } from '@/store/rootReducer';
 import { t } from '@/i18n';
 import BottomSheet from '@gorhom/bottom-sheet';
@@ -36,14 +36,17 @@ import { triggerHapticFeedback } from '@/utils/haptic';
 import {
   createTable,
   getQrCodesByUserId,
-  insertQrCodesBulk,
-  syncQrCodes,
   deleteQrCode,
+  // insertQrCodesBulk,
+  syncQrCodes,
+  getLocallyDeletedQrCodes,
+  insertOrUpdateQrCodes
 } from '@/services/localDB/qrDB';
 
 function HomeScreen() {
   const color = useThemeColor({ light: '#5A4639', dark: '#FFF5E1' }, 'text');
   const [isEmpty, setIsEmpty] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
   const [isToastVisible, setIsToastVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -65,64 +68,81 @@ function HomeScreen() {
   const scrollY = useSharedValue(0);
 
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
-
   const syncWithServer = useCallback(async (userId: string) => {
-  
+    if (isOffline) {
+      console.log('Cannot sync while offline');
+      return;
+    }
+
+    setIsSyncing(true);
+    setIsToastVisible(true);
+    setToastMessage(t('homeScreen.syncing'));
+
     try {
-      // Fetch server data and sync in parallel if possible
-      const [serverData] = await Promise.all([
-        fetchQrData(userId, 1, 30),
-        syncQrCodes(userId), // Sync unsynced local data in parallel
-      ]);
-  
-      // Only insert if there are new items
-      if (serverData.totalItems > 0) {
-        await insertQrCodesBulk(serverData.items);
-      }
-  
-      console.log('Sync with server completed');
+      // Sync local changes (new, updated, deleted) to the server
+      await syncQrCodes(userId);
     } catch (error) {
       console.error('Error syncing QR codes:', error);
-    } 
-  }, [userId]);
-  
-  const fetchData = useCallback(async () => {
-    if (!userId) return;
-  
-    setIsLoading(true);
-  
-    try {
-      // Fetch local data first
-      const localData = await getQrCodesByUserId(userId);
-      setQrData(localData);
-      setIsEmpty(localData.length === 0);
-  
-      // Only sync with server if online
-      if (!isOffline) {
-        await syncWithServer(userId);
-  
-        // Fetch updated local data only if sync occurred
-        setIsSyncing(true);
-        setIsToastVisible(true);
-        const updatedLocalData = await getQrCodesByUserId(userId);
-        setQrData(updatedLocalData);
-        setIsEmpty(updatedLocalData.length === 0);
-      }
-    } catch (error) {
-      console.error('Error fetching QR codes:', error);
+      setToastMessage(t('homeScreen.syncError'));
     } finally {
-      setIsLoading(false);
       setIsToastVisible(false);
     }
-  }, [userId, isOffline, syncWithServer]);
-  
+  }, [isOffline, userId]);
+
+  const fetchData = useCallback(async () => {
+    if (!userId) return;
+
+    setIsLoading(true);
+
+    try {
+      // Fetch QR codes from the local database where is_deleted = false
+      const localData = await getQrCodesByUserId(userId);
+      setQrData(localData);  // Immediately display local data
+
+      if (localData.length === 0) {
+        console.log('No data found locally, syncing with the server...');
+      }
+
+      setIsEmpty(localData.length === 0);
+
+      // Sync with the server after displaying local data (runs in the background)
+      syncWithServer(userId);
+
+      // Fetch and compare server data to update local database in the background
+      try {
+        const serverData = await fetchQrData(userId, 1, 30);
+        const locallyDeletedData = await getLocallyDeletedQrCodes(userId);
+
+        const filteredServerData = serverData.items.filter(item => {
+          // Filter out server items that are deleted locally
+          return !locallyDeletedData.some(deletedItem => deletedItem.id === item.id);
+        });
+
+        if (filteredServerData.length > 0) {
+          await insertOrUpdateQrCodes(filteredServerData);
+          setQrData(filteredServerData); 
+        }
+      } catch (error) {
+        console.error('Error fetching QR codes from server:', error);
+        setToastMessage(t('homeScreen.fetchError'));
+        setIsToastVisible(true);
+      }
+    } catch (error) {
+      console.error('Error fetching QR codes from local DB:', error);
+      setToastMessage(t('homeScreen.fetchError'));
+      setIsToastVisible(true);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [userId, syncWithServer]);
+
   // Animate empty card when isEmpty changes to true
   useEffect(() => {
     if (isEmpty) {
       animateEmptyCard();
     }
   }, [isEmpty]);
-  
+
   useEffect(() => {
     const setupDatabase = async () => {
       try {
@@ -137,6 +157,7 @@ function HomeScreen() {
   }, []);
 
   useEffect(() => {
+    setToastMessage(isOffline ? t('homeScreen.offline') : '');
     setIsToastVisible(isOffline);
   }, [isOffline]);
 
@@ -264,24 +285,40 @@ function HomeScreen() {
   const onDeletePress = async () => {
     if (selectedItemId) {
       try {
+        bottomSheetRef.current?.close();
         setIsSyncing(true);
         setIsToastVisible(true);
+        setToastMessage(t('homeScreen.deleting'));
+  
+        console.log('Deleting QR code:', selectedItemId);
+  
+        // Mark the QR code as deleted in the local database
         await deleteQrCode(selectedItemId);
+  
+        // Fetch updated data from the local database
         const updatedLocalData = await getQrCodesByUserId(userId);
-        setQrData(updatedLocalData);
-        setIsEmpty(updatedLocalData.length === 0);
-        bottomSheetRef.current?.close();
-      }
-      catch (error) {
+  
+        console.log('Updated QR data:', updatedLocalData);
+  
+        // Ensure that updatedLocalData is valid before updating state
+        if (updatedLocalData && Array.isArray(updatedLocalData)) {
+          setQrData(updatedLocalData);
+          setIsEmpty(updatedLocalData.length === 0);
+        } else {
+          console.error('Error fetching updated QR data after deletion');
+          setQrData([]);  // Fallback to empty array if there's an error
+          setIsEmpty(true);
+        }
+      } catch (error) {
         console.error('Error deleting QR code:', error);
+        setToastMessage(t('homeScreen.deleteError'));  // Display an error toast if deletion fails
       } finally {
         setIsToastVisible(false);
-        setSelectedItemId(null);
-        setIsSyncing(false);
-
+        setSelectedItemId(null);  // Reset selected item after deletion
       }
     }
   };
+  
 
   const renderItem = useCallback(
     ({ item, drag }: { item: QRRecord; drag: () => void }) => (
@@ -388,6 +425,7 @@ function HomeScreen() {
           onScrollOffsetChange={(offset) => {
             scrollY.value = offset;
           }}
+          decelerationRate={'fast'}
         />
       )}
       <Animated.View style={scrollContainerStyle}>
@@ -396,7 +434,7 @@ function HomeScreen() {
       <ThemedStatusToast
         isSyncing={isSyncing}
         isVisible={isToastVisible}
-        message={isSyncing ? t('homeScreen.syncing') : t('homeScreen.offline')}
+        message={toastMessage}
         iconName="cloud-offline"
         onDismiss={() => setIsToastVisible(false)}
         style={styles.toastContainer}

@@ -18,7 +18,7 @@ export default function HomeLayout() {
           headerLeft: () => <Text>hello</Text>,
           // animation: 'default',
           animation: 'ios',
-          animationTypeForReplace: 'pop',
+          animationTypeForReplace: 'push',
         }}
       >
         <Stack.Screen name="home"/>

@@ -11,10 +11,12 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming } from 'react-native-reanimated';
 import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
 import { storage } from '@/utils/storage';
+import { triggerLightHapticFeedback, triggerSuccessHapticFeedback } from '@/utils/haptic';
 
 const OnBoardScreen = () => {
     const color = useThemeColor({ light: '#5A4639', dark: '#FFF5E1' }, 'text');
     const iconColor = useThemeColor({ light: '#D3B08C', dark: '#7B524A' }, 'buttonBackground');
+    const pageIndicator = useThemeColor({ light: '#5A4639', dark: '#FFF5E14D' }, 'tabIconSelected');
     const router = useRouter();
     const scrollRef = useRef<ScrollView>(null);
     const [currentPage, setCurrentPage] = useState(0);
@@ -44,6 +46,7 @@ const OnBoardScreen = () => {
 
     const onFinish = () => {
         storage.set('hasSeenOnboarding', true);
+        triggerLightHapticFeedback();
         router.replace('/login');
     };
 
@@ -61,6 +64,7 @@ const OnBoardScreen = () => {
                 onPress={onFinish}
                 style={styles.skipButton}
                 label={t('onboardingScreen.skipButton')}
+                textStyle={{fontSize: 16,}}
             />
 
             <ScrollView
@@ -117,8 +121,8 @@ const OnBoardScreen = () => {
                     <View
                         key={index}
                         style={[
-                            styles.pageDot,
-                            {
+                            styles.pageDot, 
+                            {   backgroundColor: pageIndicator,
                                 opacity: currentPage === index ? 1 : 0.3,
                                 width: currentPage === index ? 12 : 8, // Larger active dot
                                 height: currentPage === index ? 12 : 8, // Larger active dot
@@ -178,7 +182,7 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     pageDot: {
-        backgroundColor: '#5A4639',
+        // backgroundColor: '#5A4639',
         marginHorizontal: 5,
         borderRadius: 6,
     },
@@ -193,6 +197,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: STATUSBAR_HEIGHT ,
         right: 15,
+        zIndex: 10,
     },
 });
 

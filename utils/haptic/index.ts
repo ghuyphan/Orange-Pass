@@ -8,3 +8,11 @@ const options = {
 export const triggerHapticFeedback = () => {
     trigger("impactMedium", options);
 }
+
+export const triggerLightHapticFeedback = () => {
+    trigger("impactLight", options);
+}
+
+export const triggerSuccessHapticFeedback = () => {
+    trigger("notificationSuccess", options);
+}

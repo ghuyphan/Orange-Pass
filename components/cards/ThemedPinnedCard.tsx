@@ -129,11 +129,11 @@ const styles = StyleSheet.create({
         flexDirection: 'column',
     },
     icon: {
-        width: '50%',
-        height: '50%',
+        width: '60%',
+        height: '60%',
     },
     companyName: {
-        fontSize: 20,
+        fontSize: 18,
     },
     companyFullName: {
         fontSize: 14,

@@ -144,14 +144,16 @@ const styles = StyleSheet.create({
     },
     logoContainer: {
         alignItems: 'center',
-        marginTop: 80,
-    },
-    orangeLogo: {
-        width: width * 0.6,
-        height: height * 0.22,
+        marginTop: 90,
+        marginBottom: 10,
+      },
+      orangeLogo: {
+        width: width * 0.3,
+        height: height * 0.13,
         left: 0,
         right: 0,
         resizeMode: 'cover',
+        marginBottom: 20,
       },
     title: {
         marginBottom: 20,
