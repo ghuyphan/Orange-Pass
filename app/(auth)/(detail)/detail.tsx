@@ -1,6 +1,6 @@
 import { StyleSheet, ScrollView, View } from 'react-native';
 
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useRef } from 'react';
 import { useColorScheme } from 'react-native';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import * as Brightness from 'expo-brightness';
@@ -13,35 +13,42 @@ import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
 import QRRecord from '@/types/qrType';
 import { t } from '@/i18n';
 import { ThemedText } from '@/components/ThemedText';
+import ThemedBottomSheet from '@/components/bottomsheet/ThemedBottomSheet';
+import BottomSheet from '@gorhom/bottom-sheet';
 
 export default function DetailScreen() {
     const { record } = useLocalSearchParams();
+    const bottomSheetRef = useRef<BottomSheet>(null);
+    const handleExpandPress = useCallback(() => {
+        // setSelectedItemId(id);
+        bottomSheetRef.current?.expand();
+    }, []);
     useEffect(() => {
         (async () => {
-        const permissions = await Brightness.getPermissionsAsync();
-         if (permissions.status == 'granted') {
-          await Brightness.setSystemBrightnessAsync(0.5);
-        } else {
-          return;
-        }
-        })();
-      }, []);
-
-      useFocusEffect(
-        useCallback(() => {
-          const restoreBrightness = async () => {
             const permissions = await Brightness.getPermissionsAsync();
             if (permissions.status == 'granted') {
-                await Brightness.setSystemBrightnessModeAsync(Brightness.BrightnessMode.AUTOMATIC);
+                await Brightness.setSystemBrightnessAsync(0.5);
             } else {
-              return;
+                return;
             }
-          };
-          return () => {
-            restoreBrightness();
-          };
+        })();
+    }, []);
+
+    useFocusEffect(
+        useCallback(() => {
+            const restoreBrightness = async () => {
+                const permissions = await Brightness.getPermissionsAsync();
+                if (permissions.status == 'granted') {
+                    await Brightness.setSystemBrightnessModeAsync(Brightness.BrightnessMode.AUTOMATIC);
+                } else {
+                    return;
+                }
+            };
+            return () => {
+                restoreBrightness();
+            };
         }, [])
-      );
+    );
 
     // Deserialize the record
     const item: QRRecord = Array.isArray(record) ? null : record ? JSON.parse(decodeURIComponent(record)) : null;
@@ -59,7 +66,7 @@ export default function DetailScreen() {
                         iconName="chevron-back-outline"
                     />
                     <ThemedButton
-                        onPress={router.back}
+                        onPress={handleExpandPress}
                         iconName="ellipsis-vertical"
                     />
                 </View>
@@ -83,6 +90,13 @@ export default function DetailScreen() {
 
                 </View>
             </ThemedView>
+            <ThemedBottomSheet
+                ref={bottomSheetRef}
+                // onDeletePress={onDeletePress}
+                onEditPress={() => { }}
+                editText={t('homeScreen.edit')}
+                deleteText={t('homeScreen.delete')}
+            />
         </ScrollView>
     );
 }
@@ -94,7 +108,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 15,
     },
     headerContainer: {
-        paddingTop: STATUSBAR_HEIGHT+ 25,
+        paddingTop: STATUSBAR_HEIGHT + 25,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between'

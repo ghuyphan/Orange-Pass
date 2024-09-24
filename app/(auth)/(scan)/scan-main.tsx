@@ -17,6 +17,8 @@ import { t } from '@/i18n';
 
 import { ScannerFrame, FocusIndicator, ZoomControl } from '@/components/camera';
 import { ThemedView } from '@/components/ThemedView';
+import BottomSheet from '@gorhom/bottom-sheet';
+import ThemedSettingSheet from '@/components/bottomsheet/ThemedSettingSheet';
 
 const ReanimatedCamera = Reanimated.createAnimatedComponent(Camera)
 Reanimated.addWhitelistedNativeProps({
@@ -132,6 +134,12 @@ export default function ScanScreen() {
   const [codeValue, setCodeValue] = useState<string>('');
   const [codeType, setCodeType] = useState<string>('');
   const [iconName, setIconName] = useState<keyof typeof Ionicons.glyphMap>('compass');
+
+  const bottomSheetRef = useRef<BottomSheet>(null);
+  const handleExpandPress = useCallback(() => {
+    // setSelectedItemId(id);
+    bottomSheetRef.current?.expand();
+}, []);
 
   const onLayout = useCallback((event: LayoutChangeEvent) => {
     if (event.nativeEvent.layout) {
@@ -377,7 +385,7 @@ export default function ScanScreen() {
             iconName="settings"
             iconColor="white"
             underlayColor='#fff'
-            onPress={() => console.log('Open Settings')}
+            onPress={handleExpandPress}
             style={styles.bottomButton}
           />
         </View>
@@ -388,6 +396,7 @@ export default function ScanScreen() {
         <ThemedButton underlayColor='#fff' iconColor={torch === 'on' ? '#FFCC00' : '#fff'} style={styles.headerButton} onPress={toggleFlash} iconName={torch === 'on' ? 'flash' : 'flash-off'} />
       </View>
       <StatusBar barStyle="light-content" />
+      <ThemedSettingSheet ref={bottomSheetRef} />
     </View>
   );
 }

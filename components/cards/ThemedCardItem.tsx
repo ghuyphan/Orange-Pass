@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-start',
         bottom: 0,
         paddingHorizontal: 15,
-        paddingVertical: 10,
+        paddingVertical: 5,
         gap: 10,
     },
     footerText: {
