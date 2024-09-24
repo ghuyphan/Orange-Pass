@@ -102,9 +102,6 @@ function HomeScreen() {
       if (localData.length === 0) {
         console.log('No data found locally, syncing with the server...');
       }
-
-      setIsEmpty(localData.length === 0);
-
       // Sync with the server after displaying local data (runs in the background)
       syncWithServer(userId);
 
@@ -121,11 +118,14 @@ function HomeScreen() {
         if (filteredServerData.length > 0) {
           await insertOrUpdateQrCodes(filteredServerData);
           setQrData(filteredServerData); 
-        }
+          
+        } 
+        setIsEmpty(filteredServerData.length === 0);
       } catch (error) {
         console.error('Error fetching QR codes from server:', error);
         setToastMessage(t('homeScreen.fetchError'));
         setIsToastVisible(true);
+        // setIsEmpty(true);
       }
     } catch (error) {
       console.error('Error fetching QR codes from local DB:', error);

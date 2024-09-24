@@ -115,8 +115,6 @@ export default function ScanScreen() {
   const minZoom = device?.minZoom ?? 1
   const maxZoom = Math.min(device?.maxZoom ?? 1, MAX_ZOOM_FACTOR)
 
-  const [brightnessStatus, setBrightnessStatus] = useState('')
-
   const cameraAnimatedProps = useAnimatedProps<CameraProps>(() => {
     const z = Math.max(Math.min(zoom.value, maxZoom), minZoom)
     return {
@@ -262,7 +260,6 @@ export default function ScanScreen() {
       const restoreBrightness = async () => {
         try {
           const { status } = await Brightness.getPermissionsAsync();
-          setBrightnessStatus(status);
           if (status === 'granted') {
             // Explicitly set to automatic mode
             await Brightness.setSystemBrightnessModeAsync(Brightness.BrightnessMode.AUTOMATIC);
@@ -314,7 +311,7 @@ export default function ScanScreen() {
     }
   }, [device]);
 
-  if (!hasPermission || brightnessStatus !== 'granted') {
+  if (!hasPermission) {
     return (
       <ThemedView style={{ flex: 1 }}>
         <Redirect href="/(auth)/(scan)/permission" />
