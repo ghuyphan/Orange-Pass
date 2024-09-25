@@ -1,23 +1,22 @@
 import React, { memo, useMemo, useEffect } from 'react';
-import { Image, StyleSheet, View, TouchableWithoutFeedback } from 'react-native';
+import { Image, StyleSheet, View, TouchableWithoutFeedback, Dimensions } from 'react-native';
 import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { TouchableHighlight } from 'react-native';
-import { getIconPath } from '@/utils/returnIcon';
-import { returnItemData } from '@/utils/returnItemData';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import QRCode from 'react-native-qrcode-svg';
 import Barcode from 'react-native-barcode-svg';
+import { getIconPath } from '@/utils/returnIcon';
+import { returnItemData } from '@/utils/returnItemData';
 
 export type ThemedCardItemProps = {
     lightColor?: string;
     darkColor?: string;
     code: string;
     type: "bank" | "store" | "ewallet";
-    metadata: string,
+    metadata: string;
     metadata_type: "qr" | "barcode";
     accountName?: string;
     accountNumber?: string;
@@ -27,6 +26,8 @@ export type ThemedCardItemProps = {
     style?: object;
     isActive?: boolean; // Add isActive prop
 };
+
+const screenWidth = Dimensions.get('window').width;
 
 export const ThemedCardItem = memo(function ThemedCardItem({
     lightColor,
@@ -39,9 +40,9 @@ export const ThemedCardItem = memo(function ThemedCardItem({
     accountNumber,
     onItemPress,
     onMoreButtonPress,
-    onDrag,  // Added drag prop
+    onDrag,
     style,
-    isActive, // Added isActive prop
+    isActive,
 }: ThemedCardItemProps): JSX.Element {
     const colorScheme = useColorScheme();
     const colors = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
@@ -52,7 +53,7 @@ export const ThemedCardItem = memo(function ThemedCardItem({
         if (!isActive) {
             onItemPress();
         }
-    }
+    };
 
     const scale = useSharedValue(1);
     const shadowOpacity = useSharedValue(0);
@@ -62,11 +63,11 @@ export const ThemedCardItem = memo(function ThemedCardItem({
         if (isActive) {
             scale.value = withTiming(1.06, { duration: 150 });
             shadowOpacity.value = withTiming(0.3, { duration: 150 });
-            elevation.value = 5
+            elevation.value = 5;
         } else {
             scale.value = withTiming(1, { duration: 100 });
             shadowOpacity.value = withTiming(0, { duration: 100 });
-            elevation.value = 0
+            elevation.value = 0;
         }
     }, [isActive]);
 
@@ -81,21 +82,16 @@ export const ThemedCardItem = memo(function ThemedCardItem({
         <Animated.View style={animatedStyle}>
             <TouchableWithoutFeedback
                 style={[styles.touchableHighlight, style]}
-                // underlayColor={colorScheme === 'light' ? color.dark : color.light}
                 onPress={handleItemPress}
                 onLongPress={onDrag}
                 delayLongPress={150}
-
             >
-
                 <ThemedView
                     style={[styles.itemContainer, { backgroundColor: colorScheme === 'light' ? color.light : color.dark }]}
                 >
                     <View style={styles.headerContainer}>
-                        <View style={{ flexDirection: 'row' }}>
-                            <View
-                                style={styles.dragIconContainer}
-                            >
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <View style={styles.dragIconContainer}>
                                 <Ionicons name={'menu'} size={18} color={colors} />
                             </View>
 
@@ -107,7 +103,9 @@ export const ThemedCardItem = memo(function ThemedCardItem({
                                     <ThemedText type="defaultSemiBold" style={styles.companyName}>{name}</ThemedText>
                                     <ThemedText
                                         style={styles.companyFullName}
-                                        numberOfLines={1}>
+                                        numberOfLines={1}
+                                        ellipsizeMode="tail"
+                                    >
                                         {type === "bank" ? `${'*'.repeat((accountNumber?.length ?? 0) - 3)}${accountNumber?.slice(-3)}` : full_name}
                                     </ThemedText>
                                 </View>
@@ -115,25 +113,24 @@ export const ThemedCardItem = memo(function ThemedCardItem({
                         </View>
                         <TouchableWithoutFeedback
                             onPress={onMoreButtonPress}
-                            // underlayColor={colorScheme === 'light' ? accent_color.light : accent_color.dark}
-                            style={styles.moreButttonContainer}
+                            style={styles.moreButtonContainer}
                         >
                             <Ionicons name={'ellipsis-vertical'} size={18} color={colors} />
                         </TouchableWithoutFeedback>
                     </View>
                     <View style={styles.qrContainer}>
                         <View style={styles.qr}>
-                            {metadata_type == "qr" ? <QRCode
-                                value={metadata}
-                                size={70}
-                                // quietZone={3}
-                            /> :
+                            {metadata_type === "qr" ? (
+                                <QRCode value={metadata} size={70} />
+                            ) : (
                                 <Barcode height={70} maxWidth={120} value={metadata} format="CODE128" />
-                            }
+                            )}
                         </View>
                     </View>
                     <View style={[styles.footerContainer, { backgroundColor: colorScheme === 'light' ? accent_color.light : accent_color.dark }]}>
-                        <ThemedText style={styles.footerText} numberOfLines={1}>{accountName}</ThemedText>
+                        <ThemedText style={styles.footerText} numberOfLines={1} ellipsizeMode="tail">
+                            {accountName}
+                        </ThemedText>
                     </View>
                 </ThemedView>
             </TouchableWithoutFeedback>
@@ -144,13 +141,10 @@ export const ThemedCardItem = memo(function ThemedCardItem({
 const styles = StyleSheet.create({
     touchableHighlight: {
         borderRadius: 10,
-        // marginBottom: 30,
     },
     itemContainer: {
-        // height: 230,
         borderRadius: 10,
         overflow: 'hidden',
-
     },
     headerContainer: {
         flexDirection: 'row',
@@ -160,7 +154,6 @@ const styles = StyleSheet.create({
         paddingRight: 15,
     },
     dragIconContainer: {
-        paddingTop: 15,
         paddingHorizontal: 10,
     },
     leftHeaderContainer: {
@@ -169,7 +162,7 @@ const styles = StyleSheet.create({
         gap: 10,
     },
     iconContainer: {
-        width: 40,
+        width: 35,
         aspectRatio: 1,
         borderRadius: 25,
         justifyContent: 'center',
@@ -182,7 +175,6 @@ const styles = StyleSheet.create({
     icon: {
         width: '60%',
         height: '60%',
-
     },
     companyName: {
         fontSize: 16,
@@ -191,21 +183,22 @@ const styles = StyleSheet.create({
         fontSize: 14,
         flexShrink: 1,
         flexWrap: 'nowrap',
-        width: 200,  // Adjust as needed
+        width: screenWidth * 0.5, // Adjust width based on screen size
+        overflow: 'hidden',
     },
-    moreButttonContainer: {
+    moreButtonContainer: {
         borderRadius: 50,
         padding: 15,
         right: -15,
     },
     qrContainer: {
         padding: 15,
-        alignItems: 'flex-end'
+        alignItems: 'flex-end',
     },
     qr: {
         backgroundColor: 'white',
         padding: 8,
-        borderRadius: 10
+        borderRadius: 10,
     },
     footerContainer: {
         flexDirection: 'row',
@@ -218,6 +211,6 @@ const styles = StyleSheet.create({
     },
     footerText: {
         maxWidth: '80%',
-        fontSize: 16,
-    }
+        fontSize: 14,
+    },
 });

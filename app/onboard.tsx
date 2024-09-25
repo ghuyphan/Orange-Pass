@@ -46,7 +46,7 @@ const OnBoardScreen = () => {
 
     const onFinish = () => {
         storage.set('hasSeenOnboarding', true);
-        triggerLightHapticFeedback();
+        triggerSuccessHapticFeedback();
         router.replace('/login');
     };
 

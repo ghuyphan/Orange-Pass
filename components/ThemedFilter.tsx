@@ -1,8 +1,8 @@
-import { ScrollView, StyleProp, ViewStyle, StyleSheet, TouchableOpacity } from 'react-native';
+import { ScrollView, StyleProp, ViewStyle, StyleSheet, View, TouchableWithoutFeedback } from 'react-native';
 import React from 'react';
 import { t } from '@/i18n';
 import { useColorScheme } from 'react-native';
-import { ThemedView } from './ThemedView';
+// import { ThemedView } from './ThemedView';
 import { ThemedText } from './ThemedText';
 
 export type ThemedFilterProps = {
@@ -25,19 +25,23 @@ export function ThemedFilter({ selectedFilter, onFilterChange, style }: ThemedFi
     return (
         <ScrollView showsHorizontalScrollIndicator={false} horizontal contentContainerStyle={[styles.filterContainer, style]}>
             {filters.map((filter) => (
-                <TouchableOpacity
+                <TouchableWithoutFeedback
                     key={filter.key}
-                    style={[
-                        styles.filterButton,
-                        isDarkMode ? styles.darkModeButton : styles.lightModeButton,
-                        selectedFilter === filter.key && (isDarkMode ? styles.selectedFilterDarkMode : styles.selectedFilterLightMode)
-                    ]}
+
                     onPress={() => onFilterChange(filter.key)}
                 >
-                    <ThemedText type={'defaultSemiBold'} style={ selectedFilter === filter.key && (isDarkMode ? styles.selectedFilterTextDarkMode : styles.selectedFilterTextLightMode)}>
-                        {filter.label}
-                    </ThemedText>
-                </TouchableOpacity>
+                    <View
+                        style={[
+                            styles.filterButton,
+                            isDarkMode ? styles.darkModeButton : styles.lightModeButton,
+                            selectedFilter === filter.key && (isDarkMode ? styles.selectedFilterDarkMode : styles.selectedFilterLightMode)
+                        ]}
+                    >
+                        <ThemedText type={'defaultSemiBold'} style={selectedFilter === filter.key && (isDarkMode ? styles.selectedFilterTextDarkMode : styles.selectedFilterTextLightMode)}>
+                            {filter.label}
+                        </ThemedText>
+                    </View>
+                </TouchableWithoutFeedback>
             ))}
         </ScrollView>
     );

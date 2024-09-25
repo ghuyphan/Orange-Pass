@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
-import { StyleSheet, View, Platform, FlatList, RefreshControl } from 'react-native';
+import { StyleSheet, View, Platform, FlatList } from 'react-native';
 import { useSelector } from 'react-redux';
 import Animated, {
   useAnimatedStyle,
@@ -32,19 +32,21 @@ import { t } from '@/i18n';
 import BottomSheet from '@gorhom/bottom-sheet';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { triggerHapticFeedback } from '@/utils/haptic';
+import Avatar, { genConfig } from '@zamplyy/react-native-nice-avatar';
+import { storage } from '@/utils/storage';
 
 import {
   createTable,
   getQrCodesByUserId,
   deleteQrCode,
-  // insertQrCodesBulk,
   syncQrCodes,
   getLocallyDeletedQrCodes,
-  insertOrUpdateQrCodes
+  insertOrUpdateQrCodes,
 } from '@/services/localDB/qrDB';
 
 function HomeScreen() {
   const color = useThemeColor({ light: '#5A4639', dark: '#FFF5E1' }, 'text');
+  const [avatarConfig, setAvatarConfig] = useState(genConfig());
   const [isEmpty, setIsEmpty] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [isToastVisible, setIsToastVisible] = useState(false);
@@ -73,69 +75,69 @@ function HomeScreen() {
       console.log('Cannot sync while offline');
       return;
     }
-
-    setIsSyncing(true);
-    setIsToastVisible(true);
-    setToastMessage(t('homeScreen.syncing'));
-
+  
     try {
+      setIsSyncing(true);
+      setToastMessage(t('homeScreen.syncing'));
+      setIsToastVisible(true);
+  
       // Sync local changes (new, updated, deleted) to the server
       await syncQrCodes(userId);
     } catch (error) {
       console.error('Error syncing QR codes:', error);
       setToastMessage(t('homeScreen.syncError'));
     } finally {
+      setIsSyncing(false);
       setIsToastVisible(false);
     }
-  }, [isOffline, userId]);
-
+  }, [isOffline]);
+  
   const fetchData = useCallback(async () => {
     if (!userId) return;
-
+  
     setIsLoading(true);
-
+  
     try {
-      // Fetch QR codes from the local database where is_deleted = false
+      // Fetch local data first
       const localData = await getQrCodesByUserId(userId);
-      setQrData(localData);  // Immediately display local data
-
+      setQrData(localData);
+  
       if (localData.length === 0) {
         console.log('No data found locally, syncing with the server...');
       }
-      // Sync with the server after displaying local data (runs in the background)
-      syncWithServer(userId);
-
-      // Fetch and compare server data to update local database in the background
-      try {
-        const serverData = await fetchQrData(userId, 1, 30);
-        const locallyDeletedData = await getLocallyDeletedQrCodes(userId);
-
-        const filteredServerData = serverData.items.filter(item => {
-          // Filter out server items that are deleted locally
-          return !locallyDeletedData.some(deletedItem => deletedItem.id === item.id);
-        });
-
-        if (filteredServerData.length > 0) {
-          await insertOrUpdateQrCodes(filteredServerData);
-          setQrData(filteredServerData); 
-          
-        } 
-        setIsEmpty(filteredServerData.length === 0);
-      } catch (error) {
-        console.error('Error fetching QR codes from server:', error);
-        setToastMessage(t('homeScreen.fetchError'));
-        setIsToastVisible(true);
-        // setIsEmpty(true);
+  
+      // Fetch server data asynchronously in the background
+      const serverSyncTask = syncWithServer(userId);
+  
+      // Fetch and compare server data with local data in parallel
+      const [serverData, locallyDeletedData] = await Promise.all([
+        fetchQrData(userId, 1, 30),
+        getLocallyDeletedQrCodes(userId),
+      ]);
+  
+      const filteredServerData = serverData.items.filter(item => {
+        // Filter out server items that are deleted locally
+        return !locallyDeletedData.some(deletedItem => deletedItem.id === item.id);
+      });
+  
+      if (filteredServerData.length > 0) {
+        await insertOrUpdateQrCodes(filteredServerData);
+        setQrData(filteredServerData);
+        animateEmptyCard();
       }
+      setIsEmpty(filteredServerData.length === 0);
+  
+      // Wait for the server sync task to complete
+      await serverSyncTask;
     } catch (error) {
-      console.error('Error fetching QR codes from local DB:', error);
+      console.error('Error fetching QR codes:', error);
       setToastMessage(t('homeScreen.fetchError'));
       setIsToastVisible(true);
     } finally {
       setIsLoading(false);
     }
   }, [userId, syncWithServer]);
-
+  
   // Animate empty card when isEmpty changes to true
   useEffect(() => {
     if (isEmpty) {
@@ -153,7 +155,26 @@ function HomeScreen() {
       }
     };
 
+    const configAvatar = async () => {
+      const savedConfig = storage.getString('avatarConfig');
+  
+      if (!savedConfig) {
+        // Generate a new config and set a fixed background color
+        const newConfig = {
+          ...genConfig(),
+          faceColor: "#D3B08C",
+          bgColor: '#FFDDC1', // Your desired fixed background color (e.g., light peach)
+        };
+        
+        // Save the new avatar config with the fixed background color
+        storage.set('avatarConfig', JSON.stringify(newConfig));
+        setAvatarConfig(newConfig);
+      } else {
+        setAvatarConfig(JSON.parse(savedConfig)); // Load saved config
+      }
+    }
     setupDatabase();
+    configAvatar();
   }, []);
 
   useEffect(() => {
@@ -289,17 +310,17 @@ function HomeScreen() {
         setIsSyncing(true);
         setIsToastVisible(true);
         setToastMessage(t('homeScreen.deleting'));
-  
+
         console.log('Deleting QR code:', selectedItemId);
-  
+
         // Mark the QR code as deleted in the local database
         await deleteQrCode(selectedItemId);
-  
+
         // Fetch updated data from the local database
         const updatedLocalData = await getQrCodesByUserId(userId);
-  
+
         console.log('Updated QR data:', updatedLocalData);
-  
+
         // Ensure that updatedLocalData is valid before updating state
         if (updatedLocalData && Array.isArray(updatedLocalData)) {
           setQrData(updatedLocalData);
@@ -318,22 +339,24 @@ function HomeScreen() {
       }
     }
   };
-  
+
 
   const renderItem = useCallback(
     ({ item, drag }: { item: QRRecord; drag: () => void }) => (
       <ScaleDecorator activeScale={1.05}>
-        <ThemedCardItem
-          onItemPress={() => onNavigateToDetailScreen(item)}
-          code={item.code}
-          type={item.type}
-          metadata={item.metadata}
-          metadata_type={item.metadata_type}
-          onMoreButtonPress={() => handleExpandPress(item.id)}
-          accountName={item.account_name}
-          accountNumber={item.account_number}
-          onDrag={drag}
-        />
+        <Animated.View style={emptyCardStyle}>
+          <ThemedCardItem
+            onItemPress={() => onNavigateToDetailScreen(item)}
+            code={item.code}
+            type={item.type}
+            metadata={item.metadata}
+            metadata_type={item.metadata_type}
+            onMoreButtonPress={() => handleExpandPress(item.id)}
+            accountName={item.account_name}
+            accountNumber={item.account_number}
+            onDrag={drag}
+          />
+        </Animated.View>
       </ScaleDecorator>
     ),
     [onNavigateToDetailScreen, handleExpandPress]
@@ -355,7 +378,8 @@ function HomeScreen() {
               style={styles.titleButton}
               onPress={onNavigateToScanScreen}
             />
-            <ThemedButton iconName="person" style={styles.titleButton} onPress={() => { }} />
+            <ThemedButton iconName="settings" style={styles.titleButton} onPress={() => { }} />
+            {/* <Avatar size={45} {...avatarConfig} /> */}
           </View>
         </View>
         {!isEmpty && (
@@ -382,7 +406,7 @@ function HomeScreen() {
       {isLoading ? (
         <View style={styles.loadingContainer}>
           {Array.from({ length: 3 }).map((_, index) => (
-            <ThemedCardSkeleton key={index} />
+            <ThemedCardSkeleton key={index} index={index} />
           ))}
         </View>
       ) : isEmpty ? (

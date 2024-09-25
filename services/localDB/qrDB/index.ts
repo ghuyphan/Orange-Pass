@@ -191,63 +191,64 @@ export async function insertQrCodesBulk(qrDataArray: QRRecord[]): Promise<void> 
     }
 }
 export async function syncQrCodes(userId: string) {
-    const db = await openDatabase();
+  const db = await openDatabase();
 
-    try {
-        // Get all unsynced local QR codes (is_synced = 0)
-        const unsyncedQrCodes = await getUnsyncedQrCodes(userId);
-        if (unsyncedQrCodes.length === 0) {
-            console.log('No unsynced QR codes to sync for this user');
-            return;
-        }
+  try {
+    // Get all unsynced local QR codes (is_synced = 0)
+    const unsyncedQrCodes = await getUnsyncedQrCodes(userId);
 
-        // Sync operations for each unsynced QR code
-        for (const qrCode of unsyncedQrCodes) {
-            try {
-                const data = {
-                    code: qrCode.code,
-                    qr_index: qrCode.qr_index,
-                    metadata: qrCode.metadata,
-                    type: qrCode.type,
-                    metadata_type: qrCode.metadata_type,
-                    account_name: qrCode.account_name,
-                    account_number: qrCode.account_number,
-                    userId: qrCode.user_id,
-                    is_deleted: qrCode.is_deleted,
-                };
-
-                // Check if the record exists on the server
-                const existingRecord = await pb.collection('qr').getOne(qrCode.id).catch(() => null);
-
-                if (existingRecord) {
-                    // Only update if the local record is newer than the server record
-                    if (new Date(qrCode.updated) > new Date(existingRecord.updated)) {
-                        const updatedRecord = await pb.collection('qr').update(qrCode.id, data);
-
-                        console.log(`QR code ${qrCode.id} updated on the server:`, updatedRecord);
-                        
-                        console.log(`QR code ${qrCode.id} updated on PocketBase`);
-                    } else {
-                        console.log(`QR code ${qrCode.id} on the server is up-to-date, skipping update.`);
-                    }
-                } else {
-                    // Create the record on the server if it doesn't exist
-                    await pb.collection('qr').create({ ...data, id: qrCode.id });
-                    console.log(`QR code ${qrCode.id} created on PocketBase`);
-                }
-
-                // Mark the QR code as synced in the local database after successful server sync
-                await db.runAsync('UPDATE qrcodes SET is_synced = 1 WHERE id = ?', qrCode.id);
-                console.log(`QR code ${qrCode.id} successfully synced and marked as synced.`);
-            } catch (syncError) {
-                console.error(`Failed to sync QR code ${qrCode.id}:`, syncError);
-            }
-        }
-
-        console.log('All unsynced QR codes for this user have been processed for syncing.');
-    } catch (error) {
-        console.error('Error during sync:', error);
+    if (unsyncedQrCodes.length === 0) {
+      console.log('No unsynced QR codes to sync for this user');
+      return;
     }
+
+    // Sync operations for each unsynced QR code in parallel
+    const syncPromises = unsyncedQrCodes.map(async (qrCode) => {
+      const data = {
+        code: qrCode.code,
+        qr_index: qrCode.qr_index,
+        metadata: qrCode.metadata,
+        type: qrCode.type,
+        metadata_type: qrCode.metadata_type,
+        account_name: qrCode.account_name,
+        account_number: qrCode.account_number,
+        userId: qrCode.user_id,
+        is_deleted: qrCode.is_deleted,
+      };
+
+      try {
+        // Check if the record exists on the server
+        const existingRecord = await pb.collection('qr').getOne(qrCode.id).catch(() => null);
+
+        if (existingRecord) {
+          // Update if local record is newer
+          if (new Date(qrCode.updated) > new Date(existingRecord.updated)) {
+            const updatedRecord = await pb.collection('qr').update(qrCode.id, data);
+            console.log(`QR code ${qrCode.id} updated on the server:`, updatedRecord);
+          } else {
+            console.log(`QR code ${qrCode.id} on the server is up-to-date, skipping update.`);
+          }
+        } else {
+          // Create new record if it doesn't exist on the server
+          await pb.collection('qr').create({ ...data, id: qrCode.id });
+          console.log(`QR code ${qrCode.id} created on PocketBase`);
+        }
+
+        // Mark the QR code as synced in the local database
+        await db.runAsync('UPDATE qrcodes SET is_synced = 1 WHERE id = ?', qrCode.id);
+        console.log(`QR code ${qrCode.id} successfully synced and marked as synced.`);
+      } catch (syncError) {
+        console.error(`Failed to sync QR code ${qrCode.id}:`, syncError);
+      }
+    });
+
+    // Wait for all sync operations to complete
+    await Promise.allSettled(syncPromises);
+
+    console.log('All unsynced QR codes for this user have been processed for syncing.');
+  } catch (error) {
+    console.error('Error during sync:', error);
+  }
 }
 
 export async function getUnsyncedQrCodes(userId: string) {

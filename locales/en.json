@@ -79,7 +79,7 @@
     "title": "Orange⁺ Wallet",
     "searchPlaceholder": "Search",
     "noItemFound": "Nothing found, please try again.",
-    "edit": "Edit card details", 
+    "edit": "Edit card details",
     "delete": "Move to trash",
     "syncing": "Syncing...",
     "deleting": "Deleting...",
@@ -106,12 +106,10 @@
   "permissionScreen": {
     "cameraTitle": "Enable Camera Access",
     "imageTitle": "Enable Photo Gallery Access",
-    "brightnessTitle": "Allow Brightness Adjustment",
-    
+    "locationTitle": "Allow Location Access",
     "cameraSubtitle": "To scan QR codes, we need permission to access your device's camera.",
     "imageSubtitle": "To scan QR codes from images, we need permission to access your photo gallery.",
-    "brightnessSubtitle": "To enhance visibility, we need permission to adjust your device's screen brightness.",
-  
+    "locationSubtitle": "To scan for nearby Wi-Fi networks, we need permission to access your location. You can decline this request, and Wi-Fi scanning will be unavailable.",
     "allowButton": "Allow Access",
     "cancelButton": "Decline"
   },

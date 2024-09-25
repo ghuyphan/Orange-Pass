@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
         gap: 10,
     },
     iconContainer: {
-        width: 45,
+        width: 35,
         aspectRatio: 1,
         borderRadius: 25,
         justifyContent: 'center',
@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
         height: '60%',
     },
     companyName: {
-        fontSize: 18,
+        fontSize: 16,
     },
     companyFullName: {
         fontSize: 14,

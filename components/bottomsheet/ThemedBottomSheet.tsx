@@ -6,6 +6,7 @@ import { useColorScheme } from 'react-native';
 import { Colors } from '@/constants/Colors';
 import { Portal } from 'react-native-paper';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 
 interface ThemedBottomSheetProps {
     ref?: React.Ref<BottomSheet>;
@@ -73,8 +74,8 @@ const ThemedBottomSheet = forwardRef<BottomSheet, ThemedBottomSheetProps>(
                         {title && <ThemedText style={styles.title}>{title}</ThemedText>}
                         {description && <ThemedText style={styles.description}>{description}</ThemedText>}
                         <View style={styles.contentContainer}>
-                            <TouchableHighlight
-                                underlayColor={underlayColor}
+                            <TouchableWithoutFeedback
+                                // underlayColor={underlayColor}
                                 onPress={onEditPress}
                                 style={styles.touchableHighlight}
                             >
@@ -82,7 +83,7 @@ const ThemedBottomSheet = forwardRef<BottomSheet, ThemedBottomSheetProps>(
                                     <Ionicons name="create-outline" size={20} color={iconColor} />
                                     <ThemedText type='defaultSemiBold' style={styles.buttonText}>{editText}</ThemedText>
                                 </View>
-                            </TouchableHighlight>
+                            </TouchableWithoutFeedback>
                             <TouchableHighlight
                                 underlayColor={underlayColor}
                                 onPress={onDeletePress}
@@ -141,7 +142,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         gap: 10,
         paddingVertical: 10,
-        paddingHorizontal: 10,
+        // paddingHorizontal: 15,
     },
     buttonText: {
         fontSize: 18,

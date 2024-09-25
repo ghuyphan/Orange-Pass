@@ -1,5 +1,5 @@
 import React, { forwardRef, useImperativeHandle, useRef } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Switch } from 'react-native';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView, TouchableHighlight } from '@gorhom/bottom-sheet';
 import { ThemedText } from '../ThemedText';
 import { useColorScheme } from 'react-native';
@@ -12,25 +12,40 @@ interface ThemedSettingSheetProps {
     title?: string;
     description?: string;
     snapPoints?: (string | number)[];
-    editText?: string;
-    onEditPress?: () => void;
-    deleteText?: string;
-    onDeletePress?: () => void;
+    setting1Text?: string;
+    setting1Description?: string;
+    setting1Value?: boolean;
+    onSetting1Press?: () => void;
+    setting2Text?: string;
+    setting2Description?: string;
+    setting2Value?: boolean;
+    onSetting2Press?: () => void;
+    setting3Text?: string;
+    setting3Description?: string;
+    setting3Value?: boolean;
+    onSetting3Press?: () => void;
 }
 
 const ThemedSettingSheet = forwardRef<BottomSheet, ThemedSettingSheetProps>(
     ({ title,
         description,
-        deleteText,
-        onDeletePress,
-        editText,
-        onEditPress 
+        setting1Text,
+        setting1Description,
+        setting1Value,
+        onSetting1Press,
+        setting2Text,
+        setting2Description,
+        setting2Value,
+        onSetting2Press,
+        setting3Text,
+        setting3Description,
+        setting3Value,
+        onSetting3Press
     },
         ref
     ) => {
         const color = useColorScheme() === 'light' ? Colors.light.background : Colors.dark.background;
-        const underlayColor = useColorScheme() === 'light' ? Colors.light.toastBackground : Colors.dark.toastBackground;
-        const iconColor = useColorScheme() === 'light' ? Colors.light.text : Colors.dark.text;
+        const switchColor = useColorScheme() === 'light' ? Colors.light.buttonBackground : Colors.dark.buttonBackground;
         const bottomSheetRef = useRef<BottomSheet>(null);
 
         // Expose BottomSheet methods to parent component via ref
@@ -49,9 +64,9 @@ const ThemedSettingSheet = forwardRef<BottomSheet, ThemedSettingSheetProps>(
                     ref={bottomSheetRef}
                     index={-1}
                     animateOnMount={true}
-                    backgroundStyle={[styles.background, { backgroundColor: '#fff' }]}
+                    backgroundStyle={[styles.background, { backgroundColor: '#FFF5E1' }]}
                     handleStyle={{
-                        backgroundColor: '#fff',
+                        backgroundColor: '#FFF5E1',
                         borderTopLeftRadius: 50,
                         borderTopRightRadius: 50,
                     }}
@@ -73,26 +88,37 @@ const ThemedSettingSheet = forwardRef<BottomSheet, ThemedSettingSheetProps>(
                         {title && <ThemedText style={styles.title}>{title}</ThemedText>}
                         {description && <ThemedText style={styles.description}>{description}</ThemedText>}
                         <View style={styles.contentContainer}>
-                            <TouchableHighlight
-                                underlayColor={underlayColor}
-                                onPress={onEditPress}
+                            <View
                                 style={styles.touchableHighlight}
                             >
                                 <View style={styles.buttonContainer}>
-                                    <Ionicons name="create-outline" size={20} color={iconColor} />
-                                    <ThemedText type='defaultSemiBold' style={styles.buttonText}>{editText}</ThemedText>
+                                    <View style={styles.iconContainer}>
+                                        <ThemedText type='defaultSemiBold' style={styles.title}>{setting1Text}</ThemedText>
+                                        <ThemedText style={styles.description}>{setting1Description}</ThemedText>
+                                    </View>
+                                    <Switch
+                                        thumbColor={'#fff'}
+                                        trackColor={{ false: '#aaa', true: switchColor }}
+                                        ios_backgroundColor={color}
+                                        value={setting1Value}
+                                        onValueChange={onSetting1Press}
+                                    />
                                 </View>
-                            </TouchableHighlight>
-                            <TouchableHighlight
-                                underlayColor={underlayColor}
-                                onPress={onDeletePress}
-                                style={styles.touchableHighlight}
-                            >
+                            </View>
                                 <View style={styles.buttonContainer}>
-                                    <Ionicons name="trash-outline" size={20} color={iconColor} />
-                                    <ThemedText type='defaultSemiBold' style={styles.buttonText}>{deleteText}</ThemedText>
+                                    <View style={styles.iconContainer}>
+                                        <ThemedText type='defaultSemiBold' style={styles.title}>{setting2Text}</ThemedText>
+
+                                        <ThemedText style={styles.description}>{setting2Description}</ThemedText>
+                                    </View>
+                                    <Switch
+                                        thumbColor={'#fff'}
+                                        trackColor={{ false: '#aaa', true: switchColor }}
+                                        ios_backgroundColor={color}
+                                        value={setting2Value}
+                                        onValueChange={onSetting2Press}
+                                    />
                                 </View>
-                            </TouchableHighlight>
                         </View>
                     </BottomSheetScrollView>
                 </BottomSheet>
@@ -114,23 +140,12 @@ const styles = StyleSheet.create({
     container: {
         paddingHorizontal: 15,
     },
-    title: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        textAlign: 'center',
-        marginBottom: 8,
-    },
-    description: {
-        fontSize: 14,
-        color: 'gray',
-        marginBottom: 16,
-    },
     contentContainer: {
         flexDirection: 'column',
         marginBottom: 15,
         borderRadius: 10,
         paddingVertical: 5,
-        
+
     },
     touchableHighlight: {
         borderRadius: 10, // Ensures the highlight covers the entire button, including rounded corners
@@ -141,11 +156,22 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         gap: 10,
         paddingVertical: 10,
-        paddingHorizontal: 10,
+        justifyContent: 'space-between',
     },
-    buttonText: {
+    title: {
         fontSize: 18,
     },
+    description: {
+        fontSize: 14,
+        maxWidth: 280,
+        overflow: 'hidden',
+        lineHeight: 20,
+        opacity: 0.7,
+    },
+    iconContainer: {
+        flexDirection: 'column',
+        // alignItems: 'center',
+    }
 });
 
 export default ThemedSettingSheet;

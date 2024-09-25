@@ -104,17 +104,14 @@
     "momoPayment": "Mã QR MoMo"
   },
   "permissionScreen": {
-    "cameraTitle": "Cho phép truy cập camera",
-    "imageTitle": "Cho phép truy cập vào thư viện ảnh",
-    "brightnessTitle": "Cho phép điều chỉnh độ sáng",
-    
-    "cameraSubtitle": "Để quét mã QR, chúng tôi cần quyền truy cập vào camera của thiết bị bạn.",
+    "cameraTitle": "Bật Quyền Truy Cập Máy Ảnh",
+    "imageTitle": "Bật Quyền Truy Cập Thư Viện Ảnh",
+    "locationTitle": "Cho Phép Truy Cập Vị Trí",
+    "cameraSubtitle": "Để quét mã QR, chúng tôi cần quyền truy cập vào máy ảnh của thiết bị.",
     "imageSubtitle": "Để quét mã QR từ hình ảnh, chúng tôi cần quyền truy cập vào thư viện ảnh của bạn.",
-    "brightnessSubtitle": "Để cải thiện khả năng hiển thị, chúng tôi cần quyền điều chỉnh độ sáng màn hình của thiết bị bạn.",
-  
-    "allowButton": "Cho phép truy cập",
-    "cancelButton": "Từ chối"
-
+    "locationSubtitle": "Để quét các mạng Wi-Fi lân cận, chúng tôi cần quyền truy cập vị trí của bạn. Bạn có thể từ chối yêu cầu này, và việc quét Wi-Fi sẽ không khả dụng.",
+    "allowButton": "Cho Phép Truy Cập",
+    "cancelButton": "Từ Chối"
   },
   "onboardingScreen": {
     "title1": "Quản lý mã QR",

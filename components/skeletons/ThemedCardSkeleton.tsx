@@ -5,17 +5,19 @@ import { Skeleton } from 'moti/skeleton';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
-export default function ThemedCardSkeleton({ show = true }) {
+export default function ThemedCardSkeleton({ show = true, index = 0}) {
   const colorScheme = useColorScheme();
   const colorsArray = colorScheme === 'dark'
     ? ['#6A5A58', '#4B4B4B', '#6A5A58', '#4B4B4B', '#6A5A58'] // Reversed dark mode colors
     : ['#C3997D', '#D4A78B', '#EAD2BB', '#D4A78B', '#EAD2BB'];
 
+
+    const qrWidth = index % 2 === 0 ? 120 : 70;
+
   return (
     <MotiView
       transition={{
         type: 'timing',
-        duration: 100, // Reduced duration for faster animation
       }}
       style={[styles.container, styles.padded]}
       animate={{ backgroundColor: colorScheme === 'dark' ? Colors.dark.cardBackground : Colors.light.cardBackground }}
@@ -30,11 +32,11 @@ export default function ThemedCardSkeleton({ show = true }) {
         </View>
 
         <View style={styles.qrContainer}>
-          <Skeleton colors={colorsArray} radius={10} height={70} width={70} />
+          <Skeleton colors={colorsArray} radius={10} height={70} width={qrWidth} />
         </View>
 
         <View style={styles.footerContainer}>
-          <Skeleton colors={colorsArray} width={120} height={20} />
+          <Skeleton colors={colorsArray} width={100} height={15} />
         </View>
       </Skeleton.Group>
     </MotiView>

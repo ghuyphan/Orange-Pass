@@ -1,9 +1,11 @@
 import { StyleSheet, ScrollView, View } from 'react-native';
 
-import React, { useEffect, useCallback, useRef } from 'react';
+import React, { useCallback, useRef } from 'react';
 import { useColorScheme } from 'react-native';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
-import * as Brightness from 'expo-brightness';
+import {
+    useUnmountBrightness
+} from '@reeq/react-native-device-brightness';
 import { Colors } from '@/constants/Colors';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedButton } from '@/components/buttons/ThemedButton';
@@ -23,32 +25,7 @@ export default function DetailScreen() {
         // setSelectedItemId(id);
         bottomSheetRef.current?.expand();
     }, []);
-    useEffect(() => {
-        (async () => {
-            const permissions = await Brightness.getPermissionsAsync();
-            if (permissions.status == 'granted') {
-                await Brightness.setSystemBrightnessAsync(0.5);
-            } else {
-                return;
-            }
-        })();
-    }, []);
-
-    useFocusEffect(
-        useCallback(() => {
-            const restoreBrightness = async () => {
-                const permissions = await Brightness.getPermissionsAsync();
-                if (permissions.status == 'granted') {
-                    await Brightness.setSystemBrightnessModeAsync(Brightness.BrightnessMode.AUTOMATIC);
-                } else {
-                    return;
-                }
-            };
-            return () => {
-                restoreBrightness();
-            };
-        }, [])
-    );
+    useUnmountBrightness(0.8, true);
 
     // Deserialize the record
     const item: QRRecord = Array.isArray(record) ? null : record ? JSON.parse(decodeURIComponent(record)) : null;
