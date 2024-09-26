@@ -1,9 +1,8 @@
 import pb from "@/services/pocketBase"; // Assuming you have PocketBase setup
 import { openDatabase } from '../userDB';
 import QRRecord from '@/types/qrType';
-import { getLocales } from 'expo-localization';
-import enDatas from '@/assets/enDatas.json';
-import viDatas from '@/assets/viDatas.json';
+import { returnItemCode } from '@/utils/returnItemData';
+
 
 // Function to create the "qrcodes" table with optimized indexing
 export async function createTable() {
@@ -261,36 +260,105 @@ export async function insertOrUpdateQrCodes(qrDataArray: QRRecord[]): Promise<vo
         console.error('Failed to insert/update QR codes:', error);
     }
 }
-// Function to filter QR codes using searchQuery and filter
-export async function filterQrCodes(userId: string, searchQuery: string = '', filter: string = 'all') {
+// // Function to filter QR codes using searchQuery and filter
+// export async function filterQrCodes(userId: string, searchQuery: string = '', filter: string = 'all') {
+//     const db = await openDatabase();
+//     try {
+//         // Construct SQL query with filtering based on `searchQuery` and `filter`
+//         let query = 'SELECT * FROM qrcodes WHERE user_id = ? AND is_deleted = 0';
+//         const queryParams: any[] = [userId];
+
+//         // Add searchQuery filtering
+//         if (searchQuery) {
+//             query += ' AND (code LIKE ? OR metadata LIKE ? OR account_name LIKE ? OR account_number LIKE ?)';
+//             const searchPattern = `%${searchQuery}%`;
+//             queryParams.push(searchPattern, searchPattern, searchPattern, searchPattern);
+//         }
+
+//         // Add type filter
+//         if (filter !== 'all') {
+//             query += ' AND type = ?';
+//             queryParams.push(filter);
+//         }
+
+//         // Add ordering
+//         query += ' ORDER BY qr_index';
+
+//         return await db.getAllAsync<QRRecord>(query, ...queryParams);
+//     } catch (error) {
+//         console.error('Error filtering QR codes:', error);
+//         return [];
+//     }
+// }
+export async function filterQrCodes(
+    userId: string,
+    searchQuery: string = '',
+    filter: string = 'all'
+  ) {
     const db = await openDatabase();
     try {
-        // Construct SQL query with filtering based on `searchQuery` and `filter`
-        let query = 'SELECT * FROM qrcodes WHERE user_id = ? AND is_deleted = 0';
-        const queryParams: any[] = [userId];
-
-        // Add searchQuery filtering
-        if (searchQuery) {
-            query += ' AND (code LIKE ? OR metadata LIKE ? OR account_name LIKE ? OR account_number LIKE ?)';
-            const searchPattern = `%${searchQuery}%`;
-            queryParams.push(searchPattern, searchPattern, searchPattern, searchPattern);
+      let query =
+        'SELECT * FROM qrcodes WHERE user_id = ? AND is_deleted = 0';
+      const queryParams: any[] = [userId];
+  
+      if (searchQuery) {
+        // Get matching codes from returnItemCode
+        const matchingCodes = returnItemCode(searchQuery);
+        console.log('Matching codes:', matchingCodes);
+  
+        let searchConditions = [];
+  
+        // Include matching codes in the SQL query for 'code' field
+        if (matchingCodes.length > 0) {
+          const placeholders = matchingCodes.map(() => '?').join(', ');
+          searchConditions.push(`code IN (${placeholders})`);
+          queryParams.push(...matchingCodes);
         }
-
-        // Add type filter
-        if (filter !== 'all') {
-            query += ' AND type = ?';
-            queryParams.push(filter);
+  
+        // Include 'searchQuery' and 'matchingCodes' in other fields
+        const searchPatterns = [
+          `%${searchQuery}%`,
+          ...matchingCodes.map(code => `%${code}%`)
+        ];
+  
+        const fieldsToSearch = [
+          'code',
+          'metadata',
+          'account_name',
+          'account_number'
+        ];
+  
+        // Build search conditions
+        fieldsToSearch.forEach(field => {
+          searchPatterns.forEach(pattern => {
+            searchConditions.push(`${field} LIKE ?`);
+            queryParams.push(pattern);
+          });
+        });
+  
+        // Combine conditions
+        if (searchConditions.length > 0) {
+          query += ' AND (' + searchConditions.join(' OR ') + ')';
         }
-
-        // Add ordering
-        query += ' ORDER BY qr_index';
-
-        return await db.getAllAsync<QRRecord>(query, ...queryParams);
+      }
+  
+      // Add type filter if specified
+      if (filter !== 'all') {
+        query += ' AND type = ?';
+        queryParams.push(filter);
+      }
+  
+      // Order by qr_index
+      query += ' ORDER BY qr_index';
+  
+      // Execute the query
+      return await db.getAllAsync<QRRecord>(query, ...queryParams);
     } catch (error) {
-        console.error('Error filtering QR codes:', error);
-        return [];
+      console.error('Error filtering QR codes:', error);
+      return [];
     }
-}
+  }
+  
 
 // Function to update the qr_index and updated timestamp of QR codes in bulk
 export async function updateQrIndexes(qrDataArray: QRRecord[]): Promise<void> {

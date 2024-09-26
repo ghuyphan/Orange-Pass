@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
     modalContainer: {
         minWidth: '95%',
         borderRadius: 12,
-        padding: 15,
+        padding: 25,
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -127,12 +127,13 @@ const styles = StyleSheet.create({
     titleText: {
         fontSize: 20,
         textAlign: 'center',
-        marginBottom: 10,
     },
     messageText: {
         fontSize: 16,
-        textAlign: 'center',
-        marginBottom: 20,
+        marginVertical: 15,
+        maxWidth: '90%',
+        lineHeight: 24,
+        overflow: 'hidden',
     },
     actions: {
         flexDirection: 'row',
@@ -140,10 +141,11 @@ const styles = StyleSheet.create({
         // justifyContent: 'space-between',
         width: '100%',
         marginTop: 10,
+        gap: 5,
     },
     actionButton: {
-        paddingVertical: 10,
-        paddingHorizontal: 10,
+        // paddingVertical: 10,
+        paddingHorizontal: 5,
         borderRadius: 8,
         // backgroundColor: Colors.light.primary, // Use your theme's primary color
     },

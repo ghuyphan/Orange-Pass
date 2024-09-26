@@ -76,6 +76,8 @@ function HomeScreen() {
   const emptyCardOffset = useSharedValue(300);
   const scrollY = useSharedValue(0);
 
+  const bottomSheetRef = useRef<BottomSheet>(null);
+
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const syncWithServer = useCallback(async (userId: string) => {
     if (isOffline) {
@@ -204,7 +206,7 @@ function HomeScreen() {
   const debouncedSetSearchQuery = useCallback(
     debounce((query) => {
       setDebouncedSearchQuery(query);
-    }, 100), []
+    }, 200), []
   );
 
   // Update debounced search query whenever searchQuery changes
@@ -220,7 +222,7 @@ function HomeScreen() {
 
   // Fetch filtered data from the database
   useEffect(() => {
-    if (userId) {
+    if (userId) { 
       filterQrCodes(userId, debouncedSearchQuery, filter).then(setQrData);
     }
   }, [userId, debouncedSearchQuery, filter]);
@@ -289,76 +291,79 @@ function HomeScreen() {
 
   }, []);
 
-  const onDragEnd = useCallback(({ data }: { data: QRRecord[] }) => {
-    setQrData(data); // Update the component state with the new order
+// onDragEnd function
+const onDragEnd = useCallback(async ({ data }: { data: QRRecord[] }) => {
+  try {
+    // Update the component state with the new order
+    setQrData(data);
 
-    // Create a new array with updated qr_index values
-    const updatedData = data.map((item, index) => ({ ...item, qr_index: index }));
+    // Update qr_index values and timestamps
+    const updatedData = data.map((item, index) => ({
+      ...item,
+      qr_index: index,
+      updated: new Date().toISOString(),
+    }));
 
     // Update the indexes and timestamps in the local database
-    updateQrIndexes(updatedData).then(() => {
-        console.log('QR indexes and timestamps updated in the database');
-    }).catch((error) => {
-        console.error('Error updating QR indexes and timestamps:', error);
-    });
-
+    await updateQrIndexes(updatedData);
+    console.log('QR indexes and timestamps updated in the database');
+  } catch (error) {
+    console.error('Error updating QR indexes and timestamps:', error);
+  } finally {
     triggerHapticFeedback(); // Optional: Provide haptic feedback
     setIsActive(false);
+  }
+}, [triggerHapticFeedback]);
+
+// scrollToTop function
+const scrollToTop = useCallback(() => {
+  flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
 }, []);
 
+// handleExpandPress function
+const handleExpandPress = useCallback((id: string) => {
+  setSelectedItemId(id);
+  bottomSheetRef.current?.expand();
+}, []);
 
-  const scrollToTop = useCallback(() => {
-    if (flatListRef.current) {
-      flatListRef.current.scrollToOffset({ offset: 0, animated: true });
-    }
-  }, []);
+// onDeleteSheetPress function
+const onDeleteSheetPress = useCallback(() => {
+  bottomSheetRef.current?.close();
+  setIsModalVisible(true);
+}, []);
 
-  const bottomSheetRef = useRef<BottomSheet>(null);
+// onDeletePress function
+const onDeletePress = useCallback(async () => {
+  if (!selectedItemId) return;
 
-  const handleExpandPress = useCallback((id: string) => {
-    setSelectedItemId(id);
-    bottomSheetRef.current?.expand();
-  }, []);
-
-  const onDeleteSheetPress = useCallback(() => {
+  try {
     bottomSheetRef.current?.close();
-    setIsModalVisible(true);
-  }, []);
+    setIsSyncing(true);
+    setIsToastVisible(true);
+    setToastMessage(t('homeScreen.deleting'));
 
-  const onDeletePress = async () => {
-    if (selectedItemId) {
-      try {
-        bottomSheetRef.current?.close();
-        setIsSyncing(true);
-        setIsToastVisible(true);
-        setToastMessage(t('homeScreen.deleting'));
+    // Mark the QR code as deleted in the local database
+    await deleteQrCode(selectedItemId);
 
-        // Mark the QR code as deleted in the local database
-        await deleteQrCode(selectedItemId);
+    // Fetch updated data from the local database
+    const updatedLocalData = await getQrCodesByUserId(userId);
 
-        // Fetch updated data from the local database
-        const updatedLocalData = await getQrCodesByUserId(userId);
+    // Update state with the new data
+    setQrData(updatedLocalData);
+    setIsEmpty(updatedLocalData.length === 0);
 
-        console.log('Updated QR data:', updatedLocalData);
-
-        // Ensure that updatedLocalData is valid before updating state
-        if (updatedLocalData && Array.isArray(updatedLocalData)) {
-          setQrData(updatedLocalData);
-          setIsEmpty(updatedLocalData.length === 0);
-        } else {
-          console.error('Error fetching updated QR data after deletion');
-          setQrData([]);  // Fallback to empty array if there's an error
-          setIsEmpty(true);
-        }
-      } catch (error) {
-        console.error('Error deleting QR code:', error);
-        setToastMessage(t('homeScreen.deleteError'));  // Display an error toast if deletion fails
-      } finally {
-        setIsToastVisible(false);
-        setSelectedItemId(null);  // Reset selected item after deletion
-      }
-    }
-  };
+    // Deletion successful, hide modal and toast
+    setIsModalVisible(false);
+    setIsToastVisible(false);
+  } catch (error) {
+    console.error('Error deleting QR code:', error);
+    setToastMessage(t('homeScreen.deleteError')); // Display an error toast if deletion fails
+    // Keep the toast visible to show the error message
+  } finally {
+    setIsSyncing(false);
+    setSelectedItemId(null); // Reset selected item after deletion
+  }
+}, [selectedItemId, userId]);
 
 
   const renderItem = useCallback(
@@ -498,7 +503,7 @@ function HomeScreen() {
         title={'Move to trash?'}
         message={'Are you sure you want to move this item to trash?'}
         isVisible={isModalVisible}
-        iconName="trash" />
+        iconName="trash-outline" />
     </ThemedView>
   );
 }
