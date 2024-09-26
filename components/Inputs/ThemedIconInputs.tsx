@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useState, useMemo } from 'react';
-import { TextInput, StyleSheet, TouchableHighlight, View } from 'react-native';
+import { TextInput, StyleSheet, TouchableHighlight, View, TouchableWithoutFeedback } from 'react-native';
 import { ThemedView } from '../ThemedView';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -91,18 +91,19 @@ export function ThemedIconInput({
                         </TouchableHighlight>
                     )}
                     {rightIconName && (
-                        <TouchableHighlight
+                        <TouchableWithoutFeedback
                             onPress={onRightIconPress}
-                            activeOpacity={0.6}
-                            underlayColor="#FFF5E1"
-                            style={styles.iconTouchable}
+                            // activeOpacity={0.6}
+                            // underlayColor="#FFF5E1"
                         >
+                            <View style={styles.iconTouchable}>
                             <Ionicons
                                 name={rightIconName}
                                 size={20}
                                 color={color}
                             />
-                        </TouchableHighlight>
+                            </View>
+                        </TouchableWithoutFeedback>
                     )}
                 </View>
             </View>

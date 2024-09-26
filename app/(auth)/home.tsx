@@ -8,15 +8,18 @@ import Animated, {
   withTiming,
   useAnimatedScrollHandler,
   Easing,
+  FadeIn,
+  FadeOut,
 } from 'react-native-reanimated';
 import { router } from 'expo-router';
 import { BlurView } from 'expo-blur';
 import DraggableFlatList, { ScaleDecorator } from 'react-native-draggable-flatlist';
+import { debounce } from 'lodash';
 
 import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
 import QRRecord from '@/types/qrType';
 import { useThemeColor } from '@/hooks/useThemeColor';
-import { ThemedFilter } from '@/components/ThemedFilter';
+import ThemedFilter from '@/components/ThemedFilter';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedIconInput } from '@/components/Inputs';
@@ -44,6 +47,7 @@ import {
   getLocallyDeletedQrCodes,
   insertOrUpdateQrCodes,
   updateQrIndexes,
+  filterQrCodes,
 } from '@/services/localDB/qrDB';
 
 function HomeScreen() {
@@ -97,40 +101,43 @@ function HomeScreen() {
 
   const fetchData = useCallback(async () => {
     if (!userId) return;
-
+  
     setIsLoading(true);
-
+  
     try {
       // Fetch local data first
       const localData = await getQrCodesByUserId(userId);
       setQrData(localData);
       console.log('Local data:', localData);
-
+  
       if (localData.length === 0) {
         console.log('No data found locally, syncing with the server...');
       }
-
+  
       // Fetch server data asynchronously in the background
       const serverSyncTask = syncWithServer(userId);
-
+  
       // Fetch and compare server data with local data in parallel
       const [serverData, locallyDeletedData] = await Promise.all([
         fetchQrData(userId, 1, 30),
         getLocallyDeletedQrCodes(userId),
       ]);
-
+  
       const filteredServerData = serverData.items.filter(item => {
         // Filter out server items that are deleted locally
         return !locallyDeletedData.some(deletedItem => deletedItem.id === item.id);
       });
-
+  
       if (filteredServerData.length > 0) {
         await insertOrUpdateQrCodes(filteredServerData);
-        setQrData(filteredServerData);
+        
+        // Fetch updated local data after inserting/updating
+        const updatedLocalData = await getQrCodesByUserId(userId);
+        setQrData(updatedLocalData);
         animateEmptyCard();
       }
       setIsEmpty(filteredServerData.length === 0);
-
+  
       // Wait for the server sync task to complete
       await serverSyncTask;
     } catch (error) {
@@ -140,7 +147,7 @@ function HomeScreen() {
     } finally {
       setIsLoading(false);
     }
-  }, [userId, syncWithServer]);
+  }, [userId, syncWithServer]);  
 
   // Animate empty card when isEmpty changes to true
   useEffect(() => {
@@ -194,36 +201,29 @@ function HomeScreen() {
     isActiveShared.value = isActive ? 1 : 0;
   }, [isActive]);
 
+  const debouncedSetSearchQuery = useCallback(
+    debounce((query) => {
+      setDebouncedSearchQuery(query);
+    }, 100), []
+  );
+
+  // Update debounced search query whenever searchQuery changes
   useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedSearchQuery(searchQuery);
-    }, 300);
+    debouncedSetSearchQuery(searchQuery);
 
+    // Clean up on unmount to prevent memory leaks
     return () => {
-      clearTimeout(handler);
+      debouncedSetSearchQuery.cancel();
     };
-  }, [searchQuery]);
 
-  const filteredData = useMemo(() => {
-    try {
-      let results = qrData;
+  }, [searchQuery, debouncedSetSearchQuery]);
 
-      if (debouncedSearchQuery) {
-        results = results.filter(
-          (item) =>
-            item.code.includes(debouncedSearchQuery) ||
-            item.metadata.includes(debouncedSearchQuery) ||
-            (item.account_name && item.account_name.includes(debouncedSearchQuery)) ||
-            (item.account_number && item.account_number.includes(debouncedSearchQuery))
-        );
-      }
-
-      return filter === 'all' ? results : results.filter((item) => item.type === filter);
-    } catch (error) {
-      console.error('Error filtering QR codes:', error);
-      return [];
+  // Fetch filtered data from the database
+  useEffect(() => {
+    if (userId) {
+      filterQrCodes(userId, debouncedSearchQuery, filter).then(setQrData);
     }
-  }, [debouncedSearchQuery, filter, qrData]);
+  }, [userId, debouncedSearchQuery, filter]);
 
   const animateEmptyCard = () => {
     emptyCardOffset.value = withSpring(0, {
@@ -332,8 +332,6 @@ function HomeScreen() {
         setIsSyncing(true);
         setIsToastVisible(true);
         setToastMessage(t('homeScreen.deleting'));
-
-        console.log('Deleting QR code:', selectedItemId);
 
         // Mark the QR code as deleted in the local database
         await deleteQrCode(selectedItemId);
@@ -458,7 +456,7 @@ function HomeScreen() {
           }
           automaticallyAdjustKeyboardInsets
           keyboardDismissMode="on-drag"
-          data={filteredData}
+          data={qrData}
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
           containerStyle={{ flex: 1 }}
@@ -467,7 +465,7 @@ function HomeScreen() {
           showsVerticalScrollIndicator={false}
           onDragBegin={onDragBegin}
           onDragEnd={onDragEnd}
-          dragItemOverflow={false}
+          dragItemOverflow={false}      
           onScrollOffsetChange={(offset) => {
             scrollY.value = offset;
           }}
@@ -497,8 +495,8 @@ function HomeScreen() {
         onPrimaryAction={onDeletePress}
         onSecondaryAction={() => {setIsModalVisible(false)}}
         secondaryActionText='Cancel'
-        title={'Delete this item?'}
-        message='Are you sure you want to delete this item'
+        title={'Move to trash?'}
+        message={'Are you sure you want to move this item to trash?'}
         isVisible={isModalVisible}
         iconName="trash" />
     </ThemedView>

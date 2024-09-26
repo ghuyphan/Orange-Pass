@@ -1,6 +1,9 @@
 import pb from "@/services/pocketBase"; // Assuming you have PocketBase setup
 import { openDatabase } from '../userDB';
 import QRRecord from '@/types/qrType';
+import { getLocales } from 'expo-localization';
+import enDatas from '@/assets/enDatas.json';
+import viDatas from '@/assets/viDatas.json';
 
 // Function to create the "qrcodes" table with optimized indexing
 export async function createTable() {

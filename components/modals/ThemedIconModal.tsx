@@ -73,7 +73,7 @@ export function ThemedModal({
                     {/* Icon */}
                     <Ionicons
                         name={iconName || 'information-circle'}
-                        size={30}
+                        size={28}
                         color={color}
                         style={styles.icon}
                     />
@@ -90,12 +90,7 @@ export function ThemedModal({
 
                     {/* Action Buttons */}
                     <View style={styles.actions}>
-                        {/* <TouchableOpacity onPress={onSecondaryAction} style={styles.actionButton}>
-                            <ThemedText style={styles.actionText}>{secondaryActionText}</ThemedText>
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={onPrimaryAction} style={styles.actionButton}>
-                            <ThemedText style={styles.actionText}>{primaryActionText}</ThemedText>
-                        </TouchableOpacity> */}
+
                         <ThemedTextButton
                             onPress={onSecondaryAction ? onSecondaryAction : () => { }}
                             label={secondaryActionText ?? 'Cancel'}

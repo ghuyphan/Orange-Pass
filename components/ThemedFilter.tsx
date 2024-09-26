@@ -2,16 +2,15 @@ import { ScrollView, StyleProp, ViewStyle, StyleSheet, View, TouchableWithoutFee
 import React from 'react';
 import { t } from '@/i18n';
 import { useColorScheme } from 'react-native';
-// import { ThemedView } from './ThemedView';
 import { ThemedText } from './ThemedText';
 
-export type ThemedFilterProps = {
+type ThemedFilterProps = {
     selectedFilter: string;
     onFilterChange: (filter: string) => void;
     style?: StyleProp<ViewStyle>;
 };
 
-export function ThemedFilter({ selectedFilter, onFilterChange, style }: ThemedFilterProps) {
+const ThemedFilter = React.memo(({ selectedFilter, onFilterChange, style }: ThemedFilterProps) => {
     const filters = [
         { key: 'all', label: t('homeScreen.filters.all') },
         { key: 'bank', label: t('homeScreen.filters.bank') },
@@ -45,7 +44,7 @@ export function ThemedFilter({ selectedFilter, onFilterChange, style }: ThemedFi
             ))}
         </ScrollView>
     );
-}
+});
 
 const styles = StyleSheet.create({
     filterContainer: {
@@ -80,3 +79,5 @@ const styles = StyleSheet.create({
         // color: '#E7C9B3', // Default text color
     },
 });
+
+export default ThemedFilter;

@@ -36,11 +36,6 @@ interface CameraHighlight {
   height: number;
 }
 
-interface Pattern {
-  pattern: RegExp;
-  handler: () => void;
-}
-
 // Custom hooks
 const useCameraSetup = (cameraRef: React.RefObject<Camera>) => {
   const device = useCameraDevice('back');
@@ -120,13 +115,13 @@ export default function ScanScreen() {
     if (showIndicator === undefined) {
       setShowIndicator(true);
     }
-  }, [setShowIndicator, showIndicator]); 
+  }, [setShowIndicator, showIndicator]);
 
   useEffect(() => {
     if (autoBrightness === undefined) {
       setAutoBrightness(true);
     }
-  }, [setAutoBrightness, autoBrightness]); 
+  }, [setAutoBrightness, autoBrightness]);
 
   const toggleQuickScan = useCallback(() => {
     setQuickScan(prev => !!!prev);
@@ -172,11 +167,8 @@ export default function ScanScreen() {
     setLayout(event.nativeEvent.layout);
   }, []);
 
-  if (autoBrightness === true) {
-    setBrightnessLevel(0.8, true);
-  } else {
-    setBrightnessLevel(0.4, true);
-  }
+  useUnmountBrightness(0.8, true);
+
   const handleCodeScanned = useCallback(
     useHandleCodeScanned({
       isConnecting,
