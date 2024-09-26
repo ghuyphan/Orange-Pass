@@ -1,12 +1,10 @@
-import React, { forwardRef, useImperativeHandle, useRef } from 'react';
+import React, { forwardRef, useImperativeHandle, useRef, useMemo, useCallback } from 'react';
 import { View, StyleSheet, Switch } from 'react-native';
-import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView, TouchableHighlight } from '@gorhom/bottom-sheet';
+import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView, BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 import { ThemedText } from '../ThemedText';
 import { useColorScheme } from 'react-native';
 import { Colors } from '@/constants/Colors';
 import { Portal } from 'react-native-paper';
-import Ionicons from '@expo/vector-icons/Ionicons';
-
 interface ThemedSettingSheetProps {
     ref?: React.Ref<BottomSheet>;
     title?: string;
@@ -26,8 +24,9 @@ interface ThemedSettingSheetProps {
     onSetting3Press?: () => void;
 }
 
-const ThemedSettingSheet = forwardRef<BottomSheet, ThemedSettingSheetProps>(
-    ({ title,
+const ThemedSettingSheet = React.memo(forwardRef<BottomSheet, ThemedSettingSheetProps>(
+    ({
+        title,
         description,
         setting1Text,
         setting1Description,
@@ -41,11 +40,11 @@ const ThemedSettingSheet = forwardRef<BottomSheet, ThemedSettingSheetProps>(
         setting3Description,
         setting3Value,
         onSetting3Press
-    },
-        ref
-    ) => {
-        const color = useColorScheme() === 'light' ? Colors.light.background : Colors.dark.background;
-        const switchColor = useColorScheme() === 'light' ? Colors.light.buttonBackground : Colors.dark.buttonBackground;
+    }, ref) => {
+        const colorScheme = useColorScheme();
+        const color = useMemo(() => (colorScheme === 'light' ? Colors.light.background : Colors.dark.background), [colorScheme]);
+        const switchColor = useMemo(() => (colorScheme === 'light' ? Colors.light.buttonBackground : Colors.dark.buttonBackground), [colorScheme]);
+
         const bottomSheetRef = useRef<BottomSheet>(null);
 
         // Expose BottomSheet methods to parent component via ref
@@ -58,12 +57,23 @@ const ThemedSettingSheet = forwardRef<BottomSheet, ThemedSettingSheetProps>(
             forceClose: () => bottomSheetRef.current?.forceClose(),
         }));
 
+        // Memoize Backdrop Component
+        const renderBackdrop = useCallback((props: BottomSheetBackdropProps) => (
+            <BottomSheetBackdrop
+                {...props}
+                opacity={0.5}
+                appearsOnIndex={0}
+                disappearsOnIndex={-1}
+                style={styles.backdrop}
+                onPress={() => bottomSheetRef.current?.close()}
+            />
+        ), []);
+
         return (
             <Portal>
                 <BottomSheet
                     ref={bottomSheetRef}
                     index={-1}
-                    animateOnMount={true}
                     backgroundStyle={[styles.background, { backgroundColor: '#FFF5E1' }]}
                     handleStyle={{
                         backgroundColor: '#FFF5E1',
@@ -73,42 +83,33 @@ const ThemedSettingSheet = forwardRef<BottomSheet, ThemedSettingSheetProps>(
                     handleIndicatorStyle={styles.handleIndicator}
                     enablePanDownToClose={true}
                     enableDynamicSizing={true}
-                    backdropComponent={(props) => (
-                        <BottomSheetBackdrop
-                            {...props}
-                            opacity={0.5}
-                            appearsOnIndex={0}
-                            disappearsOnIndex={-1}
-                            style={styles.backdrop}
-                            onPress={() => bottomSheetRef.current?.close()}
-                        />
-                    )}
+                    backdropComponent={renderBackdrop}
                 >
                     <BottomSheetScrollView scrollEnabled={false} style={styles.container}>
                         {title && <ThemedText style={styles.title}>{title}</ThemedText>}
                         {description && <ThemedText style={styles.description}>{description}</ThemedText>}
                         <View style={styles.contentContainer}>
-                            <View
-                                style={styles.touchableHighlight}
-                            >
-                                <View style={styles.buttonContainer}>
-                                    <View style={styles.iconContainer}>
-                                        <ThemedText type='defaultSemiBold' style={styles.title}>{setting1Text}</ThemedText>
-                                        <ThemedText style={styles.description}>{setting1Description}</ThemedText>
+                            {setting1Text && (
+                                <View style={styles.touchableHighlight}>
+                                    <View style={styles.buttonContainer}>
+                                        <View style={styles.iconContainer}>
+                                            <ThemedText type='defaultSemiBold' style={styles.title}>{setting1Text}</ThemedText>
+                                            <ThemedText style={styles.description}>{setting1Description}</ThemedText>
+                                        </View>
+                                        <Switch
+                                            thumbColor={'#fff'}
+                                            trackColor={{ false: '#aaa', true: switchColor }}
+                                            ios_backgroundColor={color}
+                                            value={setting1Value}
+                                            onValueChange={onSetting1Press}
+                                        />
                                     </View>
-                                    <Switch
-                                        thumbColor={'#fff'}
-                                        trackColor={{ false: '#aaa', true: switchColor }}
-                                        ios_backgroundColor={color}
-                                        value={setting1Value}
-                                        onValueChange={onSetting1Press}
-                                    />
                                 </View>
-                            </View>
+                            )}
+                            {setting2Text && (
                                 <View style={styles.buttonContainer}>
                                     <View style={styles.iconContainer}>
                                         <ThemedText type='defaultSemiBold' style={styles.title}>{setting2Text}</ThemedText>
-
                                         <ThemedText style={styles.description}>{setting2Description}</ThemedText>
                                     </View>
                                     <Switch
@@ -119,13 +120,29 @@ const ThemedSettingSheet = forwardRef<BottomSheet, ThemedSettingSheetProps>(
                                         onValueChange={onSetting2Press}
                                     />
                                 </View>
+                            )}
+                            {setting3Text && (
+                                <View style={styles.buttonContainer}>
+                                    <View style={styles.iconContainer}>
+                                        <ThemedText type='defaultSemiBold' style={styles.title}>{setting3Text}</ThemedText>
+                                        <ThemedText style={styles.description}>{setting3Description}</ThemedText>
+                                    </View>
+                                    <Switch
+                                        thumbColor={'#fff'}
+                                        trackColor={{ false: '#aaa', true: switchColor }}
+                                        ios_backgroundColor={color}
+                                        value={setting3Value}
+                                        onValueChange={onSetting3Press}
+                                    />
+                                </View>
+                            )}
                         </View>
                     </BottomSheetScrollView>
                 </BottomSheet>
             </Portal>
         );
     }
-);
+));
 
 const styles = StyleSheet.create({
     background: {
@@ -145,7 +162,7 @@ const styles = StyleSheet.create({
         marginBottom: 15,
         borderRadius: 10,
         paddingVertical: 5,
-
+        paddingHorizontal: 10,
     },
     touchableHighlight: {
         borderRadius: 10, // Ensures the highlight covers the entire button, including rounded corners
@@ -170,7 +187,6 @@ const styles = StyleSheet.create({
     },
     iconContainer: {
         flexDirection: 'column',
-        // alignItems: 'center',
     }
 });
 

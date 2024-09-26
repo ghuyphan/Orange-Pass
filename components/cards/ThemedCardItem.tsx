@@ -113,9 +113,11 @@ export const ThemedCardItem = memo(function ThemedCardItem({
                         </View>
                         <TouchableWithoutFeedback
                             onPress={onMoreButtonPress}
-                            style={styles.moreButtonContainer}
+                            
                         >
-                            <Ionicons name={'ellipsis-vertical'} size={18} color={colors} />
+                            <View style={styles.moreButtonContainer}>
+                                <Ionicons name={'ellipsis-vertical'} size={18} color={colors} />
+                            </View>
                         </TouchableWithoutFeedback>
                     </View>
                     <View style={styles.qrContainer}>

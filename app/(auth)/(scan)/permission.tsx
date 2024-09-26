@@ -23,7 +23,7 @@ const PermissionScreen = () => {
     const fadeValue = useSharedValue(1);
     const swipeValue = useSharedValue(0); // New value for the horizontal translation
 
-    useUnmountBrightness(0.8, true);
+    useUnmountBrightness(0.3, true);
     
     const requestLocationPermission = async () => {
         if (Platform.OS === 'android') {

@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { StyleSheet, View, Text, ActivityIndicator, TouchableWithoutFeedback, LayoutChangeEvent, Linking, SafeAreaView, StatusBar } from 'react-native';
-import { Camera, Code, useCameraDevice, useCameraPermission, useCodeScanner, CodeScannerFrame, useCameraFormat } from 'react-native-vision-camera';
+import { Camera, Code, useCameraDevice, useCameraPermission, useCodeScanner, CodeScannerFrame } from 'react-native-vision-camera';
 import Reanimated, { useSharedValue, useAnimatedStyle, withSpring, runOnJS, withTiming, useAnimatedProps } from 'react-native-reanimated';
 import {
-  useUnmountBrightness
+  useUnmountBrightness,
+  setBrightnessLevel
 } from '@reeq/react-native-device-brightness';
 import ImagePicker from 'react-native-image-crop-picker';
 import { Redirect, useRouter } from 'expo-router';
@@ -13,8 +14,7 @@ import { ThemedButton } from '@/components/buttons/ThemedButton';
 import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
 import { MAX_ZOOM_FACTOR } from '@/constants/Constants';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { throttle, debounce } from 'lodash';
-import { t } from '@/i18n';
+import { debounce } from 'lodash';
 import { storage } from '@/utils/storage';
 
 import { ScannerFrame, FocusIndicator, ZoomControl } from '@/components/camera';
@@ -23,6 +23,7 @@ import BottomSheet from '@gorhom/bottom-sheet';
 import ThemedSettingSheet from '@/components/bottomsheet/ThemedSettingSheet';
 import { useMMKVBoolean } from 'react-native-mmkv';
 import { triggerLightHapticFeedback } from '@/utils/haptic';
+import useHandleCodeScanned from '@/hooks/useHandleCodeScanned'; // Import the custom hook
 
 const ReanimatedCamera = Reanimated.createAnimatedComponent(Camera);
 Reanimated.addWhitelistedNativeProps({ zoom: true });
@@ -113,12 +114,19 @@ export default function ScanScreen() {
   //MMKV settings
   const [quickScan, setQuickScan] = useMMKVBoolean('quickScan', storage);
   const [showIndicator, setShowIndicator] = useMMKVBoolean('showIndicator', storage);
+  const [autoBrightness, setAutoBrightness] = useMMKVBoolean('autoBrightness', storage);
 
   useEffect(() => {
     if (showIndicator === undefined) {
       setShowIndicator(true);
     }
-  }, [setShowIndicator, showIndicator]);
+  }, [setShowIndicator, showIndicator]); 
+
+  useEffect(() => {
+    if (autoBrightness === undefined) {
+      setAutoBrightness(true);
+    }
+  }, [setAutoBrightness, autoBrightness]); 
 
   const toggleQuickScan = useCallback(() => {
     setQuickScan(prev => !!!prev);
@@ -127,6 +135,11 @@ export default function ScanScreen() {
 
   const toggleShowIndicator = useCallback(() => {
     setShowIndicator(prev => !!!prev);
+    triggerLightHapticFeedback();
+  }, [])
+
+  const toggleAutoBrightness = useCallback(() => {
+    setAutoBrightness(prev => !!!prev);
     triggerLightHapticFeedback();
   }, [])
 
@@ -148,6 +161,7 @@ export default function ScanScreen() {
   const [codeValue, setCodeValue] = useState('');
   const [codeType, setCodeType] = useState('');
   const [iconName, setIconName] = useState<keyof typeof Ionicons.glyphMap>('compass');
+  const [isConnecting, setIsConnecting] = useState(false);
 
   const bottomSheetRef = useRef<BottomSheet>(null);
   const handleExpandPress = useCallback(() => {
@@ -158,88 +172,74 @@ export default function ScanScreen() {
     setLayout(event.nativeEvent.layout);
   }, []);
 
-  useUnmountBrightness(0.8, true);
-
-  const handleCodeScanned = useCallback(throttle((codeMetadata: string) => {
-    const patterns: { [key: string]: Pattern } = {
-      WIFI: {
-        pattern: /^WIFI:/,
-        handler: () => {
-          const ssidMatch = codeMetadata.match(/S:([^;]*)/);
-          const ssid = ssidMatch ? ssidMatch[1] : 'Unknown';
-          setCodeType('WIFI');
-          setIconName('wifi');
-          setCodeValue(`${t('scanScreen.join')} "${ssid}" ${t('scanScreen.join2')}`);
-        },
-      },
-      URL: {
-        pattern: /^(https:\/\/|http:\/\/)/,
-        handler: () => {
-          const url = codeMetadata.replace(/^https?:\/\//, '');
-          setCodeType('URL');
-          setIconName('compass');
-          setCodeValue(`${t('scanScreen.goto')} "${url}"`);
-        },
-      },
-      VietQR: {
-        pattern: /^000201010211/,
-        handler: () => {
-          if (codeMetadata.includes('MOMO')) {
-            setCodeType('ewallet');
-            setIconName('qr-code');
-            setCodeValue(`${t('scanScreen.momoPayment')}`);
-          } else if (codeMetadata.includes('zalopay')) {
-            setCodeType('ewallet');
-            setIconName('qr-code');
-            setCodeValue(`${t('scanScreen.zalopayPayment')}`);
-          } else {
-            setCodeType('card');
-            setIconName('qr-code');
-            setCodeValue(codeMetadata);
-          }
-        },
-      },
-    };
-
-    for (const key in patterns) {
-      const { pattern, handler } = patterns[key];
-      if (pattern.test(codeMetadata)) {
-        handler();
-        return;
-      }
-    }
-
-    setCodeType('unknown');
-    setCodeValue(t('scanScreen.unknownCode'));
-  }, 500), []);
+  if (autoBrightness === true) {
+    setBrightnessLevel(0.8, true);
+  } else {
+    setBrightnessLevel(0.4, true);
+  }
+  const handleCodeScanned = useCallback(
+    useHandleCodeScanned({
+      isConnecting,
+      quickScan,
+      setCodeType,
+      setIconName,
+      setCodeValue,
+      setIsConnecting,
+    }),
+    [isConnecting, quickScan, setCodeType, setIconName, setCodeValue, setIsConnecting]
+  );
 
   const codeScanner = useCodeScanner({
     codeTypes: ['qr', 'code-128', 'code-39', 'ean-13', 'ean-8', 'upc-a', 'upc-e', 'data-matrix'],
     onCodeScanned: (codes: Code[], frame: CodeScannerFrame) => {
       frameCounterRef.current++;
-      if (frameCounterRef.current % 4 === 0) {
+      if (isConnecting) return; // Stop scanning if already connecting
+
+      // Process every 4th frame (adjust frame skip logic here as needed)
+      if (frameCounterRef.current % 3 === 0) {
         setScanFrame(frame);
+
+        // Clear previous timeout to prevent stale highlights
         if (timeoutRef.current) {
           clearTimeout(timeoutRef.current);
         }
+
         if (codes.length > 0) {
           const firstCode = codes[0];
+
+          // Update metadata
           setCodeMetadata(firstCode.value ?? '');
-          if (showIndicator === true) {
+
+          // Conditionally set the scanner highlights if showIndicator is true
+          if (showIndicator) {
             setCodeScannerHighlights([{
               height: firstCode.frame?.height ?? 0,
               width: firstCode.frame?.width ?? 0,
               x: firstCode.frame?.x ?? 0,
               y: firstCode.frame?.y ?? 0,
             }]);
+
+            // Reset highlights and metadata only if the indicator is shown
+            timeoutRef.current = setTimeout(() => {
+              setCodeScannerHighlights([]);
+              setCodeMetadata('');
+              setCodeType('');
+              setCodeValue('');
+            }, 1000);
           }
+          // Only call handleCodeScanned if not already connecting
           handleCodeScanned(firstCode.value ?? '');
-          timeoutRef.current = setTimeout(() => {
-            setCodeScannerHighlights([]);
-            setCodeMetadata('');
-            setCodeType('');
-            setCodeValue('');
-          }, 1000);
+
+        } else {
+          // No codes found, clear the timeout and reset states
+          if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+          }
+          setIsConnecting(false); // Reset the connection flag
+          setCodeType('');
+          setCodeValue('');
+          setCodeScannerHighlights([]);
+          setCodeMetadata('');
         }
       }
     },
@@ -261,7 +261,6 @@ export default function ScanScreen() {
       console.log('Error opening image picker:', error);
     }
   }, []);
-
 
   useEffect(() => {
     return () => {
@@ -330,19 +329,19 @@ export default function ScanScreen() {
             />
           </Reanimated.View>
           <FocusIndicator focusPoint={focusPoint} animatedFocusStyle={animatedFocusStyle} />
-          {showIndicator === true ? <ScannerFrame highlight={codeScannerHighlights[0]} layout={layout} scanFrame={scanFrame} /> : null}
+          {showIndicator == true ? <ScannerFrame highlight={codeScannerHighlights[0]} layout={layout} scanFrame={scanFrame} /> : null}
         </SafeAreaView>
       </GestureDetector>
 
       <View style={styles.bottomContainer}>
-        {codeMetadata && (
+        {codeMetadata && quickScan === false ? (
           <TouchableWithoutFeedback onPress={() => onResultTap(codeMetadata, codeType)}>
             <View style={styles.qrResultContainer}>
               <Ionicons name={iconName} size={18} color="black" />
               <ThemedText type='defaultSemiBold' numberOfLines={1} style={styles.qrResultText}>{codeValue}</ThemedText>
             </View>
           </TouchableWithoutFeedback>
-        )}
+        ) : null}
         <ZoomControl
           zoom={zoom}
           minZoom={Number(minZoom.toFixed(2))}
@@ -382,6 +381,10 @@ export default function ScanScreen() {
         setting2Description='Show a visual indicator at the scan point. Turn this on if your devices is fast'
         setting2Value={showIndicator}
         onSetting2Press={toggleShowIndicator}
+        setting3Text='High Brightness'
+        setting3Description='Automatically turn up screen brightness to improve visibility.'
+        setting3Value={autoBrightness}
+        onSetting3Press={toggleAutoBrightness}
       />
     </View>
   );

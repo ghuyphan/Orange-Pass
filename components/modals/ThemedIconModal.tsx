@@ -1,133 +1,160 @@
-import React, { useMemo, useEffect, useState } from 'react';
-import { StyleSheet, View, StyleProp, ViewStyle, TouchableHighlight } from 'react-native';
+import React, { useEffect } from 'react';
+import { StyleSheet, View, StyleProp, ViewStyle, TouchableOpacity } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Portal } from 'react-native-paper';
+import { Modal, Portal } from 'react-native-paper';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { ThemedText } from '../ThemedText';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
+import { ThemedTextButton } from '../buttons/ThemedTextButton';
 
-export type ThemedIconModalProps = {
+export type ThemedModalProps = {
     lightColor?: string;
     darkColor?: string;
     iconName?: keyof typeof Ionicons.glyphMap;
-    dismissIconName?: keyof typeof Ionicons.glyphMap;
-    onDismiss?: () => void;
+    title: string;
     message: string;
-    isVisible?: boolean;
+    isVisible: boolean;
+    onDismiss?: () => void;
     style?: StyleProp<ViewStyle>;
-    onVisibilityToggle?: (isVisible: boolean) => void;
+    onPrimaryAction?: () => void;
+    primaryActionText?: string;
+    onSecondaryAction?: () => void;
+    secondaryActionText?: string;
 };
 
-export function ThemedIconModal({
+export function ThemedModal({
     lightColor,
     darkColor,
     iconName,
-    dismissIconName,
-    onDismiss,
+    title,
     message,
-    isVisible = false,
+    isVisible,
+    onDismiss,
+    onPrimaryAction,
+    primaryActionText,
+    onSecondaryAction,
+    secondaryActionText,
     style = {},
-    onVisibilityToggle,
-}: ThemedIconModalProps) {
+}: ThemedModalProps) {
     const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
     const colorScheme = useColorScheme();
-    const [isAnimationComplete, setIsAnimationComplete] = useState(false);
 
-    const toastStyle = useMemo(() => ([
-        styles.toastContainer,
+    const modalStyle = [
+        styles.modalContainer,
         {
-            backgroundColor: colorScheme === 'light' ? Colors.light.toastBackground : Colors.dark.toastBackground
+            backgroundColor: colorScheme === 'light' ? Colors.light.background : Colors.dark.background,
         },
-        style
-    ]), [colorScheme, style]);
+        style,
+    ];
 
-    // Reanimated values
+    // Reanimated values for fade-in/out effect
     const opacity = useSharedValue(0);
-    const translateY = useSharedValue(50);
 
     const animatedStyle = useAnimatedStyle(() => {
         return {
             opacity: opacity.value,
-            transform: [{ translateY: translateY.value }],
         };
     });
 
     useEffect(() => {
         if (isVisible) {
-
             opacity.value = withTiming(1, { duration: 300 });
-            // translateY.value = withTiming(0, { duration: 300 });
-
-            if (onVisibilityToggle) {
-                onVisibilityToggle(false);
-            }
-
         } else {
-            setIsAnimationComplete(true);
             opacity.value = withTiming(0, { duration: 300 });
-            // translateY.value = withTiming(50, { duration: 300 });
-            setTimeout(() => {
-                setIsAnimationComplete(false);
-            }, 300);
         }
-    }, [isVisible, onVisibilityToggle, opacity, translateY]);
-
-    if (isVisible == false && isAnimationComplete == false) {
-        return null;
-    }
+    }, [isVisible, opacity]);
 
     return (
         <Portal>
-            <Animated.View style={[toastStyle, animatedStyle]}>
-                <View style={styles.toastTitle}>
+            <Modal visible={isVisible} onDismiss={onDismiss} contentContainerStyle={styles.overlay}>
+                <Animated.View style={[modalStyle, animatedStyle]}>
+                    {/* Icon */}
                     <Ionicons
                         name={iconName || 'information-circle'}
-                        size={25}
+                        size={30}
                         color={color}
+                        style={styles.icon}
                     />
-                    <ThemedText style={styles.toastText} numberOfLines={2} type='defaultSemiBold'>
+
+                    {/* Title */}
+                    <ThemedText style={styles.titleText} type="defaultSemiBold">
+                        {title}
+                    </ThemedText>
+
+                    {/* Description Message */}
+                    <ThemedText style={styles.messageText} type="default">
                         {message}
                     </ThemedText>
-                </View>
-                <TouchableHighlight
-                    onPress={onDismiss}
-                    underlayColor={colorScheme === 'light' ? Colors.light.inputBackground : Colors.dark.inputBackground}
-                    style={styles.iconTouchable}
-                >
-                    <Ionicons
-                        name={dismissIconName || 'close'}
-                        size={20}
-                        color={color}
-                    />
-                </TouchableHighlight>
-            </Animated.View>
+
+                    {/* Action Buttons */}
+                    <View style={styles.actions}>
+                        {/* <TouchableOpacity onPress={onSecondaryAction} style={styles.actionButton}>
+                            <ThemedText style={styles.actionText}>{secondaryActionText}</ThemedText>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={onPrimaryAction} style={styles.actionButton}>
+                            <ThemedText style={styles.actionText}>{primaryActionText}</ThemedText>
+                        </TouchableOpacity> */}
+                        <ThemedTextButton
+                            onPress={onSecondaryAction ? onSecondaryAction : () => { }}
+                            label={secondaryActionText ?? 'Cancel'}
+                            style={styles.actionButton}
+                        />
+                        <ThemedTextButton
+                            onPress={onPrimaryAction ? onPrimaryAction : () => { }}
+                            label={primaryActionText ?? 'Done'}
+                            style={styles.actionButton}
+                        />
+                    </View>
+                </Animated.View>
+            </Modal>
         </Portal>
     );
 }
 
 const styles = StyleSheet.create({
-    toastContainer: {
-        borderRadius: 10,
+    overlay: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+    },
+    modalContainer: {
+        minWidth: '95%',
+        borderRadius: 12,
         padding: 15,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
-        gap: 10,
-        // marginHorizontal: 15,
+        justifyContent: 'center',
     },
-    toastTitle: {
+    icon: {
+        marginBottom: 15,
+    },
+    titleText: {
+        fontSize: 20,
+        textAlign: 'center',
+        marginBottom: 10,
+    },
+    messageText: {
+        fontSize: 16,
+        textAlign: 'center',
+        marginBottom: 20,
+    },
+    actions: {
         flexDirection: 'row',
-        alignItems: 'center',
-        gap: 10
+        alignSelf: 'flex-end',
+        // justifyContent: 'space-between',
+        width: '100%',
+        marginTop: 10,
     },
-    toastText: {
-        fontSize: 15,
-        width: '80%'
+    actionButton: {
+        paddingVertical: 10,
+        paddingHorizontal: 10,
+        borderRadius: 8,
+        // backgroundColor: Colors.light.primary, // Use your theme's primary color
     },
-    iconTouchable: {
-        padding: 5,
-        borderRadius: 50,
-    }
+    actionText: {
+        color: Colors.light.text, // Or appropriate text color from the theme
+        textAlign: 'center',
+        fontSize: 16,
+    },
 });

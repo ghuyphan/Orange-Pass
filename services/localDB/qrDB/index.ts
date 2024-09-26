@@ -35,60 +35,6 @@ export async function createTable() {
         console.error('Error creating qr table or indexes:', error);
     }
 }
-
-// Optimized function to insert a QR code
-export async function insertQrCode(qrData: QRRecord): Promise<boolean> {
-    const db = await openDatabase();
-    try {
-        // Check if the QR code already exists in the database by id
-        const existingQr = await db.getFirstAsync<QRRecord>('SELECT * FROM qrcodes WHERE id = ?', qrData.id);
-        if (existingQr) {
-            console.log(`QR code with id ${qrData.id} already exists, skipping insertion.`);
-            return false;
-        }
-
-        // Use a transaction for the insert operation
-        await db.runAsync('BEGIN TRANSACTION');
-        await db.runAsync(
-            `INSERT INTO qrcodes 
-            (id, qr_index, user_id, code, metadata, metadata_type, account_name, account_number, type, created, updated, is_deleted, is_synced) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            qrData.id,
-            qrData.qr_index,
-            qrData.user_id,
-            qrData.code,
-            qrData.metadata,
-            qrData.metadata_type,
-            qrData.account_name || '',
-            qrData.account_number || '',
-            qrData.type,
-            qrData.created,
-            qrData.updated,
-            qrData.is_deleted ? 1 : 0,
-            qrData.is_synced ? 1 : 0
-        );
-        await db.runAsync('COMMIT');
-        console.log('QR code inserted successfully');
-        return true;
-    } catch (error) {
-        await db.runAsync('ROLLBACK');
-        console.error('Failed to insert QR code:', error);
-        return false;
-    }
-}
-
-// Function to retrieve all QR codes with improved performance using indexed queries
-export async function getAllQrCodes() {
-    const db = await openDatabase();
-    try {
-        return await db.getAllAsync<QRRecord>('SELECT * FROM qrcodes WHERE is_deleted = 0 ORDER BY qr_index');
-    } catch (error) {
-        console.error('Error retrieving all QR codes:', error);
-        return [];
-    }
-}
-
-// Function to retrieve a specific QR code by its ID
 export async function getQrCodeById(id: string) {
     const db = await openDatabase();
     try {
@@ -110,30 +56,6 @@ export async function getQrCodesByUserId(userId: string) {
     }
 }
 
-// Optimized update function with error handling
-export async function updateQrCode(qrData: QRRecord) {
-    const db = await openDatabase();
-    try {
-        await db.runAsync(
-            'UPDATE qrcodes SET user_id = ?, qr_index = ?, code = ?, metadata = ?, account_name = ?, account_number = ?, type = ?, updated = ?, is_deleted = ?, is_synced = 0 WHERE id = ?',
-            qrData.user_id,
-            qrData.qr_index,
-            qrData.code,
-            qrData.metadata,
-            qrData.metadata_type,
-            qrData.account_name,
-            qrData.account_number,
-            qrData.type,
-            qrData.updated,
-            qrData.is_deleted,
-            qrData.id
-        );
-        console.log('QR code updated and marked as unsynced');
-    } catch (error) {
-        console.error('Error updating QR code:', error);
-    }
-}
-
 // Optimized delete function to mark as deleted
 export async function deleteQrCode(id: string) {
     const db = await openDatabase();
@@ -150,7 +72,6 @@ export async function deleteQrCode(id: string) {
         console.error(`Failed to delete QR code ${id}:`, error);
     }
 }
-
 
 // Optimized bulk insert with transaction handling
 export async function insertQrCodesBulk(qrDataArray: QRRecord[]): Promise<void> {
@@ -263,17 +184,6 @@ export async function getUnsyncedQrCodes(userId: string) {
         return [];
     }
 }
-// Function to close the database
-export async function closeDatabase() {
-    const db = await openDatabase();
-    try {
-        await db.closeAsync();
-        console.log('Database closed');
-    } catch (error) {
-        console.error('Error closing the database:', error);
-    }
-}
-
 // Function to retrieve locally deleted QR codes by user ID
 export async function getLocallyDeletedQrCodes(userId: string) {
     const db = await openDatabase();
@@ -346,5 +256,71 @@ export async function insertOrUpdateQrCodes(qrDataArray: QRRecord[]): Promise<vo
     } catch (error) {
         await db.runAsync('ROLLBACK');
         console.error('Failed to insert/update QR codes:', error);
+    }
+}
+// Function to filter QR codes using searchQuery and filter
+export async function filterQrCodes(userId: string, searchQuery: string = '', filter: string = 'all') {
+    const db = await openDatabase();
+    try {
+        // Construct SQL query with filtering based on `searchQuery` and `filter`
+        let query = 'SELECT * FROM qrcodes WHERE user_id = ? AND is_deleted = 0';
+        const queryParams: any[] = [userId];
+
+        // Add searchQuery filtering
+        if (searchQuery) {
+            query += ' AND (code LIKE ? OR metadata LIKE ? OR account_name LIKE ? OR account_number LIKE ?)';
+            const searchPattern = `%${searchQuery}%`;
+            queryParams.push(searchPattern, searchPattern, searchPattern, searchPattern);
+        }
+
+        // Add type filter
+        if (filter !== 'all') {
+            query += ' AND type = ?';
+            queryParams.push(filter);
+        }
+
+        // Add ordering
+        query += ' ORDER BY qr_index';
+
+        return await db.getAllAsync<QRRecord>(query, ...queryParams);
+    } catch (error) {
+        console.error('Error filtering QR codes:', error);
+        return [];
+    }
+}
+
+// Function to update the qr_index and updated timestamp of QR codes in bulk
+export async function updateQrIndexes(qrDataArray: QRRecord[]): Promise<void> {
+    const db = await openDatabase();
+    const updatedAt = new Date().toISOString(); // Current timestamp in ISO format
+    
+    try {
+        await db.runAsync('BEGIN TRANSACTION');
+
+        for (const qrData of qrDataArray) {
+            await db.runAsync(
+                'UPDATE qrcodes SET qr_index = ?, updated = ?, is_synced = 0 WHERE id = ?',
+                qrData.qr_index,
+                updatedAt,
+                qrData.id
+            );
+        }
+
+        await db.runAsync('COMMIT');
+        console.log('QR indexes and timestamps updated successfully');
+    } catch (error) {
+        await db.runAsync('ROLLBACK');
+        console.error('Failed to update QR indexes and timestamps:', error);
+    }
+}
+
+// Function to close the database
+export async function closeDatabase() {
+    const db = await openDatabase();
+    try {
+        await db.closeAsync();
+        console.log('Database closed');
+    } catch (error) {
+        console.error('Error closing the database:', error);
     }
 }

@@ -26,6 +26,7 @@ import { ThemedEmptyCard, ThemedCardItem } from '@/components/cards';
 import ThemedFilterSkeleton from '@/components/skeletons/ThemedFilterSkeleton';
 import ThemedCardSkeleton from '@/components/skeletons/ThemedCardSkeleton';
 import { ThemedStatusToast } from '@/components/toast/ThemedOfflineToast';
+import { ThemedModal } from '@/components/modals/ThemedIconModal';
 import { fetchQrData } from '@/services/auth/fetchQrData';
 import { RootState } from '@/store/rootReducer';
 import { t } from '@/i18n';
@@ -33,7 +34,7 @@ import BottomSheet from '@gorhom/bottom-sheet';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { triggerHapticFeedback } from '@/utils/haptic';
 import Avatar, { genConfig } from '@zamplyy/react-native-nice-avatar';
-import { storage } from '@/utils/storage';
+
 
 import {
   createTable,
@@ -42,14 +43,16 @@ import {
   syncQrCodes,
   getLocallyDeletedQrCodes,
   insertOrUpdateQrCodes,
+  updateQrIndexes,
 } from '@/services/localDB/qrDB';
 
 function HomeScreen() {
   const color = useThemeColor({ light: '#5A4639', dark: '#FFF5E1' }, 'text');
-  const [avatarConfig, setAvatarConfig] = useState(genConfig());
+  // const [avatarConfig, setAvatarConfig] = useState(genConfig());
   const [isEmpty, setIsEmpty] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [isToastVisible, setIsToastVisible] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isActive, setIsActive] = useState(false);
@@ -75,12 +78,12 @@ function HomeScreen() {
       console.log('Cannot sync while offline');
       return;
     }
-  
+
     try {
       setIsSyncing(true);
       setToastMessage(t('homeScreen.syncing'));
       setIsToastVisible(true);
-  
+
       // Sync local changes (new, updated, deleted) to the server
       await syncQrCodes(userId);
     } catch (error) {
@@ -91,42 +94,43 @@ function HomeScreen() {
       setIsToastVisible(false);
     }
   }, [isOffline]);
-  
+
   const fetchData = useCallback(async () => {
     if (!userId) return;
-  
+
     setIsLoading(true);
-  
+
     try {
       // Fetch local data first
       const localData = await getQrCodesByUserId(userId);
       setQrData(localData);
-  
+      console.log('Local data:', localData);
+
       if (localData.length === 0) {
         console.log('No data found locally, syncing with the server...');
       }
-  
+
       // Fetch server data asynchronously in the background
       const serverSyncTask = syncWithServer(userId);
-  
+
       // Fetch and compare server data with local data in parallel
       const [serverData, locallyDeletedData] = await Promise.all([
         fetchQrData(userId, 1, 30),
         getLocallyDeletedQrCodes(userId),
       ]);
-  
+
       const filteredServerData = serverData.items.filter(item => {
         // Filter out server items that are deleted locally
         return !locallyDeletedData.some(deletedItem => deletedItem.id === item.id);
       });
-  
+
       if (filteredServerData.length > 0) {
         await insertOrUpdateQrCodes(filteredServerData);
         setQrData(filteredServerData);
         animateEmptyCard();
       }
       setIsEmpty(filteredServerData.length === 0);
-  
+
       // Wait for the server sync task to complete
       await serverSyncTask;
     } catch (error) {
@@ -137,7 +141,7 @@ function HomeScreen() {
       setIsLoading(false);
     }
   }, [userId, syncWithServer]);
-  
+
   // Animate empty card when isEmpty changes to true
   useEffect(() => {
     if (isEmpty) {
@@ -155,32 +159,40 @@ function HomeScreen() {
       }
     };
 
-    const configAvatar = async () => {
-      const savedConfig = storage.getString('avatarConfig');
-  
-      if (!savedConfig) {
-        // Generate a new config and set a fixed background color
-        const newConfig = {
-          ...genConfig(),
-          faceColor: "#D3B08C",
-          bgColor: '#FFDDC1', // Your desired fixed background color (e.g., light peach)
-        };
-        
-        // Save the new avatar config with the fixed background color
-        storage.set('avatarConfig', JSON.stringify(newConfig));
-        setAvatarConfig(newConfig);
-      } else {
-        setAvatarConfig(JSON.parse(savedConfig)); // Load saved config
-      }
-    }
+    // const configAvatar = async () => {
+    //   const savedConfig = storage.getString('avatarConfig');
+
+    //   if (!savedConfig) {
+    //     // Generate a new config and set a fixed background color
+    //     const newConfig = {
+    //       ...genConfig(),
+    //       faceColor: "#D3B08C",
+    //       bgColor: '#FFDDC1', // Your desired fixed background color (e.g., light peach)
+    //     };
+
+    //     // Save the new avatar config with the fixed background color
+    //     storage.set('avatarConfig', JSON.stringify(newConfig));
+    //     setAvatarConfig(newConfig);
+    //   } else {
+    //     setAvatarConfig(JSON.parse(savedConfig)); // Load saved config
+    //   }
+    // }
     setupDatabase();
-    configAvatar();
+    // configAvatar();
   }, []);
 
   useEffect(() => {
     setToastMessage(isOffline ? t('homeScreen.offline') : '');
     setIsToastVisible(isOffline);
   }, [isOffline]);
+  
+  useEffect(() => {
+    isEmptyShared.value = isEmpty ? 1 : 0;
+  }, [isEmpty]);
+
+  useEffect(() => {
+    isActiveShared.value = isActive ? 1 : 0;
+  }, [isActive]);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -191,14 +203,6 @@ function HomeScreen() {
       clearTimeout(handler);
     };
   }, [searchQuery]);
-
-  useEffect(() => {
-    isEmptyShared.value = isEmpty ? 1 : 0;
-  }, [isEmpty]);
-
-  useEffect(() => {
-    isActiveShared.value = isActive ? 1 : 0;
-  }, [isActive]);
 
   const filteredData = useMemo(() => {
     try {
@@ -284,11 +288,24 @@ function HomeScreen() {
     setIsActive(true);
 
   }, []);
+
   const onDragEnd = useCallback(({ data }: { data: QRRecord[] }) => {
-    setQrData(data);
-    triggerHapticFeedback();
+    setQrData(data); // Update the component state with the new order
+
+    // Create a new array with updated qr_index values
+    const updatedData = data.map((item, index) => ({ ...item, qr_index: index }));
+
+    // Update the indexes and timestamps in the local database
+    updateQrIndexes(updatedData).then(() => {
+        console.log('QR indexes and timestamps updated in the database');
+    }).catch((error) => {
+        console.error('Error updating QR indexes and timestamps:', error);
+    });
+
+    triggerHapticFeedback(); // Optional: Provide haptic feedback
     setIsActive(false);
-  }, []);
+}, []);
+
 
   const scrollToTop = useCallback(() => {
     if (flatListRef.current) {
@@ -301,6 +318,11 @@ function HomeScreen() {
   const handleExpandPress = useCallback((id: string) => {
     setSelectedItemId(id);
     bottomSheetRef.current?.expand();
+  }, []);
+
+  const onDeleteSheetPress = useCallback(() => {
+    bottomSheetRef.current?.close();
+    setIsModalVisible(true);
   }, []);
 
   const onDeletePress = async () => {
@@ -465,11 +487,20 @@ function HomeScreen() {
       />
       <ThemedBottomSheet
         ref={bottomSheetRef}
-        onDeletePress={onDeletePress}
+        onDeletePress={onDeleteSheetPress}
         onEditPress={() => { }}
         editText={t('homeScreen.edit')}
         deleteText={t('homeScreen.delete')}
       />
+      <ThemedModal
+        primaryActionText='Delete'
+        onPrimaryAction={onDeletePress}
+        onSecondaryAction={() => {setIsModalVisible(false)}}
+        secondaryActionText='Cancel'
+        title={'Delete this item?'}
+        message='Are you sure you want to delete this item'
+        isVisible={isModalVisible}
+        iconName="trash" />
     </ThemedView>
   );
 }

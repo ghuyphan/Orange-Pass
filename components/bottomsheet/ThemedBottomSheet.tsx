@@ -1,4 +1,4 @@
-import React, { forwardRef, useImperativeHandle, useRef } from 'react';
+import React, { forwardRef, useImperativeHandle, useMemo, useRef } from 'react';
 import { View, StyleSheet } from 'react-native';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView, TouchableHighlight } from '@gorhom/bottom-sheet';
 import { ThemedText } from '../ThemedText';
@@ -19,7 +19,7 @@ interface ThemedBottomSheetProps {
     onDeletePress?: () => void;
 }
 
-const ThemedBottomSheet = forwardRef<BottomSheet, ThemedBottomSheetProps>(
+const ThemedBottomSheet = React.memo(forwardRef<BottomSheet, ThemedBottomSheetProps>(
     ({ title,
         description,
         deleteText,
@@ -29,9 +29,11 @@ const ThemedBottomSheet = forwardRef<BottomSheet, ThemedBottomSheetProps>(
     },
         ref
     ) => {
-        const color = useColorScheme() === 'light' ? Colors.light.background : Colors.dark.background;
-        const underlayColor = useColorScheme() === 'light' ? Colors.light.toastBackground : Colors.dark.toastBackground;
-        const iconColor = useColorScheme() === 'light' ? Colors.light.text : Colors.dark.text;
+        const colorScheme = useColorScheme();
+        const color = useMemo(() => (colorScheme === 'light' ? Colors.light.background : Colors.dark.background), [colorScheme]);
+        const iconColor = useMemo(() => (colorScheme === 'light' ? Colors.light.text : Colors.dark.text), [colorScheme]);
+        // const color = useColorScheme() === 'light' ? Colors.light.background : Colors.dark.background;
+        // const iconColor = useColorScheme() === 'light' ? Colors.light.text : Colors.dark.text;
         const bottomSheetRef = useRef<BottomSheet>(null);
 
         // Expose BottomSheet methods to parent component via ref
@@ -84,8 +86,8 @@ const ThemedBottomSheet = forwardRef<BottomSheet, ThemedBottomSheetProps>(
                                     <ThemedText type='defaultSemiBold' style={styles.buttonText}>{editText}</ThemedText>
                                 </View>
                             </TouchableWithoutFeedback>
-                            <TouchableHighlight
-                                underlayColor={underlayColor}
+                            <TouchableWithoutFeedback
+                                // underlayColor={underlayColor}
                                 onPress={onDeletePress}
                                 style={styles.touchableHighlight}
                             >
@@ -93,14 +95,14 @@ const ThemedBottomSheet = forwardRef<BottomSheet, ThemedBottomSheetProps>(
                                     <Ionicons name="trash-outline" size={20} color={iconColor} />
                                     <ThemedText type='defaultSemiBold' style={styles.buttonText}>{deleteText}</ThemedText>
                                 </View>
-                            </TouchableHighlight>
+                            </TouchableWithoutFeedback>
                         </View>
                     </BottomSheetScrollView>
                 </BottomSheet>
             </Portal>
         );
     }
-);
+));
 
 const styles = StyleSheet.create({
     background: {
@@ -142,7 +144,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         gap: 10,
         paddingVertical: 10,
-        // paddingHorizontal: 15,
+        paddingHorizontal: 10,
     },
     buttonText: {
         fontSize: 18,
