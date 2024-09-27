@@ -84,6 +84,10 @@
     "syncing": "Đang đồng bộ...",
     "deleting": "Đang xoá...",
     "offline": "Bạn đang ngoại tuyến. Vui lòng kết nối internet để đồng bộ dữ liệu.",
+    "confirmDeleteTitle": "Chuyển vào thùng rác?",
+    "confirmDeleteMessage": "Bạn có chắc chắn muốn chuyển thẻ này vào thùng rác không?",
+    "cancel": "Hủy",
+    "moveToTrash": "Chuyển vào thùng rác",
     "filters": {
       "all": "Tất cả",
       "bank": "Ngân hàng",

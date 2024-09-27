@@ -77,18 +77,18 @@ export function ThemedIconInput({
                 </View>
                 <View style={styles.rightContainer}>
                     {localValue.length > 0 && (
-                        <TouchableHighlight
+                        <TouchableWithoutFeedback
                             onPress={onClearValue}
-                            activeOpacity={0.6}
-                            underlayColor="#FFF5E1"
-                            style={styles.iconTouchable}
+                            
                         >
+                            <View style={styles.iconTouchable}>
                             <Ionicons
                                 name={'close-circle-sharp'}
                                 size={20}
                                 color={color}
                             />
-                        </TouchableHighlight>
+                            </View>
+                        </TouchableWithoutFeedback>
                     )}
                     {rightIconName && (
                         <TouchableWithoutFeedback

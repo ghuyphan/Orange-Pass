@@ -12,6 +12,7 @@ import Animated, {
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import { ThemedText } from '@/components/ThemedText';
 import { triggerHapticFeedback } from '@/utils/haptic';
+import { cancelAnimation } from 'react-native-reanimated';
 
 const MemoizedThemedText = React.memo(ThemedText);
 
@@ -22,7 +23,7 @@ interface ZoomControlProps {
 }
 
 export const ZoomControl: React.FC<ZoomControlProps> = ({ zoom, minZoom, maxZoom }) => {
-  const buttonWidth = 35; // Width of each zoom button
+  const buttonWidth = 37; // Width of each zoom button
 
   // Compute zoom levels dynamically using minZoom and maxZoom
   const zoomLevels = React.useMemo(() => {
@@ -86,9 +87,10 @@ export const ZoomControl: React.FC<ZoomControlProps> = ({ zoom, minZoom, maxZoom
       activeButtonPosition.value = Math.max(0, Math.min(newPosition, totalWidth));
 
       const newIndex = Math.min(
-        Math.max(0, Math.floor((activeButtonPosition.value + buttonWidth / 2) / buttonWidth)),
+        Math.max(0, Math.round(activeButtonPosition.value / buttonWidth)),
         zoomLevels.length - 1
       );
+          
       if (newIndex !== activeButtonIndex.value) {
         activeButtonIndex.value = newIndex;
         const clampedLevel = Math.max(minZoom, Math.min(maxZoom, zoomLevels[newIndex]));
@@ -98,13 +100,13 @@ export const ZoomControl: React.FC<ZoomControlProps> = ({ zoom, minZoom, maxZoom
     })
     .onEnd(() => {
       'worklet';
-      // Animate back to the exact position
+      // Snap to the exact position
       activeButtonPosition.value = withSpring(activeButtonIndex.value * buttonWidth, {
         damping: 30,
         stiffness: 200,
       });
       scale.value = withSpring(1, { damping: 20, stiffness: 150 });
-    });
+    });    
 
   return (
     <GestureDetector gesture={swipeGesture}>
@@ -138,13 +140,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 25,
     overflow: 'hidden',
   },
   zoomButton: {
-    width: 35,
-    height: 35,
+    width: 37,
+    aspectRatio: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -158,9 +160,9 @@ const styles = StyleSheet.create({
   },
   activeZoomButton: {
     position: 'absolute',
-    width: 35,
-    height: 35,
-    backgroundColor: 'rgba(0, 0, 0, 0.35)',
+    width: 37,
+    aspectRatio: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
     borderRadius: 25,
   },
 });

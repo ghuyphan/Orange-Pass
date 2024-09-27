@@ -1,66 +1,107 @@
 import enDatas from '@/assets/enDatas.json';
 import viDatas from '@/assets/viDatas.json';
+import colorConfig from '@/assets/color-config.json';
 import { getLocales } from 'expo-localization';
 
-// Helper function to normalize and remove accents/diacritics from text
+// Define types
+type ColorConfigType = {
+    [key: string]: {
+        color: { light: string; dark: string };
+        accent_color: { light: string; dark: string };
+    };
+};
+
+type ItemType = {
+    code: string;
+    name: string;
+    full_name: string;
+    normalized_name: string;
+    normalized_full_name: string;
+    color: { light: string; dark: string };
+    accent_color: { light: string; dark: string };
+};
+
+// Cast colorConfig to the defined type
+const colorConfigTyped = colorConfig as ColorConfigType;
+
+// Helper function to normalize text
 function normalizeText(text: string): string {
-    return text.normalize('NFD') // Normalize to decomposed form
-        .replace(/[\u0300-\u036f]/g, '') // Remove diacritical marks
-        .toLowerCase(); // Convert to lowercase
+    return text
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase();
 }
 
-// Cache for language code and data
+// Caches
 let cachedLanguageCode: string | null = null;
-let cachedData: any = null;
-let cachedDataTypes: any = null;
+let cachedDataByCode: { [type: string]: { [code: string]: ItemType } } = {};
+let searchIndex: { [type: string]: { [normalizedTerm: string]: Set<string> } } = {};
 
-// Preprocess data and normalize item names
+// Initialize data and build indices
 function initializeData() {
     const languageCode = getLocales()[0]?.languageCode || 'en';
+
     if (languageCode !== cachedLanguageCode) {
         cachedLanguageCode = languageCode;
         const data = languageCode === 'en' ? enDatas : viDatas;
 
-        // Preprocess and normalize item names and full names
-        cachedData = data;
-        cachedDataTypes = {
-            bank: data.bank
-                ? data.bank.map((item: any) => ({
-                      ...item,
-                      normalized_name: normalizeText(item.name),
-                      normalized_full_name: normalizeText(item.full_name),
-                  }))
-                : [],
-            store: data.store
-                ? data.store.map((item: any) => ({
-                      ...item,
-                      normalized_name: normalizeText(item.name),
-                      normalized_full_name: normalizeText(item.full_name),
-                  }))
-                : [],
-            // ewallet: data.ewallet
-            //     ? data.ewallet.map((item: any) => ({
-            //           ...item,
-            //           normalized_name: normalizeText(item.name),
-            //           normalized_full_name: normalizeText(item.full_name),
-            //       }))
-            //     : [],
-        };
+        cachedDataByCode = {};
+        searchIndex = {};
+        const types = ['bank', 'store']; // Add 'ewallet' if needed
+
+        types.forEach((type) => {
+            if (data[type]) {
+                const itemsArray = data[type];
+                const itemsByCode: { [code: string]: ItemType } = {};
+                const typeSearchIndex: { [normalizedTerm: string]: Set<string> } = {};
+
+                itemsArray.forEach((item: any) => {
+                    const code = item.code as string;
+                    const normalized_name = normalizeText(item.name);
+                    const normalized_full_name = normalizeText(item.full_name);
+
+                    const colorData = colorConfigTyped[code] || { color: { light: '', dark: '' }, accent_color: { light: '', dark: '' } };
+
+                    const processedItem: ItemType = {
+                        ...item,
+                        normalized_name,
+                        normalized_full_name,
+                        color: colorData.color,
+                        accent_color: colorData.accent_color,
+                    };
+
+                    // Store item by code for O(1) access
+                    itemsByCode[code] = processedItem;
+
+                    // Build search index
+                    const terms = new Set<string>([normalized_name, normalized_full_name]);
+                    terms.forEach((term) => {
+                        if (!typeSearchIndex[term]) {
+                            typeSearchIndex[term] = new Set();
+                        }
+                        typeSearchIndex[term].add(code);
+                    });
+                });
+
+                cachedDataByCode[type] = itemsByCode;
+                searchIndex[type] = typeSearchIndex;
+            } else {
+                cachedDataByCode[type] = {};
+                searchIndex[type] = {};
+            }
+        });
     }
 }
-
 
 // Initialize data once
 initializeData();
 
 export function returnItemData(code: string, type: 'bank' | 'store' | 'ewallet') {
-    // Use cached data
-    if (!cachedData) {
+    if (!cachedDataByCode[type]) {
         initializeData();
     }
-    const dataType = cachedData[type];
 
-    const item = dataType.find((item: { code: string }) => item.code === code);
+    const item = cachedDataByCode[type][code];
 
     if (item) {
         return {
@@ -80,42 +121,27 @@ export function returnItemData(code: string, type: 'bank' | 'store' | 'ewallet')
 }
 
 export function returnItemCode(searchTerm: string, type?: 'bank' | 'store' | 'ewallet'): string[] {
-    // Ensure data is initialized
-    if (!cachedDataTypes) {
+    if (!searchIndex) {
         initializeData();
     }
 
-    // Build dataTypes array, excluding undefined or empty arrays
-    let dataTypes: Array<any> = [];
-
-    if (type) {
-        if (cachedDataTypes[type] && cachedDataTypes[type].length > 0) {
-            dataTypes.push(cachedDataTypes[type]);
-        }
-    } else {
-        ['bank', 'store', 'ewallet'].forEach((key) => {
-            if (cachedDataTypes[key] && cachedDataTypes[key].length > 0) {
-                dataTypes.push(cachedDataTypes[key]);
-            }
-        });
-    }
-
-    // Normalize search term for case-insensitive and accent-insensitive matching
+    const types = type ? [type] : ['bank', 'store']; // Add 'ewallet' if needed
     const normalizedSearchTerm = normalizeText(searchTerm);
-
     const matchingCodesSet = new Set<string>();
 
-    dataTypes.forEach((dataType) => {
-        dataType.forEach((item: { code: string; normalized_name: string; normalized_full_name: string }) => {
-            if (
-                item.normalized_name.includes(normalizedSearchTerm) ||
-                item.normalized_full_name.includes(normalizedSearchTerm)
-            ) {
-                matchingCodesSet.add(item.code.toLowerCase());
+    types.forEach((t) => {
+        const typeSearchIndex = searchIndex[t];
+        if (typeSearchIndex[normalizedSearchTerm]) {
+            typeSearchIndex[normalizedSearchTerm].forEach((code) => matchingCodesSet.add(code));
+        } else {
+            // Partial matching (if full term not found)
+            for (const term in typeSearchIndex) {
+                if (term.includes(normalizedSearchTerm)) {
+                    typeSearchIndex[term].forEach((code) => matchingCodesSet.add(code));
+                }
             }
-        });
+        }
     });
 
-    // Return an array of unique matching codes
     return Array.from(matchingCodesSet);
 }

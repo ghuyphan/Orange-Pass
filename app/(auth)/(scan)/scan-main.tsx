@@ -142,6 +142,7 @@ export default function ScanScreen() {
   const { gesture, focusPoint, animatedFocusStyle } = useFocusGesture(cameraRef, zoom);
   const minZoom = device?.minZoom ?? 1;
   const maxZoom = Math.min(device?.maxZoom ?? 1, MAX_ZOOM_FACTOR);
+  // console.log({ minZoom, maxZoom });
 
   const cameraAnimatedProps = useAnimatedProps(() => ({
     zoom: Math.max(Math.min(zoom.value, maxZoom), minZoom),
@@ -217,7 +218,7 @@ export default function ScanScreen() {
               setCodeMetadata('');
               setCodeType('');
               setCodeValue('');
-            }, 1000);
+            }, 2000);
           }
           // Only call handleCodeScanned if not already connecting
           handleCodeScanned(firstCode.value ?? '');
@@ -321,7 +322,8 @@ export default function ScanScreen() {
             />
           </Reanimated.View>
           <FocusIndicator focusPoint={focusPoint} animatedFocusStyle={animatedFocusStyle} />
-          {showIndicator == true ? <ScannerFrame highlight={codeScannerHighlights[0]} layout={layout} scanFrame={scanFrame} /> : null}
+          {/* {showIndicator == true ? <ScannerFrame highlight={codeScannerHighlights[0]} layout={layout} scanFrame={scanFrame} /> : null} */}
+          <ScannerFrame highlight={codeScannerHighlights[0]} layout={layout} scanFrame={scanFrame} />
         </SafeAreaView>
       </GestureDetector>
 
@@ -334,11 +336,14 @@ export default function ScanScreen() {
             </View>
           </TouchableWithoutFeedback>
         ) : null}
-        <ZoomControl
-          zoom={zoom}
-          minZoom={Number(minZoom.toFixed(2))}
-          maxZoom={maxZoom}
-        />
+        <View style={styles.zoomControlContainer}>
+          <ZoomControl
+            zoom={zoom}
+            minZoom={Number(minZoom.toFixed(2))}
+            maxZoom={maxZoom}
+          />
+        </View>
+
         <View style={styles.bottomButtonsContainer}>
           <ThemedButton
             iconName="images"
@@ -369,8 +374,8 @@ export default function ScanScreen() {
         setting1Description='Automatically scan for QR codes and barcodes.'
         setting1Value={quickScan}
         onSetting1Press={toggleQuickScan}
-        setting2Text='Show Scan Indicator'
-        setting2Description='Show a visual indicator at the scan point. Turn this on if your devices is fast'
+        setting2Text='Animate Scan Indicator'
+        setting2Description='Animate the scanner indicator when scanning. Turn it off to improve performance.'
         setting2Value={showIndicator}
         onSetting2Press={toggleShowIndicator}
         setting3Text='High Brightness'
@@ -387,7 +392,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'black',
   },
   cameraContainer: {
-    marginTop: STATUSBAR_HEIGHT,
+    marginTop: STATUSBAR_HEIGHT + 5,
     flex: 2.5,
     backgroundColor: 'black',
     borderRadius: 10,
@@ -413,11 +418,13 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   headerButton: {
-    backgroundColor: 'rgba(0, 0, 0, 0.35)',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
   },
   bottomContainer: {
-    flex: 1,
+    // flex: 1, // Remove this line
+    height: 250, // Set a fixed height if needed
   },
+
   qrResultContainer: {
     position: 'absolute',
     bottom: 260,
@@ -437,9 +444,16 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     maxWidth: 200,
   },
+  zoomControlContainer: {
+    position: 'absolute',
+    bottom: 10, // Adjust this value as needed
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+  },
   bottomButtonsContainer: {
     position: 'absolute',
-    bottom: 80,
+    bottom: 90, // Adjust if necessary
     left: 0,
     right: 0,
     flexDirection: 'row',
@@ -448,8 +462,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 60,
     paddingVertical: 10,
   },
+
   bottomButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     padding: 15,
     borderRadius: 50,
   },

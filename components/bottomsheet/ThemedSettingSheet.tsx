@@ -74,9 +74,9 @@ const ThemedSettingSheet = React.memo(forwardRef<BottomSheet, ThemedSettingSheet
                 <BottomSheet
                     ref={bottomSheetRef}
                     index={-1}
-                    backgroundStyle={[styles.background, { backgroundColor: '#FFF5E1' }]}
+                    backgroundStyle={[styles.background, { backgroundColor: color }]}
                     handleStyle={{
-                        backgroundColor: '#FFF5E1',
+                        backgroundColor: color,
                         borderTopLeftRadius: 50,
                         borderTopRightRadius: 50,
                     }}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { StyleSheet, View, Platform, FlatList } from 'react-native';
 import { useSelector } from 'react-redux';
 import Animated, {
@@ -8,8 +8,6 @@ import Animated, {
   withTiming,
   useAnimatedScrollHandler,
   Easing,
-  FadeIn,
-  FadeOut,
 } from 'react-native-reanimated';
 import { router } from 'expo-router';
 import { BlurView } from 'expo-blur';
@@ -36,8 +34,6 @@ import { t } from '@/i18n';
 import BottomSheet from '@gorhom/bottom-sheet';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { triggerHapticFeedback } from '@/utils/haptic';
-import Avatar, { genConfig } from '@zamplyy/react-native-nice-avatar';
-
 
 import {
   createTable,
@@ -52,7 +48,6 @@ import {
 
 function HomeScreen() {
   const color = useThemeColor({ light: '#5A4639', dark: '#FFF5E1' }, 'text');
-  // const [avatarConfig, setAvatarConfig] = useState(genConfig());
   const [isEmpty, setIsEmpty] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [isToastVisible, setIsToastVisible] = useState(false);
@@ -79,80 +74,92 @@ function HomeScreen() {
   const bottomSheetRef = useRef<BottomSheet>(null);
 
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+
   const syncWithServer = useCallback(async (userId: string) => {
     if (isOffline) {
       console.log('Cannot sync while offline');
       return;
     }
-
+  
     try {
       setIsSyncing(true);
       setToastMessage(t('homeScreen.syncing'));
       setIsToastVisible(true);
-
+  
       // Sync local changes (new, updated, deleted) to the server
       await syncQrCodes(userId);
     } catch (error) {
       console.error('Error syncing QR codes:', error);
       setToastMessage(t('homeScreen.syncError'));
+      setIsToastVisible(true);
     } finally {
       setIsSyncing(false);
       setIsToastVisible(false);
     }
-  }, [isOffline]);
-
+  }, []); // Removed isOffline from dependencies
+  
   const fetchData = useCallback(async () => {
     if (!userId) return;
   
     setIsLoading(true);
   
     try {
-      // Fetch local data first
+      // Step 1: Fetch and display local data immediately
       const localData = await getQrCodesByUserId(userId);
       setQrData(localData);
-      console.log('Local data:', localData);
   
-      if (localData.length === 0) {
-        console.log('No data found locally, syncing with the server...');
+      // Set empty state based on local data
+      const isLocalDataEmpty = localData.length === 0;
+      setIsEmpty(isLocalDataEmpty);
+  
+      // Animate empty card if necessary
+      if (isLocalDataEmpty) {
+        animateEmptyCard();
       }
   
-      // Fetch server data asynchronously in the background
-      const serverSyncTask = syncWithServer(userId);
+      // If offline, we can't proceed with server sync
+      if (isOffline) {
+        console.log('Offline mode: cannot sync with server');
+        return;
+      }
   
-      // Fetch and compare server data with local data in parallel
+      // Step 2: Sync local changes with the server
+      await syncWithServer(userId);
+  
+      // Step 3: Fetch server data after successful sync
       const [serverData, locallyDeletedData] = await Promise.all([
         fetchQrData(userId, 1, 30),
         getLocallyDeletedQrCodes(userId),
       ]);
   
-      const filteredServerData = serverData.items.filter(item => {
-        // Filter out server items that are deleted locally
-        return !locallyDeletedData.some(deletedItem => deletedItem.id === item.id);
-      });
+      // Step 4: Filter out server items that are deleted locally
+      const filteredServerData = serverData.items.filter(
+        item => !locallyDeletedData.some(deletedItem => deletedItem.id === item.id)
+      );
   
+      // Step 5: Merge new server data into local storage
       if (filteredServerData.length > 0) {
         await insertOrUpdateQrCodes(filteredServerData);
-        
-        // Fetch updated local data after inserting/updating
+  
+        // Step 6: Update local data displayed to the user
         const updatedLocalData = await getQrCodesByUserId(userId);
         setQrData(updatedLocalData);
+        setIsEmpty(updatedLocalData.length === 0);
         animateEmptyCard();
       }
-      setIsEmpty(filteredServerData.length === 0);
   
-      // Wait for the server sync task to complete
-      await serverSyncTask;
     } catch (error) {
-      console.error('Error fetching QR codes:', error);
+      console.error('Error in fetchData:', error);
       setToastMessage(t('homeScreen.fetchError'));
       setIsToastVisible(true);
     } finally {
       setIsLoading(false);
     }
-  }, [userId, syncWithServer]);  
-
-  // Animate empty card when isEmpty changes to true
+  }, [userId]); // Removed isOffline and syncWithServer from dependencies
+  
+  // Animate empty card when isEmpty changes
   useEffect(() => {
+    isEmptyShared.value = isEmpty ? 1 : 0;
     if (isEmpty) {
       animateEmptyCard();
     }
@@ -168,36 +175,13 @@ function HomeScreen() {
       }
     };
 
-    // const configAvatar = async () => {
-    //   const savedConfig = storage.getString('avatarConfig');
-
-    //   if (!savedConfig) {
-    //     // Generate a new config and set a fixed background color
-    //     const newConfig = {
-    //       ...genConfig(),
-    //       faceColor: "#D3B08C",
-    //       bgColor: '#FFDDC1', // Your desired fixed background color (e.g., light peach)
-    //     };
-
-    //     // Save the new avatar config with the fixed background color
-    //     storage.set('avatarConfig', JSON.stringify(newConfig));
-    //     setAvatarConfig(newConfig);
-    //   } else {
-    //     setAvatarConfig(JSON.parse(savedConfig)); // Load saved config
-    //   }
-    // }
     setupDatabase();
-    // configAvatar();
-  }, []);
+  }, [fetchData]);
 
   useEffect(() => {
     setToastMessage(isOffline ? t('homeScreen.offline') : '');
     setIsToastVisible(isOffline);
   }, [isOffline]);
-  
-  useEffect(() => {
-    isEmptyShared.value = isEmpty ? 1 : 0;
-  }, [isEmpty]);
 
   useEffect(() => {
     isActiveShared.value = isActive ? 1 : 0;
@@ -206,7 +190,8 @@ function HomeScreen() {
   const debouncedSetSearchQuery = useCallback(
     debounce((query) => {
       setDebouncedSearchQuery(query);
-    }, 200), []
+    }, 300),
+    []
   );
 
   // Update debounced search query whenever searchQuery changes
@@ -217,12 +202,11 @@ function HomeScreen() {
     return () => {
       debouncedSetSearchQuery.cancel();
     };
-
   }, [searchQuery, debouncedSetSearchQuery]);
 
   // Fetch filtered data from the database
   useEffect(() => {
-    if (userId) { 
+    if (userId) {
       filterQrCodes(userId, debouncedSearchQuery, filter).then(setQrData);
     }
   }, [userId, debouncedSearchQuery, filter]);
@@ -235,13 +219,12 @@ function HomeScreen() {
   };
 
   const titleContainerStyle = useAnimatedStyle(() => {
-    const threshold = 40; // Adjust this threshold as needed
+    const threshold = 40;
     const shouldSnap = scrollY.value > threshold;
 
-    // Using withTiming with Easing for a smooth transition
     const translateY = withTiming(shouldSnap ? -30 : 0, {
       duration: 300,
-      easing: Easing.out(Easing.ease), // Easing effect to smooth the transition
+      easing: Easing.out(Easing.ease),
     });
 
     const opacity = withTiming(shouldSnap ? 0 : 1, {
@@ -249,7 +232,7 @@ function HomeScreen() {
       easing: Easing.out(Easing.ease),
     });
 
-    const zIndex = scrollY.value > 40 || isActiveShared.value ? 0 : 20;
+    const zIndex = scrollY.value > threshold || isActiveShared.value ? 0 : 20;
 
     return {
       opacity,
@@ -288,83 +271,95 @@ function HomeScreen() {
   const onDragBegin = useCallback(() => {
     triggerHapticFeedback();
     setIsActive(true);
-
   }, []);
 
-// onDragEnd function
-const onDragEnd = useCallback(async ({ data }: { data: QRRecord[] }) => {
-  try {
-    // Update the component state with the new order
-    setQrData(data);
+  const onDragEnd = useCallback(async ({ data }: { data: QRRecord[] }) => {
+    try {
+      // Check if the order has changed
+      const isOrderChanged =
+        data.length !== qrData.length ||
+        data.some((item, index) => item.id !== qrData[index].id);
+  
+      // Proceed only if the order has changed
+      if (isOrderChanged) {
+        // Update the component state with the new order
+        setQrData(data);
+  
+        // Update qr_index values and timestamps
+        const updatedData = data.map((item, index) => ({
+          ...item,
+          qr_index: index,
+          updated: new Date().toISOString(),
+        }));
+  
+        // Update the indexes and timestamps in the local database
+        await updateQrIndexes(updatedData);
+        // console.log('QR indexes and timestamps updated in the database');
+      } else {
+        // console.log('Order has not changed; no update needed.');
+      }
+    } catch (error) {
+      console.error('Error updating QR indexes and timestamps:', error);
+    } finally {
+      triggerHapticFeedback();
+      setIsActive(false);
+    }
+  }, [qrData]);
+  
+  const scrollToTop = useCallback(() => {
+    flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+  }, []);
 
-    // Update qr_index values and timestamps
-    const updatedData = data.map((item, index) => ({
-      ...item,
-      qr_index: index,
-      updated: new Date().toISOString(),
-    }));
+  const handleExpandPress = useCallback((id: string) => {
+    setSelectedItemId(id);
+    bottomSheetRef.current?.expand();
+  }, []);
 
-    // Update the indexes and timestamps in the local database
-    await updateQrIndexes(updatedData);
-    console.log('QR indexes and timestamps updated in the database');
-  } catch (error) {
-    console.error('Error updating QR indexes and timestamps:', error);
-  } finally {
-    triggerHapticFeedback(); // Optional: Provide haptic feedback
-    setIsActive(false);
-  }
-}, [triggerHapticFeedback]);
-
-// scrollToTop function
-const scrollToTop = useCallback(() => {
-  flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
-}, []);
-
-// handleExpandPress function
-const handleExpandPress = useCallback((id: string) => {
-  setSelectedItemId(id);
-  bottomSheetRef.current?.expand();
-}, []);
-
-// onDeleteSheetPress function
-const onDeleteSheetPress = useCallback(() => {
-  bottomSheetRef.current?.close();
-  setIsModalVisible(true);
-}, []);
-
-// onDeletePress function
-const onDeletePress = useCallback(async () => {
-  if (!selectedItemId) return;
-
-  try {
+  const onDeleteSheetPress = useCallback(() => {
     bottomSheetRef.current?.close();
-    setIsSyncing(true);
-    setIsToastVisible(true);
-    setToastMessage(t('homeScreen.deleting'));
+    setIsModalVisible(true);
+  }, []);
 
-    // Mark the QR code as deleted in the local database
-    await deleteQrCode(selectedItemId);
-
-    // Fetch updated data from the local database
-    const updatedLocalData = await getQrCodesByUserId(userId);
-
-    // Update state with the new data
-    setQrData(updatedLocalData);
-    setIsEmpty(updatedLocalData.length === 0);
-
-    // Deletion successful, hide modal and toast
-    setIsModalVisible(false);
-    setIsToastVisible(false);
-  } catch (error) {
-    console.error('Error deleting QR code:', error);
-    setToastMessage(t('homeScreen.deleteError')); // Display an error toast if deletion fails
-    // Keep the toast visible to show the error message
-  } finally {
-    setIsSyncing(false);
-    setSelectedItemId(null); // Reset selected item after deletion
-  }
-}, [selectedItemId, userId]);
-
+  const onDeletePress = useCallback(async () => {
+    if (!selectedItemId) return;
+  
+    try {
+      setIsSyncing(true);
+      setIsToastVisible(true);
+      setToastMessage(t('homeScreen.deleting'));
+  
+      // Mark the QR code as deleted in the local database
+      await deleteQrCode(selectedItemId);
+  
+      // Fetch updated data from the local database
+      const updatedLocalData = await getQrCodesByUserId(userId);
+  
+      // Reindex the remaining items
+      const reindexedData = updatedLocalData.map((item, index) => ({
+        ...item,
+        qr_index: index,
+        updated: new Date().toISOString(),
+      }));
+  
+      // Update the indexes and timestamps in the local database
+      await updateQrIndexes(reindexedData);
+  
+      // Update state with the new data
+      setQrData(reindexedData);
+      setIsEmpty(reindexedData.length === 0);
+  
+      // Deletion successful, hide modal and toast
+      setIsModalVisible(false);
+      setIsToastVisible(false);
+    } catch (error) {
+      console.error('Error deleting QR code:', error);
+      setToastMessage(t('homeScreen.deleteError'));
+      setIsToastVisible(true);
+    } finally {
+      setSelectedItemId(null);
+      setIsSyncing(false);
+    }
+  }, [selectedItemId, userId]);
 
   const renderItem = useCallback(
     ({ item, drag }: { item: QRRecord; drag: () => void }) => (
@@ -404,7 +399,6 @@ const onDeletePress = useCallback(async () => {
               onPress={onNavigateToScanScreen}
             />
             <ThemedButton iconName="settings" style={styles.titleButton} onPress={() => { }} />
-            {/* <Avatar size={45} {...avatarConfig} /> */}
           </View>
         </View>
         {!isEmpty && (
@@ -456,7 +450,9 @@ const onDeletePress = useCallback(async () => {
           ListEmptyComponent={
             <View style={styles.emptyItem}>
               <Ionicons color={color} name="search" size={40} />
-              <ThemedText style={{ textAlign: 'center' }}>{t('homeScreen.noItemFound')}</ThemedText>
+              <ThemedText style={{ textAlign: 'center' }}>
+                {t('homeScreen.noItemFound')}
+              </ThemedText>
             </View>
           }
           automaticallyAdjustKeyboardInsets
@@ -470,7 +466,8 @@ const onDeletePress = useCallback(async () => {
           showsVerticalScrollIndicator={false}
           onDragBegin={onDragBegin}
           onDragEnd={onDragEnd}
-          dragItemOverflow={false}      
+          dragItemOverflow={false}
+          activationDistance={20}
           onScrollOffsetChange={(offset) => {
             scrollY.value = offset;
           }}
@@ -496,14 +493,15 @@ const onDeletePress = useCallback(async () => {
         deleteText={t('homeScreen.delete')}
       />
       <ThemedModal
-        primaryActionText='Delete'
+        primaryActionText={t('homeScreen.moveToTrash')}
         onPrimaryAction={onDeletePress}
-        onSecondaryAction={() => {setIsModalVisible(false)}}
-        secondaryActionText='Cancel'
-        title={'Move to trash?'}
-        message={'Are you sure you want to move this item to trash?'}
+        onSecondaryAction={() => setIsModalVisible(false)}
+        secondaryActionText={t('homeScreen.cancel')}
+        title={t('homeScreen.confirmDeleteTitle')}
+        message={t('homeScreen.confirmDeleteMessage')}
         isVisible={isModalVisible}
-        iconName="trash-outline" />
+        iconName="trash-outline"
+      />
     </ThemedView>
   );
 }

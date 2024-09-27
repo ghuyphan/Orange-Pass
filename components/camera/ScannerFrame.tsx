@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { StyleSheet } from 'react-native';
 import Animated, { useAnimatedStyle, withSpring, withTiming, useSharedValue } from 'react-native-reanimated';
 
@@ -16,20 +16,22 @@ interface ScannerFrameProps {
 }
 
 export const ScannerFrame: React.FC<ScannerFrameProps> = ({ highlight, layout, scanFrame }) => {
-    if (!layout) return null;
-    else if (layout && layout.width > 0 && layout.height > 0) {
-    const frameX = useSharedValue(layout.width / 2 - 110); // Center horizontally
-    const frameY = useSharedValue(layout.height / 2 - 110); // Center vertically
+    if (!layout || layout.width <= 0 || layout.height <= 0) return null;
+
+    // Shared values for animations
+    const frameX = useSharedValue(layout.width / 2 - 110); 
+    const frameY = useSharedValue(layout.height / 2 - 110);
     const frameWidth = useSharedValue(220);
     const frameHeight = useSharedValue(220);
-    const frameColor = useSharedValue('rgba(255, 255, 255, 0.8)'); // Default to white
+    const frameColor = useSharedValue('rgba(255, 255, 255, 0.8)');
     const frameBackgroundColor = useSharedValue('rgba(255, 255, 255, 0)');
 
     const [isFirstMount, setIsFirstMount] = useState(true);
 
     useEffect(() => {
-        if (highlight && layout && scanFrame) {
-            const xScale = layout.width / scanFrame.height -0.02;
+        if (highlight && scanFrame) {
+            // Calculate scales and adjusted values
+            const xScale = layout.width / scanFrame.height - 0.02;
             const yScale = layout.height / scanFrame.width;
             const widthScale = layout.height / scanFrame.width + 0.1;
             const heightScale = layout.width / scanFrame.height + 0.15;
@@ -39,6 +41,7 @@ export const ScannerFrame: React.FC<ScannerFrameProps> = ({ highlight, layout, s
             const adjustedWidth = highlight.width * widthScale;
             const adjustedHeight = highlight.height * heightScale;
 
+            // Animate to the new highlight area
             frameX.value = withSpring(adjustedX, { stiffness: 200, damping: 15 });
             frameY.value = withSpring(adjustedY, { stiffness: 200, damping: 15 });
             frameWidth.value = withSpring(adjustedWidth, { stiffness: 200, damping: 15 });
@@ -47,6 +50,7 @@ export const ScannerFrame: React.FC<ScannerFrameProps> = ({ highlight, layout, s
             frameBackgroundColor.value = 'rgba(128, 128, 128, 0.2)';
             setIsFirstMount(false);
         } else if (!isFirstMount) {
+            // Reset to default values
             frameX.value = withTiming(layout.width / 2 - 110);
             frameY.value = withTiming(layout.height / 2 - 110);
             frameWidth.value = withTiming(220);
@@ -56,6 +60,7 @@ export const ScannerFrame: React.FC<ScannerFrameProps> = ({ highlight, layout, s
         }
     }, [highlight, layout, scanFrame, isFirstMount]);
 
+    // Animated styles
     const animatedFrameStyle = useAnimatedStyle(() => ({
         position: 'absolute',
         borderRadius: 6,
@@ -71,15 +76,17 @@ export const ScannerFrame: React.FC<ScannerFrameProps> = ({ highlight, layout, s
         borderColor: frameColor.value,
     }));
 
-    return (
-        <Animated.View style={[animatedFrameStyle]}>
+    // Memoize non-animated styles to avoid unnecessary recalculations
+    const corners = useMemo(() => (
+        <>
             <Animated.View style={[styles.corner, styles.topLeft, animatedBorderStyle]} />
             <Animated.View style={[styles.corner, styles.topRight, animatedBorderStyle]} />
             <Animated.View style={[styles.corner, styles.bottomLeft, animatedBorderStyle]} />
             <Animated.View style={[styles.corner, styles.bottomRight, animatedBorderStyle]} />
-        </Animated.View>
-    );
-}
+        </>
+    ), [animatedBorderStyle]);
+
+    return <Animated.View style={[animatedFrameStyle]}>{corners}</Animated.View>;
 };
 
 const styles = StyleSheet.create({

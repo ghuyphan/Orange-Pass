@@ -40,6 +40,7 @@ export const ThemedPinnedCard = memo(function ThemedCardItem({
     const colorScheme = useColorScheme();
     const colors = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
     const { full_name, name, color, accent_color } = useMemo(() => returnItemData(code, type), [code, type]);
+    console.log(color.light)
     const iconPath = useMemo(() => getIconPath(code), [code]);
 
     return (
@@ -133,13 +134,15 @@ const styles = StyleSheet.create({
         height: '60%',
     },
     companyName: {
-        fontSize: 16,
+        fontSize: 18,
+        color: 'white',
     },
     companyFullName: {
         fontSize: 14,
         flexShrink: 1,
         flexWrap: 'nowrap',
         width: 200,  // Adjust as needed
+        overflow: 'hidden',
     },
     qrContainer: {
         flexDirection: 'column',
@@ -160,10 +163,12 @@ const styles = StyleSheet.create({
     accountName: {
         fontSize: 20,
         textAlign: 'center',
+        color: 'white',
     },
     accountNumber: {
         fontSize: 16,
         textAlign: 'center',
+        color: 'white',
     },
     expandIconContainer: {
         borderRadius: 50,

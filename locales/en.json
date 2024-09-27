@@ -84,6 +84,10 @@
     "syncing": "Syncing...",
     "deleting": "Deleting...",
     "offline": "You are offline. Please connect to the internet to sync your data.",
+    "confirmDeleteTitle": "Move to trash?",
+    "confirmDeleteMessage": "Are you sure you want to move this card to trash?",
+    "cancel": "Cancel",
+    "moveToTrash": "Move to trash",
     "filters": {
       "all": "All",
       "bank": "Bank Accounts",
