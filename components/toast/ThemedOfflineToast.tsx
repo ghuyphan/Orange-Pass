@@ -138,11 +138,12 @@ const styles = StyleSheet.create({
     toastTitle: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 10
+        gap: 15
     },
     toastText: {
         fontSize: 15,
-        width: '80%'
+        width: '80%',
+        overflow: 'hidden'
     },
     rightSection: {
         flexDirection: 'row',

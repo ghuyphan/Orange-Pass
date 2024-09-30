@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { StyleSheet, View, Platform, FlatList } from 'react-native';
+import { StyleSheet, View, Platform, FlatList, InteractionManager } from 'react-native';
 import { useSelector } from 'react-redux';
 import Animated, {
   useAnimatedStyle,
@@ -120,6 +120,7 @@ function HomeScreen() {
       // If offline, we can't proceed with server sync
       if (isOffline) {
         console.log('Offline mode: cannot sync with server');
+        animateEmptyCard();
         return;
       }
   
@@ -256,10 +257,13 @@ function HomeScreen() {
   }, []);
 
   const onNavigateToDetailScreen = useCallback((item: QRRecord) => {
-    const serializedItem = JSON.stringify(item);
-    router.push(`/detail?record=${encodeURIComponent(serializedItem)}`);
+    router.push({
+      pathname: `/detail`,
+      params: { id: item.id, item: encodeURIComponent(JSON.stringify(item)) },
+    });
   }, []);
-
+  
+  
   const onNavigateToScanScreen = useCallback(() => {
     router.push('/(scan)/scan-main');
   }, []);
@@ -313,8 +317,8 @@ function HomeScreen() {
   const handleExpandPress = useCallback((id: string) => {
     setSelectedItemId(id);
     bottomSheetRef.current?.expand();
-  }, []);
-
+  }, [setSelectedItemId, bottomSheetRef]);
+  
   const onDeleteSheetPress = useCallback(() => {
     bottomSheetRef.current?.close();
     setIsModalVisible(true);

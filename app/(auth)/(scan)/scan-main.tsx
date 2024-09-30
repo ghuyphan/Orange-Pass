@@ -324,11 +324,7 @@ export default function ScanScreen() {
           <FocusIndicator focusPoint={focusPoint} animatedFocusStyle={animatedFocusStyle} />
           {/* {showIndicator == true ? <ScannerFrame highlight={codeScannerHighlights[0]} layout={layout} scanFrame={scanFrame} /> : null} */}
           <ScannerFrame highlight={codeScannerHighlights[0]} layout={layout} scanFrame={scanFrame} />
-        </SafeAreaView>
-      </GestureDetector>
-
-      <View style={styles.bottomContainer}>
-        {codeMetadata && quickScan === false ? (
+          {codeMetadata && quickScan === false ? (
           <TouchableWithoutFeedback onPress={() => onResultTap(codeMetadata, codeType)}>
             <View style={styles.qrResultContainer}>
               <Ionicons name={iconName} size={18} color="black" />
@@ -336,6 +332,11 @@ export default function ScanScreen() {
             </View>
           </TouchableWithoutFeedback>
         ) : null}
+        </SafeAreaView>
+      </GestureDetector>
+
+      <View style={styles.bottomContainer}>
+
         <View style={styles.zoomControlContainer}>
           <ZoomControl
             zoom={zoom}
@@ -427,7 +428,7 @@ const styles = StyleSheet.create({
 
   qrResultContainer: {
     position: 'absolute',
-    bottom: 260,
+    bottom: 0,
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'center',
