@@ -3,317 +3,194 @@
         {
             "code": "ABB",
             "name": "ABBank",
-            "full_name": "An Binh Commercial Joint Stock Bank"
+            "full_name": "An Binh Commercial Joint Stock Bank",
+            "number_code": "970425"
         },
         {
             "code": "ACB",
             "name": "ACB",
-            "full_name": "Asia Commercial Bank"
-        },
-        {
-            "code": "ANZ",
-            "name": "ANZ",
-            "full_name": "ANZ Bank"
+            "full_name": "Asia Commercial Bank",
+            "number_code": "970416"
         },
         {
             "code": "AGR",
             "name": "Agribank",
-            "full_name": "Vietnam Bank for Agriculture and Rural Development"
+            "full_name": "Vietnam Bank for Agriculture and Rural Development",
+            "number_code": "970405"
         },
         {
             "code": "BAB",
             "name": "Bac A Bank",
-            "full_name": "North Asia Commercial Joint Stock Bank"
-        },
-        {
-            "code": "BKB",
-            "name": "Bangkok Bank",
-            "full_name": "Bangkok Bank Public Company Limited"
-        },
-        {
-            "code": "BOC",
-            "name": "Bank of China",
-            "full_name": "Bank of China Limited"
-        },
-        {
-            "code": "BVB",
-            "name": "BaoViet Bank",
-            "full_name": "BaoViet Joint Stock Commercial Bank"
-        },
-        {
-            "code": "BIC",
-            "name": "BIDC",
-            "full_name": "Bank for Investment and Development of Cambodia"
+            "full_name": "North Asia Commercial Joint Stock Bank",
+            "number_code": "970409"
         },
         {
             "code": "BIV",
             "name": "BIDV",
-            "full_name": "Bank for Investment and Development of Vietnam"
+            "full_name": "Bank for Investment and Development of Vietnam",
+            "number_code": "970418"
         },
         {
-            "code": "CAK",
-            "name": "CAKE",
-            "full_name": "Cake by VPBank"
-        },
-        {
-            "code": "CAT",
-            "name": "Cathay",
-            "full_name": "Cathay United Bank"
+            "code": "BVB",
+            "name": "BaoViet Bank",
+            "full_name": "BaoViet Joint Stock Commercial Bank",
+            "number_code": "970438"
         },
         {
             "code": "CBB",
             "name": "CBBank",
-            "full_name": "CB Bank Vietnam"
-        },
-        {
-            "code": "CHS",
-            "name": "Chase Bank",
-            "full_name": "JPMorgan Chase Bank"
-        },
-        {
-            "code": "CIM",
-            "name": "CIMB",
-            "full_name": "CIMB Bank"
+            "full_name": "CB Bank Vietnam",
+            "number_code": "970444"
         },
         {
             "code": "CIT",
             "name": "CitiBank",
-            "full_name": "Citibank, N.A."
+            "full_name": "Citibank, N.A.",
+            "number_code": "533948"
         },
         {
-            "code": "CBA",
-            "name": "Commonwealth Bank",
-            "full_name": "Commonwealth Bank of Australia"
-        },
-        {
-            "code": "DBK",
-            "name": "Deutsche Bank",
-            "full_name": "Deutsche Bank AG"
-        },
-        {
-            "code": "DAB",
-            "name": "Dong A Bank",
-            "full_name": "Dong A Commercial Joint Stock Bank"
-        },
-        {
-            "code": "DSB",
-            "name": "DSB",
-            "full_name": "Saigon-Hanoi Commercial Joint Stock Bank"
+            "code": "CAK",
+            "name": "CAKE",
+            "full_name": "Cake by VPBank",
+            "number_code": "546034"
         },
         {
             "code": "EIB",
             "name": "Eximbank",
-            "full_name": "Vietnam Export-Import Commercial Joint Stock Bank"
+            "full_name": "Vietnam Export-Import Commercial Joint Stock Bank",
+            "number_code": "970431"
         },
         {
             "code": "GPB",
             "name": "GPBank",
-            "full_name": "Global Petro Commercial Joint Stock Bank"
+            "full_name": "Global Petro Commercial Joint Stock Bank",
+            "number_code": "970408"
         },
         {
             "code": "HDB",
             "name": "HDBank",
-            "full_name": "Ho Chi Minh City Development Joint Stock Commercial Bank"
+            "full_name": "Ho Chi Minh City Development Joint Stock Commercial Bank",
+            "number_code": "970437"
         },
         {
             "code": "HLB",
             "name": "Hong Leong Bank",
-            "full_name": "Hong Leong Bank Berhad"
+            "full_name": "Hong Leong Bank Berhad",
+            "number_code": "970442"
         },
         {
             "code": "HSB",
             "name": "HSBC",
-            "full_name": "Hongkong and Shanghai Banking Corporation"
-        },
-        {
-            "code": "BOK",
-            "name": "Bank of Korea",
-            "full_name": "Bank of Korea"
+            "full_name": "Hongkong and Shanghai Banking Corporation",
+            "number_code": "458761"
         },
         {
             "code": "IVB",
             "name": "Indovina Bank",
-            "full_name": "Indovina Bank Ltd"
-        },
-        {
-            "code": "KBK",
-            "name": "KB",
-            "full_name": "KB Kookmin Bank"
-        },
-        {
-            "code": "KEB",
-            "name": "KEB",
-            "full_name": "Korea Exchange Bank"
+            "full_name": "Indovina Bank Ltd",
+            "number_code": "970434"
         },
         {
             "code": "KLB",
             "name": "KienLong Bank",
-            "full_name": "Kien Long Commercial Joint Stock Bank"
-        },
-        {
-            "code": "LVB",
-            "name": "LienVietPostBank",
-            "full_name": "Lien Viet Post Joint Stock Commercial Bank"
-        },
-        {
-            "code": "MAY",
-            "name": "Maybank",
-            "full_name": "Malayan Banking Berhad"
+            "full_name": "Kien Long Commercial Joint Stock Bank",
+            "number_code": "970452"
         },
         {
             "code": "MBB",
             "name": "MB Bank",
-            "full_name": "Military Commercial Joint Stock Bank"
-        },
-        {
-            "code": "MGB",
-            "name": "Mega International Commercial Bank",
-            "full_name": "Mega International Commercial Bank Co., Ltd"
-        },
-        {
-            "code": "MZH",
-            "name": "Mizuho",
-            "full_name": "Mizuho Bank, Ltd."
+            "full_name": "Military Commercial Joint Stock Bank",
+            "number_code": "970422"
         },
         {
             "code": "MSB",
             "name": "MSB",
-            "full_name": "Vietnam Maritime Commercial Joint Stock Bank"
-        },
-        {
-            "code": "NAB",
-            "name": "NAB",
-            "full_name": "National Australia Bank"
+            "full_name": "Vietnam Maritime Commercial Joint Stock Bank",
+            "number_code": "970426"
         },
         {
             "code": "NCB",
             "name": "NCB",
-            "full_name": "National Citizen Bank"
+            "full_name": "National Citizen Bank",
+            "number_code": "970419"
         },
         {
             "code": "OCB",
             "name": "OCB",
-            "full_name": "Orient Commercial Joint Stock Bank"
-        },
-        {
-            "code": "OCE",
-            "name": "OceanBank",
-            "full_name": "Ocean Commercial One Member Limited Liability Bank"
+            "full_name": "Orient Commercial Joint Stock Bank",
+            "number_code": "970448"
         },
         {
             "code": "PGB",
             "name": "PG Bank",
-            "full_name": "Petrolimex Group Commercial Joint Stock Bank"
+            "full_name": "Petrolimex Group Commercial Joint Stock Bank",
+            "number_code": "970430"
         },
         {
             "code": "PUB",
             "name": "Public Bank",
-            "full_name": "Public Bank Berhad"
-        },
-        {
-            "code": "PVB",
-            "name": "PVcomBank",
-            "full_name": "Vietnam Public Joint Stock Commercial Bank"
+            "full_name": "Public Bank Berhad",
+            "number_code": "970439"
         },
         {
             "code": "SCB",
             "name": "SCB",
-            "full_name": "Saigon Commercial Joint Stock Bank"
-        },
-        {
-            "code": "SEA",
-            "name": "SeaBank",
-            "full_name": "Southeast Asia Commercial Joint Stock Bank"
+            "full_name": "Saigon Commercial Joint Stock Bank",
+            "number_code": "970429"
         },
         {
             "code": "SHB",
             "name": "SHB",
-            "full_name": "Saigon-Hanoi Commercial Joint Stock Bank"
-        },
-        {
-            "code": "SHN",
-            "name": "SHN",
-            "full_name": "Shinhan Bank"
-        },
-        {
-            "code": "SMF",
-            "name": "SMFG",
-            "full_name": "Sumitomo Mitsui Financial Group"
-        },
-        {
-            "code": "STC",
-            "name": "Standard Chartered",
-            "full_name": "Standard Chartered Bank"
+            "full_name": "Saigon-Hanoi Commercial Joint Stock Bank",
+            "number_code": "970443"
         },
         {
             "code": "TCB",
             "name": "Techcombank",
-            "full_name": "Vietnam Technological and Commercial Joint Stock Bank"
-        },
-        {
-            "code": "TIM",
-            "name": "Timo",
-            "full_name": "Timo Digital Bank"
+            "full_name": "Vietnam Technological and Commercial Joint Stock Bank",
+            "number_code": "970407"
         },
         {
             "code": "TPB",
             "name": "TPBank",
-            "full_name": "Tien Phong Commercial Joint Stock Bank"
-        },
-        {
-            "code": "TYM",
-            "name": "TymeBank",
-            "full_name": "TymeBank"
-        },
-        {
-            "code": "TYB",
-            "name": "Tyme",
-            "full_name": "Tyme Digital"
+            "full_name": "Tien Phong Commercial Joint Stock Bank",
+            "number_code": "970423"
         },
         {
             "code": "UBB",
             "name": "Ubank",
-            "full_name": "Ubank by VPBank"
-        },
-        {
-            "code": "UBS",
-            "name": "UBSP",
-            "full_name": "UBS Group AG"
-        },
-        {
-            "code": "VIB",
-            "name": "VIB",
-            "full_name": "Vietnam International Bank"
-        },
-        {
-            "code": "VAB",
-            "name": "VAB",
-            "full_name": "Viet A Bank"
-        },
-        {
-            "code": "VCP",
-            "name": "Viet Capital Bank",
-            "full_name": "Viet Capital Commercial Joint Stock Bank"
+            "full_name": "Ubank by VPBank",
+            "number_code": "546035"
         },
         {
             "code": "VCB",
             "name": "Vietcombank",
-            "full_name": "Joint Stock Commercial Bank for Foreign Trade of Vietnam"
+            "full_name": "Joint Stock Commercial Bank for Foreign Trade of Vietnam",
+            "number_code": "970436"
+        },
+        {
+            "code": "VIB",
+            "name": "VIB",
+            "full_name": "Vietnam International Bank",
+            "number_code": "970441"
         },
         {
             "code": "VTB",
             "name": "VietinBank",
-            "full_name": "Vietnam Joint Stock Commercial Bank for Industry and Trade"
+            "full_name": "Vietnam Joint Stock Commercial Bank for Industry and Trade",
+            "number_code": "970415"
         },
         {
             "code": "VPB",
             "name": "VPBank",
-            "full_name": "Vietnam Prosperity Joint Stock Commercial Bank"
+            "full_name": "Vietnam Prosperity Joint Stock Commercial Bank",
+            "number_code": "970432"
         },
         {
             "code": "WOO",
             "name": "Woori Bank",
-            "full_name": "Woori Bank"
+            "full_name": "Woori Bank",
+            "number_code": "970457"
         }
     ],
     "store": [

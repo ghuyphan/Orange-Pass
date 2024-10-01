@@ -17,6 +17,7 @@ type ItemType = {
     full_name: string;
     normalized_name: string;
     normalized_full_name: string;
+    number_code?: string; // Add number_code as an optional field
     color: { light: string; dark: string };
     accent_color: { light: string; dark: string };
 };
@@ -66,6 +67,7 @@ function initializeData() {
                         ...item,
                         normalized_name,
                         normalized_full_name,
+                        number_code: item.number_code, // Include number_code if available
                         color: colorData.color,
                         accent_color: colorData.accent_color,
                     };
@@ -96,6 +98,7 @@ function initializeData() {
 // Initialize data once
 initializeData();
 
+// Function to return item data, including number_code
 export function returnItemData(code: string, type: 'bank' | 'store' | 'ewallet') {
     if (!cachedDataByCode[type]) {
         initializeData();
@@ -107,6 +110,7 @@ export function returnItemData(code: string, type: 'bank' | 'store' | 'ewallet')
         return {
             name: item.name,
             full_name: item.full_name,
+            number_code: item.number_code || '', // Return number_code if available
             color: item.color,
             accent_color: item.accent_color,
         };
@@ -114,12 +118,14 @@ export function returnItemData(code: string, type: 'bank' | 'store' | 'ewallet')
         return {
             name: '',
             full_name: '',
+            number_code: '',
             color: { light: '', dark: '' },
             accent_color: { light: '', dark: '' },
         };
     }
 }
 
+// Function to return matching codes for a search term
 export function returnItemCode(searchTerm: string, type?: 'bank' | 'store' | 'ewallet'): string[] {
     if (!searchIndex) {
         initializeData();

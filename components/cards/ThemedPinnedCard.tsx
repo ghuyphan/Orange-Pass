@@ -1,5 +1,5 @@
 import React, { memo, useMemo, useState, useEffect } from 'react';
-import { Image, StyleSheet, View, TouchableHighlight, InteractionManager } from 'react-native';
+import { Image, StyleSheet, View, TouchableHighlight, InteractionManager, useWindowDimensions } from 'react-native';
 import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
 import QRCode from 'react-native-qrcode-svg';
@@ -36,6 +36,12 @@ export const ThemedPinnedCard = memo(function ThemedPinnedCard({
 }: ThemedPinnedCardProps): JSX.Element {
   const colorScheme = useColorScheme();
   const colors = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
+  const { width } = useWindowDimensions();
+
+  // Calculate sizes based on screen width
+  const qrSize = useMemo(() => width * 0.45, [width]); // Adjust QR code size to 50% of screen width
+  const barcodeHeight = useMemo(() => width * 0.3, [width]); // Adjust Barcode height to 20% of screen width
+  const barcodeWidth = useMemo(() => width * 0.7, [width]); // Adjust Barcode max width to 80% of screen width
 
   // Memoize the result of returnItemData to avoid unnecessary computations
   const { full_name, name, color, accent_color } = useMemo(() => returnItemData(code, type), [code, type]);
@@ -94,16 +100,16 @@ export const ThemedPinnedCard = memo(function ThemedPinnedCard({
               {metadata_type === 'qr' ? (
                 <QRCode
                   value={metadata}
-                  size={150}
+                  size={qrSize}
                   logo={iconPath}
-                  logoSize={35}
+                  logoSize={qrSize * 0.2} // Adjust logo size relative to the QR code size
                   logoBackgroundColor="white"
                   logoBorderRadius={50}
                   logoMargin={5}
                   quietZone={3}
                 />
               ) : (
-                <Barcode height={100} maxWidth={280} value={metadata} format="CODE128" />
+                <Barcode height={barcodeHeight} maxWidth={barcodeWidth} value={metadata} format="CODE128" />
               )}
             </View>
           )}

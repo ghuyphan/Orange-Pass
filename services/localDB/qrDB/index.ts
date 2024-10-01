@@ -117,59 +117,67 @@ export async function syncQrCodes(userId: string) {
   const db = await openDatabase();
 
   try {
-      // Get all unsynced local QR codes
-      const unsyncedQrCodes = await getUnsyncedQrCodes(userId);
+    // Get all unsynced local QR codes
+    const unsyncedQrCodes = await getUnsyncedQrCodes(userId);
 
-      if (unsyncedQrCodes.length === 0) {
-          console.log('No unsynced QR codes to sync for this user');
-          return;
+    if (unsyncedQrCodes.length === 0) {
+      console.log('No unsynced QR codes to sync for this user');
+      return;
+    }
+
+    // Construct the filter expression using logical OR
+    const filterExpression = unsyncedQrCodes
+      .map(qr => `id='${qr.id}'`)
+      .join(' || ');
+
+    // Fetch existing records from the server in bulk
+    const serverRecords = await pb.collection('qr').getFullList({
+      filter: filterExpression,
+      // fields: 'id,updated',
+    });
+
+    const serverRecordMap = new Map(serverRecords.map(rec => [rec.id, rec.updated]));
+
+    const recordsToCreate = [];
+    const recordsToUpdate = [];
+
+    for (const qrCode of unsyncedQrCodes) {
+      const serverUpdated = serverRecordMap.get(qrCode.id);
+
+      if (serverUpdated) {
+        if (new Date(qrCode.updated) > new Date(serverUpdated)) {
+          recordsToUpdate.push({ id: qrCode.id, data: qrCode });
+        }
+      } else {
+        recordsToCreate.push(qrCode);
       }
+    }
 
-      // Fetch existing records from the server in bulk
-      const serverRecords = await pb.collection('qr').getFullList({
-          filter: `id in (${unsyncedQrCodes.map(qr => `'${qr.id}'`).join(',')})`,
-          fields: 'id,updated',
-      });
+    // Batch create
+    if (recordsToCreate.length > 0) {
+      await pb.collection('qr').create(recordsToCreate);
+      console.log('Batch create completed');
+    }
 
-      const serverRecordMap = new Map(serverRecords.map(rec => [rec.id, rec.updated]));
+    // Batch update
+    for (const { id, data } of recordsToUpdate) {
+      await pb.collection('qr').update(id, data);
+    }
 
-      const recordsToCreate = [];
-      const recordsToUpdate = [];
+    // Mark all QR codes as synced in the local database
+    await db.runAsync(
+      'UPDATE qrcodes SET is_synced = 1 WHERE id IN (' +
+        unsyncedQrCodes.map(() => '?').join(',') +
+        ')',
+      ...unsyncedQrCodes.map(qr => qr.id)
+    );
 
-      for (const qrCode of unsyncedQrCodes) {
-          const serverUpdated = serverRecordMap.get(qrCode.id);
-
-          if (serverUpdated) {
-              if (new Date(qrCode.updated) > new Date(serverUpdated)) {
-                  recordsToUpdate.push({ id: qrCode.id, data: qrCode });
-              }
-          } else {
-              recordsToCreate.push(qrCode);
-          }
-      }
-
-      // Batch create
-      if (recordsToCreate.length > 0) {
-          await pb.collection('qr').create(recordsToCreate);
-          console.log('Batch create completed');
-      }
-
-      // Batch update
-      for (const { id, data } of recordsToUpdate) {
-          await pb.collection('qr').update(id, data);
-      }
-
-      // Mark all QR codes as synced in the local database
-      await db.runAsync(
-          'UPDATE qrcodes SET is_synced = 1 WHERE id IN (' + unsyncedQrCodes.map(() => '?').join(',') + ')',
-          ...unsyncedQrCodes.map(qr => qr.id)
-      );
-
-      console.log('All unsynced QR codes for this user have been processed for syncing.');
+    console.log('All unsynced QR codes for this user have been processed for syncing.');
   } catch (error) {
-      console.error('Error during sync:', error);
+    console.error('Error during sync:', error);
   }
 }
+
 export async function getUnsyncedQrCodes(userId: string) {
     const db = await openDatabase();
     try {

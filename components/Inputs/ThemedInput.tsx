@@ -26,6 +26,7 @@ export type ThemedInputProps = {
     errorMessage?: string;
     /** Whether the input should be secure */
     secureTextEntry?: boolean;
+    keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad'
     /** Function to call when the input value changes */
     onChangeText?: (text: string) => void;
     /** Function to call when the input loses focus */
@@ -46,6 +47,7 @@ export function ThemedInput({
     isError = false,
     errorMessage = '',
     secureTextEntry = false,
+    keyboardType = 'default',
     onChangeText = () => { },
     onBlur = () => { },
     onFocus = () => { },
@@ -101,6 +103,7 @@ export function ThemedInput({
                         placeholderTextColor={colorScheme === 'light' ? Colors.light.placeHolder : Colors.dark.placeHolder}
                         accessible
                         aria-label={label}
+                        keyboardType={keyboardType}
                     />
                     {localValue.length > 0 && (
 

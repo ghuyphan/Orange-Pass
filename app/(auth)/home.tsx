@@ -12,7 +12,7 @@ import Animated, {
 import { router } from 'expo-router';
 import { BlurView } from 'expo-blur';
 import DraggableFlatList, { ScaleDecorator } from 'react-native-draggable-flatlist';
-import { debounce } from 'lodash';
+import { debounce, throttle } from 'lodash';
 
 import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
 import QRRecord from '@/types/qrType';
@@ -93,8 +93,10 @@ function HomeScreen() {
       setToastMessage(t('homeScreen.syncError'));
       setIsToastVisible(true);
     } finally {
-      setIsSyncing(false);
       setIsToastVisible(false);
+      setTimeout(() => {
+        setIsSyncing(false);
+      }, 300);
     }
   }, []); // Removed isOffline from dependencies
   
@@ -155,6 +157,9 @@ function HomeScreen() {
       setIsToastVisible(true);
     } finally {
       setIsLoading(false);
+      setTimeout(() => {
+        setIsSyncing(false);
+      }, 300);
     }
   }, [userId]); // Removed isOffline and syncWithServer from dependencies
   
@@ -256,12 +261,16 @@ function HomeScreen() {
     router.push('/empty');
   }, []);
 
-  const onNavigateToDetailScreen = useCallback((item: QRRecord) => {
-    router.push({
-      pathname: `/detail`,
-      params: { id: item.id, item: encodeURIComponent(JSON.stringify(item)) },
-    });
-  }, []);
+  const onNavigateToDetailScreen = useCallback(
+    throttle((item: QRRecord) => {
+      router.push({
+        pathname: `/detail`,
+        params: { id: item.id, item: encodeURIComponent(JSON.stringify(item)) },
+      });
+    }, 1000), // Adjust the delay to suit the desired behavior
+    []
+  );
+  
   
   
   const onNavigateToScanScreen = useCallback(() => {
@@ -361,7 +370,6 @@ function HomeScreen() {
       setIsToastVisible(true);
     } finally {
       setSelectedItemId(null);
-      setIsSyncing(false);
     }
   }, [selectedItemId, userId]);
 
@@ -398,11 +406,11 @@ function HomeScreen() {
           <ThemedText type="title">{t('homeScreen.title')}</ThemedText>
           <View style={styles.titleButtonContainer}>
             <ThemedButton
-              iconName="scan"
+              iconName="scan-outline"
               style={styles.titleButton}
               onPress={onNavigateToScanScreen}
             />
-            <ThemedButton iconName="settings" style={styles.titleButton} onPress={() => { }} />
+            <ThemedButton iconName="settings-outline" style={styles.titleButton} onPress={() => { }} />
           </View>
         </View>
         {!isEmpty && (

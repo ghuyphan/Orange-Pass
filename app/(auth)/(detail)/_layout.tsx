@@ -16,12 +16,10 @@ export default function DetailLayout() {
       <Stack
         screenOptions={{
           headerShown: false,
-          animation: 'flip',
           animationTypeForReplace: 'pop',
         }}
       >
-        <Stack.Screen options={{ presentation: 'modal' }} name="detail" />
-        <Stack.Screen name="permission" />
+        <Stack.Screen name="detail" />
       </Stack>
     </View>
   );

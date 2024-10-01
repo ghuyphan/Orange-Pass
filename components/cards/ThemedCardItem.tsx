@@ -109,7 +109,7 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
             <View style={styles.headerContainer}>
               <View style={styles.headerLeft}>
                 <View style={styles.dragIconContainer}>
-                  <Ionicons name="menu" size={18} color="white" />
+                  <Ionicons name="menu-outline" size={18} color="white" />
                 </View>
                 <View style={styles.leftHeaderContainer}>
                   <View style={styles.iconContainer}>
@@ -128,7 +128,7 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
               {onMoreButtonPress && (
                 <TouchableWithoutFeedback onPress={onMoreButtonPress}>
                   <View style={styles.moreButtonContainer}>
-                    <Ionicons name="ellipsis-vertical" size={18} color="white" />
+                    <Ionicons name="ellipsis-vertical-outline" size={18} color="white" />
                   </View>
                 </TouchableWithoutFeedback>
               )}

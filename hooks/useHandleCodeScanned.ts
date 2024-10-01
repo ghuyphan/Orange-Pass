@@ -95,6 +95,7 @@ const useHandleCodeScanned = ({
               setCodeType('card');
               setIconName('qr-code'); // Ionicons icon name
               setCodeValue(codeMetadata);
+              console.log ('VietQR', codeMetadata);
             }
           },
         },

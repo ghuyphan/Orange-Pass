@@ -42,10 +42,10 @@ export const ScannerFrame: React.FC<ScannerFrameProps> = ({ highlight, layout, s
             const adjustedHeight = highlight.height * heightScale;
 
             // Animate to the new highlight area
-            frameX.value = withSpring(adjustedX, { stiffness: 200, damping: 15 });
-            frameY.value = withSpring(adjustedY, { stiffness: 200, damping: 15 });
-            frameWidth.value = withSpring(adjustedWidth, { stiffness: 200, damping: 15 });
-            frameHeight.value = withSpring(adjustedHeight, { stiffness: 200, damping: 15 });
+            frameX.value = withSpring(adjustedX, { stiffness: 200, damping: 16 });
+            frameY.value = withSpring(adjustedY, { stiffness: 200, damping: 16 });
+            frameWidth.value = withSpring(adjustedWidth, { stiffness: 200, damping: 16 });
+            frameHeight.value = withSpring(adjustedHeight, { stiffness: 200, damping: 16 });
             frameColor.value = '#FFCC00';
             frameBackgroundColor.value = 'rgba(128, 128, 128, 0.2)';
             setIsFirstMount(false);
