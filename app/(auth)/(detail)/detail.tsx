@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
-import { StyleSheet, View, TouchableWithoutFeedback, useColorScheme, Linking, Keyboard, FlatList, TouchableOpacity, TextInput } from 'react-native';
+import { StyleSheet, View, TouchableWithoutFeedback, useColorScheme, Linking, Keyboard, FlatList, TouchableOpacity, TextInput, Pressable } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useUnmountBrightness } from '@reeq/react-native-device-brightness';
@@ -30,6 +30,9 @@ export default function DetailScreen() {
     const colorScheme = useColorScheme();
     const [amount, setAmount] = useState(''); // State to hold the amount of money
     const [isKeyboardVisible, setKeyboardVisible] = useState(false);
+    const [isTransfer, setIsTransfer] = useState(false);
+
+    const iconColor = useColorScheme() === 'light' ? Colors.light.text : Colors.dark.text;
 
     useUnmountBrightness(0.8, false);
 
@@ -76,6 +79,11 @@ export default function DetailScreen() {
         Linking.openURL(url).catch((err) => console.error('Failed to open Google Maps:', err));
     }, [item]);
 
+    const onToggleTransfer = useCallback(() => {
+        triggerLightHapticFeedback();
+        setIsTransfer(!isTransfer);
+    }, [isTransfer]);
+
     const transferAmount = useCallback(() => {
         triggerLightHapticFeedback();
         if (!item || !item.type || !item.code || !amount) return;
@@ -92,27 +100,27 @@ export default function DetailScreen() {
 
     if (!item) {
         return (
-            <ThemedView style={styles.loadingContainer}>
+            <ThemedView style={styles.loadingWrapper}>
                 <ThemedText>No item found.</ThemedText>
             </ThemedView>
         );
     }
-
+    
     return (
         <KeyboardAwareScrollView
-            contentContainerStyle={styles.scrollViewContainer}
+            contentContainerStyle={styles.scrollViewContent}
             enableOnAndroid={true}
             showsVerticalScrollIndicator={false}
             scrollEnabled={isKeyboardVisible}
             style={{ backgroundColor: colorScheme === 'light' ? Colors.light.background : Colors.dark.background }}
         >
-            <ThemedView style={styles.container}>
-                <View style={styles.headerContainer}>
+            <ThemedView style={styles.mainContainer}>
+                <View style={styles.headerWrapper}>
                     <ThemedButton onPress={router.back} iconName="chevron-back-outline" />
                     <ThemedButton onPress={handleExpandPress} iconName="ellipsis-vertical-outline" />
                 </View>
                 <ThemedPinnedCard
-                    style={styles.pinnedCard}
+                    style={styles.pinnedCardWrapper}
                     metadata_type={item.metadata_type}
                     code={item.code}
                     type={item.type}
@@ -120,69 +128,59 @@ export default function DetailScreen() {
                     accountName={item.account_name}
                     accountNumber={item.account_number}
                 />
-                {item.type === 'store' && (
-                    <View style={[styles.cardContainer, {
-                        backgroundColor: colorScheme === 'light' ? Colors.light.inputBackground : Colors.dark.inputBackground,
-                    }]}>
-                        <View style={styles.storeContent}>
-                            <View>
-                                <ThemedText style={styles.memberIdText} type="defaultSemiBold">
-                                    Member ID
-                                </ThemedText>
-                                <ThemedText
-                                    style={styles.memberIdContent}
-                                    numberOfLines={1}
-                                    ellipsizeMode="middle"
-                                >
-                                    {item.metadata}
-                                </ThemedText>
-                            </View>
-                        </View>
-                    </View>
-                )}
 
-                <View style={[styles.infoContainer, {
+                <View style={[styles.infoWrapper, {
                     backgroundColor: colorScheme === 'light' ? Colors.light.inputBackground : Colors.dark.inputBackground,
                 }]}>
                     <TouchableWithoutFeedback onPress={openMap}>
-                        <View style={styles.button}>
-                            <Ionicons name="location-outline" size={20} color={Colors.light.text} />
-                            <ThemedText style={styles.memberIdText} type="defaultSemiBold">
+                        <View style={styles.actionButton}>
+                            <Ionicons name="location-outline" size={20} color={iconColor} />
+                            <ThemedText style={styles.labelText} type="defaultSemiBold">
                                 Nearby Location
                             </ThemedText>
                         </View>
                     </TouchableWithoutFeedback>
                     {(item.type === 'bank' || item.type === 'ewallet') && (
-                        <View style={styles.transferContainer}>
-                            <TouchableWithoutFeedback onPress={transferAmount}>
-                                <View style={styles.button}>
-                                    <Ionicons name="qr-code-outline" size={20} color={Colors.light.text} />
-                                    <ThemedText style={styles.memberIdText} type="defaultSemiBold">
+                        <View style={styles.transferSection}>
+                            <TouchableWithoutFeedback onPress={onToggleTransfer}>
+                                <View style={styles.actionButton}>
+                                    <Ionicons name="qr-code-outline" size={20} color={iconColor} />
+                                    <ThemedText style={styles.labelText} type="defaultSemiBold">
                                         Create a transfer order
                                     </ThemedText>
                                 </View>
                             </TouchableWithoutFeedback>
-                            <TextInput
-                                style={styles.customInput}
-                                placeholder="Enter amount"
-                                keyboardType="numeric"
-                                value={amount}
-                                onChangeText={(text) => setAmount(formatAmount(text))}
-                            />
-                            <FlatList
-                                data={amountSuggestions}
-                                horizontal
-                                showsHorizontalScrollIndicator={false}
-                                keyExtractor={(item) => item}
-                                renderItem={({ item }) => (
-                                    <TouchableOpacity onPress={() => setAmount(item)}>
-                                        <View style={styles.suggestionButton}>
-                                            <ThemedText>{item}</ThemedText>
-                                        </View>
-                                    </TouchableOpacity>
-                                )}
-                                style={styles.suggestionStrip}
-                            />
+                            {isTransfer && (
+                                <>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 15 }}>
+                                        <TextInput
+                                            style={styles.inputField}
+                                            placeholder="Enter amount"
+                                            keyboardType="numeric"
+                                            value={amount}
+                                            onChangeText={(text) => setAmount(formatAmount(text))}
+                                        />
+                                        <Pressable>
+                                            <Ionicons name="chevron-forward-outline" size={20} color={iconColor} />
+                                        </Pressable>
+                                    </View>
+                                    <FlatList
+                                        data={amountSuggestions}
+                                        horizontal
+                                        showsHorizontalScrollIndicator={false}
+                                        keyExtractor={(item) => item}
+                                        contentContainerStyle={styles.suggestionListContent}
+                                        renderItem={({ item }) => (
+                                            <TouchableOpacity onPress={() => setAmount(item)}>
+                                                <View style={styles.suggestionItem}>
+                                                    <ThemedText>{item}</ThemedText>
+                                                </View>
+                                            </TouchableOpacity>
+                                        )}
+                                        style={styles.suggestionList}
+                                    />
+                                </>
+                            )}
                         </View>
                     )}
                 </View>
@@ -196,78 +194,82 @@ export default function DetailScreen() {
         </KeyboardAwareScrollView>
     );
 }
-
 const styles = StyleSheet.create({
-    scrollViewContainer: {
+    scrollViewContent: {
         flexGrow: 1,
         paddingHorizontal: 15,
     },
-    container: {},
-    headerContainer: {
+    mainContainer: {
+    },
+    headerWrapper: {
         paddingTop: STATUSBAR_HEIGHT + 25,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
         marginBottom: 20,
     },
-    pinnedCard: {
+    pinnedCardWrapper: { 
         marginTop: 20,
         marginBottom: 30,
     },
-    cardContainer: {
+    cardWrapper: {
         marginTop: 20,
         padding: 15,
         borderRadius: 12,
         marginBottom: 10,
     },
-    storeContent: {
+    storeDetails: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 10,
     },
-    memberIdText: {
+    labelText: {
         fontSize: 16,
         marginBottom: 5,
     },
-    memberIdContent: {
+    truncatedText: {
         fontSize: 16,
         maxWidth: 300,
         overflow: 'hidden',
     },
-    infoContainer: {
+    infoWrapper: { 
         marginTop: 30,
         borderRadius: 10,
         paddingVertical: 15,
     },
-    button: {
+    actionButton: { 
         flexDirection: 'row',
         alignItems: 'center',
         gap: 10,
         paddingHorizontal: 15,
-        paddingVertical: 10,
     },
-    loadingContainer: {
+    loadingWrapper: { 
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
     },
-    transferContainer: {
+    transferSection: { 
         marginTop: 15,
     },
-    customInput: {
+    inputField: {
         height: 50,
-        paddingHorizontal: 15,
         marginTop: 10,
         fontSize: 16,
         color: Colors.light.text,
+        width: 300,
+        overflow: 'hidden',
     },
-    suggestionStrip: {
+    suggestionList: { 
         marginTop: 10,
+        paddingHorizontal: 15,
     },
-    suggestionButton: {
-        backgroundColor: Colors.light.inputBackground,
-        padding: 10,
-        borderRadius: 5,
-        marginRight: 10,
+    suggestionListContent: {
+        gap: 10,
+    },
+    suggestionItem: {
+        backgroundColor: Colors.light.buttonBackground,
+        paddingHorizontal: 15,
+        paddingVertical: 5,
+        borderRadius: 10,
     },
 });

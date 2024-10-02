@@ -113,7 +113,7 @@ export const ThemedPinnedCard = memo(function ThemedPinnedCard({
               )}
             </View>
           )}
-          {type === 'bank' && (
+          {type === 'bank' ? (
             <View style={[styles.infoContainer, styles.infoContainerWithMarginTop]}>
               <ThemedText type="defaultSemiBold" style={styles.accountName} numberOfLines={1}>
                 {accountName}
@@ -122,7 +122,13 @@ export const ThemedPinnedCard = memo(function ThemedPinnedCard({
                 {accountNumber}
               </ThemedText>
             </View>
-          )}
+          ) :
+            <View style={[styles.infoContainer, styles.infoContainerWithMarginTop]}>
+              <ThemedText style={styles.memberID} numberOfLines={1}>
+                {metadata}
+              </ThemedText>
+            </View>
+          }
         </View>
       </ThemedView>
     </TouchableHighlight>
@@ -188,7 +194,7 @@ const styles = StyleSheet.create({
     marginTop: 15,
   },
   accountName: {
-    fontSize: 20,
+    fontSize: 18,
     textAlign: 'center',
     color: 'white',
   },
@@ -197,4 +203,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: 'white',
   },
+  memberID: {
+    fontSize: 18,
+    textAlign: 'center',
+    color: 'white',
+  }
 });
