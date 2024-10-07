@@ -87,17 +87,21 @@ export default function DetailScreen() {
 
     const transferHeight = useSharedValue(0);
 
-    // Animated style for the transfer section
     const transferStyle = useAnimatedStyle(() => ({
-        height: withTiming(isTransfer ? 90 : 0, { duration: 300 }), // Adjust duration for smoothness
-        opacity: withTiming(isTransfer ? 1 : 0, { duration: 300 }),
-        pointerEvents: isTransfer ? 'auto' : 'none' // Disable interaction when hidden
+        height: withTiming(transferHeight.value, { duration: 300 }, (finished) => {
+            if (finished) {
+                runOnJS(setIsTransfer)(transferHeight.value > 0);  // update state only after animation completes
+            }
+        }),
+        marginTop: withTiming(transferHeight.value > 0 ? 10 : 0, { duration: 300 }),
+        opacity: withTiming(transferHeight.value > 0 ? 1 : 0, { duration: 300 }),
+        pointerEvents: transferHeight.value > 0 ? 'auto' : 'none',
     }));
 
     const onToggleTransfer = useCallback(() => {
         triggerLightHapticFeedback();
-        setIsTransfer(!isTransfer);
-    }, [isTransfer]);
+        transferHeight.value = transferHeight.value === 0 ? 90 : 0;
+    }, []);
 
     const transferAmount = useCallback(throttle(async () => {
 
@@ -298,7 +302,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     transferContainer: {
-        gap: 10,
+        // gap: 10,
     },
     transferSection: {
         // marginTop: 15,
