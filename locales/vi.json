@@ -88,6 +88,7 @@
     "confirmDeleteMessage": "Bạn có chắc chắn muốn chuyển thẻ này vào thùng rác không?",
     "cancel": "Hủy",
     "moveToTrash": "Chuyển vào thùng rác",
+    "fetchError": "Đã xảy ra sự cố trong quá trình lấy dữ liệu.",
     "filters": {
       "all": "Tất cả",
       "bank": "Ngân hàng",
@@ -127,5 +128,13 @@
     "nextButton": "Tiếp theo",
     "skipButton": "Bỏ qua",
     "finishButton": "Bắt đầu"
+  },
+  "detailsScreen": {
+    "edit": "Chỉnh sửa",
+    "delete": "Xóa",
+    "moveToTrash": "Chuyển vào thùng rác",
+    "nearbyLocation": "Vị trí lân cận",
+    "createQrCode": "Tạo mã QR nhận khoản tiền",
+    "receivePlaceholder": "Nhập số tiền cần nhận"
   }
 }

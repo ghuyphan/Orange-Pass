@@ -17,6 +17,9 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { returnItemData } from '@/utils/returnItemData';
 import { triggerLightHapticFeedback } from '@/utils/haptic';
 import { getVietQRData } from '@/utils/vietQR';
+import { ThemedStatusToast } from '@/components/toast/ThemedOfflineToast';
+import { throttle } from 'lodash';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, runOnJS } from 'react-native-reanimated';
 
 // Utility function to format the amount
 const formatAmount = (amount: string) => {
@@ -24,13 +27,16 @@ const formatAmount = (amount: string) => {
 };
 
 export default function DetailScreen() {
-    const { id, item: encodedItem } = useLocalSearchParams();
+    const { item: encodedItem } = useLocalSearchParams();
     const bottomSheetRef = useRef<BottomSheet>(null);
     const router = useRouter();
     const colorScheme = useColorScheme();
     const [amount, setAmount] = useState(''); // State to hold the amount of money
     const [isKeyboardVisible, setKeyboardVisible] = useState(false);
     const [isTransfer, setIsTransfer] = useState(false);
+    const [isToastVisible, setIsToastVisible] = useState(false);
+    const [toastMessage, setToastMessage] = useState('');
+    const [isSyncing, setIsSyncing] = useState(false);
 
     const iconColor = useColorScheme() === 'light' ? Colors.light.text : Colors.dark.text;
 
@@ -79,21 +85,52 @@ export default function DetailScreen() {
         Linking.openURL(url).catch((err) => console.error('Failed to open Google Maps:', err));
     }, [item]);
 
+    const transferHeight = useSharedValue(0);
+
+    // Animated style for the transfer section
+    const transferStyle = useAnimatedStyle(() => ({
+        height: withTiming(isTransfer ? 90 : 0, { duration: 300 }), // Adjust duration for smoothness
+        opacity: withTiming(isTransfer ? 1 : 0, { duration: 300 }),
+        pointerEvents: isTransfer ? 'auto' : 'none' // Disable interaction when hidden
+    }));
+
     const onToggleTransfer = useCallback(() => {
         triggerLightHapticFeedback();
         setIsTransfer(!isTransfer);
     }, [isTransfer]);
 
-    const transferAmount = useCallback(() => {
-        triggerLightHapticFeedback();
-        if (!item || !item.type || !item.code || !amount) return;
+    const transferAmount = useCallback(throttle(async () => {
 
-        let itemName = returnItemData(item.code, item.type);
-        getVietQRData(item.account_number, item.account_name, itemName.number_code, parseInt(amount.replace(/,/g, '')), 'Hello')
-            .then((response) => {
-                console.log(response.data.qrCode);
+        if (!item || !item.type || !item.code || !amount) return;
+        
+        triggerLightHapticFeedback();
+        setIsSyncing(true);
+        setIsToastVisible(true);
+
+        const itemName = returnItemData(item.code, item.type);
+        setToastMessage('Generating QR code...');
+
+        try {
+            const response = await getVietQRData(
+                item.account_number,
+                item.account_name,
+                itemName.number_code,
+                parseInt(amount.replace(/,/g, '')),
+                'Hello'
+            );
+
+            const qrCode = response.data.qrCode;
+            router.replace({
+                pathname: '/qr-screen',
+                params: {
+                    metadata: qrCode,
+                    originalItem: encodeURIComponent(JSON.stringify(item)),
+                },
             });
-    }, [item, amount]);
+        } finally {
+            setIsToastVisible(false);
+        }
+    }, 500), [item, amount])
 
     // Amount suggestions
     const amountSuggestions = ['10,000', '50,000', '100,000', '500,000', '1,000,000'];
@@ -105,11 +142,12 @@ export default function DetailScreen() {
             </ThemedView>
         );
     }
-    
+
     return (
         <KeyboardAwareScrollView
             contentContainerStyle={styles.scrollViewContent}
             enableOnAndroid={true}
+            extraScrollHeight={50}
             showsVerticalScrollIndicator={false}
             scrollEnabled={isKeyboardVisible}
             style={{ backgroundColor: colorScheme === 'light' ? Colors.light.background : Colors.dark.background }}
@@ -136,33 +174,36 @@ export default function DetailScreen() {
                         <View style={styles.actionButton}>
                             <Ionicons name="location-outline" size={20} color={iconColor} />
                             <ThemedText style={styles.labelText} type="defaultSemiBold">
-                                Nearby Location
+                                {t('detailsScreen.nearbyLocation')}
                             </ThemedText>
                         </View>
                     </TouchableWithoutFeedback>
+
                     {(item.type === 'bank' || item.type === 'ewallet') && (
-                        <View style={styles.transferSection}>
+                        <View style={styles.transferContainer}>
                             <TouchableWithoutFeedback onPress={onToggleTransfer}>
                                 <View style={styles.actionButton}>
                                     <Ionicons name="qr-code-outline" size={20} color={iconColor} />
                                     <ThemedText style={styles.labelText} type="defaultSemiBold">
-                                        Create a transfer order
+                                        {t('detailsScreen.createQrCode')}
                                     </ThemedText>
                                 </View>
                             </TouchableWithoutFeedback>
-                            {isTransfer && (
-                                <>
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 15 }}>
+                            {/* {isTransfer && ( */}
+                                <Animated.View style={[styles.transferSection, transferStyle]}>
+                                    <View style={styles.inputWrapper}>
                                         <TextInput
-                                            style={styles.inputField}
-                                            placeholder="Enter amount"
+                                            style={[styles.inputField, { color: colorScheme === 'light' ? Colors.light.text : Colors.dark.text }]}
+                                            placeholder={t('detailsScreen.receivePlaceholder')}
                                             keyboardType="numeric"
                                             value={amount}
                                             onChangeText={(text) => setAmount(formatAmount(text))}
                                         />
-                                        <Pressable>
+                                        <Pressable onPress={transferAmount} style={[styles.transferButton, {opacity: amount ? 1 : 0.5}]}>
                                             <Ionicons name="chevron-forward-outline" size={20} color={iconColor} />
                                         </Pressable>
+
+
                                     </View>
                                     <FlatList
                                         data={amountSuggestions}
@@ -172,15 +213,15 @@ export default function DetailScreen() {
                                         contentContainerStyle={styles.suggestionListContent}
                                         renderItem={({ item }) => (
                                             <TouchableOpacity onPress={() => setAmount(item)}>
-                                                <View style={styles.suggestionItem}>
+                                                <View style={[styles.suggestionItem, { backgroundColor: colorScheme === 'light' ? Colors.light.buttonBackground : Colors.dark.buttonHighlight }]}>
                                                     <ThemedText>{item}</ThemedText>
                                                 </View>
                                             </TouchableOpacity>
                                         )}
                                         style={styles.suggestionList}
                                     />
-                                </>
-                            )}
+                                </Animated.View>
+                            {/* )} */}
                         </View>
                     )}
                 </View>
@@ -190,13 +231,21 @@ export default function DetailScreen() {
                     editText={t('homeScreen.edit')}
                     deleteText={t('homeScreen.delete')}
                 />
+                <ThemedStatusToast
+                    isSyncing={isSyncing}
+                    isVisible={isToastVisible}
+                    message={toastMessage}
+                    iconName="cloud-offline"
+                    onDismiss={() => setIsToastVisible(false)}
+                    style={styles.toastContainer}
+                />
             </ThemedView>
         </KeyboardAwareScrollView>
     );
 }
 const styles = StyleSheet.create({
     scrollViewContent: {
-        flexGrow: 1,
+        // flexGrow: 1,
         paddingHorizontal: 15,
     },
     mainContainer: {
@@ -208,7 +257,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         marginBottom: 20,
     },
-    pinnedCardWrapper: { 
+    pinnedCardWrapper: {
         marginTop: 20,
         marginBottom: 30,
     },
@@ -221,55 +270,72 @@ const styles = StyleSheet.create({
     storeDetails: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 10,
+        gap: 15,
     },
     labelText: {
         fontSize: 16,
-        marginBottom: 5,
     },
     truncatedText: {
         fontSize: 16,
         maxWidth: 300,
         overflow: 'hidden',
     },
-    infoWrapper: { 
+    infoWrapper: {
         marginTop: 30,
         borderRadius: 10,
         paddingVertical: 15,
+        gap: 20,
     },
-    actionButton: { 
+    actionButton: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 10,
         paddingHorizontal: 15,
     },
-    loadingWrapper: { 
+    loadingWrapper: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
     },
-    transferSection: { 
-        marginTop: 15,
+    transferContainer: {
+        gap: 10,
+    },
+    transferSection: {
+        // marginTop: 15,
+        gap: 10,
+    },
+    inputWrapper: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 15
     },
     inputField: {
         height: 50,
-        marginTop: 10,
         fontSize: 16,
-        color: Colors.light.text,
         width: 300,
         overflow: 'hidden',
     },
-    suggestionList: { 
-        marginTop: 10,
+    transferButton: {
         paddingHorizontal: 15,
+        paddingVertical: 10,
+        marginRight: -15,
+    },
+    suggestionList: {
+        paddingLeft: 15,
     },
     suggestionListContent: {
-        gap: 10,
+        gap: 15,
     },
     suggestionItem: {
-        backgroundColor: Colors.light.buttonBackground,
         paddingHorizontal: 15,
         paddingVertical: 5,
         borderRadius: 10,
+    },
+    toastContainer: {
+        position: 'absolute',
+        bottom: 40,
+        left: 15,
+        right: 15,
     },
 });

@@ -16,10 +16,11 @@ export default function DetailLayout() {
       <Stack
         screenOptions={{
           headerShown: false,
-          animationTypeForReplace: 'pop',
+          animation: 'ios'
         }}
       >
         <Stack.Screen name="detail" />
+        <Stack.Screen name="qr-screen" />
       </Stack>
     </View>
   );

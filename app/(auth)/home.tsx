@@ -265,13 +265,14 @@ function HomeScreen() {
     throttle((item: QRRecord) => {
       router.push({
         pathname: `/detail`,
-        params: { id: item.id, item: encodeURIComponent(JSON.stringify(item)) },
+        params: { 
+          id: item.id, 
+          item: encodeURIComponent(JSON.stringify(item)) 
+        },
       });
     }, 1000), // Adjust the delay to suit the desired behavior
     []
   );
-  
-  
   
   const onNavigateToScanScreen = useCallback(() => {
     router.push('/(scan)/scan-main');

@@ -127,5 +127,13 @@
     "nextButton": "Next",
     "skipButton": "Skip",
     "finishButton": "Get Started"
+  }, 
+  "detailsScreen": {
+    "edit": "Edit",
+    "delete": "Delete",
+    "moveToTrash": "Move to trash",
+    "nearbyLocation": "Nearby Location",
+    "createQrCode": "Generate QR Code with Amount",
+    "receivePlaceholder": "Enter amount to receive"
   }
 }
