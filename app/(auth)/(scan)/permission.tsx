@@ -62,7 +62,7 @@ const PermissionScreen = () => {
         } else if (step === 2) {
             const locationGranted = await requestLocationPermission();
             if (locationGranted) {
-                router.navigate('/(auth)/(scan)/scan-main');
+                router.replace('/(auth)/(scan)/scan-main');
             } else {
                 console.log('Location permission not granted');
             }

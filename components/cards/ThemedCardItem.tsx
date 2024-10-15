@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
   moreButtonContainer: {
     borderRadius: 50,
     padding: 15,
-    right: -15,
+    right: -20,
   },
   qrContainer: {
     padding: 15,

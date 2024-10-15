@@ -19,7 +19,7 @@ import { triggerLightHapticFeedback } from '@/utils/haptic';
 import { getVietQRData } from '@/utils/vietQR';
 import { ThemedStatusToast } from '@/components/toast/ThemedOfflineToast';
 import { throttle } from 'lodash';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming, runOnJS } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
 
 // Utility function to format the amount
 const formatAmount = (amount: string) => {
@@ -88,21 +88,25 @@ export default function DetailScreen() {
     const transferHeight = useSharedValue(0);
 
     const transferStyle = useAnimatedStyle(() => ({
-        height: withTiming(transferHeight.value, { duration: 300 }, (finished) => {
-            if (finished) {
-                runOnJS(setIsTransfer)(transferHeight.value > 0);  // update state only after animation completes
-            }
-        }),
-        marginTop: withTiming(transferHeight.value > 0 ? 10 : 0, { duration: 300 }),
-        opacity: withTiming(transferHeight.value > 0 ? 1 : 0, { duration: 300 }),
-        pointerEvents: transferHeight.value > 0 ? 'auto' : 'none',
+        height: withTiming(transferHeight.value, { 
+            duration: 300, 
+            easing: Easing.out(Easing.ease) 
+          }),
+          marginTop: withTiming(transferHeight.value > 0 ? 10 : 0, { 
+            duration: 300, 
+            easing: Easing.out(Easing.ease) 
+          }),
+          opacity: withTiming(transferHeight.value > 0 ? 1 : 0, { 
+            duration: 300, 
+            easing: Easing.out(Easing.ease) 
+          }),
+          pointerEvents: transferHeight.value > 0 ? 'auto' : 'none',
     }));
-
+    
     const onToggleTransfer = useCallback(() => {
         triggerLightHapticFeedback();
         transferHeight.value = transferHeight.value === 0 ? 90 : 0;
     }, []);
-
     const transferAmount = useCallback(throttle(async () => {
 
         if (!item || !item.type || !item.code || !amount) return;
@@ -203,7 +207,7 @@ export default function DetailScreen() {
                                             value={amount}
                                             onChangeText={(text) => setAmount(formatAmount(text))}
                                         />
-                                        <Pressable onPress={transferAmount} style={[styles.transferButton, {opacity: amount ? 1 : 0.5}]}>
+                                        <Pressable onPress={transferAmount} style={[styles.transferButton, {opacity: amount ? 1 : 0.3}]}>
                                             <Ionicons name="chevron-forward-outline" size={20} color={iconColor} />
                                         </Pressable>
 
@@ -218,11 +222,10 @@ export default function DetailScreen() {
                                         renderItem={({ item }) => (
                                             <TouchableOpacity onPress={() => setAmount(item)}>
                                                 <View style={[styles.suggestionItem, { backgroundColor: colorScheme === 'light' ? Colors.light.buttonBackground : Colors.dark.buttonHighlight }]}>
-                                                    <ThemedText>{item}</ThemedText>
+                                                    <ThemedText style={styles.suggestionText}>{item}</ThemedText>
                                                 </View>
                                             </TouchableOpacity>
                                         )}
-                                        style={styles.suggestionList}
                                     />
                                 </Animated.View>
                             {/* )} */}
@@ -325,16 +328,17 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         marginRight: -15,
     },
-    suggestionList: {
-        paddingLeft: 15,
-    },
     suggestionListContent: {
         gap: 15,
+        paddingLeft: 15,
     },
     suggestionItem: {
         paddingHorizontal: 15,
         paddingVertical: 5,
         borderRadius: 10,
+    },
+    suggestionText: {
+        fontSize: 16,
     },
     toastContainer: {
         position: 'absolute',

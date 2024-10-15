@@ -194,12 +194,12 @@ const styles = StyleSheet.create({
     marginTop: 15,
   },
   accountName: {
-    fontSize: 18,
+    fontSize: 20,
     textAlign: 'center',
     color: 'white',
   },
   accountNumber: {
-    fontSize: 16,
+    fontSize: 18,
     textAlign: 'center',
     color: 'white',
   },

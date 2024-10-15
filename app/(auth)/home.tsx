@@ -249,7 +249,8 @@ function HomeScreen() {
 
   const scrollContainerStyle = useAnimatedStyle(() => {
     return {
-      opacity: scrollY.value > 200 ? withTiming(1) : withTiming(0),
+      opacity: scrollY.value > 40 ? withTiming(1) : withTiming(0),
+      pointerEvents: scrollY.value > 40 ? 'auto' : 'none',
     };
   });
 

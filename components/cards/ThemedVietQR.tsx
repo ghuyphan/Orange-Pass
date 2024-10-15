@@ -44,7 +44,7 @@ export const ThemedVietQRCard = memo(function ThemedVietQRCard({
     const barcodeWidth = useMemo(() => width * 0.7, [width]); // Adjust Barcode max width to 80% of screen width
 
     // Memoize the result of returnItemData to avoid unnecessary computations
-    const { name, color } = useMemo(() => returnItemData(code, type), [code, type]);
+    const { name, color, accent_color } = useMemo(() => returnItemData(code, type), [code, type]);
 
     // Memoize iconPath to prevent re-computation
     const iconPath = useMemo(() => getIconPath(code), [code]);
@@ -113,13 +113,13 @@ export const ThemedVietQRCard = memo(function ThemedVietQRCard({
                             )}
                         </View>
                     )}
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: -10, marginBottom: -30 }}>
+                    <View style={styles.logoContainer}>
                         <Image style={styles.vietQRIcon} source={require('@/assets/images/vietqr-icon.png')} resizeMode="contain" />
                         <View style={styles.divider} />
                         <Image style={styles.napasIcon} source={require('@/assets/images/napas-icon.png')} resizeMode="contain" />
                     </View>
-                    {type === 'bank' && (
-                        <View style={[styles.infoContainer, styles.infoContainerWithMarginTop]}>
+                    {/* {type === 'bank' && ( */}
+                        <View style={styles.infoContainer}>
                             <ThemedText type="defaultSemiBold" style={styles.accountName} numberOfLines={1}>
                                 {accountName}
                             </ThemedText>
@@ -127,8 +127,8 @@ export const ThemedVietQRCard = memo(function ThemedVietQRCard({
                                 {accountNumber}
                             </ThemedText>
                         </View>
-                    )
-                    }
+                    {/* )
+                    } */}
                 </View>
             </ThemedView>
         </TouchableHighlight>
@@ -181,10 +181,22 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
         paddingTop: 20,
     },
+    logoContainer: {
+        flexDirection: 'row', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        // marginVertical: -10, 
+        // marginBottom: -30, 
+        marginVertical: 15,
+        paddingRight: 10,
+        backgroundColor: '#fff',
+        borderRadius: 10,
+        
+    },
     vietQRIcon: {
-        width: '30%',
+        width: '26%',
         marginRight: -5,
-        height: 100,
+        height: 40,
     },
     divider: {
         width: 1,
@@ -193,33 +205,26 @@ const styles = StyleSheet.create({
         marginHorizontal: 10,
     },
     napasIcon: {
-        width: '23%',
-        height: 50,
-        marginTop: 10,
+        width: '22%',
+        height: 30,
+        marginTop: 5,
         marginLeft: 5,
     },
     qr: {
         padding: 10,
         borderRadius: 10,
         backgroundColor: 'white',
+        marginBottom: 10,
     },
     infoContainer: {
         justifyContent: 'center',
     },
-    infoContainerWithMarginTop: {
-        marginTop: 15,
-    },
     accountName: {
-        fontSize: 18,
+        fontSize: 20,
         textAlign: 'center',
         color: 'white',
     },
     accountNumber: {
-        fontSize: 16,
-        textAlign: 'center',
-        color: 'white',
-    },
-    memberID: {
         fontSize: 18,
         textAlign: 'center',
         color: 'white',
