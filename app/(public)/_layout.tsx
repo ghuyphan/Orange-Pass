@@ -18,7 +18,6 @@ export default function AuthLayout() {
         <Stack
           screenOptions={{
             headerShown: false,
-            animation: 'ios', // Disable animation only on the login screen
             animationTypeForReplace: 'push', // Use a push animation instead of 'pop'
           }}
         >

@@ -25,16 +25,16 @@
             "number_code": "970409"
         },
         {
-            "code": "BIV",
-            "name": "BIDV",
-            "full_name": "Bank for Investment and Development of Vietnam",
-            "number_code": "970418"
-        },
-        {
             "code": "BVB",
             "name": "BaoViet Bank",
             "full_name": "BaoViet Joint Stock Commercial Bank",
             "number_code": "970438"
+        },
+        {
+            "code": "BIV",
+            "name": "BIDV",
+            "full_name": "Bank for Investment and Development of Vietnam",
+            "number_code": "970418"
         },
         {
             "code": "CBB",
@@ -53,6 +53,12 @@
             "name": "CAKE",
             "full_name": "Cake by VPBank",
             "number_code": "546034"
+        },
+        {
+            "code": "CIM",
+            "name": "CIMB",
+            "full_name": "CIMB Bank Vietnam Limited",
+            "number_code": "422589"
         },
         {
             "code": "EIB",
@@ -145,10 +151,22 @@
             "number_code": "970443"
         },
         {
+            "code": "SHBVN",
+            "name": "ShinhanBank",
+            "full_name": "Shinhan Bank Vietnam Limited",
+            "number_code": "970424"
+        },   
+        {
             "code": "TCB",
             "name": "Techcombank",
             "full_name": "Vietnam Technological and Commercial Joint Stock Bank",
             "number_code": "970407"
+        },
+        {
+            "code": "TIM",
+            "name": "Timo",
+            "full_name": "Timo Digital Bank (Timo by Ban Viet Bank)",
+            "number_code": "963388"
         },
         {
             "code": "TPB",

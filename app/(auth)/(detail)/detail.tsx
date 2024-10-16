@@ -40,7 +40,7 @@ export default function DetailScreen() {
 
     const iconColor = useColorScheme() === 'light' ? Colors.light.text : Colors.dark.text;
 
-    useUnmountBrightness(0.8, false);
+    useUnmountBrightness(0.8, true);
 
     useEffect(() => {
         const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
@@ -164,7 +164,7 @@ export default function DetailScreen() {
             <ThemedView style={styles.mainContainer}>
                 <View style={styles.headerWrapper}>
                     <ThemedButton onPress={router.back} iconName="chevron-back-outline" />
-                    <ThemedButton onPress={handleExpandPress} iconName="ellipsis-vertical-outline" />
+                    <ThemedButton onPress={handleExpandPress} iconName="ellipsis-vertical" />
                 </View>
                 <ThemedPinnedCard
                     style={styles.pinnedCardWrapper}

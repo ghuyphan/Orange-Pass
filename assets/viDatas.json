@@ -13,11 +13,6 @@
             "number_code": "970416"
         },
         {
-            "code": "ANZ",
-            "name": "ANZ",
-            "full_name": "ANZ Bank"
-        },
-        {
             "code": "AGR",
             "name": "Agribank",
             "full_name": "Ngân hàng Nông nghiệp và Phát triển Nông thôn Việt Nam",
@@ -30,25 +25,10 @@
             "number_code": "970409"
         },
         {
-            "code": "BKB",
-            "name": "Bangkok Bank",
-            "full_name": "Bangkok Bank Public Company Limited"
-        },
-        {
-            "code": "BOC",
-            "name": "Bank of China",
-            "full_name": "Bank of China Limited"
-        },
-        {
             "code": "BVB",
             "name": "BaoViet Bank",
             "full_name": "Ngân hàng Thương mại Cổ phần Bảo Việt",
             "number_code": "970438"
-        },
-        {
-            "code": "BIC",
-            "name": "BIDC",
-            "full_name": "Ngân hàng Đầu tư và Phát triển Campuchia"
         },
         {
             "code": "BIV",
@@ -57,37 +37,28 @@
             "number_code": "970418"
         },
         {
-            "code": "CAK",
-            "name": "CAKE",
-            "full_name": "Cake by VPBank",
-            "number_code": "546034"
-        },
-        {
-            "code": "CAT",
-            "name": "Cathay",
-            "full_name": "Cathay United Bank"
-        },
-        {
             "code": "CBB",
             "name": "CBBank",
             "full_name": "Ngân hàng CB Vietnam",
             "number_code": "970444"
         },
         {
-            "code": "CHS",
-            "name": "Chase Bank",
-            "full_name": "JPMorgan Chase Bank"
-        },
-        {
-            "code": "CIM",
-            "name": "CIMB",
-            "full_name": "Ngân hàng CIMB"
-        },
-        {
             "code": "CIT",
             "name": "CitiBank",
             "full_name": "Citibank, N.A.",
             "number_code": "533948"
+        },
+        {
+            "code": "CAK",
+            "name": "CAKE",
+            "full_name": "Cake by VPBank",
+            "number_code": "546034"
+        },
+        {
+            "code": "CIM",
+            "name": "CIMB",
+            "full_name": "Ngân hàng TNHH MTV CIMB Việt Nam",
+            "number_code": "422589"
         },
         {
             "code": "CBA",
@@ -259,11 +230,11 @@
             "number_code": "970443"
         },
         {
-            "code": "SHN",
-            "name": "SHN",
-            "full_name": "Ngân hàng Shinhan",
+            "code": "SHBVN",
+            "name": "ShinhanBank",
+            "full_name": "Ngân hàng TNHH MTV Shinhan Việt Nam",
             "number_code": "970424"
-        },
+        },        
         {
             "code": "SMF",
             "name": "SMFG",
@@ -284,7 +255,7 @@
         {
             "code": "TIM",
             "name": "Timo",
-            "full_name": "Timo Digital Bank",
+            "full_name": "Ngân hàng số Timo by Ban Viet Bank (Timo by Ban Viet Bank)",
             "number_code": "963388"
         },
         {

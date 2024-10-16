@@ -20,7 +20,7 @@ export default function CreateQRScreen() {
     const { metadata, amount, originalItem: encodedItem } = useLocalSearchParams();
     const router = useRouter();
 
-    useUnmountBrightness(0.8, false);
+    useUnmountBrightness(0.8, true);
     
     const item: QRRecord | null = useMemo(() => {
         if (!encodedItem) return null;

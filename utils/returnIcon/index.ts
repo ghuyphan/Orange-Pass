@@ -46,7 +46,7 @@ export function getIconPath(key: string): any {
       'SCB': require('@/assets/images/logoIcons/SCB.png'),
       'SEA': require('@/assets/images/logoIcons/SEA.png'),
       'SHB': require('@/assets/images/logoIcons/SHB.png'),
-      'SHN': require('@/assets/images/logoIcons/SHN.png'),
+      'SHBVN': require('@/assets/images/logoIcons/SHBVN.png'),
       'SMF': require('@/assets/images/logoIcons/SMF.png'),
       'STC': require('@/assets/images/logoIcons/STC.png'),
       'TCB': require('@/assets/images/logoIcons/TCB.png'),

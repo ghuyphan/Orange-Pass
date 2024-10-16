@@ -63,8 +63,8 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
   const accountDisplayName = useMemo(() => {
     if (type === 'bank') {
       const length = accountNumber?.length ?? 0;
-      const maskedLength = Math.max(0, length - 3);
-      return `${'*'.repeat(maskedLength)}${accountNumber?.slice(-3)}`;
+      const maskedLength = Math.max(0, length - 4);
+      return `${'*'.repeat(maskedLength)}${accountNumber?.slice(-4)}`;
     } else {
       return full_name;
     }
@@ -128,7 +128,7 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
               {onMoreButtonPress && (
                 <TouchableWithoutFeedback onPress={onMoreButtonPress}>
                   <View style={styles.moreButtonContainer}>
-                    <Ionicons name="ellipsis-vertical-outline" size={18} color="white" />
+                    <Ionicons name="ellipsis-vertical" size={18} color="white" />
                   </View>
                 </TouchableWithoutFeedback>
               )}
