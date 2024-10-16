@@ -17,7 +17,7 @@ const formatAmount = (amount: string) => {
 };
 
 export default function CreateQRScreen() {
-    const { metadata, originalItem: encodedItem } = useLocalSearchParams();
+    const { metadata, amount, originalItem: encodedItem } = useLocalSearchParams();
     const router = useRouter();
 
     useUnmountBrightness(0.8, false);
@@ -53,6 +53,7 @@ export default function CreateQRScreen() {
                     metadata={metadata.toString()}
                     accountName={item.account_name}
                     accountNumber={item.account_number}
+                    amount={amount}
                 />
             </ThemedView>
     );

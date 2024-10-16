@@ -132,6 +132,7 @@ export default function DetailScreen() {
                 pathname: '/qr-screen',
                 params: {
                     metadata: qrCode,
+                    amount: amount,
                     originalItem: encodeURIComponent(JSON.stringify(item)),
                 },
             });

@@ -330,7 +330,6 @@ export async function filterQrCodes(
       if (searchQuery) {
         // Get matching codes from returnItemCode
         const matchingCodes = returnItemCode(searchQuery);
-        console.log('Matching codes:', matchingCodes);
   
         let searchConditions = [];
   

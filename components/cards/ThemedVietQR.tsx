@@ -18,6 +18,7 @@ export type ThemedVietQRProps = {
     metadata_type: 'qr' | 'barcode';
     accountName?: string;
     accountNumber?: string;
+    amount?: string;
     onItemLongPress?: () => void;
     style?: object;
 };
@@ -31,6 +32,7 @@ export const ThemedVietQRCard = memo(function ThemedVietQRCard({
     metadata_type,
     accountName,
     accountNumber,
+    amount,
     onItemLongPress,
     style,
 }: ThemedVietQRProps): JSX.Element {
@@ -97,38 +99,33 @@ export const ThemedVietQRCard = memo(function ThemedVietQRCard({
                 <View style={styles.qrContainer}>
                     {shouldRenderCode && (
                         <View style={styles.qr}>
-                            {metadata_type === 'qr' ? (
-                                <QRCode
-                                    value={metadata}
-                                    size={qrSize}
-                                    logo={iconPath}
-                                    logoSize={qrSize * 0.2} // Adjust logo size relative to the QR code size
-                                    logoBackgroundColor="white"
-                                    logoBorderRadius={50}
-                                    logoMargin={5}
-                                    quietZone={3}
-                                />
-                            ) : (
-                                <Barcode height={barcodeHeight} maxWidth={barcodeWidth} value={metadata} format="CODE128" />
-                            )}
+                            <QRCode
+                                value={metadata}
+                                size={qrSize}
+                                logo={iconPath}
+                                logoSize={qrSize * 0.2} // Adjust logo size relative to the QR code size
+                                logoBackgroundColor="white"
+                                logoBorderRadius={50}
+                                logoMargin={5}
+                                quietZone={3}
+                            />
                         </View>
                     )}
-                    <View style={styles.logoContainer}>
+                    <View style={[styles.logoContainer, { backgroundColor: accent_color[colorScheme === 'light' ? 'light' : 'dark'] }]}>
                         <Image style={styles.vietQRIcon} source={require('@/assets/images/vietqr-icon.png')} resizeMode="contain" />
                         <View style={styles.divider} />
                         <Image style={styles.napasIcon} source={require('@/assets/images/napas-icon.png')} resizeMode="contain" />
                     </View>
                     {/* {type === 'bank' && ( */}
-                        <View style={styles.infoContainer}>
-                            <ThemedText type="defaultSemiBold" style={styles.accountName} numberOfLines={1}>
-                                {accountName}
-                            </ThemedText>
-                            <ThemedText style={styles.accountNumber} numberOfLines={1}>
-                                {accountNumber}
-                            </ThemedText>
-                        </View>
-                    {/* )
-                    } */}
+                    <View style={styles.infoContainer}>
+                        <ThemedText style={styles.accountName} numberOfLines={1}>
+                            {accountName}
+                        </ThemedText>
+                        <ThemedText style={styles.accountNumber} numberOfLines={1}>
+                            {accountNumber}
+                        </ThemedText>
+
+                    </View>
                 </View>
             </ThemedView>
         </TouchableHighlight>
@@ -182,19 +179,19 @@ const styles = StyleSheet.create({
         paddingTop: 20,
     },
     logoContainer: {
-        flexDirection: 'row', 
-        alignItems: 'center', 
-        justifyContent: 'center', 
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
         // marginVertical: -10, 
         // marginBottom: -30, 
         marginVertical: 15,
         paddingRight: 10,
-        backgroundColor: '#fff',
+        // backgroundColor: '#fff',
         borderRadius: 10,
-        
+
     },
     vietQRIcon: {
-        width: '26%',
+        width: '24%',
         marginRight: -5,
         height: 40,
     },
@@ -218,9 +215,10 @@ const styles = StyleSheet.create({
     },
     infoContainer: {
         justifyContent: 'center',
+        gap: 5, // Increased padding
     },
     accountName: {
-        fontSize: 20,
+        fontSize: 18,
         textAlign: 'center',
         color: 'white',
     },

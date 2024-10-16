@@ -144,7 +144,7 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
             </View>
             <View style={[styles.footerContainer, { backgroundColor: footerBackgroundColor }]}>
               <ThemedText style={styles.footerText} numberOfLines={1} ellipsizeMode="tail">
-                {accountName}
+                {accountName || ' '}
               </ThemedText>
             </View>
           </ThemedView>
@@ -232,5 +232,6 @@ const styles = StyleSheet.create({
   footerText: {
     maxWidth: '80%',
     fontSize: 14,
+    color: 'white',
   },
 });

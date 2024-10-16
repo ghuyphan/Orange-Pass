@@ -80,12 +80,12 @@ function HomeScreen() {
       console.log('Cannot sync while offline');
       return;
     }
-  
+
     try {
       setIsSyncing(true);
       setToastMessage(t('homeScreen.syncing'));
       setIsToastVisible(true);
-  
+
       // Sync local changes (new, updated, deleted) to the server
       await syncQrCodes(userId);
     } catch (error) {
@@ -99,58 +99,58 @@ function HomeScreen() {
       }, 300);
     }
   }, []); // Removed isOffline from dependencies
-  
+
   const fetchData = useCallback(async () => {
     if (!userId) return;
-  
+
     setIsLoading(true);
-  
+
     try {
       // Step 1: Fetch and display local data immediately
       const localData = await getQrCodesByUserId(userId);
       setQrData(localData);
-  
+
       // Set empty state based on local data
       const isLocalDataEmpty = localData.length === 0;
       setIsEmpty(isLocalDataEmpty);
-  
+
       // Animate empty card if necessary
       if (isLocalDataEmpty) {
         animateEmptyCard();
       }
-  
+
       // If offline, we can't proceed with server sync
       if (isOffline) {
         console.log('Offline mode: cannot sync with server');
         animateEmptyCard();
         return;
       }
-  
+
       // Step 2: Sync local changes with the server
       await syncWithServer(userId);
-  
+
       // Step 3: Fetch server data after successful sync
       const [serverData, locallyDeletedData] = await Promise.all([
         fetchQrData(userId, 1, 30),
         getLocallyDeletedQrCodes(userId),
       ]);
-  
+
       // Step 4: Filter out server items that are deleted locally
       const filteredServerData = serverData.items.filter(
         item => !locallyDeletedData.some(deletedItem => deletedItem.id === item.id)
       );
-  
+
       // Step 5: Merge new server data into local storage
       if (filteredServerData.length > 0) {
         await insertOrUpdateQrCodes(filteredServerData);
-  
+
         // Step 6: Update local data displayed to the user
         const updatedLocalData = await getQrCodesByUserId(userId);
         setQrData(updatedLocalData);
         setIsEmpty(updatedLocalData.length === 0);
         animateEmptyCard();
       }
-  
+
     } catch (error) {
       console.error('Error in fetchData:', error);
       setToastMessage(t('homeScreen.fetchError'));
@@ -162,7 +162,7 @@ function HomeScreen() {
       }, 300);
     }
   }, [userId]); // Removed isOffline and syncWithServer from dependencies
-  
+
   // Animate empty card when isEmpty changes
   useEffect(() => {
     isEmptyShared.value = isEmpty ? 1 : 0;
@@ -266,15 +266,15 @@ function HomeScreen() {
     throttle((item: QRRecord) => {
       router.push({
         pathname: `/detail`,
-        params: { 
-          id: item.id, 
-          item: encodeURIComponent(JSON.stringify(item)) 
+        params: {
+          id: item.id,
+          item: encodeURIComponent(JSON.stringify(item))
         },
       });
     }, 1000), // Adjust the delay to suit the desired behavior
     []
   );
-  
+
   const onNavigateToScanScreen = useCallback(() => {
     router.push('/(scan)/scan-main');
   }, []);
@@ -294,19 +294,19 @@ function HomeScreen() {
       const isOrderChanged =
         data.length !== qrData.length ||
         data.some((item, index) => item.id !== qrData[index].id);
-  
+
       // Proceed only if the order has changed
       if (isOrderChanged) {
         // Update the component state with the new order
         setQrData(data);
-  
+
         // Update qr_index values and timestamps
         const updatedData = data.map((item, index) => ({
           ...item,
           qr_index: index,
           updated: new Date().toISOString(),
         }));
-  
+
         // Update the indexes and timestamps in the local database
         await updateQrIndexes(updatedData);
         // console.log('QR indexes and timestamps updated in the database');
@@ -320,16 +320,17 @@ function HomeScreen() {
       setIsActive(false);
     }
   }, [qrData]);
-  
+
   const scrollToTop = useCallback(() => {
     flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
-  }, []);
+    triggerHapticFeedback();
+  }, [flatListRef]);
 
   const handleExpandPress = useCallback((id: string) => {
     setSelectedItemId(id);
     bottomSheetRef.current?.expand();
   }, [setSelectedItemId, bottomSheetRef]);
-  
+
   const onDeleteSheetPress = useCallback(() => {
     bottomSheetRef.current?.close();
     setIsModalVisible(true);
@@ -337,32 +338,32 @@ function HomeScreen() {
 
   const onDeletePress = useCallback(async () => {
     if (!selectedItemId) return;
-  
+
     try {
       setIsSyncing(true);
       setIsToastVisible(true);
       setToastMessage(t('homeScreen.deleting'));
-  
+
       // Mark the QR code as deleted in the local database
       await deleteQrCode(selectedItemId);
-  
+
       // Fetch updated data from the local database
       const updatedLocalData = await getQrCodesByUserId(userId);
-  
+
       // Reindex the remaining items
       const reindexedData = updatedLocalData.map((item, index) => ({
         ...item,
         qr_index: index,
         updated: new Date().toISOString(),
       }));
-  
+
       // Update the indexes and timestamps in the local database
       await updateQrIndexes(reindexedData);
-  
+
       // Update state with the new data
       setQrData(reindexedData);
       setIsEmpty(reindexedData.length === 0);
-  
+
       // Deletion successful, hide modal and toast
       setIsModalVisible(false);
       setIsToastVisible(false);
@@ -415,14 +416,15 @@ function HomeScreen() {
             <ThemedButton iconName="settings-outline" style={styles.titleButton} onPress={() => { }} />
           </View>
         </View>
-        {!isEmpty && (
+        {(!isEmpty || isLoading) && (
           <>
             <ThemedIconInput
               placeholder={t('homeScreen.searchPlaceholder')}
               iconName="search"
               value={searchQuery}
               onChangeText={setSearchQuery}
-              style={{ marginHorizontal: 15 }}
+              // pointerEvents={isLoading && qrData.length > 0 ? 'none' : 'auto'}
+              style={{ marginHorizontal: 15}}
             />
             {isLoading ? (
               <ThemedFilterSkeleton show={true} />
@@ -435,6 +437,7 @@ function HomeScreen() {
             )}
           </>
         )}
+
       </Animated.View>
       {isLoading ? (
         <View style={styles.loadingContainer}>

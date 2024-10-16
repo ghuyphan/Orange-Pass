@@ -462,11 +462,11 @@
     "SHN": {
         "color": {
             "light": "#7E7FAF",
-            "dark": "#8B7066"
+            "dark": "#4A4B75"
         },
         "accent_color": {
             "light": "#98A0C5",
-            "dark": "#968880"
+            "dark": "#636688"
         }
     },
     "SMF": {
@@ -501,22 +501,22 @@
     },
     "TIM": {
         "color": {
-            "light": "#9E9E9E",
-            "dark": "#8F8F8F"
+            "light": "#8A7CBA",
+            "dark": "#695A9A"
         },
         "accent_color": {
-            "light": "#B8B8B8",
-            "dark": "#A0A0A0"
+            "light": "#B2A1D4",
+            "dark": "#8A79B6"
         }
     },
     "TPB": {
         "color": {
-            "light": "#967BA5",
-            "dark": "#7A608B"
+            "light": "#9774ab",
+            "dark": "#7D6299"
         },
         "accent_color": {
             "light": "#B096B7",
-            "dark": "#9688A3"
+            "dark": "#A081B0"
         }
     },
     "TYM": {
@@ -579,16 +579,6 @@
             "dark": "#91AA9A"
         }
     },
-    "VCP": {
-        "color": {
-            "light": "#D2787B",
-            "dark": "#8F6060"
-        },
-        "accent_color": {
-            "light": "#DFA2A0",
-            "dark": "#A57A7F"
-        }
-    },
     "VCB": {
         "color": {
             "light": "#90B590",
@@ -641,22 +631,22 @@
     },
     "BAX": {
         "color": {
-            "light": "#A8C988",
-            "dark": "#789A4A"
+            "light": "#B2D89A",
+            "dark": "#7A8F5C"
         },
         "accent_color": {
-            "light": "#BDE8A2",
-            "dark": "#85B157"
+            "light": "#C6F0B3",
+            "dark": "#8CA66A"
         }
     },
     "CIR": {
         "color": {
-            "light": "#D8B0B0",
-            "dark": "#996B6B"
+            "light": "#D86E6E",
+            "dark": "#A85858"
         },
         "accent_color": {
-            "light": "#EBD5D5",
-            "dark": "#A68484"
+            "light": "#E8B3B3",
+            "dark": "#B96E6E"
         }
     },
     "COO": {
@@ -711,12 +701,12 @@
     },
     "LOT": {
         "color": {
-            "light": "#D8B0B0",
-            "dark": "#996B6B"
+            "light": "#C44A4A",
+            "dark": "#8F3B3B"
         },
         "accent_color": {
-            "light": "#EBD5D5",
-            "dark": "#A68484"
+            "light": "#D96666",
+            "dark": "#A45151"
         }
     },
     "MMM": {

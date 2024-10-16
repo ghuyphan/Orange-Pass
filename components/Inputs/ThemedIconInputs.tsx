@@ -13,6 +13,7 @@ export type ThemedIconInput = {
     value?: string;
     placeholder?: string;
     style?: object;
+    pointerEvents?: 'none' | 'auto';
     onChangeText?: (text: string) => void;
     onBlur?: () => void;
     onFocus?: () => void;
@@ -28,6 +29,7 @@ export function ThemedIconInput({
     placeholder,
     value = '',
     style,
+    pointerEvents = 'auto',
     onChangeText = () => { },
     onBlur = () => { },
     onFocus = () => { },
@@ -73,6 +75,7 @@ export function ThemedIconInput({
                         accessible
                         aria-label={placeholder}
                         onSubmitEditing={onSubmitEditing}
+                        pointerEvents={pointerEvents}
                     />
                 </View>
                 <View style={styles.rightContainer}>
