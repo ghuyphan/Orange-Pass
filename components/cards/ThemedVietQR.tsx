@@ -111,7 +111,7 @@ export const ThemedVietQRCard = memo(function ThemedVietQRCard({
                             />
                         </View>
                     )}
-                    <View style={[styles.logoContainer, { backgroundColor: accent_color[colorScheme === 'light' ? 'light' : 'dark'] }]}>
+                    <View style={[styles.logoContainer]}>
                         <Image style={styles.vietQRIcon} source={require('@/assets/images/vietqr-icon.png')} resizeMode="contain" />
                         <View style={styles.divider} />
                         <Image style={styles.napasIcon} source={require('@/assets/images/napas-icon.png')} resizeMode="contain" />
@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
         // marginBottom: -30, 
         marginVertical: 15,
         paddingRight: 10,
-        // backgroundColor: '#fff',
+        backgroundColor: '#fff',
         borderRadius: 10,
 
     },

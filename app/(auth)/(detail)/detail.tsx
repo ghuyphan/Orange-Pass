@@ -44,19 +44,19 @@ export default function DetailScreen() {
 
     useUnmountBrightness(0.8, true);
 
-    useEffect(() => {
-        const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
-            setKeyboardVisible(true);
-        });
-        const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
-            setKeyboardVisible(false);
-        });
+    // useEffect(() => {
+    //     const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
+    //         setKeyboardVisible(true);
+    //     });
+    //     const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+    //         setKeyboardVisible(false);
+    //     });
 
-        return () => {
-            keyboardDidHideListener.remove();
-            keyboardDidShowListener.remove();
-        };
-    }, [isKeyboardVisible]);
+    //     return () => {
+    //         keyboardDidHideListener.remove();
+    //         keyboardDidShowListener.remove();
+    //     };
+    // }, [isKeyboardVisible]);
 
     const item: QRRecord | null = useMemo(() => {
         if (!encodedItem) return null;
@@ -110,7 +110,7 @@ export default function DetailScreen() {
         triggerLightHapticFeedback();
         transferHeight.value = transferHeight.value === 0 ? 90 : 0;
     }, [isOffline]);
-    
+
     const transferAmount = useCallback(throttle(async () => {
 
         if (!item || !item.type || !item.code || !amount) return;
@@ -162,7 +162,7 @@ export default function DetailScreen() {
             enableOnAndroid={true}
             extraScrollHeight={50}
             showsVerticalScrollIndicator={false}
-            scrollEnabled={isKeyboardVisible}
+            // scrollEnabled={isKeyboardVisible}
             style={{ backgroundColor: colorScheme === 'light' ? Colors.light.background : Colors.dark.background }}
         >
             <ThemedView style={styles.mainContainer}>
@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: 15
+        marginHorizontal: 15,
     },
     inputField: {
         height: 50,
@@ -334,8 +334,8 @@ const styles = StyleSheet.create({
         marginRight: -15,
     },
     suggestionListContent: {
-        gap: 15,
-        paddingLeft: 15,
+        gap: 10,
+        paddingHorizontal: 15,
     },
     suggestionItem: {
         paddingHorizontal: 15,

@@ -62,7 +62,6 @@ function initializeData() {
                     const normalized_full_name = normalizeText(item.full_name);
 
                     const colorData = colorConfigTyped[code] || { color: { light: '', dark: '' }, accent_color: { light: '', dark: '' } };
-                    console.log(colorData);
                     const processedItem: ItemType = {
                         ...item,
                         normalized_name,

@@ -109,7 +109,7 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
             <View style={styles.headerContainer}>
               <View style={styles.headerLeft}>
                 <View style={styles.dragIconContainer}>
-                  <Ionicons name="menu-outline" size={18} color="white" />
+                  <Ionicons name="menu" size={18} color="white" />
                 </View>
                 <View style={styles.leftHeaderContainer}>
                   <View style={styles.iconContainer}>

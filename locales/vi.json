@@ -83,7 +83,7 @@
     "delete": "Chuyển vào thùng rấc",
     "syncing": "Đang đồng bộ...",
     "deleting": "Đang xoá...",
-    "offline": "Bạn đang ngoại tuyến. Vui lòng kết nối internet để đồng bộ dữ liệu.",
+    "offline": "Bạn đang ngoại tuyến. Một số tính năng không khả dụng.",
     "confirmDeleteTitle": "Chuyển vào thùng rác?",
     "confirmDeleteMessage": "Bạn có chắc chắn muốn chuyển thẻ này vào thùng rác không?",
     "cancel": "Hủy",

@@ -12,11 +12,11 @@
     "ACB": {
         "color": {
             "light": "#3B579D",
-            "dark": "#1F305D"
+            "dark": "#2C3F7A"
         },
         "accent_color": {
-            "light": "#5e74ad",
-            "dark": "#2C4175"
+            "light": "#6FAEE8",
+            "dark": "#4B8DC3"
         }
     },
     "VBA": {
@@ -89,14 +89,14 @@
             "dark": "#406F6D"
         }
     },
-    "CAK": {
+    "CAKE": {
         "color": {
-            "light": "#C38F9E",
-            "dark": "#AE6B79"
+            "light": "#372975",
+            "dark": "#2B2160"
         },
         "accent_color": {
-            "light": "#D1A9B5",
-            "dark": "#B58E94"
+            "light": "#D96D98",
+            "dark": "#B4567B"
         }
     },
     "CAT": {
@@ -129,24 +129,24 @@
             "dark": "#968880"
         }
     },
-    "CIM": {
+    "CIMB": {
         "color": {
-            "light": "#BA7C83",
-            "dark": "#AE6367"
+            "light": "#8C1A18",
+            "dark": "#6E1311"
         },
         "accent_color": {
-            "light": "#C59598",
-            "dark": "#B57B80"
+            "light": "#D8A3A5",
+            "dark": "#C59A9D"
         }
     },
-    "CIT": {
+    "CITIBANK": {
         "color": {
-            "light": "#90ABB6",
-            "dark": "#898E7B"
+            "light": "#2F6A99",
+            "dark": "#2A5578"
         },
         "accent_color": {
-            "light": "#AAC9D1",
-            "dark": "#A0AEB5"
+            "light": "#D14641",
+            "dark": "#B13A36"
         }
     },
     "CBA": {
@@ -631,12 +631,12 @@
     },
     "CIR": {
         "color": {
-            "light": "#D86E6E",
-            "dark": "#A85858"
+            "light": "#D83933",
+            "dark": "#A82B27"
         },
         "accent_color": {
-            "light": "#E8B3B3",
-            "dark": "#B96E6E"
+            "light": "#F77B3E",
+            "dark": "#C9642F"
         }
     },
     "COO": {
@@ -692,11 +692,11 @@
     "LOT": {
         "color": {
             "light": "#C44A4A",
-            "dark": "#8F3B3B"
+            "dark": "#A03E3E"
         },
         "accent_color": {
-            "light": "#D96666",
-            "dark": "#A45151"
+            "light": "#e87979",
+            "dark": "#C06464"
         }
     },
     "MMM": {

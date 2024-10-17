@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
     overlay: {
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 20,
+        padding: 15,
     },
     modalContainer: {
         minWidth: '95%',
