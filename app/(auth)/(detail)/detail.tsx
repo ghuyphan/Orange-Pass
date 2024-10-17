@@ -1,5 +1,7 @@
 import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import { StyleSheet, View, TouchableWithoutFeedback, useColorScheme, Linking, Keyboard, FlatList, TouchableOpacity, TextInput, Pressable } from 'react-native';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store/rootReducer';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useUnmountBrightness } from '@reeq/react-native-device-brightness';
@@ -33,10 +35,10 @@ export default function DetailScreen() {
     const colorScheme = useColorScheme();
     const [amount, setAmount] = useState(''); // State to hold the amount of money
     const [isKeyboardVisible, setKeyboardVisible] = useState(false);
-    const [isTransfer, setIsTransfer] = useState(false);
     const [isToastVisible, setIsToastVisible] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
     const [isSyncing, setIsSyncing] = useState(false);
+    const isOffline = useSelector((state: RootState) => state.network.isOffline);
 
     const iconColor = useColorScheme() === 'light' ? Colors.light.text : Colors.dark.text;
 
@@ -104,9 +106,11 @@ export default function DetailScreen() {
     }));
     
     const onToggleTransfer = useCallback(() => {
+        if (isOffline) return; // Prevent action if offline
         triggerLightHapticFeedback();
         transferHeight.value = transferHeight.value === 0 ? 90 : 0;
-    }, []);
+    }, [isOffline]);
+    
     const transferAmount = useCallback(throttle(async () => {
 
         if (!item || !item.type || !item.code || !amount) return;
@@ -189,13 +193,16 @@ export default function DetailScreen() {
                     </TouchableWithoutFeedback>
 
                     {(item.type === 'bank' || item.type === 'ewallet') && (
-                        <View style={styles.transferContainer}>
+                        <View style={[styles.transferContainer,  isOffline ? { opacity: 0.4, pointerEvents: 'none' } : {}]}>
                             <TouchableWithoutFeedback onPress={onToggleTransfer}>
                                 <View style={styles.actionButton}>
                                     <Ionicons name="qr-code-outline" size={20} color={iconColor} />
                                     <ThemedText style={styles.labelText} type="defaultSemiBold">
                                         {t('detailsScreen.createQrCode')}
                                     </ThemedText>
+                                    {isOffline && (
+                                    <Ionicons name="cloud-offline-outline" size={20} color={iconColor} />
+                                )}
                                 </View>
                             </TouchableWithoutFeedback>
                             {/* {isTransfer && ( */}
@@ -211,8 +218,6 @@ export default function DetailScreen() {
                                         <Pressable onPress={transferAmount} style={[styles.transferButton, {opacity: amount ? 1 : 0.3}]}>
                                             <Ionicons name="chevron-forward-outline" size={20} color={iconColor} />
                                         </Pressable>
-
-
                                     </View>
                                     <FlatList
                                         data={amountSuggestions}
@@ -229,7 +234,6 @@ export default function DetailScreen() {
                                         )}
                                     />
                                 </Animated.View>
-                            {/* )} */}
                         </View>
                     )}
                 </View>

@@ -1,52 +1,42 @@
 {
     "ABB": {
         "color": {
-            "light": "#837265",
-            "dark": "#8B7066"
+            "light": "#52AAAE",
+            "dark": "#3F7F82"
         },
         "accent_color": {
-            "light": "#A29586",
-            "dark": "#9B887E"
+            "light": "#7FBCBD",
+            "dark": "#418E91"
         }
     },
     "ACB": {
         "color": {
-            "light": "#6C8B9A",
-            "dark": "#4C6472"
+            "light": "#3B579D",
+            "dark": "#1F305D"
         },
         "accent_color": {
-            "light": "#94AAB5",
-            "dark": "#5D7485"
+            "light": "#5e74ad",
+            "dark": "#2C4175"
         }
     },
-    "ANZ": {
+    "VBA": {
         "color": {
-            "light": "#889AA5",
-            "dark": "#8B7266"
+            "light": "#9B4A50",
+            "dark": "#7B3A3F"
         },
         "accent_color": {
-            "light": "#9CB9C0",
-            "dark": "#968880"
-        }
-    },
-    "AGR": {
-        "color": {
-            "light": "#B58888",
-            "dark": "#9B6565"
-        },
-        "accent_color": {
-            "light": "#C39D9E",
-            "dark": "#B08889"
+            "light": "#b56b70",
+            "dark": "#8A4A4F"
         }
     },
     "BAB": {
         "color": {
-            "light": "#D6B187",
-            "dark": "#AC8C5C"
+            "light": "#D4B471",
+            "dark": "#8F7444"
         },
         "accent_color": {
-            "light": "#E2C3AA",
-            "dark": "#BC9C80"
+            "light": "#E0C38A",
+            "dark": "#A6894E"
         }
     },
     "BKB": {
@@ -71,12 +61,12 @@
     },
     "BVB": {
         "color": {
-            "light": "#7D8AA5",
-            "dark": "#8B7066"
+            "light": "#3477BB",
+            "dark": "#2A5B8F"
         },
         "accent_color": {
-            "light": "#95A6BF",
-            "dark": "#968880"
+            "light": "#4F8AB8",
+            "dark": "#2F6B9F"
         }
     },
     "BIC": {
@@ -89,14 +79,14 @@
             "dark": "#968880"
         }
     },
-    "BIV": {
+    "BIDV": {
         "color": {
-            "light": "#7F8A9A",
-            "dark": "#8B7066"
+            "light": "#4A7D7B",
+            "dark": "#336664"
         },
         "accent_color": {
-            "light": "#99AABD",
-            "dark": "#968880"
+            "light": "#5C9B98",
+            "dark": "#406F6D"
         }
     },
     "CAK": {
@@ -121,12 +111,12 @@
     },
     "CBB": {
         "color": {
-            "light": "#BCAE7E",
-            "dark": "#A38E68"
+            "light": "#2559A9",
+            "dark": "#183D73"
         },
         "accent_color": {
-            "light": "#D1C29B",
-            "dark": "#B59C85"
+            "light": "#4A79C1",
+            "dark": "#1E4A8C"
         }
     },
     "CHS": {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { StyleSheet, View, Platform, FlatList, InteractionManager } from 'react-native';
+import { StyleSheet, View, Platform, FlatList, RefreshControl } from 'react-native';
 import { useSelector } from 'react-redux';
 import Animated, {
   useAnimatedStyle,
@@ -8,6 +8,9 @@ import Animated, {
   withTiming,
   useAnimatedScrollHandler,
   Easing,
+  useDerivedValue,
+  interpolate,
+  Extrapolation
 } from 'react-native-reanimated';
 import { router } from 'expo-router';
 import { BlurView } from 'expo-blur';
@@ -223,30 +226,36 @@ function HomeScreen() {
       stiffness: 150,
     });
   };
-
-  const titleContainerStyle = useAnimatedStyle(() => {
-    const threshold = 40;
-    const shouldSnap = scrollY.value > threshold;
-
-    const translateY = withTiming(shouldSnap ? -30 : 0, {
-      duration: 300,
-      easing: Easing.out(Easing.ease),
-    });
-
-    const opacity = withTiming(shouldSnap ? 0 : 1, {
-      duration: 300,
-      easing: Easing.out(Easing.ease),
-    });
-
-    const zIndex = scrollY.value > threshold || isActiveShared.value ? 0 : 20;
-
-    return {
-      opacity,
-      transform: [{ translateY }],
-      zIndex,
-    };
+  
+  // Header animation
+  const shouldSnap = useDerivedValue(() => {
+    return scrollY.value > 70;
+  }, [scrollY]);
+  
+  const translateY = useDerivedValue(() => {
+    return interpolate(
+      scrollY.value,
+      [0, 140],  // Input range
+      [0, -40], // Output range
+      Extrapolation.CLAMP
+    );
   });
 
+  const opacity = useDerivedValue(() => {
+    return withTiming(shouldSnap.value ? 0 : 1, {
+      duration: 300,
+      easing: Easing.out(Easing.ease),
+    });
+  });
+
+  const titleContainerStyle = useAnimatedStyle(() => {
+    return {
+      opacity: opacity.value,
+      transform: [{ translateY: translateY.value }],
+      zIndex: (scrollY.value > 40 || isActiveShared.value) ? 0 : 20,
+    };
+  });
+  
   const scrollContainerStyle = useAnimatedStyle(() => {
     return {
       opacity: scrollY.value > 40 ? withTiming(1) : withTiming(0),
@@ -261,6 +270,10 @@ function HomeScreen() {
   const onNavigateToEmptyScreen = useCallback(() => {
     router.push('/empty');
   }, []);
+
+  const onRefresh = (async () => {
+    console.log('Refreshing...');
+  })
 
   const onNavigateToDetailScreen = useCallback(
     throttle((item: QRRecord) => {

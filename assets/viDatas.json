@@ -13,7 +13,7 @@
             "number_code": "970416"
         },
         {
-            "code": "AGR",
+            "code": "VBA",
             "name": "Agribank",
             "full_name": "Ngân hàng Nông nghiệp và Phát triển Nông thôn Việt Nam",
             "number_code": "970405"
@@ -31,7 +31,7 @@
             "number_code": "970438"
         },
         {
-            "code": "BIV",
+            "code": "BIDV",
             "name": "BIDV",
             "full_name": "Ngân hàng Thương mại Cổ phần Đầu tư và Phát triển Việt Nam",
             "number_code": "970418"
@@ -39,7 +39,7 @@
         {
             "code": "CBB",
             "name": "CBBank",
-            "full_name": "Ngân hàng CB Vietnam",
+            "full_name": "Ngân hàng Thương mại TNHH MTV Xây dựng Việt Nam",
             "number_code": "970444"
         },
         {

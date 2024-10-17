@@ -136,9 +136,9 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
             <View style={styles.qrContainer}>
               <View style={styles.qr}>
                 {metadata_type === 'qr' ? (
-                  <QRCode value={metadata} size={70} />
+                  <QRCode value={metadata} size={75} />
                 ) : (
-                  <Barcode height={70} maxWidth={120} value={metadata} format="CODE128" />
+                  <Barcode height={75} maxWidth={150} value={metadata} format="CODE128" />
                 )}
               </View>
             </View>

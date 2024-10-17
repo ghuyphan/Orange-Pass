@@ -5,14 +5,13 @@ import { Skeleton } from 'moti/skeleton';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
-export default function ThemedCardSkeleton({ show = true, index = 0}) {
+export default function ThemedCardSkeleton({ show = true, index = 0 }) {
   const colorScheme = useColorScheme();
   const colorsArray = colorScheme === 'dark'
-    ? ['#6A5A58', '#4B4B4B', '#6A5A58', '#4B4B4B', '#6A5A58'] // Reversed dark mode colors
-    : ['#C3997D', '#D4A78B', '#EAD2BB', '#D4A78B', '#EAD2BB'];
+    ? ['#8E7F7C', '#6B615E', '#8E7F7C', '#6B615E', '#8E7F7C'] // Lighter warm tones for dark mode
+    : ['#E3C5A8', '#D5AF92', '#E3C5A8', '#D5AF92', '#E3C5A8']; // Warmer shades for light mode to contrast the light background
 
-
-    const qrWidth = index % 2 === 0 ? 120 : 70;
+  const qrWidth = index % 2 === 0 ? 170 : 90;
 
   return (
     <MotiView
@@ -32,11 +31,11 @@ export default function ThemedCardSkeleton({ show = true, index = 0}) {
         </View>
 
         <View style={styles.qrContainer}>
-          <Skeleton colors={colorsArray} radius={10} height={70} width={qrWidth} />
+          <Skeleton colors={colorsArray} radius={10} height={90} width={qrWidth} />
         </View>
 
         <View style={styles.footerContainer}>
-          <Skeleton colors={colorsArray} width={100} height={15} />
+          <Skeleton colors={colorsArray} width={120} height={15} />
         </View>
       </Skeleton.Group>
     </MotiView>
@@ -59,7 +58,7 @@ const styles = StyleSheet.create({
     paddingRight: 15,
   },
   leftHeaderContainer: {
-    marginLeft: 20,
+    // marginLeft: 20,
     flexDirection: 'row',
     alignItems: 'center',
   },
@@ -73,6 +72,7 @@ const styles = StyleSheet.create({
     marginVertical: 20,
   },
   footerContainer: {
+    // marginLeft: 15,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-start',

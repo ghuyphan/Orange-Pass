@@ -7,8 +7,8 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 export default function ThemedFilterSkeleton({ show = true }) {
   const colorScheme = useColorScheme();
   const colorsArray = colorScheme === 'dark'
-    ? ['#6A5A58', '#4B4B4B', '#6A5A58', '#4B4B4B', '#6A5A58'] // Reversed dark mode colors
-    : ['#C3997D', '#D4A78B', '#EAD2BB', '#D4A78B', '#EAD2BB'];
+    ? ['#8E7F7C', '#6B615E', '#8E7F7C', '#6B615E', '#8E7F7C'] // Lighter warm tones for dark mode
+    : ['#E3C5A8', '#D5AF92', '#E3C5A8', '#D5AF92', '#E3C5A8']; // Warmer shades for light mode to contrast the light background
 
   return (
     <MotiView
