@@ -90,23 +90,23 @@
         {
             "code": "GPB",
             "name": "GPBank",
-            "full_name": "Ngân hàng Thương mại Cổ phần Dầu Khí Toàn Cầu",
+            "full_name": "Ngân hàng Thương mại TNHH MTV Dầu Khí Toàn Cầu",
             "number_code": "970408"
         },
         {
             "code": "HDB",
             "name": "HDBank",
-            "full_name": "Ngân hàng Thương mại Cổ phần Phát triển TP.HCM",
+            "full_name": "Ngân hàng TMCP Phát triển Thành phố Hồ Chí Minh",
             "number_code": "970437"
         },
         {
-            "code": "HLB",
+            "code": "HLBVN",
             "name": "Hong Leong Bank",
             "full_name": "Hong Leong Bank Berhad",
             "number_code": "970442"
         },
         {
-            "code": "HSB",
+            "code": "HSBC",
             "name": "HSBC",
             "full_name": "Hongkong and Shanghai Banking Corporation",
             "number_code": "458761"

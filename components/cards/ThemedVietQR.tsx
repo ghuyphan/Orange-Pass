@@ -3,7 +3,6 @@ import { Image, StyleSheet, View, TouchableHighlight, InteractionManager, useWin
 import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
 import QRCode from 'react-native-qrcode-svg';
-import Barcode from 'react-native-barcode-svg';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { getIconPath } from '@/utils/returnIcon';
 import { returnItemData } from '@/utils/returnItemData';
@@ -15,11 +14,9 @@ export type ThemedVietQRProps = {
     code: string;
     type: 'bank' | 'store' | 'ewallet';
     metadata: string;
-    metadata_type: 'qr' | 'barcode';
     accountName?: string;
     accountNumber?: string;
     amount?: string;
-    onItemLongPress?: () => void;
     style?: object;
 };
 
@@ -29,21 +26,16 @@ export const ThemedVietQRCard = memo(function ThemedVietQRCard({
     code,
     type,
     metadata,
-    metadata_type,
     accountName,
     accountNumber,
     amount,
-    onItemLongPress,
     style,
 }: ThemedVietQRProps): JSX.Element {
     const colorScheme = useColorScheme();
-    const colors = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
     const { width } = useWindowDimensions();
 
     // Calculate sizes based on screen width
     const qrSize = useMemo(() => width * 0.45, [width]); // Adjust QR code size to 50% of screen width
-    const barcodeHeight = useMemo(() => width * 0.3, [width]); // Adjust Barcode height to 20% of screen width
-    const barcodeWidth = useMemo(() => width * 0.7, [width]); // Adjust Barcode max width to 80% of screen width
 
     // Memoize the result of returnItemData to avoid unnecessary computations
     const { name, color, accent_color } = useMemo(() => returnItemData(code, type), [code, type]);
@@ -69,19 +61,8 @@ export const ThemedVietQRCard = memo(function ThemedVietQRCard({
         }),
         [colorScheme, color.light, color.dark]
     );
-
-    const underlayColor = useMemo(() => (colorScheme === 'light' ? color.dark : color.light), [
-        colorScheme,
-        color.light,
-        color.dark,
-    ]);
-
+    
     return (
-        <TouchableHighlight
-            onLongPress={onItemLongPress}
-            style={[styles.touchableHighlight, style]}
-            underlayColor={underlayColor}
-        >
             <ThemedView style={[styles.itemContainer, backgroundColorStyle]}>
                 <View style={styles.headerContainer}>
                     <View style={styles.leftHeaderContainer}>
@@ -118,7 +99,7 @@ export const ThemedVietQRCard = memo(function ThemedVietQRCard({
                     </View>
                     {/* {type === 'bank' && ( */}
                     <View style={styles.infoContainer}>
-                        <ThemedText style={styles.accountName} numberOfLines={1}>
+                        <ThemedText type="defaultSemiBold" style={styles.accountName} numberOfLines={1}>
                             {accountName}
                         </ThemedText>
                         <ThemedText style={styles.accountNumber} numberOfLines={1}>
@@ -128,7 +109,6 @@ export const ThemedVietQRCard = memo(function ThemedVietQRCard({
                     </View>
                 </View>
             </ThemedView>
-        </TouchableHighlight>
     );
 });
 

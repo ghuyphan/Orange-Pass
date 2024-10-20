@@ -44,19 +44,19 @@ export default function DetailScreen() {
 
     useUnmountBrightness(0.8, true);
 
-    // useEffect(() => {
-    //     const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
-    //         setKeyboardVisible(true);
-    //     });
-    //     const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
-    //         setKeyboardVisible(false);
-    //     });
+    useEffect(() => {
+        const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
+            setKeyboardVisible(true);
+        });
+        const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+            setKeyboardVisible(false);
+        });
 
-    //     return () => {
-    //         keyboardDidHideListener.remove();
-    //         keyboardDidShowListener.remove();
-    //     };
-    // }, [isKeyboardVisible]);
+        return () => {
+            keyboardDidHideListener.remove();
+            keyboardDidShowListener.remove();
+        };
+    }, [isKeyboardVisible]);
 
     const item: QRRecord | null = useMemo(() => {
         if (!encodedItem) return null;
@@ -162,7 +162,7 @@ export default function DetailScreen() {
             enableOnAndroid={true}
             extraScrollHeight={50}
             showsVerticalScrollIndicator={false}
-            // scrollEnabled={isKeyboardVisible}
+            scrollEnabled={isKeyboardVisible}
             style={{ backgroundColor: colorScheme === 'light' ? Colors.light.background : Colors.dark.background }}
         >
             <ThemedView style={styles.mainContainer}>

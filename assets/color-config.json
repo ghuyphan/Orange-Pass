@@ -191,52 +191,52 @@
     },
     "EIB": {
         "color": {
-            "light": "#7D80BA",
-            "dark": "#8B7066"
+            "light": "#265C93",
+            "dark": "#1E4874"
         },
         "accent_color": {
-            "light": "#98A1CF",
-            "dark": "#968880"
+            "light": "#4395DE",
+            "dark": "#3576B0"
         }
     },
     "GPB": {
         "color": {
-            "light": "#DAB577",
-            "dark": "#A6764C"
+            "light": "#2E5E8E",
+            "dark": "#244975"
         },
         "accent_color": {
-            "light": "#E5C796",
-            "dark": "#B6946C"
+            "light": "#E4B944",
+            "dark": "#C39D36"
         }
     },
     "HDB": {
         "color": {
-            "light": "#B77879",
-            "dark": "#8B7066"
+            "light": "#B94A4F",
+            "dark": "#922C30"
         },
         "accent_color": {
-            "light": "#C58D90",
-            "dark": "#968880"
+            "light": "#E2C04A",
+            "dark": "#B89A3C"
         }
     },
-    "HLB": {
+    "HLBVN": {
         "color": {
-            "light": "#7D80BA",
-            "dark": "#8B7066"
+            "light": "#234774",
+            "dark": "#1A3458"
         },
         "accent_color": {
-            "light": "#98A1CF",
-            "dark": "#968880"
+            "light": "#B24234",
+            "dark": "#8E3327"
         }
     },
-    "HSB": {
+    "HSBC": {
         "color": {
-            "light": "#D2787B",
-            "dark": "#8F6060"
+            "light": "#db0011",
+            "dark": "#A6000D"
         },
         "accent_color": {
-            "light": "#DB9395",
-            "dark": "#A47A7C"
+            "light": "#F0675D",
+            "dark": "#C25048"
         }
     },
     "BOK": {

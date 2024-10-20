@@ -124,7 +124,7 @@ export const ThemedPinnedCard = memo(function ThemedPinnedCard({
             </View>
           ) :
             <View style={[styles.infoContainer, styles.infoContainerWithMarginTop]}>
-              <ThemedText style={styles.memberID} numberOfLines={1}>
+              <ThemedText style={styles.memberID} numberOfLines={2}>
                 {metadata}
               </ThemedText>
             </View>
@@ -207,5 +207,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     textAlign: 'center',
     color: 'white',
+    maxWidth: 250,
+    overflow: 'hidden',
   }
 });
