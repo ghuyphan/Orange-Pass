@@ -231,12 +231,12 @@
     },
     "HSBC": {
         "color": {
-            "light": "#db0011",
-            "dark": "#A6000D"
+            "light": "#C2333C",
+            "dark": "#8F2B28"
         },
         "accent_color": {
-            "light": "#F0675D",
-            "dark": "#C25048"
+            "light": "#D97B72",
+            "dark": "#A94E44"
         }
     },
     "BOK": {

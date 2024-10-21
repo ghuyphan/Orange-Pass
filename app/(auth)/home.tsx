@@ -252,14 +252,14 @@ function HomeScreen() {
     return {
       opacity: opacity.value,
       transform: [{ translateY: translateY.value }],
-      zIndex: (scrollY.value > 40 || isActiveShared.value) ? 0 : 20,
+      zIndex: (scrollY.value > 70 || isActiveShared.value) ? 0 : 20,
     };
   });
   
   const scrollContainerStyle = useAnimatedStyle(() => {
     return {
-      opacity: scrollY.value > 40 ? withTiming(1) : withTiming(0),
-      pointerEvents: scrollY.value > 40 ? 'auto' : 'none',
+      opacity: scrollY.value > 70 ? withTiming(1) : withTiming(0),
+      pointerEvents: scrollY.value > 70 ? 'auto' : 'none',
     };
   });
 

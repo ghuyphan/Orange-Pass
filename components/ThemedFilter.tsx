@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#503f3c',
     },
     lightModeButton: {
-        backgroundColor: '#FFE4C4',
+        backgroundColor: '#B29A8E',
     },
     filterText: {
         // color: '#E7C9B3', // Default text color

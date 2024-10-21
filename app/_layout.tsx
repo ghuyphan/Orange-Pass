@@ -93,7 +93,7 @@ export default function RootLayout() {
   // Delay rendering the stack until the app is ready and status checks are done
   if (!isAppReady || isAuthenticated === null || hasSeenOnboarding === null) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: systemColorScheme === 'dark' ? Colors.dark.background : Colors.light.background }]}>
+      <View style={[styles.loadingContainer, { backgroundColor: systemColorScheme === 'dark' ? '#2D2524' : '#FFF5E1' }]}>
         <Image resizeMode='contain' source={require('@/assets/images/orange-icon.png')} style={styles.orangeLogo} />
         <ActivityIndicator style={styles.activityIndicator} size="small" color='##8FCB8F' />
       </View>
