@@ -171,12 +171,12 @@
     },
     "DAB": {
         "color": {
-            "light": "#C6886E",
-            "dark": "#A05739"
+            "light": "#2F659F",
+            "dark": "#244D7A"
         },
         "accent_color": {
-            "light": "#D69C8E",
-            "dark": "#B67B59"
+            "light": "#E89840",
+            "dark": "#B87430"
         }
     },
     "DSB": {
@@ -251,22 +251,22 @@
     },
     "IVB": {
         "color": {
-            "light": "#7E8CA5",
-            "dark": "#8B7066"
+            "light": "#D9C855",
+            "dark": "#B3A945"
         },
         "accent_color": {
-            "light": "#95A6C0",
-            "dark": "#968880"
+            "light": "#3973B5",
+            "dark": "#2E5A8C"
         }
     },
-    "KBK": {
+    "KBHN": {
         "color": {
-            "light": "#D9B27A",
-            "dark": "#A67D4A"
+            "light": "#797268",
+            "dark": "#5F574F"
         },
         "accent_color": {
-            "light": "#E6C69E",
-            "dark": "#B8966A"
+            "light": "#EEB33E",
+            "dark": "#C49531"
         }
     },
     "KEB": {

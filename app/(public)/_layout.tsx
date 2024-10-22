@@ -18,7 +18,6 @@ export default function AuthLayout() {
         <Stack
           screenOptions={{
             headerShown: false,
-            animationTypeForReplace: 'push', // Use a push animation instead of 'pop'
           }}
         >
           <Stack.Screen name="login"/>

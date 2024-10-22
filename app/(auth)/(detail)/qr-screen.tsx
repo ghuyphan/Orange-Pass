@@ -73,11 +73,12 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginBottom: 20,
+        marginBottom: 40,
     },
     pinnedCardWrapper: {
         marginTop: 20,
         marginBottom: 30,
+        
     },
     cardWrapper: {
         marginTop: 20,

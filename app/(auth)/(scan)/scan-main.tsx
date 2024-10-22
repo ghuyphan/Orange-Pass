@@ -428,7 +428,7 @@ const styles = StyleSheet.create({
 
   qrResultContainer: {
     position: 'absolute',
-    bottom: 20,
+    bottom: 15,
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'center',

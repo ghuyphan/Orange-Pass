@@ -274,7 +274,6 @@ const styles = StyleSheet.create({
         marginBottom: 30,
     },
     cardWrapper: {
-        marginTop: 20,
         padding: 15,
         borderRadius: 12,
         marginBottom: 10,

@@ -7,8 +7,8 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 export default function ThemedFilterSkeleton({ show = true }) {
   const colorScheme = useColorScheme();
   const colorsArray = colorScheme === 'dark'
-  ? ['#B29A8E', '#A88A7D', '#B29A8E', '#A88A7D', '#B29A8E'] // Shades closer to #B29A8E for dark mode
-  : ['#D4B9A5', '#C9A895', '#D4B9A5', '#C9A895', '#D4B9A5']; // Lighter and warmer shades for light m
+  ? ['#856353', '#5A3D30', '#856353', '#5A3D30', '#856353'] // Even lighter shade for dark mode
+  : ['#F5E7D2', '#D3B08C', '#F5E7D2', '#D3B08C', '#F5E7D2']; // Even lighter shade for light mode
 
   return (
     <MotiView
@@ -21,7 +21,7 @@ export default function ThemedFilterSkeleton({ show = true }) {
       <Skeleton.Group show={show}>
         {Array.from({ length: 4 }).map((_, index) => (
           <View key={index} style={styles.filterButton}>
-            <Skeleton colors={colorsArray} width={95} height={35} radius={10} />
+            <Skeleton colors={colorsArray} width={95} height={40} radius={10} />
           </View>
         ))}
       </Skeleton.Group>

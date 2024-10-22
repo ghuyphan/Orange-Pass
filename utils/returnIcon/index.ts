@@ -26,7 +26,7 @@ export function getIconPath(key: string): any {
       'HSBC': require('@/assets/images/logoIcons/HSBC.png'),
       'BOK': require('@/assets/images/logoIcons/BOK.png'),
       'IVB': require('@/assets/images/logoIcons/IVB.png'),
-      'KBK': require('@/assets/images/logoIcons/KBK.png'),
+      'KBHN': require('@/assets/images/logoIcons/KBHN.png'),
       'KEB': require('@/assets/images/logoIcons/KEB.png'),
       'KLB': require('@/assets/images/logoIcons/KLB.png'),
       'LVB': require('@/assets/images/logoIcons/LVB.png'),

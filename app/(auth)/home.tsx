@@ -226,17 +226,17 @@ function HomeScreen() {
       stiffness: 150,
     });
   };
-  
+
   // Header animation
   const shouldSnap = useDerivedValue(() => {
     return scrollY.value > 70;
   }, [scrollY]);
-  
+
   const translateY = useDerivedValue(() => {
     return interpolate(
       scrollY.value,
       [0, 140],  // Input range
-      [0, -40], // Output range
+      [0, -35], // Output range
       Extrapolation.CLAMP
     );
   });
@@ -252,14 +252,14 @@ function HomeScreen() {
     return {
       opacity: opacity.value,
       transform: [{ translateY: translateY.value }],
-      zIndex: (scrollY.value > 70 || isActiveShared.value) ? 0 : 20,
+      zIndex: (scrollY.value > 50 || isActiveShared.value) ? 0 : 20,
     };
   });
-  
+
   const scrollContainerStyle = useAnimatedStyle(() => {
     return {
-      opacity: scrollY.value > 70 ? withTiming(1) : withTiming(0),
-      pointerEvents: scrollY.value > 70 ? 'auto' : 'none',
+      opacity: scrollY.value > 50 ? withTiming(1) : withTiming(0),
+      pointerEvents: scrollY.value > 50 ? 'auto' : 'none',
     };
   });
 
@@ -267,13 +267,30 @@ function HomeScreen() {
     transform: [{ translateY: emptyCardOffset.value }],
   }));
 
+  const THRESHOLD = 140;
+  const getCardStyle = (index: number) => {
+    return {
+      transform: [{
+        translateY: interpolate(
+          scrollY.value,
+          [-THRESHOLD, 0],
+          [index * 40, index * 180], // Adjust values as needed
+          Extrapolation.CLAMP
+        )
+      }],
+      opacity: interpolate(
+        scrollY.value,
+        [-THRESHOLD, 0],
+        [0.95, 1], // Adjust values as needed
+        Extrapolation.CLAMP
+      ),
+    };
+  };
+
+
   const onNavigateToEmptyScreen = useCallback(() => {
     router.push('/empty');
   }, []);
-
-  const onRefresh = (async () => {
-    console.log('Refreshing...');
-  })
 
   const onNavigateToDetailScreen = useCallback(
     throttle((item: QRRecord) => {
@@ -304,6 +321,7 @@ function HomeScreen() {
   const onDragEnd = useCallback(async ({ data }: { data: QRRecord[] }) => {
     try {
       // Check if the order has changed
+      triggerHapticFeedback();
       const isOrderChanged =
         data.length !== qrData.length ||
         data.some((item, index) => item.id !== qrData[index].id);
@@ -329,7 +347,6 @@ function HomeScreen() {
     } catch (error) {
       console.error('Error updating QR indexes and timestamps:', error);
     } finally {
-      triggerHapticFeedback();
       setIsActive(false);
     }
   }, [qrData]);
@@ -390,23 +407,26 @@ function HomeScreen() {
   }, [selectedItemId, userId]);
 
   const renderItem = useCallback(
-    ({ item, drag }: { item: QRRecord; drag: () => void }) => (
-      <ScaleDecorator activeScale={1.05}>
-        <Animated.View style={emptyCardStyle}>
-          <ThemedCardItem
-            onItemPress={() => onNavigateToDetailScreen(item)}
-            code={item.code}
-            type={item.type}
-            metadata={item.metadata}
-            metadata_type={item.metadata_type}
-            onMoreButtonPress={() => handleExpandPress(item.id)}
-            accountName={item.account_name}
-            accountNumber={item.account_number}
-            onDrag={drag}
-          />
-        </Animated.View>
-      </ScaleDecorator>
-    ),
+    ({ item, drag }: { item: QRRecord; drag: () => void }) => {
+
+      return (
+          <ScaleDecorator activeScale={1.05}>
+            {/* <Animated.View style={emptyCardStyle}> */}
+            <ThemedCardItem
+              onItemPress={() => onNavigateToDetailScreen(item)}
+              code={item.code}
+              type={item.type}
+              metadata={item.metadata}
+              metadata_type={item.metadata_type}
+              onMoreButtonPress={() => handleExpandPress(item.id)}
+              accountName={item.account_name}
+              accountNumber={item.account_number}
+              onDrag={drag}
+            />
+            {/* </Animated.View> */}
+          </ScaleDecorator>
+      );
+    },
     [onNavigateToDetailScreen, handleExpandPress]
   );
 
@@ -437,7 +457,7 @@ function HomeScreen() {
               value={searchQuery}
               onChangeText={setSearchQuery}
               // pointerEvents={isLoading && qrData.length > 0 ? 'none' : 'auto'}
-              style={{ marginHorizontal: 15}}
+              style={{ marginHorizontal: 15 }}
             />
             {isLoading ? (
               <ThemedFilterSkeleton show={true} />

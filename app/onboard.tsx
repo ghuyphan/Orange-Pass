@@ -15,7 +15,7 @@ import { triggerSuccessHapticFeedback } from '@/utils/haptic';
 
 const OnBoardScreen = () => {
     const color = useThemeColor({ light: '#5A4639', dark: '#FFF5E1' }, 'text');
-    const iconColor = useThemeColor({ light: '#B29A8E', dark: '#503f3c' }, 'buttonBackground');
+    const iconColor = useThemeColor({ light: '#D3B08C', dark: '#7B524A' }, 'buttonBackground');
     const pageIndicator = useThemeColor({ light: '#5A4639', dark: '#FFF5E14D' }, 'tabIconSelected');
     const router = useRouter();
     const scrollRef = useRef<ScrollView>(null);

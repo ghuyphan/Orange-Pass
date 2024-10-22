@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     filterButton: {
-        paddingVertical: 5,
+        paddingVertical: 8,
         paddingHorizontal: 15,
         borderRadius: 10,
     },
@@ -70,10 +70,10 @@ const styles = StyleSheet.create({
         backgroundColor: '#FFF5E1', // example color for dark mod
     },
     darkModeButton: {
-        backgroundColor: '#503f3c',
+        backgroundColor: '#5A3D30',
     },
     lightModeButton: {
-        backgroundColor: '#B29A8E',
+        backgroundColor: '#D3B08C',
     },
     filterText: {
         // color: '#E7C9B3', // Default text color

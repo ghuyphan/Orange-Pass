@@ -61,6 +61,12 @@
             "number_code": "422589"
         },
         {
+            "code": "DAB",
+            "name": "Dong A Bank",
+            "full_name": "DongA Commercial Joint Stock Bank",
+            "number_code": "970406"
+        },
+        {
             "code": "EIB",
             "name": "Eximbank",
             "full_name": "Vietnam Export-Import Commercial Joint Stock Bank",
@@ -95,6 +101,12 @@
             "name": "Indovina Bank",
             "full_name": "Indovina Bank Ltd",
             "number_code": "970434"
+        },
+        {
+            "code": "KBHN",
+            "name": "Kookmin Bank Hanoi Branch",
+            "full_name": "Ngân hàng Kookmin - Hanoi Branch",
+            "number_code": "970462"
         },
         {
             "code": "KLB",

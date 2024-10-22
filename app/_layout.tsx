@@ -16,6 +16,7 @@ import { PaperProvider } from 'react-native-paper';
 import { createTable } from '@/services/localDB/userDB';
 import { storage } from '@/utils/storage';
 import { useMMKVBoolean } from 'react-native-mmkv';
+import { ThemedView } from '@/components/ThemedView';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -93,10 +94,10 @@ export default function RootLayout() {
   // Delay rendering the stack until the app is ready and status checks are done
   if (!isAppReady || isAuthenticated === null || hasSeenOnboarding === null) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: systemColorScheme === 'dark' ? '#2D2524' : '#FFF5E1' }]}>
+      <ThemedView style={styles.loadingContainer}>
         <Image resizeMode='contain' source={require('@/assets/images/orange-icon.png')} style={styles.orangeLogo} />
         <ActivityIndicator style={styles.activityIndicator} size="small" color='##8FCB8F' />
-      </View>
+      </ThemedView>
     );
   }
 
@@ -112,14 +113,14 @@ export default function RootLayout() {
                 (systemColorScheme === 'dark' ? DarkTheme : DefaultTheme)
             }
           >
-            <View style={{ flex: 1, backgroundColor: Colors.light.background }}>
+            <ThemedView style={{ flex: 1 }}>
               <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
-                <Stack.Screen name="(public)"/>
-                <Stack.Screen name="(auth)"/>
-                <Stack.Screen name="+not-found"/>
+                <Stack.Screen name="(public)" />
+                <Stack.Screen name="(auth)" />
+                <Stack.Screen name="+not-found" />
                 <Stack.Screen name="onboard" options={{ animation: 'none' }} />
               </Stack>
-            </View>
+            </ThemedView>
           </ThemeProvider>
         </PaperProvider>
       </GestureHandlerRootView>
