@@ -1,10 +1,9 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
-import { StyleSheet, View, Text, ActivityIndicator, TouchableWithoutFeedback, LayoutChangeEvent, Linking, SafeAreaView, StatusBar } from 'react-native';
+import { StyleSheet, View, Text, ActivityIndicator, TouchableWithoutFeedback, LayoutChangeEvent, Linking, SafeAreaView, StatusBar, Touchable } from 'react-native';
 import { Camera, Code, useCameraDevice, useCameraPermission, useCodeScanner, CodeScannerFrame } from 'react-native-vision-camera';
-import Reanimated, { useSharedValue, useAnimatedStyle, withSpring, runOnJS, withTiming, useAnimatedProps } from 'react-native-reanimated';
+import Reanimated, { useSharedValue, useAnimatedStyle, withSpring, runOnJS, withTiming, useAnimatedProps, SharedValue } from 'react-native-reanimated';
 import {
   useUnmountBrightness,
-  setBrightnessLevel
 } from '@reeq/react-native-device-brightness';
 import ImagePicker from 'react-native-image-crop-picker';
 import { Redirect, useRouter } from 'expo-router';
@@ -19,7 +18,7 @@ import { storage } from '@/utils/storage';
 
 import { ScannerFrame, FocusIndicator, ZoomControl } from '@/components/camera';
 import { ThemedView } from '@/components/ThemedView';
-import BottomSheet from '@gorhom/bottom-sheet';
+import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import ThemedSettingSheet from '@/components/bottomsheet/ThemedSettingSheet';
 import { useMMKVBoolean } from 'react-native-mmkv';
 import { triggerLightHapticFeedback } from '@/utils/haptic';
@@ -53,7 +52,7 @@ const useCameraSetup = (cameraRef: React.RefObject<Camera>) => {
   return { device, hasPermission, torch, toggleFlash };
 };
 
-const useFocusGesture = (cameraRef: React.RefObject<Camera>, zoom: Reanimated.SharedValue<number>) => {
+const useFocusGesture = (cameraRef: React.RefObject<Camera>, zoom: SharedValue<number>) => {
   const [focusPoint, setFocusPoint] = useState<null | { x: number; y: number }>(null);
   const focusOpacity = useSharedValue(0);
   const FOCUS_DEBOUNCE_MS = 50;
@@ -158,10 +157,16 @@ export default function ScanScreen() {
   const [codeType, setCodeType] = useState('');
   const [iconName, setIconName] = useState<keyof typeof Ionicons.glyphMap>('compass');
   const [isConnecting, setIsConnecting] = useState(false);
+  const [isResultTap, setIsResultTap] = useState(false);
 
-  const bottomSheetRef = useRef<BottomSheet>(null);
+  const onResultPressIn = useCallback(() => setIsResultTap(true), []);
+  const onResultPressOut = useCallback(() => setIsResultTap(false), []);
+
+
+  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const handleExpandPress = useCallback(() => {
-    bottomSheetRef.current?.expand();
+    console.log('handleExpandPress');
+    bottomSheetModalRef.current?.present();
   }, []);
 
   const onLayout = useCallback((event: LayoutChangeEvent) => {
@@ -305,35 +310,39 @@ export default function ScanScreen() {
 
   return (
     <View style={styles.container}>
-      <GestureDetector gesture={gesture}>
-        <SafeAreaView style={styles.cameraContainer}>
-          <Reanimated.View style={[StyleSheet.absoluteFill, animatedCameraStyle]}>
-            <ReanimatedCamera
-              ref={cameraRef}
-              torch={torch}
-              style={StyleSheet.absoluteFill}
-              device={device}
-              onLayout={onLayout}
-              isActive={true}
-              codeScanner={codeScanner}
-              resizeMode='cover'
-              videoStabilizationMode='auto'
-              animatedProps={cameraAnimatedProps}
-            />
-          </Reanimated.View>
-          <FocusIndicator focusPoint={focusPoint} animatedFocusStyle={animatedFocusStyle} />
-          {/* {showIndicator == true ? <ScannerFrame highlight={codeScannerHighlights[0]} layout={layout} scanFrame={scanFrame} /> : null} */}
-          <ScannerFrame highlight={codeScannerHighlights[0]} layout={layout} scanFrame={scanFrame} />
-          {codeMetadata && quickScan === false ? (
-          <TouchableWithoutFeedback onPress={() => onResultTap(codeMetadata, codeType)}>
-            <View style={styles.qrResultContainer}>
-              <Ionicons name={iconName} size={18} color="black" />
-              <ThemedText type='defaultSemiBold' numberOfLines={1} style={styles.qrResultText}>{codeValue}</ThemedText>
-            </View>
-          </TouchableWithoutFeedback>
-        ) : null}
-        </SafeAreaView>
-      </GestureDetector>
+        <GestureDetector gesture={gesture}>
+          <SafeAreaView style={styles.cameraContainer}>
+            <Reanimated.View style={[StyleSheet.absoluteFill, animatedCameraStyle]}>
+              <ReanimatedCamera
+                ref={cameraRef}
+                torch={torch}
+                style={StyleSheet.absoluteFill}
+                device={device}
+                onLayout={onLayout}
+                isActive={true}
+                codeScanner={codeScanner}
+                resizeMode='cover'
+                videoStabilizationMode='auto'
+                animatedProps={cameraAnimatedProps}
+              />
+            </Reanimated.View>
+            <FocusIndicator focusPoint={focusPoint} animatedFocusStyle={animatedFocusStyle} />
+            {/* {showIndicator == true ? <ScannerFrame highlight={codeScannerHighlights[0]} layout={layout} scanFrame={scanFrame} /> : null} */}
+            <ScannerFrame highlight={codeScannerHighlights[0]} layout={layout} scanFrame={scanFrame} />
+            {codeMetadata && quickScan === false ? (
+              <TouchableWithoutFeedback
+                onPress={() => onResultTap(codeMetadata, codeType)}
+                onPressIn={onResultPressIn}
+                onPressOut={onResultPressOut}
+              >
+                <View style={styles.qrResultContainer}>
+                  <Ionicons name={iconName} size={18} color="black" />
+                  <ThemedText type='defaultSemiBold' numberOfLines={1} style={styles.qrResultText}>{codeValue}</ThemedText>
+                </View>
+              </TouchableWithoutFeedback>
+            ) : null}
+          </SafeAreaView>
+        </GestureDetector>
 
       <View style={styles.bottomContainer}>
 
@@ -370,7 +379,7 @@ export default function ScanScreen() {
       </View>
       <StatusBar barStyle="light-content" />
       <ThemedSettingSheet
-        ref={bottomSheetRef}
+        ref={bottomSheetModalRef}
         setting1Text='Quick Scan Mode'
         setting1Description='Automatically scan for QR codes and barcodes.'
         setting1Value={quickScan}
@@ -460,7 +469,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 60,
+    paddingHorizontal: 40,
     paddingVertical: 10,
   },
 

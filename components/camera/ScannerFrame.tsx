@@ -31,8 +31,8 @@ export const ScannerFrame: React.FC<ScannerFrameProps> = ({ highlight, layout, s
     useEffect(() => {
         if (highlight && scanFrame) {
             // Calculate scales and adjusted values
-            const xScale = layout.width / scanFrame.height - 0.02;
-            const yScale = layout.height / scanFrame.width;
+            const xScale = layout.width / scanFrame.height - 0.025;
+            const yScale = layout.height / scanFrame.width - 0.01;
             const widthScale = layout.height / scanFrame.width + 0.1;
             const heightScale = layout.width / scanFrame.height + 0.15;
 

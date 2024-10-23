@@ -105,7 +105,6 @@ export default function RootLayout() {
     <Provider store={store}>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <PaperProvider>
-          {/* ThemeProvider logic updated */}
           <ThemeProvider
             value={
               dark !== undefined ?

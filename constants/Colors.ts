@@ -3,7 +3,7 @@ const tintColorDark = '#D8A657';  // Darker, but same hue as light tint
 
 export const Colors = {
   light: {
-    text: '#5A4639', // Warm dark brown
+    text: '#000000', // Warm dark brown
     background: '#FFF5E1', // Very light warm beige
     tint: tintColorLight,
     icon: '#D3B08C', // Warm light brown
@@ -20,7 +20,7 @@ export const Colors = {
     logoIcon: '#D3B08C', // Matches icon color
   },
   dark: {
-    text: '#FFF5E1', // Light warm beige for contrast on dark background
+    text: '#FFFFFF', // Light warm beige for contrast on dark background
     background: '#2A241F', // Very dark warm brown, matches hue of light background
     tint: tintColorDark,
     icon: '#8A5C42', // Darker brown, same hue as light icon

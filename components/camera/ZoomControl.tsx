@@ -27,7 +27,7 @@ export const ZoomControl: React.FC<ZoomControlProps> = ({ zoom, minZoom, maxZoom
 
   // Compute zoom levels dynamically using minZoom and maxZoom
   const zoomLevels = React.useMemo(() => {
-    const levels = minZoom < 1 ? [minZoom, 1, 3, maxZoom] : [1, 3, maxZoom];
+    const levels = minZoom < 1 ? [minZoom, 1, 2, 5] : [1, 2, 5];
     // Filter levels to ensure they fall within the provided minZoom and maxZoom range
     return levels.filter((level) => level >= minZoom && level <= maxZoom);
   }, [minZoom, maxZoom]);
