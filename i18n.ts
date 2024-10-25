@@ -21,6 +21,7 @@ if (storedLocale) {
         i18n.locale = getLocales()[0].languageCode ?? 'en';
     } else {
         i18n.locale = 'en';
+        storage.set('locale', 'en');
     }
 }
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { StyleSheet, View, Platform, useColorScheme, Switch } from 'react-native';
+import { getLocales } from "expo-localization";
 import { useSelector } from 'react-redux';
 import Animated, {
     useAnimatedStyle,
@@ -24,14 +25,29 @@ import { t } from '@/i18n';
 import { storage } from '@/utils/storage';
 import { Colors } from '@/constants/Colors';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useMMKVBoolean } from 'react-native-mmkv';
+import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
+import * as SecureStore from 'expo-secure-store';
+import { useDispatch } from 'react-redux';
+import { clearAuthData } from '@/store/reducers/authSlice';
+import { ThemedModal } from '@/components/modals/ThemedIconModal';
+import pb from '@/services/pocketBase';
 
 function SettingsScreen() {
     const [avatarConfig, setAvatarConfig] = useState<{ [key: string]: any } | null>(null);
     const colorScheme = useColorScheme();
+    const [isLoading, setIsLoading] = useState(false);
+    const [isModalVisible, setIsModalVisible] = useState(false);
+    const dispatch = useDispatch();
+
     const color = colorScheme === 'light' ? Colors.light.text : Colors.dark.text;
     const scrollY = useSharedValue(0);
     const isOffline = useSelector((state: RootState) => state.network.isOffline);
-    const userId = useSelector((state: RootState) => state.auth.user);
+    const email = useSelector((state: RootState) => state.auth.user?.email ?? '-');
+    const name = useSelector((state: RootState) => state.auth.user?.name ?? '-');
+    const [darkMode, setDarkMode] = useMMKVBoolean('quickScan', storage);
+    const storedLocale = storage.getString("locale"); 
+    const locale = getLocales()[0].languageCode ?? 'en';
 
     const scrollHandler = useAnimatedScrollHandler((event) => {
         scrollY.value = event.contentOffset.y;
@@ -58,11 +74,12 @@ function SettingsScreen() {
 
     useEffect(() => {
         const savedConfig = storage.getString('avatarConfig');
+        const darkMode = storage.getString('darkMode');
         if (savedConfig) {
             setAvatarConfig(JSON.parse(savedConfig));
         } else {
             const newConfig = genConfig({
-                bgColor: '#FFE4C4',
+                bgColor: '#FFFFFF',
                 faceColor: '#FFC0CB',
             });
             setAvatarConfig(newConfig);
@@ -72,6 +89,24 @@ function SettingsScreen() {
 
     const onNavigateBack = useCallback(() => {
         router.back();
+    }, [])
+
+    const logout = async () => {
+        try {
+            setIsLoading(true);
+            await SecureStore.deleteItemAsync('authToken');
+            dispatch(clearAuthData());
+            pb.authStore.clear();
+        } catch (error) {
+            console.log(error);
+        } finally {
+            setIsLoading(false);
+            router.replace('/login');
+        }
+    }
+
+    const onLogout = useCallback(() => {
+        setIsModalVisible(true);
     }, [])
 
     return (
@@ -94,31 +129,54 @@ function SettingsScreen() {
                 </View>
             </Animated.View>
             <Animated.ScrollView contentContainerStyle={styles.scrollContainer} onScroll={scrollHandler}>
-                <View style={styles.avatarContainer}>
-                    {avatarConfig && <Avatar size={120} {...avatarConfig} />}
+                <View style={[styles.avatarContainer, { backgroundColor: colorScheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground }]}>
+                    {avatarConfig && <Avatar size={60} {...avatarConfig} />}
+                    <View style={styles.userContainer}>
+                        <ThemedText type='defaultSemiBold' style={styles.userName}>{email}</ThemedText>
+                        <ThemedText>{name ? name : '-'}</ThemedText>
+                    </View>
                 </View>
 
                 <View style={[styles.sectionContainer, { backgroundColor: colorScheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground }]}>
-                    <View style={styles.settingsContainer}>
-                        <ThemedText style={styles.sectionTitle}>{t('settingsScreen.language')}</ThemedText>
-                        <View style={styles.languageContainer}>
-                            <ThemedText>English</ThemedText>
-                            <Ionicons name="chevron-forward" size={20} color={color} />
+                    <TouchableWithoutFeedback>
+                        <View style={styles.settingsContainer}>
+                            <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>{t('settingsScreen.language')}</ThemedText>
+                            <View style={styles.languageContainer}>
+                                <ThemedText style={styles.settingsText}>{locale? 'English' : 'Vietnamese'}</ThemedText>
+                                <Ionicons name="chevron-forward" size={20} color={color} />
+                            </View>
                         </View>
-                    </View>
+                    </TouchableWithoutFeedback>
 
-                    <View style={styles.settingsContainer}>
-                        <ThemedText style={styles.sectionTitle}>{t('settingsScreen.darkMode')}</ThemedText>
-                        <Switch
-                            thumbColor={'#fff'}
-                        // trackColor={{ false: '#aaa', true: switchColor }}
-                        // ios_backgroundColor={color}
-                        // value={setting1Value}
-                        // onValueChange={onSetting1Press}
-                        />
-                    </View>
+                    <TouchableWithoutFeedback>
+                        <View style={styles.settingsContainer}>
+                            <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>{t('settingsScreen.appTheme')}</ThemedText>
+                            <View style={styles.languageContainer}>
+                                <ThemedText style={styles.settingsText}>System</ThemedText>
+                                <Ionicons name="chevron-forward" size={20} color={color} />
+                            </View>
+                        </View>
+                    </TouchableWithoutFeedback>
                 </View>
+                <ThemedButton
+                    iconName="log-out-outline"
+                    label='Logout'
+                    loadingLabel='Logging out...'
+                    loading={isLoading}
+                    onPress={onLogout}
+
+                />
             </Animated.ScrollView>
+            <ThemedModal
+                primaryActionText={t('homeScreen.moveToTrash')}
+                onPrimaryAction={logout}
+                onSecondaryAction={() => setIsModalVisible(false)}
+                secondaryActionText={t('homeScreen.cancel')}
+                title={t('homeScreen.confirmDeleteTitle')}
+                message={t('homeScreen.confirmDeleteMessage')}
+                isVisible={isModalVisible}
+                iconName="log-out-outline"
+            />
         </ThemedView>
     );
 }
@@ -163,15 +221,29 @@ const styles = StyleSheet.create({
         paddingTop: STATUSBAR_HEIGHT + 105,
     },
     avatarContainer: {
-        justifyContent: 'center',
         alignItems: 'center',
+        flexDirection: 'row',
         paddingVertical: 10,
         paddingHorizontal: 15,
         marginBottom: 40,
+        borderRadius: 15,
+        gap: 10,
+    },
+    userContainer: {
+        justifyContent: 'center',
+        flexDirection: 'column',
+        paddingVertical: 10,
+        paddingHorizontal: 15,
+        borderRadius: 15,
+        gap: 10,
+    },
+    userName: {
+        fontSize: 18,
     },
     sectionContainer: {
         borderRadius: 15,
         backgroundColor: 'white',
+        marginBottom: 20,
     },
     settingsContainer: {
         flexDirection: 'row',
@@ -180,9 +252,11 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
     },
     sectionTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
+        fontSize: 16,
         paddingVertical: 15,
+    },
+    settingsText: {
+        fontSize: 12,
     },
     languageContainer: {
         flexDirection: 'row',

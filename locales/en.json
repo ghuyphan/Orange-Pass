@@ -139,6 +139,7 @@
   "settingsScreen": {
     "title": "Settings",
     "language": "Language",
-    "languageTitle": "Select Language"
+    "languageTitle": "Select Language",
+    "appTheme": "App Theme"
   }
 }
