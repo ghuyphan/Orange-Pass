@@ -136,5 +136,11 @@
     "nearbyLocation": "Vị trí lân cận",
     "createQrCode": "Tạo mã QR nhận khoản tiền",
     "receivePlaceholder": "Nhập số tiền cần nhận"
+  },
+  "settingsScreen": {
+    "title": "Cài đặt",
+    "language": "Ngôn ngữ",
+    "languageTitle": "Chọn ngôn ngữ",
+    "darkMode": "Chế độ tối"
   }
 }

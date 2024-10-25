@@ -135,5 +135,10 @@
     "nearbyLocation": "Nearby Location",
     "createQrCode": "Generate QR Code with Amount",
     "receivePlaceholder": "Enter amount to receive"
+  },
+  "settingsScreen": {
+    "title": "Settings",
+    "language": "Language",
+    "languageTitle": "Select Language"
   }
 }

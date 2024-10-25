@@ -104,14 +104,15 @@
         },
         {
             "code": "KBHN",
-            "name": "Kookmin Bank",
+            "name": "Kookmin Bank Hà Nội",
             "full_name": "Ngân hàng Kookmin - Chi nhánh Hà Nội",
             "number_code": "970462"
         },
         {
-            "code": "KEB",
-            "name": "KEB",
-            "full_name": "Ngân hàng KEB Hàn Quốc"
+            "code": "KEBHANAHCM",
+            "name": "KEB Hana Bank Hồ Chí Minh",
+            "full_name": "Ngân hàng KEB Hana - Chi nhánh Thành phố Hồ Chí Minh",
+            "number_code": "970466"
         },
         {
             "code": "KLB",
@@ -120,17 +121,7 @@
             "number_code": "970452"
         },
         {
-            "code": "LVB",
-            "name": "LienVietPostBank",
-            "full_name": "Ngân hàng Thương mại Cổ phần Bưu điện Liên Việt"
-        },
-        {
-            "code": "MAY",
-            "name": "Maybank",
-            "full_name": "Malayan Banking Berhad"
-        },
-        {
-            "code": "MBB",
+            "code": "MB",
             "name": "MB Bank",
             "full_name": "Ngân hàng Thương mại Cổ phần Quân Đội",
             "number_code": "970422"

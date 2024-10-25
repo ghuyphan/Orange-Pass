@@ -29,7 +29,7 @@ const ThemedSettingSheet = React.memo(forwardRef<BottomSheetModal, ThemedSetting
     ({
         title,
         description,
-        snapPoints = ['50%'],
+        snapPoints = ['35%'],
         setting1Text,
         setting1Description,
         setting1Value,
@@ -48,6 +48,7 @@ const ThemedSettingSheet = React.memo(forwardRef<BottomSheetModal, ThemedSetting
         const switchColor = useMemo(() => (colorScheme === 'light' ? Colors.light.buttonBackground : Colors.dark.buttonBackground), [colorScheme]);
 
         const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+        const bottomSheetModalRef2 = useRef<BottomSheetModal>(null);
 
         // Expose BottomSheetModal methods to parent component via ref
         useImperativeHandle(ref, () => ({
@@ -138,6 +139,43 @@ const ThemedSettingSheet = React.memo(forwardRef<BottomSheetModal, ThemedSetting
                                             value={setting3Value}
                                             onValueChange={onSetting3Press}
                                         />
+                                    </View>
+                                )}
+                            </View>
+                        </BottomSheetScrollView>
+                    </BottomSheetModal>
+                    <BottomSheetModal
+                        ref={bottomSheetModalRef2}
+                        snapPoints={snapPoints}
+                        backgroundStyle={[styles.background, { backgroundColor: color }]}
+                        handleStyle={{
+                            backgroundColor: color,
+                            borderTopLeftRadius: 50,
+                            borderTopRightRadius: 50,
+                        }}
+                        handleIndicatorStyle={styles.handleIndicator}
+                        backdropComponent={renderBackdrop}
+                        enablePanDownToClose={true}
+                    >
+                        <BottomSheetScrollView scrollEnabled={false} style={styles.container}>
+                            {title && <ThemedText style={styles.title}>{title}</ThemedText>}
+                            {description && <ThemedText style={styles.description}>{description}</ThemedText>}
+                            <View style={styles.contentContainer}>
+                                {setting1Text && (
+                                    <View style={styles.touchableHighlight}>
+                                        <View style={styles.buttonContainer}>
+                                            <View style={styles.iconContainer}>
+                                                <ThemedText type='defaultSemiBold' style={styles.title}>{setting1Text}</ThemedText>
+                                                <ThemedText style={styles.description}>{setting1Description}</ThemedText>
+                                            </View>
+                                            <Switch
+                                                thumbColor={'#fff'}
+                                                trackColor={{ false: '#aaa', true: switchColor }}
+                                                ios_backgroundColor={color}
+                                                value={setting1Value}
+                                                onValueChange={onSetting1Press}
+                                            />
+                                        </View>
                                     </View>
                                 )}
                             </View>

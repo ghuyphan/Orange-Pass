@@ -157,15 +157,9 @@ export default function ScanScreen() {
   const [codeType, setCodeType] = useState('');
   const [iconName, setIconName] = useState<keyof typeof Ionicons.glyphMap>('compass');
   const [isConnecting, setIsConnecting] = useState(false);
-  const [isResultTap, setIsResultTap] = useState(false);
-
-  const onResultPressIn = useCallback(() => setIsResultTap(true), []);
-  const onResultPressOut = useCallback(() => setIsResultTap(false), []);
-
 
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const handleExpandPress = useCallback(() => {
-    console.log('handleExpandPress');
     bottomSheetModalRef.current?.present();
   }, []);
 
@@ -194,7 +188,7 @@ export default function ScanScreen() {
       if (isConnecting) return; // Stop scanning if already connecting
 
       // Process every 4th frame (adjust frame skip logic here as needed)
-      if (frameCounterRef.current % 3 === 0) {
+      if (frameCounterRef.current % 4 === 0) {
         setScanFrame(frame);
 
         // Clear previous timeout to prevent stale highlights
@@ -332,8 +326,6 @@ export default function ScanScreen() {
             {codeMetadata && quickScan === false ? (
               <TouchableWithoutFeedback
                 onPress={() => onResultTap(codeMetadata, codeType)}
-                onPressIn={onResultPressIn}
-                onPressOut={onResultPressOut}
               >
                 <View style={styles.qrResultContainer}>
                   <Ionicons name={iconName} size={18} color="black" />

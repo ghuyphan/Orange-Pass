@@ -104,9 +104,15 @@
         },
         {
             "code": "KBHN",
-            "name": "Kookmin Bank Hanoi Branch",
+            "name": "Kookmin Bank Hanoi",
             "full_name": "Ngân hàng Kookmin - Hanoi Branch",
             "number_code": "970462"
+        },
+        {
+            "code": "KEBHANAHCM",
+            "name": "KEB Hana Bank HCMC",
+            "full_name": "KEB Hana Bank - HCMC Branch",
+            "number_code": "970466"
         },
         {
             "code": "KLB",
@@ -115,7 +121,7 @@
             "number_code": "970452"
         },
         {
-            "code": "MBB",
+            "code": "MB",
             "name": "MB Bank",
             "full_name": "Military Commercial Joint Stock Bank",
             "number_code": "970422"

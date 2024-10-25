@@ -106,6 +106,7 @@ export function ThemedStatusToast({
                         {message}
                     </ThemedText>
                 </View>
+                {!isSyncing ? (
                 <View style={styles.rightSection}>
 
                     <TouchableHighlight
@@ -121,6 +122,7 @@ export function ThemedStatusToast({
                     </TouchableHighlight>
 
                 </View>
+                ) : null}
             </Animated.View>
         </Portal>
     );

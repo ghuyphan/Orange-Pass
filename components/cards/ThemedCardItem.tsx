@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingTop: 15,
-    paddingRight: 15,
+    paddingRight: 20,
   },
   headerLeft: {
     flexDirection: 'row',
@@ -175,6 +175,7 @@ const styles = StyleSheet.create({
   },
   dragIconContainer: {
     paddingHorizontal: 10,
+    paddingLeft: 20,
   },
   leftHeaderContainer: {
     flexDirection: 'row',
@@ -213,24 +214,26 @@ const styles = StyleSheet.create({
     right: -20,
   },
   qrContainer: {
-    padding: 15,
+    paddingVertical: 15,
+    paddingHorizontal: 20,
     alignItems: 'flex-end',
   },
   qr: {
     backgroundColor: 'white',
-    padding: 8,
+    padding: 10,
     borderRadius: 10,
   },
   footerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     bottom: 0,
-    paddingHorizontal: 15,
+    paddingHorizontal: 20,
     paddingVertical: 5,
     gap: 10,
   },
   footerText: {
-    maxWidth: '80%',
+    maxWidth: '100%',
+    overflow: 'hidden',
     fontSize: 14,
     color: 'white',
   },

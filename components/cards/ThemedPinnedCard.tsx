@@ -141,8 +141,8 @@ const styles = StyleSheet.create({
   },
   itemContainer: {
     borderRadius: 10,
-    paddingHorizontal: 15,
-    paddingVertical: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 15,
     overflow: 'hidden',
   },
   headerContainer: {

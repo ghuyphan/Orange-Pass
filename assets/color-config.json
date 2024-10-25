@@ -269,24 +269,24 @@
             "dark": "#C49531"
         }
     },
-    "KEB": {
+    "KEBHANAHCM": {
         "color": {
-            "light": "#7E8CA5",
-            "dark": "#8B7066"
+            "light": "#4F9A9D",
+            "dark": "#3D7577"
         },
         "accent_color": {
-            "light": "#95A6C0",
-            "dark": "#968880"
+            "light": "#B5505A",
+            "dark": "#8A3C45"
         }
     },
     "KLB": {
         "color": {
-            "light": "#8287B0",
-            "dark": "#8B7066"
+            "light": "#2E365F",
+            "dark": "#202846"
         },
         "accent_color": {
-            "light": "#96A0C4",
-            "dark": "#968880"
+            "light": "#D48A5E",
+            "dark": "#A66D48"
         }
     },
     "LVB": {
@@ -309,14 +309,14 @@
             "dark": "#B8966A"
         }
     },
-    "MBB": {
+    "MB": {
         "color": {
-            "light": "#D2787B",
-            "dark": "#8F6060"
+            "light": "#2E0EA8",
+            "dark": "#250988"
         },
         "accent_color": {
-            "light": "#DFA2A0",
-            "dark": "#A57A7F"
+            "light": "#C8505D",
+            "dark": "#9F3E49"
         }
     },
     "MGB": {

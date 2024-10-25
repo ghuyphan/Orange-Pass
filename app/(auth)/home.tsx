@@ -309,6 +309,10 @@ function HomeScreen() {
     router.push('/(scan)/scan-main');
   }, []);
 
+  const onNavigateToSettingsScreen = useCallback(() => {
+    router.push('/settings');
+  }, []);
+
   const scrollHandler = useAnimatedScrollHandler((event) => {
     scrollY.value = event.contentOffset.y;
   });
@@ -446,7 +450,7 @@ function HomeScreen() {
               style={styles.titleButton}
               onPress={onNavigateToScanScreen}
             />
-            <ThemedButton iconName="settings-outline" style={styles.titleButton} onPress={() => { }} />
+            <ThemedButton iconName="settings-outline" style={styles.titleButton} onPress={onNavigateToSettingsScreen} />
           </View>
         </View>
         {(!isEmpty || isLoading) && (
