@@ -23,6 +23,7 @@ import ThemedSettingSheet from '@/components/bottomsheet/ThemedSettingSheet';
 import { useMMKVBoolean } from 'react-native-mmkv';
 import { triggerLightHapticFeedback } from '@/utils/haptic';
 import useHandleCodeScanned from '@/hooks/useHandleCodeScanned'; // Import the custom hook
+import Animated from 'react-native-reanimated';
 
 const ReanimatedCamera = Reanimated.createAnimatedComponent(Camera);
 Reanimated.addWhitelistedNativeProps({ zoom: true });
@@ -260,6 +261,24 @@ export default function ScanScreen() {
     };
   }, []);
 
+
+  const opacity = useSharedValue(0);
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+        opacity: opacity.value,
+    };
+});
+  useEffect(() => {
+    if (codeMetadata.length > 0) {
+  
+      opacity.value = withTiming(1, { duration: 300 });
+
+    } else {
+      opacity.value = withTiming(0, { duration: 300 });
+    }
+  }, [codeMetadata]);
+
+
   const onResultTap = useCallback((url: string, codeType: string) => {
     switch (codeType) {
       case 'URL':
@@ -304,26 +323,26 @@ export default function ScanScreen() {
 
   return (
     <View style={styles.container}>
-        <GestureDetector gesture={gesture}>
-          <SafeAreaView style={styles.cameraContainer}>
-            <Reanimated.View style={[StyleSheet.absoluteFill, animatedCameraStyle]}>
-              <ReanimatedCamera
-                ref={cameraRef}
-                torch={torch}
-                style={StyleSheet.absoluteFill}
-                device={device}
-                onLayout={onLayout}
-                isActive={true}
-                codeScanner={codeScanner}
-                resizeMode='cover'
-                videoStabilizationMode='auto'
-                animatedProps={cameraAnimatedProps}
-              />
-            </Reanimated.View>
-            <FocusIndicator focusPoint={focusPoint} animatedFocusStyle={animatedFocusStyle} />
-            {/* {showIndicator == true ? <ScannerFrame highlight={codeScannerHighlights[0]} layout={layout} scanFrame={scanFrame} /> : null} */}
-            <ScannerFrame highlight={codeScannerHighlights[0]} layout={layout} scanFrame={scanFrame} />
-            {codeMetadata && quickScan === false ? (
+      <GestureDetector gesture={gesture}>
+        <SafeAreaView style={styles.cameraContainer}>
+          <Reanimated.View style={[StyleSheet.absoluteFill, animatedCameraStyle]}>
+            <ReanimatedCamera
+              ref={cameraRef}
+              torch={torch}
+              style={StyleSheet.absoluteFill}
+              device={device}
+              onLayout={onLayout}
+              isActive={true}
+              codeScanner={codeScanner}
+              resizeMode='cover'
+              videoStabilizationMode='auto'
+              animatedProps={cameraAnimatedProps}
+            />
+          </Reanimated.View>
+          <FocusIndicator focusPoint={focusPoint} animatedFocusStyle={animatedFocusStyle} />
+          <ScannerFrame highlight={codeScannerHighlights[0]} layout={layout} scanFrame={scanFrame} />
+          {codeMetadata && quickScan === false ? (
+            <Animated.View style={[styles.qrResult, animatedStyle]}> 
               <TouchableWithoutFeedback
                 onPress={() => onResultTap(codeMetadata, codeType)}
               >
@@ -332,9 +351,10 @@ export default function ScanScreen() {
                   <ThemedText type='defaultSemiBold' numberOfLines={1} style={styles.qrResultText}>{codeValue}</ThemedText>
                 </View>
               </TouchableWithoutFeedback>
-            ) : null}
-          </SafeAreaView>
-        </GestureDetector>
+            </Animated.View>
+          ) : null}
+        </SafeAreaView>
+      </GestureDetector>
 
       <View style={styles.bottomContainer}>
 
@@ -347,6 +367,7 @@ export default function ScanScreen() {
         </View>
 
         <View style={styles.bottomButtonsContainer}>
+
           <ThemedButton
             iconName="images"
             iconColor="white"
@@ -354,7 +375,6 @@ export default function ScanScreen() {
             onPress={onOpenGallery}
             style={styles.bottomButton}
           />
-
           <ThemedButton
             iconName="settings"
             iconColor="white"
@@ -426,6 +446,12 @@ const styles = StyleSheet.create({
     // flex: 1, // Remove this line
     height: 250, // Set a fixed height if needed
   },
+  qrResult: {
+    position: 'absolute',
+    bottom: 15,
+    alignItems: 'center',
+    alignSelf: 'center',
+  },
 
   qrResultContainer: {
     position: 'absolute',
@@ -463,6 +489,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 40,
     paddingVertical: 10,
+  },
+  leftBottomButton1: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    padding: 15,
+    borderTopLeftRadius: 50,
+    borderBottomLeftRadius: 50,
+    borderTopRightRadius: 0,
+    borderBottomRightRadius: 0,
+  },
+  leftBottomButton2: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    padding: 15,
+    borderRadius: 0,
+    borderTopLeftRadius: 0,
+    borderBottomLeftRadius: 0,
+    borderTopRightRadius: 50,
+    borderBottomRightRadius: 50,
   },
 
   bottomButton: {

@@ -75,6 +75,10 @@ function SettingsScreen() {
     useEffect(() => {
         const savedConfig = storage.getString('avatarConfig');
         const darkMode = storage.getString('darkMode');
+
+        if (darkMode) {
+            setDarkMode(darkMode === 'true');
+        }
         if (savedConfig) {
             setAvatarConfig(JSON.parse(savedConfig));
         } else {
@@ -152,7 +156,7 @@ function SettingsScreen() {
                         <View style={styles.settingsContainer}>
                             <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>{t('settingsScreen.appTheme')}</ThemedText>
                             <View style={styles.languageContainer}>
-                                <ThemedText style={styles.settingsText}>System</ThemedText>
+                                <ThemedText style={styles.settingsText}>{darkMode ? 'Dark Mode' : 'Light Mode'}</ThemedText>
                                 <Ionicons name="chevron-forward" size={20} color={color} />
                             </View>
                         </View>
@@ -226,7 +230,7 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         paddingHorizontal: 15,
         marginBottom: 40,
-        borderRadius: 15,
+        borderRadius: 10,
         gap: 10,
     },
     userContainer: {
@@ -234,14 +238,14 @@ const styles = StyleSheet.create({
         flexDirection: 'column',
         paddingVertical: 10,
         paddingHorizontal: 15,
-        borderRadius: 15,
+        borderRadius: 10,
         gap: 10,
     },
     userName: {
         fontSize: 18,
     },
     sectionContainer: {
-        borderRadius: 15,
+        borderRadius: 10,
         backgroundColor: 'white',
         marginBottom: 20,
     },

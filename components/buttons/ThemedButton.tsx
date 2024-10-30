@@ -22,6 +22,8 @@ export type ThemedButtonProps = {
     iconName?: keyof typeof Ionicons.glyphMap;
     /** Color of the icon to display in the button */
     iconColor?: string;
+    /** Size of the icon to display in the button */
+    iconSize?: number;
     /** Underlay color for the button */
     underlayColor?: string;
     /** Function to call when the button is pressed */
@@ -49,6 +51,7 @@ export function ThemedButton({
     loadingLabel,
     iconName,
     iconColor,
+    iconSize = 20,
     underlayColor,
     onPress,
     style = {},
@@ -87,7 +90,7 @@ export function ThemedButton({
                         </>
                     ) : (
                         <>
-                            {iconName && <Ionicons name={iconName} size={20} color={iconColor ? iconColor : color} />}
+                            {iconName && <Ionicons name={iconName} size={iconSize} color={iconColor ? iconColor : color} />}
                             {label && <ThemedText style={[styles.label, { color }]} type='defaultSemiBold'>{label}</ThemedText>}
                         </>
                     )}

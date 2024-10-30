@@ -108,7 +108,7 @@ export default function DetailScreen() {
     const onToggleTransfer = useCallback(() => {
         if (isOffline) return; // Prevent action if offline
         triggerLightHapticFeedback();
-        transferHeight.value = transferHeight.value === 0 ? 100 : 0;
+        transferHeight.value = transferHeight.value === 0 ? 90 : 0;
     }, [isOffline]);
 
     const transferAmount = useCallback(throttle(async () => {
@@ -324,13 +324,13 @@ const styles = StyleSheet.create({
     inputField: {
         height: 50,
         fontSize: 16,
-        width: 300,
+        width: 290,
         overflow: 'hidden',
     },
     transferButton: {
-        paddingHorizontal: 20,
+        paddingHorizontal: 10,
         paddingVertical: 10,
-        marginRight: -15,
+        marginRight: -10,
     },
     suggestionListContent: {
         gap: 10,
@@ -338,7 +338,7 @@ const styles = StyleSheet.create({
     },
     suggestionItem: {
         paddingHorizontal: 15,
-        paddingVertical: 10,
+        paddingVertical: 5,
         borderRadius: 10,
     },
     suggestionText: {
