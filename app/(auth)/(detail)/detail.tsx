@@ -181,7 +181,7 @@ export default function DetailScreen() {
                 />
 
                 <View style={[styles.infoWrapper, {
-                    backgroundColor: colorScheme === 'light' ? Colors.light.inputBackground : Colors.dark.inputBackground,
+                    backgroundColor: colorScheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground,
                 }]}>
                     <TouchableWithoutFeedback onPress={openMap}>
                         <View style={styles.actionButton}>

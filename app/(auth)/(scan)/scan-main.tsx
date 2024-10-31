@@ -455,7 +455,7 @@ const styles = StyleSheet.create({
 
   qrResultContainer: {
     position: 'absolute',
-    bottom: 15,
+    bottom: 0,
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'center',
@@ -490,24 +490,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
     paddingVertical: 10,
   },
-  leftBottomButton1: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    padding: 15,
-    borderTopLeftRadius: 50,
-    borderBottomLeftRadius: 50,
-    borderTopRightRadius: 0,
-    borderBottomRightRadius: 0,
-  },
-  leftBottomButton2: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    padding: 15,
-    borderRadius: 0,
-    borderTopLeftRadius: 0,
-    borderBottomLeftRadius: 0,
-    borderTopRightRadius: 50,
-    borderBottomRightRadius: 50,
-  },
-
   bottomButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     padding: 15,

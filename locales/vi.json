@@ -141,6 +141,12 @@
     "title": "Cài đặt",
     "language": "Ngôn ngữ",
     "languageTitle": "Chọn ngôn ngữ",
-    "appTheme": "Giao diện"
+    "appTheme": "Giao diện",
+    "cancel": "Huỷ",
+    "logout": "Đăng xuất",
+    "logingOut": "Đang đăng xuất...",
+    "confirmLogoutTitle": "Đăng xuất?",
+    "confirmLogoutMessage": "Bạn có chắc chắn muốn đăng xuất không?",
+    "confirmLogoutButton": "Đăng xuất"
   }
 }

@@ -6,18 +6,18 @@ export const Colors = {
     text: '#000000', // Warm dark brown
     background: '#FFF5E1', // Very light warm beige
     tint: tintColorLight,
-    icon: '#D3B08C', // Warm light brown
-    inputBackground: '#FFE4C4', // Light beige
-    placeHolder: '#5A463980', // Semi-transparent version of text color
+    icon: '#D3B8A3', // Warm light brown
+    inputBackground: '#ffedd8', // Light beige
+    placeHolder: '#00000080', // Semi-transparent version of text color
     tabIconDefault: '#C19A7C', // Warm medium brown
     tabIconSelected: tintColorLight,
     error: '#D9534F', // Standard bootstrap red for better cross-theme consistency
-    toastBackground: '#D3B08C', // Matches icon color
-    buttonBackground: '#D3B08C', // Matches icon and toast background
+    toastBackground: '#D3B8A3', // Matches icon color
+    buttonBackground: '#D3B8A3', // Matches icon and toast background
     buttonHighlight: '#EAC9B8', // Lighter shade for highlight
-    cardBackground: '#FFE4C4', // Light warm beige
+    cardBackground: '#ffedd8', // Light warm beige
     cardFooter: '#E2C8A8', // Slightly darker than card background
-    logoIcon: '#D3B08C', // Matches icon color
+    logoIcon: '#D3B8A3', // Matches icon color
   },
   dark: {
     text: '#FFFFFF', // Light warm beige for contrast on dark background
@@ -25,7 +25,7 @@ export const Colors = {
     tint: tintColorDark,
     icon: '#8A5C42', // Darker brown, same hue as light icon
     inputBackground: '#3E352E', // Dark warm brown, matches hue of light input background
-    placeHolder: '#FFF5E180', // Semi-transparent version of text color
+    placeHolder: '#FFFFFF80', // Semi-transparent version of text color
     tabIconDefault: '#8F6E46', // Darker brown, same hue as light tab icon default
     tabIconSelected: tintColorDark,
     error: '#D9534F', // Same as light mode for consistency

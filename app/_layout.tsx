@@ -113,7 +113,7 @@ export default function RootLayout() {
             }
           >
             <ThemedView style={{ flex: 1 }}>
-              <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
+              <Stack screenOptions={{ headerShown: false}}>
                 <Stack.Screen name="(public)" />
                 <Stack.Screen name="(auth)" />
                 <Stack.Screen name="+not-found" />

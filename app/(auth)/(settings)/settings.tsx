@@ -45,7 +45,7 @@ function SettingsScreen() {
     const isOffline = useSelector((state: RootState) => state.network.isOffline);
     const email = useSelector((state: RootState) => state.auth.user?.email ?? '-');
     const name = useSelector((state: RootState) => state.auth.user?.name ?? '-');
-    const [darkMode, setDarkMode] = useMMKVBoolean('quickScan', storage);
+    const darkMode= useMMKVBoolean('quickScan', storage);
     const storedLocale = storage.getString("locale"); 
     const locale = getLocales()[0].languageCode ?? 'en';
 
@@ -74,11 +74,6 @@ function SettingsScreen() {
 
     useEffect(() => {
         const savedConfig = storage.getString('avatarConfig');
-        const darkMode = storage.getString('darkMode');
-
-        if (darkMode) {
-            setDarkMode(darkMode === 'true');
-        }
         if (savedConfig) {
             setAvatarConfig(JSON.parse(savedConfig));
         } else {
@@ -97,6 +92,7 @@ function SettingsScreen() {
 
     const logout = async () => {
         try {
+            setIsModalVisible(false);
             setIsLoading(true);
             await SecureStore.deleteItemAsync('authToken');
             dispatch(clearAuthData());
@@ -104,8 +100,10 @@ function SettingsScreen() {
         } catch (error) {
             console.log(error);
         } finally {
-            setIsLoading(false);
-            router.replace('/login');
+            setTimeout(() => {
+                setIsLoading(false);
+                router.replace('/login');
+            }, 1000);
         }
     }
 
@@ -156,7 +154,7 @@ function SettingsScreen() {
                         <View style={styles.settingsContainer}>
                             <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>{t('settingsScreen.appTheme')}</ThemedText>
                             <View style={styles.languageContainer}>
-                                <ThemedText style={styles.settingsText}>{darkMode ? 'Dark Mode' : 'Light Mode'}</ThemedText>
+                            <ThemedText style={styles.settingsText}>{darkMode !== undefined ? (darkMode ? 'Dark' : 'Light') : 'System'}</ThemedText>
                                 <Ionicons name="chevron-forward" size={20} color={color} />
                             </View>
                         </View>
@@ -164,7 +162,7 @@ function SettingsScreen() {
                 </View>
                 <ThemedButton
                     iconName="log-out-outline"
-                    label='Logout'
+                    label={t('settingsScreen.logout')}
                     loadingLabel='Logging out...'
                     loading={isLoading}
                     onPress={onLogout}
@@ -172,12 +170,12 @@ function SettingsScreen() {
                 />
             </Animated.ScrollView>
             <ThemedModal
-                primaryActionText={t('homeScreen.moveToTrash')}
+                primaryActionText={t('settingsScreen.logout')}
                 onPrimaryAction={logout}
                 onSecondaryAction={() => setIsModalVisible(false)}
-                secondaryActionText={t('homeScreen.cancel')}
-                title={t('homeScreen.confirmDeleteTitle')}
-                message={t('homeScreen.confirmDeleteMessage')}
+                secondaryActionText={t('settingsScreen.cancel')}
+                title={t('settingsScreen.confirmLogoutTitle')}
+                message={t('settingsScreen.confirmLogoutMessage')}
                 isVisible={isModalVisible}
                 iconName="log-out-outline"
             />

@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect, useState } from 'react';
-import { StyleSheet, View, StyleProp, ViewStyle, TouchableHighlight, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, StyleProp, ViewStyle, TouchableHighlight, ActivityIndicator, TouchableWithoutFeedback } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Portal } from 'react-native-paper';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
@@ -100,28 +100,26 @@ export function ThemedStatusToast({
                             size={25}
                             color={color}
                         />
-                        
+
                     )}
                     <ThemedText style={styles.toastText} numberOfLines={2} type='defaultSemiBold'>
                         {message}
                     </ThemedText>
                 </View>
                 {!isSyncing ? (
-                <View style={styles.rightSection}>
-
-                    <TouchableHighlight
-                        onPress={onDismiss}
-                        underlayColor={colorScheme === 'light' ? Colors.light.inputBackground : Colors.dark.inputBackground}
-                        style={styles.iconTouchable}
-                    >
-                        <Ionicons
-                            name={dismissIconName || 'close'}
-                            size={20}
-                            color={color}
-                        />
-                    </TouchableHighlight>
-
-                </View>
+                    <View style={styles.rightSection}>
+                        <TouchableWithoutFeedback
+                            onPress={onDismiss}
+                        >
+                            <View style={styles.iconTouchable}>
+                                <Ionicons
+                                    name={dismissIconName || 'close'}
+                                    size={20}
+                                    color={color}
+                                />
+                            </View>
+                        </TouchableWithoutFeedback>
+                    </View>
                 ) : null}
             </Animated.View>
         </Portal>

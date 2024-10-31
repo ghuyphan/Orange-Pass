@@ -18,7 +18,6 @@ export default function ScanLayout() {
       <Stack
         screenOptions={{
           headerShown: false,
-          animation: 'fade',
         }}
       >
         <Stack.Screen name="settings"/>
