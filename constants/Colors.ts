@@ -7,7 +7,7 @@ export const Colors = {
     background: '#FFF5E1', // Very light warm beige
     tint: tintColorLight,
     icon: '#D3B8A3', // Warm light brown
-    inputBackground: '#ffedd8', // Light beige
+    inputBackground: '#ffe7d2', // Light beige
     placeHolder: '#00000080', // Semi-transparent version of text color
     tabIconDefault: '#C19A7C', // Warm medium brown
     tabIconSelected: tintColorLight,
@@ -15,7 +15,7 @@ export const Colors = {
     toastBackground: '#D3B8A3', // Matches icon color
     buttonBackground: '#D3B8A3', // Matches icon and toast background
     buttonHighlight: '#EAC9B8', // Lighter shade for highlight
-    cardBackground: '#ffedd8', // Light warm beige
+    cardBackground: '#ffe7d2', // Light warm beige
     cardFooter: '#E2C8A8', // Slightly darker than card background
     logoIcon: '#D3B8A3', // Matches icon color
   },

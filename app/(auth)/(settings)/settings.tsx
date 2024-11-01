@@ -1,7 +1,13 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { StyleSheet, View, Platform, useColorScheme, Switch } from 'react-native';
 import { getLocales } from "expo-localization";
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
+import * as SecureStore from 'expo-secure-store';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
+
 import Animated, {
     useAnimatedStyle,
     useSharedValue,
@@ -12,26 +18,26 @@ import Animated, {
     Extrapolation,
     useAnimatedScrollHandler
 } from 'react-native-reanimated';
+
 import { router } from 'expo-router';
+
 import { RootState } from '@/store/rootReducer';
-import { BlurView } from 'expo-blur';
-import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedButton } from '@/components/buttons/ThemedButton';
 import Avatar, { genConfig } from '@zamplyy/react-native-nice-avatar';
 import { ThemedStatusToast } from '@/components/toast/ThemedOfflineToast';
+import { ThemedSettingsCardItem } from '@/components/cards/ThemedSettingsCard';
+import { ThemedModal } from '@/components/modals/ThemedIconModal';
+
 import { t } from '@/i18n';
 import { storage } from '@/utils/storage';
 import { Colors } from '@/constants/Colors';
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { useMMKVBoolean } from 'react-native-mmkv';
-import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
-import * as SecureStore from 'expo-secure-store';
-import { useDispatch } from 'react-redux';
+import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
 import { clearAuthData } from '@/store/reducers/authSlice';
-import { ThemedModal } from '@/components/modals/ThemedIconModal';
 import pb from '@/services/pocketBase';
+import { useMMKVBoolean } from 'react-native-mmkv';
+
 
 function SettingsScreen() {
     const [avatarConfig, setAvatarConfig] = useState<{ [key: string]: any } | null>(null);
@@ -45,9 +51,12 @@ function SettingsScreen() {
     const isOffline = useSelector((state: RootState) => state.network.isOffline);
     const email = useSelector((state: RootState) => state.auth.user?.email ?? '-');
     const name = useSelector((state: RootState) => state.auth.user?.name ?? '-');
-    const darkMode= useMMKVBoolean('quickScan', storage);
-    const storedLocale = storage.getString("locale"); 
+    const [darkMode, setDarkMode] = useMMKVBoolean('quickScan', storage);
+    console.log('darkMode', darkMode);
+    const storedLocale = storage.getString("locale");
     const locale = getLocales()[0].languageCode ?? 'en';
+
+    const sectionsColors = colorScheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground
 
     const scrollHandler = useAnimatedScrollHandler((event) => {
         scrollY.value = event.contentOffset.y;
@@ -78,8 +87,9 @@ function SettingsScreen() {
             setAvatarConfig(JSON.parse(savedConfig));
         } else {
             const newConfig = genConfig({
-                bgColor: '#FFFFFF',
-                faceColor: '#FFC0CB',
+                bgColor: '#FCEDEF',
+                hatStyle: "none",
+                faceColor: '#F9C9B6',
             });
             setAvatarConfig(newConfig);
             storage.set('avatarConfig', JSON.stringify(newConfig));
@@ -131,34 +141,59 @@ function SettingsScreen() {
                 </View>
             </Animated.View>
             <Animated.ScrollView contentContainerStyle={styles.scrollContainer} onScroll={scrollHandler}>
-                <View style={[styles.avatarContainer, { backgroundColor: colorScheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground }]}>
-                    {avatarConfig && <Avatar size={60} {...avatarConfig} />}
+                <View style={[styles.avatarContainer, { backgroundColor: sectionsColors }]}>
+                    {avatarConfig &&
+                        <LinearGradient
+                            colors={['#178bff', '#ff6868']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                            style={styles.gradient}
+                        >
+                            <Avatar size={60} {...avatarConfig} />
+                        </LinearGradient>
+                    }
                     <View style={styles.userContainer}>
                         <ThemedText type='defaultSemiBold' style={styles.userName}>{email}</ThemedText>
-                        <ThemedText>{name ? name : '-'}</ThemedText>
+                        <ThemedText style={styles.editProfile}>{name ? name : '-'}</ThemedText>
                     </View>
                 </View>
 
                 <View style={[styles.sectionContainer, { backgroundColor: colorScheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground }]}>
-                    <TouchableWithoutFeedback>
-                        <View style={styles.settingsContainer}>
-                            <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>{t('settingsScreen.language')}</ThemedText>
-                            <View style={styles.languageContainer}>
-                                <ThemedText style={styles.settingsText}>{locale? 'English' : 'Vietnamese'}</ThemedText>
-                                <Ionicons name="chevron-forward" size={20} color={color} />
-                            </View>
-                        </View>
-                    </TouchableWithoutFeedback>
+                    <ThemedSettingsCardItem
+                        leftIcon='person-outline'
+                        settingsTitle='Edit Profile'
+                    // onPress={() => router.push('/settings/language')}
+                    />
+                    <ThemedSettingsCardItem
+                        settingsTitle='Change Password'
+                        leftIcon='lock-closed-outline'
+                    // onPress={() => router.push('/settings/language')}
+                    />
+                    <ThemedSettingsCardItem
+                        settingsTitle='Change Email Address'
+                        leftIcon='mail-outline'
+                    // onPress={() => router.push('/settings/language')}
+                    />
+                </View>
 
-                    <TouchableWithoutFeedback>
-                        <View style={styles.settingsContainer}>
-                            <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>{t('settingsScreen.appTheme')}</ThemedText>
-                            <View style={styles.languageContainer}>
-                            <ThemedText style={styles.settingsText}>{darkMode !== undefined ? (darkMode ? 'Dark' : 'Light') : 'System'}</ThemedText>
-                                <Ionicons name="chevron-forward" size={20} color={color} />
-                            </View>
-                        </View>
-                    </TouchableWithoutFeedback>
+                <View style={[styles.sectionContainer, { backgroundColor: colorScheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground }]}>
+                    <ThemedSettingsCardItem
+                        settingsTitle='About App'
+                        leftIcon='information-circle-outline'
+                    // onPress={() => router.push('/settings/language')}
+                    />
+                    <ThemedSettingsCardItem
+                        settingsTitle={t('settingsScreen.language')}
+                        settingsText={locale ? 'English' : 'Vietnamese'}
+                        leftIcon='language-outline'
+                    // onPress={() => router.push('/settings/language')}
+                    />
+                    <ThemedSettingsCardItem
+                        settingsTitle={t('settingsScreen.appTheme')}
+                        settingsText={darkMode == undefined ? 'System' : (darkMode ? 'Dark' : 'Light')}
+                        leftIcon='contrast-outline'
+                    // onPress={() => router.push('/settings/language')}
+                    />
                 </View>
                 <ThemedButton
                     iconName="log-out-outline"
@@ -222,6 +257,12 @@ const styles = StyleSheet.create({
         paddingHorizontal: 15,
         paddingTop: STATUSBAR_HEIGHT + 105,
     },
+    gradient: {
+        borderRadius: 50, // Make it circular
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 5, // Optional: Add padding if needed
+    },
     avatarContainer: {
         alignItems: 'center',
         flexDirection: 'row',
@@ -237,9 +278,13 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         paddingHorizontal: 15,
         borderRadius: 10,
-        gap: 10,
+        gap: 5,
     },
     userName: {
+        fontSize: 18,
+    },
+    editProfile: {
+        opacity: 0.7,
         fontSize: 18,
     },
     sectionContainer: {
@@ -258,7 +303,8 @@ const styles = StyleSheet.create({
         paddingVertical: 15,
     },
     settingsText: {
-        fontSize: 12,
+        fontSize: 16,
+        opacity: 0.7,
     },
     languageContainer: {
         flexDirection: 'row',

@@ -12,10 +12,11 @@ import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming } fr
 import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
 import { storage } from '@/utils/storage';
 import { triggerSuccessHapticFeedback } from '@/utils/haptic';
+import { Colors } from 'react-native/Libraries/NewAppScreen';
 
 const OnBoardScreen = () => {
     const color = useThemeColor({ light: '#5A4639', dark: '#FFF5E1' }, 'text');
-    const iconColor = useThemeColor({ light: '#D3B08C', dark: '#7B524A' }, 'buttonBackground');
+    const iconColor = useThemeColor({ light: Colors.light.buttonBackground, dark: Colors.dark.buttonBackground }, 'buttonBackground');
     const pageIndicator = useThemeColor({ light: '#5A4639', dark: '#FFF5E14D' }, 'tabIconSelected');
     const router = useRouter();
     const scrollRef = useRef<ScrollView>(null);
