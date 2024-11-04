@@ -87,28 +87,22 @@ export default function DetailScreen() {
         Linking.openURL(url).catch((err) => console.error('Failed to open Google Maps:', err));
     }, [item]);
 
+    // Đặt giá trị ban đầu cho `transferHeight` là 0 để ẩn transfer container
     const transferHeight = useSharedValue(0);
 
     const transferStyle = useAnimatedStyle(() => ({
-        height: withTiming(transferHeight.value, {
-            duration: 300,
-            easing: Easing.out(Easing.ease)
-        }),
-        marginTop: withTiming(transferHeight.value > 0 ? 10 : 0, {
-            duration: 300,
-            easing: Easing.out(Easing.ease)
-        }),
-        opacity: withTiming(transferHeight.value > 0 ? 1 : 0, {
-            duration: 300,
-            easing: Easing.out(Easing.ease)
-        }),
-        pointerEvents: transferHeight.value > 0 ? 'auto' : 'none',
+        height: withTiming(transferHeight.value, { duration: 300, easing: Easing.out(Easing.ease) }),
+        opacity: withTiming(transferHeight.value > 0 ? 1 : 0, { duration: 300, easing: Easing.out(Easing.ease) }),
+        overflow: 'hidden', // Giữ nội dung trong phạm vi chiều cao
+        pointerEvents: transferHeight.value > 0 ? 'auto' : 'none', // Tắt sự kiện khi ẩn
     }));
 
     const onToggleTransfer = useCallback(() => {
-        if (isOffline) return; // Prevent action if offline
+        if (isOffline) return;
         triggerLightHapticFeedback();
-        transferHeight.value = transferHeight.value === 0 ? 90 : 0;
+
+        // Chuyển đổi giữa mở và đóng `transfer container` bằng cách thay đổi `height`
+        transferHeight.value = transferHeight.value === 0 ? 90 : 0; // Điều chỉnh 90 thành chiều cao mong muốn
     }, [isOffline]);
 
     const transferAmount = useCallback(throttle(async () => {
@@ -204,14 +198,15 @@ export default function DetailScreen() {
                 }]}>
                     <Pressable
                         onPress={openMap}
-                        android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
+                        android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', borderless: false }}
+                        style={styles.actionButton}
                     >
-                        <View style={styles.actionButton}>
-                            <Ionicons name="location-outline" size={20} color={iconColor} />
-                            <ThemedText style={styles.labelText} type="defaultSemiBold">
-                                {t('detailsScreen.nearbyLocation')}
-                            </ThemedText>
-                        </View>
+                        {/* <View style={styles.actionButton}> */}
+                        <Ionicons name="location-outline" size={20} color={iconColor} />
+                        <ThemedText style={styles.labelText} type="defaultSemiBold">
+                            {t('detailsScreen.nearbyLocation')}
+                        </ThemedText>
+                        {/* </View> */}
                     </Pressable>
 
                     {(item.type === 'bank' || item.type === 'ewallet') && (
@@ -242,7 +237,7 @@ export default function DetailScreen() {
                                         onChangeText={(text) => setAmount(formatAmount(text))}
                                     />
                                     <Pressable onPress={transferAmount} style={[styles.transferButton, { opacity: amount ? 1 : 0.3 }]}>
-                                        <Ionicons name="chevron-forward-outline" size={20} color={iconColor} />
+                                        <Ionicons name="chevron-forward-outline" size={18} color={iconColor} />
                                     </Pressable>
                                 </View>
                                 <FlatList
@@ -318,14 +313,18 @@ const styles = StyleSheet.create({
     infoWrapper: {
         marginTop: 30,
         borderRadius: 10,
-        paddingVertical: 15,
-        gap: 20,
+        paddingVertical: 10,
+        paddingHorizontal: 15,
+        gap: 5,
+        overflow: 'hidden'
     },
     actionButton: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 10,
-        paddingHorizontal: 20,
+        padding: 5,
+        borderRadius: 10,
+        overflow: 'hidden'
     },
     loadingWrapper: {
         flex: 1,
@@ -343,7 +342,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginHorizontal: 20,
     },
     inputField: {
         height: 50,
@@ -354,11 +352,9 @@ const styles = StyleSheet.create({
     transferButton: {
         paddingHorizontal: 10,
         paddingVertical: 10,
-        marginRight: -10,
     },
     suggestionListContent: {
         gap: 10,
-        paddingHorizontal: 15,
     },
     suggestionItem: {
         paddingHorizontal: 15,

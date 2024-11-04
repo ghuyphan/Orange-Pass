@@ -79,7 +79,7 @@
     "title": "Orange⁺ Wallet",
     "searchPlaceholder": "Search",
     "noItemFound": "Nothing found, please try again.",
-    "edit": "Edit card details",
+    "edit": "Edit card info",
     "delete": "Move to trash",
     "syncing": "Syncing...",
     "deleting": "Deleting...",
@@ -132,8 +132,8 @@
     "edit": "Edit",
     "delete": "Delete",
     "moveToTrash": "Move to trash",
-    "nearbyLocation": "Nearby Location",
-    "createQrCode": "Generate QR Code with Amount",
+    "nearbyLocation": "Nearby location",
+    "createQrCode": "Generate QR code with amount",
     "receivePlaceholder": "Enter amount to receive"
   },
   "settingsScreen": {

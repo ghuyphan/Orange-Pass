@@ -21,7 +21,7 @@ export const Colors = {
   },
   dark: {
     text: '#FFFFFF', // Light warm beige for contrast on dark background
-    background: '#2A241F', // Very dark warm brown, matches hue of light background
+    background: '#1F1B16', // Very dark warm brown, matches hue of light background
     tint: tintColorDark,
     icon: '#8A5C42', // Darker brown, same hue as light icon
     inputBackground: '#3E352E', // Dark warm brown, matches hue of light input background

@@ -16,6 +16,7 @@ export default function AddLayout() {
       <Stack
         screenOptions={{
           headerShown: false,
+          animation: 'ios'
         }}
       >
         <Stack.Screen options={{ presentation: 'modal' }} name="add-new" />

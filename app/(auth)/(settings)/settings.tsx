@@ -105,13 +105,13 @@ function SettingsScreen() {
             setIsModalVisible(false);
             setIsLoading(true);
             await SecureStore.deleteItemAsync('authToken');
-            dispatch(clearAuthData());
             pb.authStore.clear();
         } catch (error) {
             console.log(error);
         } finally {
             setTimeout(() => {
                 setIsLoading(false);
+                dispatch(clearAuthData());
                 router.replace('/login');
             }, 1000);
         }

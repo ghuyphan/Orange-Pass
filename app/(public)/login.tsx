@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
     // flex: 1,
     flexGrow: 1,
     marginHorizontal: 15,
-    maxHeight: '130%',
+    maxHeight: '120%',
   },
   logoContainer: {
     alignItems: 'center',

@@ -99,6 +99,7 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
     shadowOpacity: shadowOpacity.value,
     elevation: elevation.value,
     marginBottom: 30,
+    borderRadius: 10,
     overflow: 'hidden'
   }));
 
@@ -131,7 +132,6 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
                   onPress={onMoreButtonPress}
                   style={styles.moreButtonContainer}
                   hitSlop={{ bottom: 40, left: 30, right: 30, top: 30 }}
-                  android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
                   pointerEvents='auto'
                 >
                   <Ionicons name="ellipsis-vertical" size={18} color="white" />
@@ -173,12 +173,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingTop: 15,
-    paddingHorizontal: 20,
-    pointerEvents: 'box-none',
+    paddingHorizontal: 15,
   },
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
+    pointerEvents: 'none',
   },
   dragIconContainer: {
     paddingRight: 10,

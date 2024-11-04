@@ -17,7 +17,7 @@ export default function HomeLayout() {
           headerShown: false,
           headerLeft: () => <Text>hello</Text>,
           // animation: 'default',
-          // animation: 'ios',
+          animation: 'ios',
           animationTypeForReplace: 'push',
         }}
       >

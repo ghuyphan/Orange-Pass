@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
         flexDirection: 'column',
         marginBottom: 15,
         borderRadius: 10,
-        paddingVertical: 5,
+        gap: 5,
         
     },
     touchableHighlight: {
@@ -142,14 +142,14 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 10,
-        paddingVertical: 10,
-        paddingHorizontal: 10,
+        paddingVertical: 5,
+        paddingHorizontal: 5,
         overflow: 'hidden',
         borderRadius: 10,
         marginVertical: 5,
     },
     buttonText: {
-        fontSize: 18,
+        fontSize: 16,
     },
 });
 

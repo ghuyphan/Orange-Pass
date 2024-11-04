@@ -16,6 +16,7 @@ export default function DetailLayout() {
       <Stack
         screenOptions={{
           headerShown: false,
+          animation: 'ios'
         }}
       >
         <Stack.Screen name="detail" />
