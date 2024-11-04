@@ -7,8 +7,8 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 export default function ThemedFilterSkeleton({ show = true }) {
   const colorScheme = useColorScheme();
   const colorsArray = colorScheme === 'dark'
-  ? ['#856353', '#5A3D30', '#856353', '#5A3D30', '#856353']
-  : ['#D3B8A3', '#dfcabb', '#D3B8A3', '#dfcabb', '#D3B8A3']; 
+  ? ['#6B5A4E', '#5A3D30', '#6B5A4E', '#5A3D30', '#6B5A4E']
+  : ['#D3B8A3', '#dfcabb', '#D3B8A3', '#dfcabb', '#D3B8A3'];
 
   return (
     <MotiView

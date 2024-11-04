@@ -42,7 +42,7 @@ export default function DetailScreen() {
 
     const iconColor = useColorScheme() === 'light' ? Colors.light.text : Colors.dark.text;
 
-    useUnmountBrightness(0.8, true);
+    useUnmountBrightness(0.8, false);
 
     useEffect(() => {
         const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {

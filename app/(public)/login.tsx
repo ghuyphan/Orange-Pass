@@ -85,7 +85,7 @@ export default function LoginScreen() {
           style={[{ backgroundColor: colorScheme === 'light' ? Colors.light.background : Colors.dark.background }]}
           contentContainerStyle={styles.container}
           extraScrollHeight={70}
-          extraHeight={100}
+          extraHeight={200}
           enableOnAndroid={true}
           showsVerticalScrollIndicator={false}
           scrollEnabled={isKeyboardVisible}

@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#FFF5E1', // example color for dark mod
     },
     darkModeButton: {
-        backgroundColor: '#5A3D30',
+        backgroundColor: '#6B5A4E',
     },
     lightModeButton: {
         backgroundColor: '#D3B8A3',

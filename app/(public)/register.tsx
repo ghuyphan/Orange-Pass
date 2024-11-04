@@ -67,7 +67,7 @@ export default function RegisterScreen() {
                     keyboardShouldPersistTaps="handled"
                     style={[{ backgroundColor: colorScheme === 'light' ? Colors.light.background : Colors.dark.background }]}
                     contentContainerStyle={styles.container}
-                    extraScrollHeight={80}
+                    extraScrollHeight={200}
                     scrollEnabled={isKeyboardVisible}
                     showsVerticalScrollIndicator={false}
                     enableOnAndroid
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
         // flex: 1,
         flexGrow: 1,
         marginHorizontal: 15,
-        maxHeight: '135%',
+        maxHeight: '150%',
     },
     logoContainer: {
         alignItems: 'center',

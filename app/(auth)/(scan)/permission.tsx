@@ -11,12 +11,13 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import { useCameraPermission } from 'react-native-vision-camera';
 import { t } from '@/i18n';
 import { useUnmountBrightness } from '@reeq/react-native-device-brightness';
+import { Colors } from 'react-native/Libraries/NewAppScreen';
 
 const PermissionScreen = () => {
     const { hasPermission: cameraPermission, requestPermission: requestCameraPermission } = useCameraPermission();
     const [step, setStep] = useState(1); // Step 1: Camera, Step 2: Location
     const color = useThemeColor({ light: '#5A4639', dark: '#FFF5E1' }, 'text');
-    const iconColor = useThemeColor({ light: '#D3B08C', dark: '#7B524A' }, 'buttonBackground');
+    const iconColor = useThemeColor({ light: Colors.light.buttonBackground, dark: Colors.dark.buttonBackground }, 'buttonBackground');
     const router = useRouter();
     const scrollRef = useRef<ScrollView>(null);
     
