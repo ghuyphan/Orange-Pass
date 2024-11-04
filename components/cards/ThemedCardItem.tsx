@@ -99,12 +99,12 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
     shadowOpacity: shadowOpacity.value,
     elevation: elevation.value,
     marginBottom: 30,
+    overflow: 'hidden'
   }));
 
   return (
     <Animated.View style={animatedStyle}>
-      <Pressable onPress={handleItemPress} onLongPress={onDrag}>
-      {/* <TouchableWithoutFeedback onPress={handleItemPress} onLongPress={onDrag} delayLongPress={150}> */}
+      <Pressable onPress={handleItemPress} onLongPress={onDrag} delayLongPress={150} android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}>
         <View style={[styles.touchableHighlight, style]}>
           <ThemedView style={[styles.itemContainer, { backgroundColor }]}>
             <View style={styles.headerContainer}>
@@ -127,12 +127,14 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
                 </View>
               </View>
               {onMoreButtonPress && (
-                <Pressable onPress={onMoreButtonPress} 
-                style={styles.moreButtonContainer}
-                pressRetentionOffset={{bottom: 40, left: 30, right: 30, top: 30}}
-                android_ripple={{ color: 'rgba(0, 0, 0, 0.2)',borderless: false }}
+                <Pressable
+                  onPress={onMoreButtonPress}
+                  style={styles.moreButtonContainer}
+                  hitSlop={{ bottom: 40, left: 30, right: 30, top: 30 }}
+                  android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
+                  pointerEvents='auto'
                 >
-                    <Ionicons name="ellipsis-vertical" size={18} color="white" />
+                  <Ionicons name="ellipsis-vertical" size={18} color="white" />
                 </Pressable>
               )}
             </View>
@@ -152,7 +154,6 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
             </View>
           </ThemedView>
         </View>
-      {/* </TouchableWithoutFeedback> */}
       </Pressable>
     </Animated.View>
   );
@@ -161,6 +162,7 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
 const styles = StyleSheet.create({
   touchableHighlight: {
     borderRadius: 10,
+    overflow: 'hidden',
   },
   itemContainer: {
     borderRadius: 10,
@@ -172,6 +174,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingTop: 15,
     paddingHorizontal: 20,
+    pointerEvents: 'box-none',
   },
   headerLeft: {
     flexDirection: 'row',
@@ -219,6 +222,7 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     paddingHorizontal: 20,
     alignItems: 'flex-end',
+    pointerEvents: 'none',
   },
   qr: {
     backgroundColor: 'white',
@@ -232,6 +236,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 5,
     gap: 10,
+    pointerEvents: 'none',
   },
   footerText: {
     maxWidth: '100%',

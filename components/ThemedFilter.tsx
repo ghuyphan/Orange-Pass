@@ -1,4 +1,4 @@
-import { ScrollView, StyleProp, ViewStyle, StyleSheet, View, TouchableWithoutFeedback } from 'react-native';
+import { ScrollView, StyleProp, ViewStyle, StyleSheet, View, TouchableWithoutFeedback, Pressable } from 'react-native';
 import React from 'react';
 import { t } from '@/i18n';
 import { useColorScheme } from 'react-native';
@@ -24,23 +24,21 @@ const ThemedFilter = React.memo(({ selectedFilter, onFilterChange, style }: Them
     return (
         <ScrollView showsHorizontalScrollIndicator={false} horizontal contentContainerStyle={[styles.filterContainer, style]}>
             {filters.map((filter) => (
-                <TouchableWithoutFeedback
+                <Pressable
                     key={filter.key}
 
                     onPress={() => onFilterChange(filter.key)}
+                    style={[
+                        styles.filterButton,
+                        isDarkMode ? styles.darkModeButton : styles.lightModeButton,
+                        selectedFilter === filter.key && (isDarkMode ? styles.selectedFilterDarkMode : styles.selectedFilterLightMode)
+                    ]}
+                    android_ripple={{ color: 'rgba(255, 255, 255, 0.3)',borderless: false }}
                 >
-                    <View
-                        style={[
-                            styles.filterButton,
-                            isDarkMode ? styles.darkModeButton : styles.lightModeButton,
-                            selectedFilter === filter.key && (isDarkMode ? styles.selectedFilterDarkMode : styles.selectedFilterLightMode)
-                        ]}
-                    >
-                        <ThemedText type={'defaultSemiBold'} style={selectedFilter === filter.key && (isDarkMode ? styles.selectedFilterTextDarkMode : styles.selectedFilterTextLightMode)}>
-                            {filter.label}
-                        </ThemedText>
-                    </View>
-                </TouchableWithoutFeedback>
+                    <ThemedText type={'defaultSemiBold'} style={selectedFilter === filter.key && (isDarkMode ? styles.selectedFilterTextDarkMode : styles.selectedFilterTextLightMode)}>
+                        {filter.label}
+                    </ThemedText>
+                </Pressable>
             ))}
         </ScrollView>
     );
@@ -56,6 +54,7 @@ const styles = StyleSheet.create({
         paddingVertical: 8,
         paddingHorizontal: 15,
         borderRadius: 10,
+        overflow: 'hidden',
     },
     selectedFilterLightMode: {
         backgroundColor: '#5A4639', // example color for light mode

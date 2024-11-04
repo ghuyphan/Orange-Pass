@@ -85,7 +85,7 @@ export function ThemedInput({
     }), [colorScheme]);
 
     return (
-        <View style={[styles.container, { marginBottom: isError ? 0 : 34 }]}>
+        <View style={[styles.container, { marginBottom: isError ? 0 : 20 }]}>
             <ThemedView style={inputContainerStyle}>
                 <ThemedText style={[styles.label, { color }]} type='defaultSemiBold'>
                     {label}
@@ -109,9 +109,9 @@ export function ThemedInput({
 
                         <Pressable
                             onPress={secureTextEntry ? onToggleSecureValue : onClearValue}
-                            style={styles.iconTouchable}
-                            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                            android_ripple={{ color: 'rgba(0, 0, 0, 0.2)',borderless: false }}
+                            style={[styles.iconTouchable]}
+                            hitSlop={{ top: 15, bottom: 10, left: 10, right: 10 }}
+                            android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', borderless: false, radius: 10 }}
 
                         >
                             <Ionicons
@@ -126,7 +126,7 @@ export function ThemedInput({
             </ThemedView >
             {isError && errorMessage.length > 0 && (
                 <View style={styles.errorLabelContainer}>
-                    <Ionicons name="alert-circle" size={16} color={errorLabelStyle.color} />
+                    <Ionicons name="alert-circle" size={14} color={errorLabelStyle.color} />
                     <ThemedText style={[styles.errorLabel, errorLabelStyle]}>
                         {errorMessage}
                     </ThemedText>
@@ -162,6 +162,7 @@ const styles = StyleSheet.create({
     },
     iconTouchable: {
         borderRadius: 50,
+        overflow: 'hidden',
     },
     errorLabelContainer: {
         flexDirection: 'row',

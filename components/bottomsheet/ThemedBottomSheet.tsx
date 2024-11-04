@@ -1,5 +1,5 @@
 import React, { forwardRef, useImperativeHandle, useMemo, useRef } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Pressable } from 'react-native';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView, TouchableHighlight } from '@gorhom/bottom-sheet';
 import { ThemedText } from '../ThemedText';
 import { useColorScheme } from 'react-native';
@@ -76,26 +76,25 @@ const ThemedBottomSheet = React.memo(forwardRef<BottomSheet, ThemedBottomSheetPr
                         {title && <ThemedText style={styles.title}>{title}</ThemedText>}
                         {description && <ThemedText style={styles.description}>{description}</ThemedText>}
                         <View style={styles.contentContainer}>
-                            <TouchableWithoutFeedback
+                            <Pressable
                                 // underlayColor={underlayColor}
                                 onPress={onEditPress}
-                                style={styles.touchableHighlight}
+                                style={styles.buttonContainer}
+                                android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
                             >
-                                <View style={styles.buttonContainer}>
                                     <Ionicons name="create-outline" size={20} color={iconColor} />
                                     <ThemedText type='defaultSemiBold' style={styles.buttonText}>{editText}</ThemedText>
-                                </View>
-                            </TouchableWithoutFeedback>
-                            <TouchableWithoutFeedback
+                            </Pressable>
+                            <Pressable
                                 // underlayColor={underlayColor}
                                 onPress={onDeletePress}
-                                style={styles.touchableHighlight}
+                                style={styles.buttonContainer}
+                                android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
                             >
-                                <View style={styles.buttonContainer}>
+
                                     <Ionicons name="trash-outline" size={20} color={iconColor} />
                                     <ThemedText type='defaultSemiBold' style={styles.buttonText}>{deleteText}</ThemedText>
-                                </View>
-                            </TouchableWithoutFeedback>
+                            </Pressable>
                         </View>
                     </BottomSheetScrollView>
                 </BottomSheet>
@@ -145,6 +144,9 @@ const styles = StyleSheet.create({
         gap: 10,
         paddingVertical: 10,
         paddingHorizontal: 10,
+        overflow: 'hidden',
+        borderRadius: 10,
+        marginVertical: 5,
     },
     buttonText: {
         fontSize: 18,

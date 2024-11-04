@@ -61,7 +61,7 @@ function HomeScreen() {
   const [filter, setFilter] = useState('all');
 
   const isEmptyShared = useSharedValue(isEmpty ? 1 : 0);
-  const isActiveShared = useSharedValue(isActive ? 1 : 0);
+  // const isActiveShared = useSharedValue(isActive ? 1 : 0);
 
   const [qrData, setQrData] = useState<QRRecord[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -192,9 +192,9 @@ function HomeScreen() {
     setIsToastVisible(isOffline);
   }, [isOffline]);
 
-  useEffect(() => {
-    isActiveShared.value = isActive ? 1 : 0;
-  }, [isActive]);
+  // useEffect(() => {
+  //   isActiveShared.value = isActive ? 1 : 0;
+  // }, [isActive]);
 
   const debouncedSetSearchQuery = useCallback(
     debounce((query) => {
@@ -227,8 +227,7 @@ function HomeScreen() {
     });
   };
 
-  // Header animation
-  const shouldSnap = useDerivedValue(() => {
+  const threshold = useDerivedValue(() => {
     return scrollY.value > 70;
   }, [scrollY]);
 
@@ -242,7 +241,7 @@ function HomeScreen() {
   });
 
   const opacity = useDerivedValue(() => {
-    return withTiming(shouldSnap.value ? 0 : 1, {
+    return withTiming(threshold.value ? 0 : 1, {
       duration: 250,
       easing: Easing.out(Easing.ease),
     });
@@ -252,7 +251,7 @@ function HomeScreen() {
     return {
       opacity: opacity.value,
       transform: [{ translateY: translateY.value }],
-      zIndex: (scrollY.value > 50 || isActiveShared.value) ? 0 : 20,
+      
     };
   });
 
@@ -330,7 +329,7 @@ function HomeScreen() {
     } catch (error) {
       console.error('Error updating QR indexes and timestamps:', error);
     } finally {
-      setIsActive(false);
+      // setIsActive(false);
     }
   }, [qrData]);
 
@@ -392,8 +391,7 @@ function HomeScreen() {
     ({ item, drag }: { item: QRRecord; drag: () => void }) => {
 
       return (
-          <ScaleDecorator activeScale={1.05}>
-            {/* <Animated.View style={emptyCardStyle}> */}
+          <ScaleDecorator activeScale={1.04}>
             <ThemedCardItem
               onItemPress={() => onNavigateToDetailScreen(item)}
               code={item.code}
@@ -405,7 +403,6 @@ function HomeScreen() {
               accountNumber={item.account_number}
               onDrag={drag}
             />
-            {/* </Animated.View> */}
           </ScaleDecorator>
       );
     },
@@ -493,13 +490,13 @@ function HomeScreen() {
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
           containerStyle={{ flex: 1 }}
-          contentContainerStyle={styles.listContainer}
+          contentContainerStyle={[styles.listContainer, isActive && {zIndex: 11}]}
           scrollEventThrottle={32}
           showsVerticalScrollIndicator={false}
           onDragBegin={onDragBegin}
           onDragEnd={onDragEnd}
           dragItemOverflow={false}
-          activationDistance={20}
+          activationDistance={10}
           onScrollOffsetChange={(offset) => {
             scrollY.value = offset;
           }}
@@ -557,11 +554,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 15,
+    pointerEvents: 'box-none',
   },
   titleButtonContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 15,
+    pointerEvents: 'box-none',
   },
   titleButton: {
     zIndex: 11,

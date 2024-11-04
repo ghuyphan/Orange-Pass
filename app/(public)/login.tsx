@@ -135,7 +135,7 @@ export default function LoginScreen() {
           <ThemedToast
             duration={5000}
             message={errorMessage}
-            isVisible={true}
+            isVisible={isToastVisible}
             style={styles.toastContainer}
             onDismiss={onDismissToast}
             onVisibilityToggle={setIsToastVisible}

@@ -90,21 +90,21 @@ export default function DetailScreen() {
     const transferHeight = useSharedValue(0);
 
     const transferStyle = useAnimatedStyle(() => ({
-        height: withTiming(transferHeight.value, { 
-            duration: 300, 
-            easing: Easing.out(Easing.ease) 
-          }),
-          marginTop: withTiming(transferHeight.value > 0 ? 10 : 0, { 
-            duration: 300, 
-            easing: Easing.out(Easing.ease) 
-          }),
-          opacity: withTiming(transferHeight.value > 0 ? 1 : 0, { 
-            duration: 300, 
-            easing: Easing.out(Easing.ease) 
-          }),
-          pointerEvents: transferHeight.value > 0 ? 'auto' : 'none',
+        height: withTiming(transferHeight.value, {
+            duration: 300,
+            easing: Easing.out(Easing.ease)
+        }),
+        marginTop: withTiming(transferHeight.value > 0 ? 10 : 0, {
+            duration: 300,
+            easing: Easing.out(Easing.ease)
+        }),
+        opacity: withTiming(transferHeight.value > 0 ? 1 : 0, {
+            duration: 300,
+            easing: Easing.out(Easing.ease)
+        }),
+        pointerEvents: transferHeight.value > 0 ? 'auto' : 'none',
     }));
-    
+
     const onToggleTransfer = useCallback(() => {
         if (isOffline) return; // Prevent action if offline
         triggerLightHapticFeedback();
@@ -114,7 +114,7 @@ export default function DetailScreen() {
     const transferAmount = useCallback(throttle(async () => {
 
         if (!item || !item.type || !item.code || !amount) return;
-        
+
         triggerLightHapticFeedback();
         setIsSyncing(true);
         setIsToastVisible(true);
@@ -155,6 +155,26 @@ export default function DetailScreen() {
             </ThemedView>
         );
     }
+    const SuggestionItem = React.memo(({ item, onPress, colorScheme }) => (
+        <Pressable
+            onPress={() => onPress(item)}
+            android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
+            style={[
+                styles.suggestionItem,
+                {
+                    backgroundColor:
+                        colorScheme === 'light'
+                            ? Colors.light.buttonBackground
+                            : Colors.dark.buttonHighlight,
+                    overflow: 'hidden',
+                    borderRadius: 10,
+                },
+            ]}
+        >
+            <ThemedText style={styles.suggestionText}>{item}</ThemedText>
+        </Pressable>
+    ));
+
 
     return (
         <KeyboardAwareScrollView
@@ -162,7 +182,7 @@ export default function DetailScreen() {
             enableOnAndroid={true}
             extraScrollHeight={50}
             showsVerticalScrollIndicator={false}
-            scrollEnabled={isKeyboardVisible}
+            // scrollEnabled={isKeyboardVisible}
             style={{ backgroundColor: colorScheme === 'light' ? Colors.light.background : Colors.dark.background }}
         >
             <ThemedView style={styles.mainContainer}>
@@ -183,57 +203,60 @@ export default function DetailScreen() {
                 <View style={[styles.infoWrapper, {
                     backgroundColor: colorScheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground,
                 }]}>
-                    <TouchableWithoutFeedback onPress={openMap}>
+                    <Pressable
+                        onPress={openMap}
+                        android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
+                    >
                         <View style={styles.actionButton}>
                             <Ionicons name="location-outline" size={20} color={iconColor} />
                             <ThemedText style={styles.labelText} type="defaultSemiBold">
                                 {t('detailsScreen.nearbyLocation')}
                             </ThemedText>
                         </View>
-                    </TouchableWithoutFeedback>
+                    </Pressable>
 
                     {(item.type === 'bank' || item.type === 'ewallet') && (
-                        <View style={[styles.transferContainer,  isOffline ? { opacity: 0.4, pointerEvents: 'none' } : {}]}>
-                            <TouchableWithoutFeedback onPress={onToggleTransfer}>
+                        <View style={[styles.transferContainer, isOffline ? { opacity: 0.4, pointerEvents: 'none' } : {}]}>
+                            <Pressable
+                                onPress={onToggleTransfer}
+                                android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
+                            >
                                 <View style={styles.actionButton}>
                                     <Ionicons name="qr-code-outline" size={20} color={iconColor} />
                                     <ThemedText style={styles.labelText} type="defaultSemiBold">
                                         {t('detailsScreen.createQrCode')}
                                     </ThemedText>
                                     {isOffline && (
-                                    <Ionicons name="cloud-offline-outline" size={20} color={iconColor} />
-                                )}
+                                        <Ionicons name="cloud-offline-outline" size={20} color={iconColor} />
+                                    )}
                                 </View>
-                            </TouchableWithoutFeedback>
+                            </Pressable>
                             {/* {isTransfer && ( */}
-                                <Animated.View style={[styles.transferSection, transferStyle]}>
-                                    <View style={styles.inputWrapper}>
-                                        <TextInput
-                                            style={[styles.inputField, { color: colorScheme === 'light' ? Colors.light.text : Colors.dark.text }]}
-                                            placeholder={t('detailsScreen.receivePlaceholder')}
-                                            keyboardType="numeric"
-                                            value={amount}
-                                            onChangeText={(text) => setAmount(formatAmount(text))}
-                                        />
-                                        <Pressable onPress={transferAmount} style={[styles.transferButton, {opacity: amount ? 1 : 0.3}]}>
-                                            <Ionicons name="chevron-forward-outline" size={20} color={iconColor} />
-                                        </Pressable>
-                                    </View>
-                                    <FlatList
-                                        data={amountSuggestions}
-                                        horizontal
-                                        showsHorizontalScrollIndicator={false}
-                                        keyExtractor={(item) => item}
-                                        contentContainerStyle={styles.suggestionListContent}
-                                        renderItem={({ item }) => (
-                                            <TouchableOpacity onPress={() => setAmount(item)}>
-                                                <View style={[styles.suggestionItem, { backgroundColor: colorScheme === 'light' ? Colors.light.buttonBackground : Colors.dark.buttonHighlight }]}>
-                                                    <ThemedText style={styles.suggestionText}>{item}</ThemedText>
-                                                </View>
-                                            </TouchableOpacity>
-                                        )}
+                            <Animated.View style={[styles.transferSection, transferStyle]}>
+                                <View style={styles.inputWrapper}>
+                                    <TextInput
+                                        style={[styles.inputField, { color: colorScheme === 'light' ? Colors.light.text : Colors.dark.text }]}
+                                        placeholder={t('detailsScreen.receivePlaceholder')}
+                                        keyboardType="numeric"
+                                        value={amount}
+                                        onChangeText={(text) => setAmount(formatAmount(text))}
                                     />
-                                </Animated.View>
+                                    <Pressable onPress={transferAmount} style={[styles.transferButton, { opacity: amount ? 1 : 0.3 }]}>
+                                        <Ionicons name="chevron-forward-outline" size={20} color={iconColor} />
+                                    </Pressable>
+                                </View>
+                                <FlatList
+                                    data={amountSuggestions}
+                                    horizontal
+                                    showsHorizontalScrollIndicator={false}
+                                    keyExtractor={(item) => item}
+                                    contentContainerStyle={styles.suggestionListContent}
+                                    renderItem={({ item }) => (
+                                        <SuggestionItem item={item} onPress={setAmount} colorScheme={colorScheme} />
+                                    )}
+                                />
+
+                            </Animated.View>
                         </View>
                     )}
                 </View>
@@ -340,6 +363,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 15,
         paddingVertical: 5,
         borderRadius: 10,
+        overflow: 'hidden',
     },
     suggestionText: {
         fontSize: 16,
