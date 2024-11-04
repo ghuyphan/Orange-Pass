@@ -1,5 +1,5 @@
 import React, { memo, useMemo, useEffect, useCallback } from 'react';
-import { Image, StyleSheet, View, TouchableWithoutFeedback, Dimensions } from 'react-native';
+import { Image, StyleSheet, View, TouchableWithoutFeedback, Dimensions, Pressable } from 'react-native';
 import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -103,7 +103,8 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
 
   return (
     <Animated.View style={animatedStyle}>
-      <TouchableWithoutFeedback onPress={handleItemPress} onLongPress={onDrag} delayLongPress={150}>
+      <Pressable onPress={handleItemPress} onLongPress={onDrag}>
+      {/* <TouchableWithoutFeedback onPress={handleItemPress} onLongPress={onDrag} delayLongPress={150}> */}
         <View style={[styles.touchableHighlight, style]}>
           <ThemedView style={[styles.itemContainer, { backgroundColor }]}>
             <View style={styles.headerContainer}>
@@ -126,11 +127,13 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
                 </View>
               </View>
               {onMoreButtonPress && (
-                <TouchableWithoutFeedback onPress={onMoreButtonPress}>
-                  <View style={styles.moreButtonContainer}>
+                <Pressable onPress={onMoreButtonPress} 
+                style={styles.moreButtonContainer}
+                pressRetentionOffset={{bottom: 40, left: 30, right: 30, top: 30}}
+                android_ripple={{ color: 'rgba(0, 0, 0, 0.2)',borderless: false }}
+                >
                     <Ionicons name="ellipsis-vertical" size={18} color="white" />
-                  </View>
-                </TouchableWithoutFeedback>
+                </Pressable>
               )}
             </View>
             <View style={styles.qrContainer}>
@@ -149,7 +152,8 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
             </View>
           </ThemedView>
         </View>
-      </TouchableWithoutFeedback>
+      {/* </TouchableWithoutFeedback> */}
+      </Pressable>
     </Animated.View>
   );
 });
@@ -167,15 +171,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingTop: 15,
-    paddingRight: 20,
+    paddingHorizontal: 20,
   },
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   dragIconContainer: {
-    paddingHorizontal: 10,
-    paddingLeft: 20,
+    paddingRight: 10,
   },
   leftHeaderContainer: {
     flexDirection: 'row',
@@ -210,8 +213,7 @@ const styles = StyleSheet.create({
   },
   moreButtonContainer: {
     borderRadius: 50,
-    padding: 15,
-    right: -20,
+    overflow: 'hidden',
   },
   qrContainer: {
     paddingVertical: 15,
@@ -234,7 +236,7 @@ const styles = StyleSheet.create({
   footerText: {
     maxWidth: '100%',
     overflow: 'hidden',
-    fontSize: 14,
+    fontSize: 13,
     color: 'white',
   },
 });

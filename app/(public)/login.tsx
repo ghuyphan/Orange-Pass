@@ -135,7 +135,7 @@ export default function LoginScreen() {
           <ThemedToast
             duration={5000}
             message={errorMessage}
-            isVisible={isToastVisible}
+            isVisible={true}
             style={styles.toastContainer}
             onDismiss={onDismissToast}
             onVisibilityToggle={setIsToastVisible}
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
   },
   toastContainer: {
     position: 'absolute',
-    bottom: 40,
+    bottom: 20,
     left: 0,
     right: 0,
     marginHorizontal: 15,

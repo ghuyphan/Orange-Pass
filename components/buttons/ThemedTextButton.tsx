@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import React, { useMemo } from 'react';
-import { StyleSheet, View, TouchableHighlight, StyleProp, ViewStyle, ActivityIndicator, TextStyle, TouchableWithoutFeedback } from 'react-native';
+import { StyleSheet, View, TouchableHighlight, StyleProp, ViewStyle, ActivityIndicator, TextStyle, TouchableWithoutFeedback, Pressable } from 'react-native';
 import { ThemedText } from '../ThemedText';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -64,17 +64,20 @@ export function ThemedTextButton({
     ]), [colorScheme, disabled, loading, style]);
 
     return (
-            <TouchableWithoutFeedback
+            <Pressable
                 onPress={onPress}
                 disabled={disabled || loading}
                 accessible
                 accessibilityLabel={label}
                 accessibilityRole="button"
                 accessibilityHint={`Press to ${label}`}
+                android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
+                hitSlop={{bottom: 10, left: 10, right: 10, top: 10}}
+                style={buttonStyle}
+
                 // underlayColor={colorScheme === 'light' ? Colors.light.inputBackground : Colors.dark.inputBackground}
                
             >
-                <View style={buttonStyle}>
                     {loading ? (
                         <>
                             <ActivityIndicator size="small" color={color} />
@@ -90,8 +93,7 @@ export function ThemedTextButton({
                             </ThemedText>
                         </>
                     )}
-                </View>
-            </TouchableWithoutFeedback>
+            </Pressable>
     );
 }
 
@@ -100,8 +102,9 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         gap: 5,
         alignSelf: 'flex-start',
-        padding: 5,
+        paddingHorizontal: 5,
         borderRadius: 50,
+        overflow: 'hidden',
     },
     buttonContainer: {
         flexDirection: 'row',

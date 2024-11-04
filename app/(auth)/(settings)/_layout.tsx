@@ -21,7 +21,6 @@ export default function ScanLayout() {
         }}
       >
         <Stack.Screen name="settings"/>
-        <Stack.Screen name="permission"/>
       </Stack>
       {showHeader &&
         <View style={styles.headerContainer}>

@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useState, useMemo } from 'react';
-import { TextInput, StyleSheet, TouchableHighlight, View, TouchableWithoutFeedback } from 'react-native';
+import { TextInput, StyleSheet, TouchableHighlight, View, TouchableWithoutFeedback, Pressable } from 'react-native';
 import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
 import { useThemeColor } from '@/hooks/useThemeColor';
@@ -107,33 +107,32 @@ export function ThemedInput({
                     />
                     {localValue.length > 0 && (
 
-                        <TouchableWithoutFeedback
+                        <Pressable
                             onPress={secureTextEntry ? onToggleSecureValue : onClearValue}
-                        // activeOpacity={0.6}
-                        // underlayColor="#FFF5E1"
+                            style={styles.iconTouchable}
+                            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                            android_ripple={{ color: 'rgba(0, 0, 0, 0.2)',borderless: false }}
 
                         >
-                            <View style={styles.iconTouchable}>
                             <Ionicons
                                 name={secureTextEntry ? (isSecure ? 'eye-sharp' : 'eye-off-sharp') : 'close-circle-sharp'}
                                 size={18}
                                 color={color}
                             />
-                        </View>
-                            </TouchableWithoutFeedback>
+                        </Pressable>
 
                     )}
-        </View>
+                </View>
             </ThemedView >
-        { isError && errorMessage.length > 0 && (
-            <View style={styles.errorLabelContainer}>
-                <Ionicons name="alert-circle" size={16} color={errorLabelStyle.color} />
-                <ThemedText style={[styles.errorLabel, errorLabelStyle]}>
-                    {errorMessage}
-                </ThemedText>
-            </View>
-        )
-}
+            {isError && errorMessage.length > 0 && (
+                <View style={styles.errorLabelContainer}>
+                    <Ionicons name="alert-circle" size={16} color={errorLabelStyle.color} />
+                    <ThemedText style={[styles.errorLabel, errorLabelStyle]}>
+                        {errorMessage}
+                    </ThemedText>
+                </View>
+            )
+            }
         </View >
     );
 }
@@ -143,7 +142,7 @@ const styles = StyleSheet.create({
         flexDirection: 'column',
     },
     inputContainer: {
-        paddingVertical: 5,
+        paddingVertical: 10,
         paddingHorizontal: 15,
         borderRadius: 10,
         flexDirection: 'column',
@@ -154,7 +153,7 @@ const styles = StyleSheet.create({
     inputRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        height: 40,
+
     },
     input: {
         fontSize: 16,
@@ -162,9 +161,7 @@ const styles = StyleSheet.create({
         flex: 1,  // Allows the input to take available space but not overlap the button
     },
     iconTouchable: {
-        padding: 10,
         borderRadius: 50,
-        marginRight: -10
     },
     errorLabelContainer: {
         flexDirection: 'row',

@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect, useState } from 'react';
-import { StyleSheet, View, StyleProp, ViewStyle, TouchableHighlight } from 'react-native';
+import { StyleSheet, View, StyleProp, ViewStyle, TouchableHighlight, Pressable } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Portal } from 'react-native-paper';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
@@ -96,9 +96,8 @@ export function ThemedToast({
                         {message}
                     </ThemedText>
                 </View>
-                <TouchableHighlight
+                <Pressable
                     onPress={onDismiss}
-                    underlayColor={colorScheme === 'light' ? Colors.light.inputBackground : Colors.dark.inputBackground}
                     style={styles.iconTouchable}
                 >
                     <Ionicons
@@ -106,7 +105,7 @@ export function ThemedToast({
                         size={20}
                         color={color}
                     />
-                </TouchableHighlight>
+                </Pressable>
             </Animated.View>
         </Portal>
     );
@@ -115,20 +114,20 @@ export function ThemedToast({
 const styles = StyleSheet.create({
     toastContainer: {
         borderRadius: 10,
-        padding: 15,
+        paddingVertical: 10,
+        paddingHorizontal: 15,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        gap: 10,
         // marginHorizontal: 15,
     },
     toastTitle: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 15
+        gap: 10
     },
     toastText: {
-        fontSize: 15,
+        fontSize: 14,
         width: '80%',
         overflow: 'hidden',
     },

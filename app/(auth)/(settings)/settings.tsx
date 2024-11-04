@@ -178,7 +178,7 @@ function SettingsScreen() {
 
                 <View style={[styles.sectionContainer, { backgroundColor: colorScheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground }]}>
                     <ThemedSettingsCardItem
-                        settingsTitle='About App'
+                        settingsTitle='About Orange⁺'
                         leftIcon='information-circle-outline'
                     // onPress={() => router.push('/settings/language')}
                     />

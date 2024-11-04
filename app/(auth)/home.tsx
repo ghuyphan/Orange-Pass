@@ -243,7 +243,7 @@ function HomeScreen() {
 
   const opacity = useDerivedValue(() => {
     return withTiming(shouldSnap.value ? 0 : 1, {
-      duration: 300,
+      duration: 250,
       easing: Easing.out(Easing.ease),
     });
   });
@@ -266,27 +266,6 @@ function HomeScreen() {
   const emptyCardStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: emptyCardOffset.value }],
   }));
-
-  const THRESHOLD = 140;
-  const getCardStyle = (index: number) => {
-    return {
-      transform: [{
-        translateY: interpolate(
-          scrollY.value,
-          [-THRESHOLD, 0],
-          [index * 40, index * 180], // Adjust values as needed
-          Extrapolation.CLAMP
-        )
-      }],
-      opacity: interpolate(
-        scrollY.value,
-        [-THRESHOLD, 0],
-        [0.95, 1], // Adjust values as needed
-        Extrapolation.CLAMP
-      ),
-    };
-  };
-
 
   const onNavigateToEmptyScreen = useCallback(() => {
     router.push('/empty');
@@ -357,7 +336,6 @@ function HomeScreen() {
 
   const scrollToTop = useCallback(() => {
     flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
-    triggerHapticFeedback();
   }, [flatListRef]);
 
   const handleExpandPress = useCallback((id: string) => {
@@ -615,6 +593,7 @@ const styles = StyleSheet.create({
   },
   blurContainer: {
     position: 'absolute',
+    opacity: 0.8,
     top: 0,
     left: 0,
     right: 0,
@@ -623,7 +602,7 @@ const styles = StyleSheet.create({
   },
   scrollButton: {
     position: 'absolute',
-    bottom: 40,
+    bottom: 20,
     right: 15,
   },
   loadingContainer: {

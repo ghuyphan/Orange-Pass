@@ -21,17 +21,17 @@
     "loggingIn": "Logging in...",
     "errors": {
       "invalidEmail": "Invalid email",
-      "emailRequired": "Username is required",
+      "emailRequired": "Please enter your username",
       "invalidPassword": "Invalid password",
-      "passwordRequired": "Password is required",
+      "passwordRequired": "Please enter your password",
       "offlineNotice": "You are offline. Please connect to the internet to log in.",
-      "400": "Invalid email or password. Please check your credentials and try again.",
+      "400": "Invalid email or password. \nPlease try again.",
       "500": "Something went wrong on our end. Please try again later."
     }
   },
   "registerScreen": {
-    "fullName": "Full name",
-    "fullNamePlaceholder": "Enter your full name",
+    "fullName": "Name",
+    "fullNamePlaceholder": "Enter your name",
     "email": "Email",
     "emailPlaceholder": "Enter your email",
     "password": "Password",
@@ -43,19 +43,19 @@
     "registering": "Registering...",
     "registerSuccess": "Your account has been created successfully",
     "errors": {
-      "fullNameRequired": "Full name is required",
+      "fullNameRequired": "Please enter your name",
       "fullNameInvalid": "Invalid full name",
       "invalidEmail": "Invalid email",
-      "emailRequired": "Email is required",
+      "emailRequired": "Please enter your email",
       "invalidPassword": "Invalid password",
       "invalidPasswordLength": "Password must be at least 8 characters long",
-      "passwordRequired": "Password is required",
+      "passwordRequired": "Please enter your password",
       "invalidPasswordLowerCase": "Password must contain at least one lowercase letter",
       "invalidPasswordUpperCase": "Password must contain at least one uppercase letter",
       "invalidPasswordNumber": "Password must contain at least one number",
       "invalidPasswordSpecialChar": "Password must contain at least one special character (e.g., !@#$%^&*_)",
       "passwordsDontMatch": "Passwords don't match",
-      "confirmPasswordRequired": "Confirm password is required",
+      "confirmPasswordRequired": "Please enter your password confirmation",
       "offlineNotice": "You are offline. Please connect to the internet to log in.",
       "400": "This email is already registered. Please use a different email or log in.",
       "403": "Account creation is disabled. Contact support if this is an error.",
@@ -70,7 +70,7 @@
     "sendingResetLink": "Sending...",
     "successMessage": "We have sent a password reset link to your email. Please check your inbox.",
     "errors": {
-      "emailRequired": "Email is required",
+      "emailRequired": "Please enter your email",
       "invalidEmail": "Invalid email",
       "500": "Something went wrong on our end. Please try again later."
     }

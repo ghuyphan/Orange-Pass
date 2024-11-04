@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import React, { useMemo } from 'react';
-import { StyleSheet, View, TouchableHighlight, StyleProp, ViewStyle, ActivityIndicator, TouchableWithoutFeedback } from 'react-native';
+import { StyleSheet, View, TouchableHighlight, StyleProp, ViewStyle, ActivityIndicator, TouchableWithoutFeedback, Pressable } from 'react-native';
 import { ThemedText } from '../ThemedText';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -70,33 +70,32 @@ export function ThemedButton({
     ]), [colorScheme, disabled, loading, style]);
 
     return (
-            <TouchableWithoutFeedback
-                onPressIn={onPress}
-                disabled={disabled || loading}
-                accessible
-                accessibilityLabel={label}
-                accessibilityRole="button"
-                accessibilityHint={`Press to ${label}`}
+        <Pressable
+            onPress={onPress}
+            disabled={disabled || loading}
+            accessible
+            accessibilityLabel={label}
+            accessibilityRole="button"
+            accessibilityHint={`Press to ${label}`}
+            android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
+            style={[buttonStyle, style]}
 
-            // underlayColor={underlayColor || (colorScheme === 'light' ? Colors.light.buttonHighlight : Colors.dark.buttonHighlight)}
-            >
-                <View style={[buttonStyle, style]}>
-                    {loading ? (
-                        <>
-                            <ActivityIndicator size="small" color={color} />
-                            <ThemedText style={[styles.label, { color }]} type='defaultSemiBold'>
-                                {loadingLabel}
-                            </ThemedText>
-                        </>
-                    ) : (
-                        <>
-                            {iconName && <Ionicons name={iconName} size={iconSize} color={iconColor ? iconColor : color} />}
-                            {label && <ThemedText style={[styles.label, { color }]} type='defaultSemiBold'>{label}</ThemedText>}
-                        </>
-                    )}
-                </View>
-            </TouchableWithoutFeedback>
-        // </View>
+        // underlayColor={underlayColor || (colorScheme === 'light' ? Colors.light.buttonHighlight : Colors.dark.buttonHighlight)}
+        >
+                {loading ? (
+                    <>
+                        <ActivityIndicator size="small" color={color} />
+                        <ThemedText style={[styles.label, { color }]} type='defaultSemiBold'>
+                            {loadingLabel}
+                        </ThemedText>
+                    </>
+                ) : (
+                    <>
+                        {iconName && <Ionicons name={iconName} size={iconSize} color={iconColor ? iconColor : color} />}
+                        {label && <ThemedText style={[styles.label, { color }]} type='defaultSemiBold'>{label}</ThemedText>}
+                    </>
+                )}
+        </Pressable>
     );
 }
 
@@ -108,6 +107,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         flexDirection: 'row',
         gap: 5,
+        overflow: 'hidden',
     },
     buttonContainer: {
         flexDirection: 'row',

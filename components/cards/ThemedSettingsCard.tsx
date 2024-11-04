@@ -52,10 +52,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 20,
+        paddingVertical: 15
     },
     sectionTitle: {
         fontSize: 16,
-        paddingVertical: 15,
     },
     settingsText: {
         fontSize: 16,
