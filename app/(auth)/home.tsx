@@ -192,10 +192,6 @@ function HomeScreen() {
     setIsToastVisible(isOffline);
   }, [isOffline]);
 
-  // useEffect(() => {
-  //   isActiveShared.value = isActive ? 1 : 0;
-  // }, [isActive]);
-
   const debouncedSetSearchQuery = useCallback(
     debounce((query) => {
       setDebouncedSearchQuery(query);
@@ -228,8 +224,10 @@ function HomeScreen() {
   };
 
   const threshold = useDerivedValue(() => {
-    return scrollY.value > 70;
+    return scrollY.value > 60;
   }, [scrollY]);
+
+  const zIndexShared = useSharedValue(1);
 
   const translateY = useDerivedValue(() => {
     return interpolate(
@@ -247,11 +245,19 @@ function HomeScreen() {
     });
   });
 
+  useDerivedValue(() => {
+    const isScrollYGreaterThan50 = scrollY.value > 50;
+    const newValue = isScrollYGreaterThan50 || isActive ? 0 : 1;
+    if (zIndexShared.value !== newValue) {
+      zIndexShared.value = newValue;
+    }
+  });
+  
   const titleContainerStyle = useAnimatedStyle(() => {
     return {
       opacity: opacity.value,
       transform: [{ translateY: translateY.value }],
-      
+      zIndex: zIndexShared.value,
     };
   });
 
@@ -264,7 +270,7 @@ function HomeScreen() {
 
   const emptyCardStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: emptyCardOffset.value }],
-  }));
+  }));  
 
   const onNavigateToEmptyScreen = useCallback(() => {
     router.push('/empty');
@@ -301,6 +307,7 @@ function HomeScreen() {
   }, []);
 
   const onDragEnd = useCallback(async ({ data }: { data: QRRecord[] }) => {
+    setIsActive(false);
     try {
       // Check if the order has changed
       triggerHapticFeedback();
@@ -329,7 +336,6 @@ function HomeScreen() {
     } catch (error) {
       console.error('Error updating QR indexes and timestamps:', error);
     } finally {
-      // setIsActive(false);
     }
   }, [qrData]);
 
@@ -490,7 +496,7 @@ function HomeScreen() {
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
           containerStyle={{ flex: 1 }}
-          contentContainerStyle={[styles.listContainer, isActive && {zIndex: 11}]}
+          contentContainerStyle={[styles.listContainer]}
           scrollEventThrottle={32}
           showsVerticalScrollIndicator={false}
           onDragBegin={onDragBegin}
