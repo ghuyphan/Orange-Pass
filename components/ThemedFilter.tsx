@@ -31,13 +31,15 @@ const ThemedFilter = React.memo(({ selectedFilter, onFilterChange, style }: Them
                     style={[
                         styles.filterButton,
                         isDarkMode ? styles.darkModeButton : styles.lightModeButton,
-                        selectedFilter === filter.key && (isDarkMode ? styles.selectedFilterDarkMode : styles.selectedFilterLightMode)
+                        selectedFilter === filter.key && (isDarkMode ? styles.selectedFilterDarkMode : styles.selectedFilterLightMode),
                     ]}
-                    android_ripple={{ color: 'rgba(255, 255, 255, 0.3)',borderless: false }}
+                    android_ripple={{ color: 'rgba(255, 255, 255, 0.3)', borderless: false }}
                 >
+                    <View>
                     <ThemedText type={'defaultSemiBold'} style={selectedFilter === filter.key && (isDarkMode ? styles.selectedFilterTextDarkMode : styles.selectedFilterTextLightMode)}>
                         {filter.label}
                     </ThemedText>
+                    </View>
                 </Pressable>
             ))}
         </ScrollView>

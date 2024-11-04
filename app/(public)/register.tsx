@@ -51,7 +51,7 @@ export default function RegisterScreen() {
                     setIsToastVisible(true);
                     setErrorMessage(t('registerScreen.registerSuccess'));
                     setTimeout(() => {
-                        router.replace('/');
+                        router.replace('/(login)');
                     }, 1000);
                 } catch (error) {
                     const errorAsError = error as Error;
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
         // flex: 1,
         flexGrow: 1,
         marginHorizontal: 15,
-        maxHeight: '165%',
+        maxHeight: '135%',
     },
     logoContainer: {
         alignItems: 'center',

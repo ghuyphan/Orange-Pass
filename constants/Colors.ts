@@ -16,7 +16,7 @@ export const Colors = {
     buttonBackground: '#D3B8A3', // Matches icon and toast background
     buttonHighlight: '#EAC9B8', // Lighter shade for highlight
     cardBackground: '#ffe7d2', // Light warm beige
-    cardFooter: '#E2C8A8', // Slightly darker than card background
+    cardFooter: '#e6d1be', // Slightly darker than card background
     logoIcon: '#D3B8A3', // Matches icon color
   },
   dark: {
@@ -33,7 +33,7 @@ export const Colors = {
     buttonBackground: '#5A3D30', // Matches toast background
     buttonHighlight: '#7B5A48', // Slightly lighter for highlight
     cardBackground: '#3E352E', // Dark warm brown, matches hue of light card background
-    cardFooter: '#5A4739', // Slightly lighter than card background
+    cardFooter: '#695144', // Slightly lighter than card background
     logoIcon: '#8A5C42', // Matches dark icon color
   },
 };

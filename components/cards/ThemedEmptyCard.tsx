@@ -63,7 +63,6 @@ export function ThemedEmptyCard({
     }), [colorScheme]);
 
     return (
-        <>
             <TouchableWithoutFeedback style={cardContainerStyle} onPress={cardOnPress}>
                 <ThemedView style={cardContainerStyle}>
                     <View style={styles.cardHeaderContainer}>
@@ -83,7 +82,6 @@ export function ThemedEmptyCard({
                     </View>
                 </ThemedView>
             </TouchableWithoutFeedback>
-        </>
     );
 }
 
@@ -96,7 +94,7 @@ const styles = StyleSheet.create({
     },
     label: {
         fontSize: 28,
-        lineHeight: 35,
+        lineHeight: 38,
     },
     cardImageContainer: {
         alignItems: 'center',

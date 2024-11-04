@@ -175,7 +175,6 @@ export default function DetailScreen() {
         </Pressable>
     ));
 
-
     return (
         <KeyboardAwareScrollView
             contentContainerStyle={styles.scrollViewContent}
@@ -239,6 +238,7 @@ export default function DetailScreen() {
                                         placeholder={t('detailsScreen.receivePlaceholder')}
                                         keyboardType="numeric"
                                         value={amount}
+                                        placeholderTextColor={colorScheme === 'light' ? Colors.light.placeHolder : Colors.dark.placeHolder}
                                         onChangeText={(text) => setAmount(formatAmount(text))}
                                     />
                                     <Pressable onPress={transferAmount} style={[styles.transferButton, { opacity: amount ? 1 : 0.3 }]}>
@@ -282,6 +282,7 @@ const styles = StyleSheet.create({
     scrollViewContent: {
         // flexGrow: 1,
         paddingHorizontal: 15,
+        maxHeight: '130%',
     },
     mainContainer: {
     },
