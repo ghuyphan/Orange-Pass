@@ -1,6 +1,6 @@
 import { Stack, useSegments } from 'expo-router';
 import React from 'react';
-import { StyleSheet, View, Platform } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { ThemedButton } from '@/components/buttons/ThemedButton';
 import { useRouter } from 'expo-router';
 import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
@@ -21,7 +21,7 @@ export default function ScanLayout() {
           animation: 'ios'
         }}
       >
-        <Stack.Screen name="settings"/>
+        <Stack.Screen name="settings" options={{ animation: 'none' }}/>
       </Stack>
       {showHeader &&
         <View style={styles.headerContainer}>

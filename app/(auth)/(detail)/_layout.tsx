@@ -1,15 +1,8 @@
-import { Stack, useSegments } from 'expo-router';
+import { Stack } from 'expo-router';
 import React from 'react';
-import { StyleSheet, View, Platform } from 'react-native';
-import { ThemedButton } from '@/components/buttons/ThemedButton';
-import { useRouter } from 'expo-router';
+import { StyleSheet, View,  } from 'react-native';
 
 export default function DetailLayout() {
-  const segments = useSegments().toString();
-
-  const showHeader = segments.includes('empty') || segments.includes('forgot-password');
-
-  const onNavigateBack = useRouter().back;
 
   return (
     <View style={styles.container}>

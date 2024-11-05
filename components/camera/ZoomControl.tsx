@@ -22,12 +22,12 @@ interface ZoomControlProps {
   maxZoom: number;
 }
 
-export const ZoomControl: React.FC<ZoomControlProps> = ({ zoom, minZoom, maxZoom }) => {
+export const ZoomControl: React.FC<ZoomControlProps> = ({ zoom, minZoom , maxZoom }) => {
   const buttonWidth = 37; // Width of each zoom button
 
   // Compute zoom levels dynamically using minZoom and maxZoom
   const zoomLevels = React.useMemo(() => {
-    const levels = minZoom < 1 ? [minZoom, 1, 2, 5] : [1, 2, 5];
+    const levels = [1, 3, 5];
     // Filter levels to ensure they fall within the provided minZoom and maxZoom range
     return levels.filter((level) => level >= minZoom && level <= maxZoom);
   }, [minZoom, maxZoom]);

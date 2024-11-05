@@ -276,18 +276,16 @@ function HomeScreen() {
     router.push('/empty');
   }, []);
 
-  const onNavigateToDetailScreen = useCallback(
-    throttle((item: QRRecord) => {
-      router.push({
-        pathname: `/detail`,
-        params: {
-          id: item.id,
-          item: encodeURIComponent(JSON.stringify(item))
-        },
-      });
-    }, 1000), // Adjust the delay to suit the desired behavior
-    []
-  );
+  const onNavigateToDetailScreen = useRef(throttle((item: QRRecord) => {
+    router.push({
+      pathname: `/detail`,
+      params: {
+        id: item.id,
+        item: encodeURIComponent(JSON.stringify(item))
+      },
+    });
+  }, 1000)).current;
+  
 
   const onNavigateToScanScreen = useCallback(() => {
     router.push('/(scan)/scan-main');
@@ -307,7 +305,7 @@ function HomeScreen() {
   }, []);
 
   const onDragEnd = useCallback(async ({ data }: { data: QRRecord[] }) => {
-    setIsActive(false);
+
     try {
       // Check if the order has changed
       triggerHapticFeedback();
@@ -336,6 +334,7 @@ function HomeScreen() {
     } catch (error) {
       console.error('Error updating QR indexes and timestamps:', error);
     } finally {
+      setIsActive(false);
     }
   }, [qrData]);
 

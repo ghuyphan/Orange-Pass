@@ -15,7 +15,7 @@ import { MAX_ZOOM_FACTOR } from '@/constants/Constants';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { debounce } from 'lodash';
 import { storage } from '@/utils/storage';
-
+ 
 import { ScannerFrame, FocusIndicator, ZoomControl } from '@/components/camera';
 import { ThemedView } from '@/components/ThemedView';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
@@ -24,6 +24,7 @@ import { useMMKVBoolean } from 'react-native-mmkv';
 import { triggerLightHapticFeedback } from '@/utils/haptic';
 import useHandleCodeScanned from '@/hooks/useHandleCodeScanned'; // Import the custom hook
 import Animated from 'react-native-reanimated';
+import RNQRGenerator from 'rn-qr-generator';
 
 const ReanimatedCamera = Reanimated.createAnimatedComponent(Camera);
 Reanimated.addWhitelistedNativeProps({ zoom: true });
@@ -105,6 +106,7 @@ export default function ScanScreen() {
   const router = useRouter();
   const cameraRef = useRef<Camera>(null);
   const { device, hasPermission, torch, toggleFlash } = useCameraSetup(cameraRef);
+  const isUltrawide = device?.name?.toLowerCase().includes('ultrawide'); // Customize this as needed based on your device
 
   //MMKV settings
   const [quickScan, setQuickScan] = useMMKVBoolean('quickScan', storage);
@@ -187,44 +189,47 @@ export default function ScanScreen() {
     onCodeScanned: (codes: Code[], frame: CodeScannerFrame) => {
       frameCounterRef.current++;
       if (isConnecting) return; // Stop scanning if already connecting
-
+  
       // Process every 4th frame (adjust frame skip logic here as needed)
       if (frameCounterRef.current % 4 === 0) {
         setScanFrame(frame);
-
+  
         // Clear previous timeout to prevent stale highlights
         if (timeoutRef.current) {
           clearTimeout(timeoutRef.current);
         }
-
+  
         if (codes.length > 0) {
           const firstCode = codes[0];
-
-          // Update metadata
+  
+          // Update metadata and code information
           setCodeMetadata(firstCode.value ?? '');
-
-          // Conditionally set the scanner highlights if showIndicator is true
+          // setCodeType(firstCode.type ?? '');
+          // setCodeValue(firstCode.value ?? '');
+  
           if (showIndicator) {
+            // Set highlights based on scanned code frame
             setCodeScannerHighlights([{
               height: firstCode.frame?.height ?? 0,
               width: firstCode.frame?.width ?? 0,
               x: firstCode.frame?.x ?? 0,
               y: firstCode.frame?.y ?? 0,
             }]);
-
-            // Reset highlights and metadata only if the indicator is shown
+  
+            // Reset highlights after timeout when showIndicator is true
             timeoutRef.current = setTimeout(() => {
               setCodeScannerHighlights([]);
-              setCodeMetadata('');
-              setCodeType('');
-              setCodeValue('');
             }, 2000);
+          } else {
+            // Immediately reset highlights if showIndicator is false
+            setCodeScannerHighlights([]);
           }
+  
           // Only call handleCodeScanned if not already connecting
           handleCodeScanned(firstCode.value ?? '');
-
+  
         } else {
-          // No codes found, clear the timeout and reset states
+          // No codes found, reset all states
           if (timeoutRef.current) {
             clearTimeout(timeoutRef.current);
           }
@@ -237,6 +242,8 @@ export default function ScanScreen() {
       }
     },
   });
+  
+  const [qrData, setQRData] = useState<string | null>(null);
 
   const onOpenGallery = useCallback(async () => {
     try {
@@ -245,15 +252,32 @@ export default function ScanScreen() {
         height: 400,
         includeBase64: true,
       });
-      if (result) {
-        const base64Data = result;
-        const imageUri = `data:${result.mime};base64,${base64Data}`;
-        // Process the image data here
+      if (result && 'data' in result && result.data) {
+        const base64Data = result.data;
+        decodeQRCode(base64Data);
       }
     } catch (error) {
       console.log('Error opening image picker:', error);
     }
   }, []);
+
+  const decodeQRCode = async (base64Image: string) => {
+    try {
+      // Detect QR code from the base64 image
+      const { values } = await RNQRGenerator.detect({
+        base64: base64Image
+      });
+
+      if (values && values.length > 0) {
+        setQRData(values[0]); // assuming there's only one QR code in the image
+        console.log('QR code data:', values[0]);
+      } else {
+        console.log('No QR code found in image');
+      }
+    } catch (error) {
+      console.error('Error decoding QR code:', error);
+    }
+  };
 
   useEffect(() => {
     return () => {

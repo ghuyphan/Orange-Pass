@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-               BuildableName = "orange2.app"
-               BlueprintName = "orange2"
-               ReferencedContainer = "container:orange2.xcodeproj">
+               BuildableName = "Orange.app"
+               BlueprintName = "Orange"
+               ReferencedContainer = "container:Orange.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -33,9 +33,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "00E356ED1AD99517003FC87E"
-               BuildableName = "orange2Tests.xctest"
-               BlueprintName = "orange2Tests"
-               ReferencedContainer = "container:orange2.xcodeproj">
+               BuildableName = "OrangeTests.xctest"
+               BlueprintName = "OrangeTests"
+               ReferencedContainer = "container:Orange.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -55,9 +55,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "orange2.app"
-            BlueprintName = "orange2"
-            ReferencedContainer = "container:orange2.xcodeproj">
+            BuildableName = "Orange.app"
+            BlueprintName = "Orange"
+            ReferencedContainer = "container:Orange.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -72,9 +72,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "orange2.app"
-            BlueprintName = "orange2"
-            ReferencedContainer = "container:orange2.xcodeproj">
+            BuildableName = "Orange.app"
+            BlueprintName = "Orange"
+            ReferencedContainer = "container:Orange.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

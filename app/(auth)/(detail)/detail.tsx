@@ -159,7 +159,7 @@ export default function DetailScreen() {
                     backgroundColor:
                         colorScheme === 'light'
                             ? Colors.light.buttonBackground
-                            : Colors.dark.buttonHighlight,
+                            : Colors.dark.buttonBackground,
                     overflow: 'hidden',
                     borderRadius: 10,
                 },
@@ -175,7 +175,7 @@ export default function DetailScreen() {
             enableOnAndroid={true}
             extraScrollHeight={50}
             showsVerticalScrollIndicator={false}
-            // scrollEnabled={isKeyboardVisible}
+            scrollEnabled={isKeyboardVisible}
             style={{ backgroundColor: colorScheme === 'light' ? Colors.light.background : Colors.dark.background }}
         >
             <ThemedView style={styles.mainContainer}>
