@@ -606,7 +606,7 @@ const styles = StyleSheet.create({
   },
   scrollButton: {
     position: 'absolute',
-    bottom: 20,
+    bottom: 60,
     right: 15,
   },
   loadingContainer: {

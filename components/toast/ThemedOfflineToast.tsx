@@ -129,26 +129,26 @@ export function ThemedStatusToast({
 const styles = StyleSheet.create({
     toastContainer: {
         borderRadius: 10,
-        padding: 15,
+        paddingVertical: 15,
+        paddingHorizontal: 20,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        gap: 10,
     },
     toastTitle: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 15
+        gap: 15,
     },
     toastText: {
         fontSize: 15,
         width: '80%',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        
     },
     rightSection: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 10
     },
     iconTouchable: {
         padding: 5,

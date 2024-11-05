@@ -153,8 +153,8 @@ function SettingsScreen() {
                         </LinearGradient>
                     }
                     <View style={styles.userContainer}>
-                        <ThemedText type='defaultSemiBold' style={styles.userName}>{email}</ThemedText>
-                        <ThemedText style={styles.editProfile}>{name ? name : '-'}</ThemedText>
+                        <ThemedText numberOfLines={1} type='defaultSemiBold' style={styles.userName}>{email}</ThemedText>
+                        <ThemedText numberOfLines={1} style={styles.editProfile}>{name ? name : '-'}</ThemedText>
                     </View>
                 </View>
 
@@ -205,6 +205,7 @@ function SettingsScreen() {
                 />
             </Animated.ScrollView>
             <ThemedModal
+                dismissable={true}
                 primaryActionText={t('settingsScreen.logout')}
                 onPrimaryAction={logout}
                 onSecondaryAction={() => setIsModalVisible(false)}
@@ -279,6 +280,8 @@ const styles = StyleSheet.create({
         paddingHorizontal: 15,
         borderRadius: 10,
         gap: 5,
+        maxWidth: '80%',
+        overflow: 'hidden',
     },
     userName: {
         fontSize: 18,

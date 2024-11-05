@@ -80,9 +80,9 @@ const ThemedSettingSheet = React.memo(forwardRef<BottomSheetModal, ThemedSetting
                     <BottomSheetModal
                         ref={bottomSheetModalRef}
                         snapPoints={snapPoints}
-                        backgroundStyle={[styles.background, { backgroundColor: color }]}
+                        backgroundStyle={[styles.background, { backgroundColor: '#222' }]}
                         handleStyle={{
-                            backgroundColor: color,
+                            backgroundColor: '#2222',
                             borderTopLeftRadius: 50,
                             borderTopRightRadius: 50,
                         }}
@@ -103,7 +103,7 @@ const ThemedSettingSheet = React.memo(forwardRef<BottomSheetModal, ThemedSetting
                                             </View>
                                             <Switch
                                                 thumbColor={'#fff'}
-                                                trackColor={{ false: '#aaa', true: switchColor }}
+                                                trackColor={{ false: '#aaa', true: '#FFCC00' }}
                                                 ios_backgroundColor={color}
                                                 value={setting1Value}
                                                 onValueChange={onSetting1Press}
@@ -147,9 +147,9 @@ const ThemedSettingSheet = React.memo(forwardRef<BottomSheetModal, ThemedSetting
                     <BottomSheetModal
                         ref={bottomSheetModalRef2}
                         snapPoints={snapPoints}
-                        backgroundStyle={[styles.background, { backgroundColor: color }]}
+                        backgroundStyle={[styles.background]}
                         handleStyle={{
-                            backgroundColor: color,
+                            backgroundColor: '#333',
                             borderTopLeftRadius: 50,
                             borderTopRightRadius: 50,
                         }}
@@ -220,6 +220,7 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 18,
+        color: 'white'
     },
     description: {
         fontSize: 14,
@@ -227,6 +228,7 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
         lineHeight: 20,
         opacity: 0.7,
+        color: 'white',
     },
     iconContainer: {
         flexDirection: 'column',

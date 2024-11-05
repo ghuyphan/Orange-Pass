@@ -22,6 +22,7 @@ export type ThemedModalProps = {
     primaryActionText?: string;
     onSecondaryAction?: () => void;
     secondaryActionText?: string;
+    dismissable?: boolean
 };
 
 export function ThemedModal({
@@ -37,6 +38,7 @@ export function ThemedModal({
     onSecondaryAction,
     secondaryActionText,
     style = {},
+    dismissable = false
 }: ThemedModalProps) {
     const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
     const colorScheme = useColorScheme();
@@ -68,7 +70,7 @@ export function ThemedModal({
 
     return (
         <Portal>
-            <Modal visible={isVisible} onDismiss={onDismiss} contentContainerStyle={styles.overlay}>
+            <Modal dismissable = {dismissable} visible={isVisible} onDismiss={onDismiss} contentContainerStyle={styles.overlay}>
                 <Animated.View style={[modalStyle, animatedStyle]}>
                     {/* Icon */}
                     <Ionicons

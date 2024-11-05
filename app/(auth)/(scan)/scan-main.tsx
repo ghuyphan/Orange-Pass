@@ -20,6 +20,7 @@ import { ScannerFrame, FocusIndicator, ZoomControl } from '@/components/camera';
 import { ThemedView } from '@/components/ThemedView';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import ThemedSettingSheet from '@/components/bottomsheet/ThemedSettingSheet';
+import { ThemedStatusToast } from '@/components/toast/ThemedOfflineToast';
 import { useMMKVBoolean } from 'react-native-mmkv';
 import { triggerLightHapticFeedback } from '@/utils/haptic';
 import useHandleCodeScanned from '@/hooks/useHandleCodeScanned'; // Import the custom hook
@@ -160,6 +161,7 @@ export default function ScanScreen() {
   const [codeType, setCodeType] = useState('');
   const [iconName, setIconName] = useState<keyof typeof Ionicons.glyphMap>('compass');
   const [isConnecting, setIsConnecting] = useState(false);
+  const [isToastVisible, setIsToastVisible] = useState(false);
 
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const handleExpandPress = useCallback(() => {
@@ -204,8 +206,6 @@ export default function ScanScreen() {
   
           // Update metadata and code information
           setCodeMetadata(firstCode.value ?? '');
-          // setCodeType(firstCode.type ?? '');
-          // setCodeValue(firstCode.value ?? '');
   
           if (showIndicator) {
             // Set highlights based on scanned code frame
@@ -233,6 +233,7 @@ export default function ScanScreen() {
           if (timeoutRef.current) {
             clearTimeout(timeoutRef.current);
           }
+          console.log('No codes found');
           setIsConnecting(false); // Reset the connection flag
           setCodeType('');
           setCodeValue('');
@@ -242,8 +243,6 @@ export default function ScanScreen() {
       }
     },
   });
-  
-  const [qrData, setQRData] = useState<string | null>(null);
 
   const onOpenGallery = useCallback(async () => {
     try {
@@ -263,19 +262,24 @@ export default function ScanScreen() {
 
   const decodeQRCode = async (base64Image: string) => {
     try {
+      setIsToastVisible(true);
       // Detect QR code from the base64 image
       const { values } = await RNQRGenerator.detect({
         base64: base64Image
       });
 
       if (values && values.length > 0) {
-        setQRData(values[0]); // assuming there's only one QR code in the image
         console.log('QR code data:', values[0]);
       } else {
         console.log('No QR code found in image');
       }
     } catch (error) {
       console.error('Error decoding QR code:', error);
+    } finally {
+      setTimeout(() => {
+        setIsToastVisible(false);
+      },500)
+
     }
   };
 
@@ -413,6 +417,13 @@ export default function ScanScreen() {
         <ThemedButton iconColor='#fff' style={styles.headerButton} onPress={() => router.back()} iconName="chevron-back" />
         <ThemedButton underlayColor='#fff' iconColor={torch === 'on' ? '#FFCC00' : '#fff'} style={styles.headerButton} onPress={toggleFlash} iconName={torch === 'on' ? 'flash' : 'flash-off'} />
       </View>
+      <ThemedStatusToast
+        isSyncing={true}
+        isVisible={isToastVisible}
+        message='Hello'
+        onDismiss={() => setIsToastVisible(false)}
+        style={styles.toastContainer}
+      />
       <StatusBar barStyle="light-content" />
       <ThemedSettingSheet
         ref={bottomSheetModalRef}
@@ -519,4 +530,11 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 50,
   },
+  toastContainer: {
+    position: 'absolute',
+    backgroundColor: 'grey',
+    bottom: 40,
+    left: 15,
+    right: 15,
+},
 });
