@@ -134,7 +134,7 @@ function SettingsScreen() {
                             onPress={onNavigateBack}
                         />
                     </View>
-                    <ThemedText type="title">{t('settingsScreen.title')}</ThemedText>
+                    <ThemedText style={styles.title} type="title">{t('settingsScreen.title')}</ThemedText>
                 </View>
             </Animated.View>
             <Animated.ScrollView contentContainerStyle={styles.scrollContainer} onScroll={scrollHandler}>
@@ -241,6 +241,9 @@ const styles = StyleSheet.create({
     },
     titleButton: {
         zIndex: 11,
+    },
+    title: {
+        fontSize: 28,
     },
     blurContainer: {
         position: 'absolute',

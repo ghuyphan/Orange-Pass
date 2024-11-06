@@ -98,7 +98,7 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
     transform: [{ scale: scale.value }],
     shadowOpacity: shadowOpacity.value,
     elevation: elevation.value,
-    marginBottom: 30,
+    marginBottom: 25,
     borderRadius: 10,
     overflow: 'hidden'
   }));
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   qrContainer: {
-    paddingVertical: 15,
+    paddingVertical: 10,
     paddingHorizontal: 15,
     alignItems: 'flex-end',
     pointerEvents: 'none',
@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     bottom: 0,
     paddingHorizontal: 15,
-    paddingBottom: 5,
+    paddingVertical: 5,
     gap: 10,
     pointerEvents: 'none',
   },

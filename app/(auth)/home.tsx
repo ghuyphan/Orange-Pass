@@ -103,68 +103,61 @@ function HomeScreen() {
     }
   }, []); // Removed isOffline from dependencies
 
-  const fetchData = useCallback(async () => {
-    if (!userId) return;
+  const fetchData = useCallback(
+    throttle(async () => {
+      if (!userId) return;
 
-    setIsLoading(true);
+      setIsLoading(true);
 
-    try {
-      // Step 1: Fetch and display local data immediately
-      const localData = await getQrCodesByUserId(userId);
-      setQrData(localData);
+      try {
+        // Fetch local data immediately
+        const localData = await getQrCodesByUserId(userId);
+        setQrData(localData);
 
-      // Set empty state based on local data
-      const isLocalDataEmpty = localData.length === 0;
-      setIsEmpty(isLocalDataEmpty);
+        // Update empty state and animation conditionally
+        const isLocalDataEmpty = localData.length === 0;
+        if (isEmpty !== isLocalDataEmpty) {
+          setIsEmpty(isLocalDataEmpty);
+          if (isLocalDataEmpty) animateEmptyCard();
+        }
 
-      // Animate empty card if necessary
-      if (isLocalDataEmpty) {
-        animateEmptyCard();
+        // Skip server sync if offline
+        if (isOffline) return;
+
+        // Sync with server if online
+        await syncWithServer(userId);
+
+        // Fetch server data
+        const [serverData, locallyDeletedData] = await Promise.all([
+          fetchQrData(userId, 1, 30),
+          getLocallyDeletedQrCodes(userId),
+        ]);
+
+        // Filter and update data as needed
+        const filteredServerData = serverData.items.filter(
+          item => !locallyDeletedData.some(deletedItem => deletedItem.id === item.id)
+        );
+
+        // Merge only if new data exists
+        if (filteredServerData.length > 0) {
+          await insertOrUpdateQrCodes(filteredServerData);
+          const updatedLocalData = await getQrCodesByUserId(userId);
+          setQrData(updatedLocalData);
+          setIsEmpty(updatedLocalData.length === 0);
+        }
+      } catch (error) {
+        console.error('Error in fetchData:', error);
+        setToastMessage(t('homeScreen.fetchError'));
+        setIsToastVisible(true);
+      } finally {
+        setIsLoading(false);
+        setTimeout(() => {
+          setIsSyncing(false);
+        }, 300);
       }
-
-      // If offline, we can't proceed with server sync
-      if (isOffline) {
-        console.log('Offline mode: cannot sync with server');
-        animateEmptyCard();
-        return;
-      }
-
-      // Step 2: Sync local changes with the server
-      await syncWithServer(userId);
-
-      // Step 3: Fetch server data after successful sync
-      const [serverData, locallyDeletedData] = await Promise.all([
-        fetchQrData(userId, 1, 30),
-        getLocallyDeletedQrCodes(userId),
-      ]);
-
-      // Step 4: Filter out server items that are deleted locally
-      const filteredServerData = serverData.items.filter(
-        item => !locallyDeletedData.some(deletedItem => deletedItem.id === item.id)
-      );
-
-      // Step 5: Merge new server data into local storage
-      if (filteredServerData.length > 0) {
-        await insertOrUpdateQrCodes(filteredServerData);
-
-        // Step 6: Update local data displayed to the user
-        const updatedLocalData = await getQrCodesByUserId(userId);
-        setQrData(updatedLocalData);
-        setIsEmpty(updatedLocalData.length === 0);
-        animateEmptyCard();
-      }
-
-    } catch (error) {
-      console.error('Error in fetchData:', error);
-      setToastMessage(t('homeScreen.fetchError'));
-      setIsToastVisible(true);
-    } finally {
-      setIsLoading(false);
-      setTimeout(() => {
-        setIsSyncing(false);
-      }, 300);
-    }
-  }, [userId]); // Removed isOffline and syncWithServer from dependencies
+    }, 1000), // Throttle limit of 1 second
+    [userId, isOffline, isEmpty]
+  );
 
   // Animate empty card when isEmpty changes
   useEffect(() => {
@@ -223,43 +216,29 @@ function HomeScreen() {
     });
   };
 
-  const threshold = useDerivedValue(() => {
-    return scrollY.value > 60;
-  }, [scrollY]);
-
-  const zIndexShared = useSharedValue(1);
-
-  const translateY = useDerivedValue(() => {
-    return interpolate(
+  // Combine animations for opacity and translateY based on scrollY in useDerivedValue
+  const headerAnimation = useDerivedValue(() => {
+    const opacity = scrollY.value > 60 ? 0 : 1;
+    const translateY = interpolate(
       scrollY.value,
-      [0, 140],  // Input range
-      [0, -35], // Output range
+      [0, 140],
+      [0, -35],
       Extrapolation.CLAMP
     );
-  });
+    const zIndex = scrollY.value > 50 || isActive ? 0 : 1;
+    return { opacity, translateY, zIndex };
+  }, [scrollY, isActive]);
 
-  const opacity = useDerivedValue(() => {
-    return withTiming(threshold.value ? 0 : 1, {
-      duration: 250,
-      easing: Easing.out(Easing.ease),
-    });
-  });
-
-  useDerivedValue(() => {
-    const isScrollYGreaterThan50 = scrollY.value > 50;
-    const newValue = isScrollYGreaterThan50 || isActive ? 0 : 1;
-    if (zIndexShared.value !== newValue) {
-      zIndexShared.value = newValue;
-    }
-  });
-
+  // Apply animation style in useAnimatedStyle
   const titleContainerStyle = useAnimatedStyle(() => {
+    const { opacity, translateY, zIndex } = headerAnimation.value;
     return {
-      opacity: opacity.value,
-      transform: [{ translateY: translateY.value }],
-      zIndex: zIndexShared.value,
+      opacity: withTiming(opacity, { duration: 180, easing: Easing.out(Easing.ease) }),
+      transform: [{ translateY }],
+      zIndex,
     };
-  });
+  }, [headerAnimation]); // Track changes to derived value
+
 
   const scrollContainerStyle = useAnimatedStyle(() => {
     return {
@@ -430,10 +409,6 @@ function HomeScreen() {
               style={styles.titleButton}
               onPress={onNavigateToScanScreen}
             />
-            <ThemedButton
-              iconName="settings-outline"
-              style={styles.titleButton}
-              onPress={onNavigateToSettingsScreen} />
             <ThemedButton
               iconName="settings-outline"
               style={styles.titleButton}
