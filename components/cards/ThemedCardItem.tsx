@@ -111,7 +111,7 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
             <View style={styles.headerContainer}>
               <View style={styles.headerLeft}>
                 <View style={styles.dragIconContainer}>
-                  <Ionicons name="menu" size={18} color="white" />
+                  <Ionicons name="menu" size={16} color="white" />
                 </View>
                 <View style={styles.leftHeaderContainer}>
                   <View style={styles.iconContainer}>
@@ -134,7 +134,7 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
                   hitSlop={{ bottom: 40, left: 30, right: 30, top: 30 }}
                   pointerEvents='auto'
                 >
-                  <Ionicons name="ellipsis-vertical" size={18} color="white" />
+                  <Ionicons name="ellipsis-vertical" size={16} color="white" />
                 </Pressable>
               )}
             </View>
@@ -189,9 +189,9 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   iconContainer: {
-    width: 35,
+    width: 38,
     aspectRatio: 1,
-    borderRadius: 25,
+    borderRadius: 50,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'white',
@@ -200,11 +200,11 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
   },
   icon: {
-    width: '60%',
-    height: '60%',
+    width: '65%',
+    height: '65%',
   },
   companyName: {
-    fontSize: 16,
+    fontSize: 14,
     color: 'white',
   },
   companyFullName: {
@@ -220,9 +220,10 @@ const styles = StyleSheet.create({
   },
   qrContainer: {
     paddingVertical: 15,
-    paddingHorizontal: 20,
+    paddingHorizontal: 15,
     alignItems: 'flex-end',
     pointerEvents: 'none',
+
   },
   qr: {
     backgroundColor: 'white',
@@ -233,8 +234,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     bottom: 0,
-    paddingHorizontal: 20,
-    paddingVertical: 5,
+    paddingHorizontal: 15,
+    paddingBottom: 5,
     gap: 10,
     pointerEvents: 'none',
   },

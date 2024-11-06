@@ -36,9 +36,15 @@ const ThemedFilter = React.memo(({ selectedFilter, onFilterChange, style }: Them
                     android_ripple={{ color: 'rgba(255, 255, 255, 0.3)', borderless: false }}
                 >
                     <View>
-                    <ThemedText type={'defaultSemiBold'} style={selectedFilter === filter.key && (isDarkMode ? styles.selectedFilterTextDarkMode : styles.selectedFilterTextLightMode)}>
-                        {filter.label}
-                    </ThemedText>
+                        <ThemedText
+                            type={'defaultSemiBold'}
+                            style={[
+                                styles.baseTextStyle,
+                                selectedFilter === filter.key && (isDarkMode ? styles.selectedFilterTextDarkMode : styles.selectedFilterTextLightMode)
+                            ]}
+                        >
+                            {filter.label}
+                        </ThemedText>
                     </View>
                 </Pressable>
             ))}
@@ -53,19 +59,24 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     filterButton: {
-        paddingVertical: 8,
-        paddingHorizontal: 15,
+        paddingVertical: 5,
+        paddingHorizontal: 10,
         borderRadius: 10,
         overflow: 'hidden',
     },
     selectedFilterLightMode: {
         backgroundColor: '#5A4639', // example color for light mode
     },
+    baseTextStyle:{
+        fontSize: 14,
+    },
     selectedFilterTextLightMode: {
-        color: '#FFF'
+        color: '#FFF',
+        fontSize: 14,
     },
     selectedFilterTextDarkMode: {
-        color: '#5A4639'
+        color: '#5A4639',
+        fontSize: 14,
     },
     selectedFilterDarkMode: {
         backgroundColor: '#FFF5E1', // example color for dark mod

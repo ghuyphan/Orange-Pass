@@ -252,7 +252,7 @@ function HomeScreen() {
       zIndexShared.value = newValue;
     }
   });
-  
+
   const titleContainerStyle = useAnimatedStyle(() => {
     return {
       opacity: opacity.value,
@@ -270,7 +270,7 @@ function HomeScreen() {
 
   const emptyCardStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: emptyCardOffset.value }],
-  }));  
+  }));
 
   const onNavigateToEmptyScreen = useCallback(() => {
     router.push('/empty');
@@ -285,7 +285,7 @@ function HomeScreen() {
       },
     });
   }, 1000)).current;
-  
+
 
   const onNavigateToScanScreen = useCallback(() => {
     router.push('/(scan)/scan-main');
@@ -396,19 +396,19 @@ function HomeScreen() {
     ({ item, drag }: { item: QRRecord; drag: () => void }) => {
 
       return (
-          <ScaleDecorator activeScale={1.04}>
-            <ThemedCardItem
-              onItemPress={() => onNavigateToDetailScreen(item)}
-              code={item.code}
-              type={item.type}
-              metadata={item.metadata}
-              metadata_type={item.metadata_type}
-              onMoreButtonPress={() => handleExpandPress(item.id)}
-              accountName={item.account_name}
-              accountNumber={item.account_number}
-              onDrag={drag}
-            />
-          </ScaleDecorator>
+        <ScaleDecorator activeScale={1.04}>
+          <ThemedCardItem
+            onItemPress={() => onNavigateToDetailScreen(item)}
+            code={item.code}
+            type={item.type}
+            metadata={item.metadata}
+            metadata_type={item.metadata_type}
+            onMoreButtonPress={() => handleExpandPress(item.id)}
+            accountName={item.account_name}
+            accountNumber={item.account_number}
+            onDrag={drag}
+          />
+        </ScaleDecorator>
       );
     },
     [onNavigateToDetailScreen, handleExpandPress]
@@ -423,14 +423,21 @@ function HomeScreen() {
       )}
       <Animated.View style={[styles.titleContainer, titleContainerStyle]} pointerEvents="auto">
         <View style={styles.headerContainer}>
-          <ThemedText type="title">{t('homeScreen.title')}</ThemedText>
+          <ThemedText style={styles.titleText} type="title">{t('homeScreen.title')}</ThemedText>
           <View style={styles.titleButtonContainer}>
             <ThemedButton
               iconName="scan-outline"
               style={styles.titleButton}
               onPress={onNavigateToScanScreen}
             />
-            <ThemedButton iconName="settings-outline" style={styles.titleButton} onPress={onNavigateToSettingsScreen} />
+            <ThemedButton
+              iconName="settings-outline"
+              style={styles.titleButton}
+              onPress={onNavigateToSettingsScreen} />
+            <ThemedButton
+              iconName="settings-outline"
+              style={styles.titleButton}
+              onPress={onNavigateToSettingsScreen} />
           </View>
         </View>
         {(!isEmpty || isLoading) && (
@@ -552,7 +559,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     flexDirection: 'column',
-    gap: 20,
+    gap: 15,
   },
   headerContainer: {
     flexDirection: 'row',
@@ -561,24 +568,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     pointerEvents: 'box-none',
   },
+  titleText: {
+    fontSize: 28,
+  },
   titleButtonContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 15,
+    gap: 8,
     pointerEvents: 'box-none',
   },
   titleButton: {
     zIndex: 11,
   },
   scrollContainer: {
-    paddingTop: STATUSBAR_HEIGHT + 105,
+    paddingTop: STATUSBAR_HEIGHT + 95,
     flex: 1,
   },
   emptyCard: {
     marginHorizontal: 15,
   },
   listContainer: {
-    paddingTop: STATUSBAR_HEIGHT + 235,
+    paddingTop: STATUSBAR_HEIGHT + 215,
     paddingHorizontal: 15,
     flexGrow: 1,
     paddingBottom: 20,
@@ -610,7 +620,7 @@ const styles = StyleSheet.create({
     right: 15,
   },
   loadingContainer: {
-    paddingTop: STATUSBAR_HEIGHT + 235,
+    paddingTop: STATUSBAR_HEIGHT + 215,
     paddingHorizontal: 15,
     flex: 1,
   },

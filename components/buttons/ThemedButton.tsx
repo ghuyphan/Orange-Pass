@@ -51,7 +51,7 @@ export function ThemedButton({
     loadingLabel,
     iconName,
     iconColor,
-    iconSize = 20,
+    iconSize = 18,
     underlayColor,
     onPress,
     style = {},

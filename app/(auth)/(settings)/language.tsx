@@ -36,7 +36,7 @@ import pb from '@/services/pocketBase';
 import { useMMKVBoolean } from 'react-native-mmkv';
 
 
-function SettingsScreen() {
+function LanguageScreen() {
     const [avatarConfig, setAvatarConfig] = useState<{ [key: string]: any } | null>(null);
     const colorScheme = useColorScheme();
     const [isLoading, setIsLoading] = useState(false);
@@ -134,7 +134,7 @@ function SettingsScreen() {
                             onPress={onNavigateBack}
                         />
                     </View>
-                    <ThemedText type="title">{t('settingsScreen.title')}</ThemedText>
+                    <ThemedText type="title">Language</ThemedText>
                 </View>
             </Animated.View>
             <Animated.ScrollView contentContainerStyle={styles.scrollContainer} onScroll={scrollHandler}>
@@ -155,51 +155,6 @@ function SettingsScreen() {
                     </View>
                 </View>
 
-                <View style={[styles.sectionContainer, { backgroundColor: colorScheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground }]}>
-                    <ThemedSettingsCardItem
-                        leftIcon='person-outline'
-                        settingsTitle='Edit Profile'
-                    // onPress={() => router.push('/settings/language')}
-                    />
-                    <ThemedSettingsCardItem
-                        settingsTitle='Change Password'
-                        leftIcon='lock-closed-outline'
-                    // onPress={() => router.push('/settings/language')}
-                    />
-                    <ThemedSettingsCardItem
-                        settingsTitle='Change Email Address'
-                        leftIcon='mail-outline'
-                    // onPress={() => router.push('/settings/language')}
-                    />
-                </View>
-
-                <View style={[styles.sectionContainer, { backgroundColor: colorScheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground }]}>
-                    <ThemedSettingsCardItem
-                        settingsTitle='About Orange⁺'
-                        leftIcon='information-circle-outline'
-                    // onPress={() => router.push('/settings/language')}
-                    />
-                    <ThemedSettingsCardItem
-                        settingsTitle={t('settingsScreen.language')}
-                        settingsText={locale ? 'English' : 'Vietnamese'}
-                        leftIcon='language-outline'
-                        onPress={() => router.push('/language')}
-                    />
-                    <ThemedSettingsCardItem
-                        settingsTitle={t('settingsScreen.appTheme')}
-                        settingsText={darkMode == undefined ? 'System' : (darkMode ? 'Dark' : 'Light')}
-                        leftIcon='contrast-outline'
-                    // onPress={() => router.push('/settings/language')}
-                    />
-                </View>
-                <ThemedButton
-                    iconName="log-out-outline"
-                    label={t('settingsScreen.logout')}
-                    loadingLabel='Logging out...'
-                    loading={isLoading}
-                    onPress={onLogout}
-
-                />
             </Animated.ScrollView>
             <ThemedModal
                 dismissable={true}
@@ -216,7 +171,7 @@ function SettingsScreen() {
     );
 }
 
-export default React.memo(SettingsScreen);
+export default React.memo(LanguageScreen);
 
 const styles = StyleSheet.create({
     container: {

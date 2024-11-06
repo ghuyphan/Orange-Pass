@@ -313,14 +313,15 @@ const styles = StyleSheet.create({
     infoWrapper: {
         marginTop: 30,
         borderRadius: 10,
-        paddingVertical: 10,
-        paddingHorizontal: 15,
         gap: 5,
-        overflow: 'hidden'
+        overflow: 'hidden',
+        paddingVertical: 10,
     },
     actionButton: {
         flexDirection: 'row',
         alignItems: 'center',
+        paddingHorizontal: 15,
+        paddingVertical: 10,
         gap: 10,
         padding: 5,
         borderRadius: 10,
@@ -342,6 +343,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
+        paddingHorizontal: 15,
     },
     inputField: {
         height: 50,
@@ -355,6 +357,7 @@ const styles = StyleSheet.create({
     },
     suggestionListContent: {
         gap: 10,
+        paddingHorizontal: 15,
     },
     suggestionItem: {
         paddingHorizontal: 15,

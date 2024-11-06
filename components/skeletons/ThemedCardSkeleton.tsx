@@ -26,7 +26,7 @@ export default function ThemedCardSkeleton({ show = true, index = 0 }) {
         <View style={styles.leftHeaderContainer}>
           <Skeleton colors={colorsArray} radius="round" height={45} width={45} />
           <View style={styles.labelContainer}>
-            <Skeleton colors={colorsArray} width={100} height={16} />
+            <Skeleton colors={colorsArray} width={100} height={14} />
             <Skeleton colors={colorsArray} width={150} height={14} />
           </View>
         </View>

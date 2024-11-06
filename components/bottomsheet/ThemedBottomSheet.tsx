@@ -32,6 +32,7 @@ const ThemedBottomSheet = React.memo(forwardRef<BottomSheet, ThemedBottomSheetPr
         const colorScheme = useColorScheme();
         const color = useMemo(() => (colorScheme === 'light' ? Colors.light.background : Colors.dark.background), [colorScheme]);
         const iconColor = useMemo(() => (colorScheme === 'light' ? Colors.light.text : Colors.dark.text), [colorScheme]);
+        const rippleColor = useMemo(() => (colorScheme === 'light' ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.2)'), [colorScheme]);
         // const color = useColorScheme() === 'light' ? Colors.light.background : Colors.dark.background;
         // const iconColor = useColorScheme() === 'light' ? Colors.light.text : Colors.dark.text;
         const bottomSheetRef = useRef<BottomSheet>(null);
@@ -80,7 +81,7 @@ const ThemedBottomSheet = React.memo(forwardRef<BottomSheet, ThemedBottomSheetPr
                                 // underlayColor={underlayColor}
                                 onPress={onEditPress}
                                 style={styles.buttonContainer}
-                                android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
+                                android_ripple={{color: rippleColor, foreground: true, borderless: false }}
                             >
                                     <Ionicons name="create-outline" size={20} color={iconColor} />
                                     <ThemedText type='defaultSemiBold' style={styles.buttonText}>{editText}</ThemedText>
@@ -89,7 +90,7 @@ const ThemedBottomSheet = React.memo(forwardRef<BottomSheet, ThemedBottomSheetPr
                                 // underlayColor={underlayColor}
                                 onPress={onDeletePress}
                                 style={styles.buttonContainer}
-                                android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
+                                android_ripple={{ color: rippleColor, foreground: true, borderless: false }}
                             >
 
                                     <Ionicons name="trash-outline" size={20} color={iconColor} />
@@ -114,7 +115,6 @@ const styles = StyleSheet.create({
         backgroundColor: 'black', // Darken the backdrop
     },
     container: {
-        paddingHorizontal: 15,
     },
     title: {
         fontSize: 18,
@@ -131,7 +131,6 @@ const styles = StyleSheet.create({
         flexDirection: 'column',
         marginBottom: 15,
         borderRadius: 10,
-        gap: 5,
         
     },
     touchableHighlight: {
@@ -142,10 +141,10 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 10,
-        paddingVertical: 5,
-        paddingHorizontal: 5,
+        paddingVertical: 10,
+        paddingHorizontal: 15,
         overflow: 'hidden',
-        borderRadius: 10,
+        // borderRadius: 10,
         marginVertical: 5,
     },
     buttonText: {

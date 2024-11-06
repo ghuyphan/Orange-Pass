@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
         width: width, // Adjust to the width of your screen
         alignItems: 'center',
         justifyContent: 'center',
-        paddingHorizontal: 20,
+        paddingHorizontal: 15,
     },
     iconContainer: {
         justifyContent: 'center',

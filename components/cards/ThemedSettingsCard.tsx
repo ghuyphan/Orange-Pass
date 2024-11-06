@@ -34,7 +34,7 @@ export const ThemedSettingsCardItem = memo(function ThemedSettingsCardItem(props
         <TouchableWithoutFeedback onPress={onPress}>
             <View style={styles.settingsCardContainer}>
                 <View style={styles.leftContainer}> 
-                <Ionicons name={leftIcon} size={20} color={iconColor || colors}/>
+                <Ionicons name={leftIcon} size={iconSize} color={iconColor || colors}/>
                 <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>{settingsTitle}</ThemedText>
                 </View>
                 <View style={styles.rightContainer}>
@@ -51,8 +51,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: 20,
-        paddingVertical: 15
+        paddingHorizontal: 15,
+        paddingVertical: 10
     },
     sectionTitle: {
         fontSize: 16,
