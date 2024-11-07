@@ -17,6 +17,7 @@ import { createTable } from '@/services/localDB/userDB';
 import { storage } from '@/utils/storage';
 import { useMMKVBoolean } from 'react-native-mmkv';
 import { ThemedView } from '@/components/ThemedView';
+import { LocaleProvider } from '@/context/LocaleContext'; // Import LocaleProvider
 
 SplashScreen.preventAutoHideAsync();
 
@@ -105,6 +106,7 @@ export default function RootLayout() {
     <Provider store={store}>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <PaperProvider>
+        <LocaleProvider>
           <ThemeProvider
             value={
               dark !== undefined ?
@@ -121,6 +123,7 @@ export default function RootLayout() {
               </Stack>
             </ThemedView>
           </ThemeProvider>
+        </LocaleProvider>
         </PaperProvider>
       </GestureHandlerRootView>
     </Provider>

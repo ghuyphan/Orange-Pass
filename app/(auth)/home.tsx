@@ -37,6 +37,7 @@ import { t } from '@/i18n';
 import BottomSheet from '@gorhom/bottom-sheet';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { triggerHapticFeedback } from '@/utils/haptic';
+import { useLocale } from '@/context/LocaleContext';
 
 import {
   createTable,
@@ -50,6 +51,7 @@ import {
 } from '@/services/localDB/qrDB';
 
 function HomeScreen() {
+  const { locale } = useLocale();
   const color = useThemeColor({ light: '#5A4639', dark: '#FFF5E1' }, 'text');
   const [isEmpty, setIsEmpty] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
@@ -218,10 +220,10 @@ function HomeScreen() {
 
   // Combine animations for opacity and translateY based on scrollY in useDerivedValue
   const headerAnimation = useDerivedValue(() => {
-    const opacity = scrollY.value > 60 ? 0 : 1;
+    const opacity = scrollY.value > 50 ? 0 : 1;
     const translateY = interpolate(
       scrollY.value,
-      [0, 140],
+      [0, 80],
       [0, -35],
       Extrapolation.CLAMP
     );
@@ -555,7 +557,6 @@ const styles = StyleSheet.create({
     pointerEvents: 'box-none',
   },
   titleButton: {
-    zIndex: 11,
   },
   scrollContainer: {
     paddingTop: STATUSBAR_HEIGHT + 95,
@@ -578,7 +579,7 @@ const styles = StyleSheet.create({
   },
   toastContainer: {
     position: 'absolute',
-    bottom: 40,
+    bottom: 10,
     left: 15,
     right: 15,
   },
@@ -593,7 +594,7 @@ const styles = StyleSheet.create({
   },
   scrollButton: {
     position: 'absolute',
-    bottom: 60,
+    bottom: 70,
     right: 15,
   },
   loadingContainer: {

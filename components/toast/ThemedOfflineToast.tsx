@@ -97,7 +97,7 @@ export function ThemedStatusToast({
                     ) : (
                         <Ionicons
                             name={iconName || 'information-circle'}
-                            size={25}
+                            size={20}
                             color={color}
                         />
 
@@ -138,11 +138,11 @@ const styles = StyleSheet.create({
     toastTitle: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 15,
+        gap: 10,
     },
     toastText: {
-        fontSize: 15,
-        width: '80%',
+        fontSize: 14,
+        maxWidth: '80%',
         overflow: 'hidden',
         
     },

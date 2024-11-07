@@ -1,62 +1,61 @@
-import React, { useState, useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { StyleSheet, View, Platform, useColorScheme, Pressable } from 'react-native';
-import { getLocales } from "expo-localization";
-import { useSelector, useDispatch } from 'react-redux';
 import { BlurView } from 'expo-blur';
-
 import Animated, {
     useAnimatedStyle,
     useSharedValue,
     withTiming,
     Easing,
-    useDerivedValue,
     interpolate,
     Extrapolation,
     useAnimatedScrollHandler
 } from 'react-native-reanimated';
-
 import { router } from 'expo-router';
-
-import { RootState } from '@/store/rootReducer';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedButton } from '@/components/buttons/ThemedButton';
-
-import { t, changeLocale } from '@/i18n';
-import { storage } from '@/utils/storage';
+import { t } from '@/i18n';
 import { Colors } from '@/constants/Colors';
+import { useThemeColor } from '@/hooks/useThemeColor';
 import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
-import { useMMKVBoolean } from 'react-native-mmkv';
 import GB from '@/assets/svgs/GB.svg';
 import VN from '@/assets/svgs/VN.svg';
+import { useLocale } from '@/context/LocaleContext';
+import { useMMKVString } from 'react-native-mmkv';
+import { storage } from '@/utils/storage';
+import { Ionicons } from '@expo/vector-icons';
+import * as Localization from 'expo-localization';
 
-function LanguageScreen() {
-    const [locale, setLocale] = useState(storage.getString("locale") || getLocales()[0].languageCode || 'en');
+const LanguageScreen: React.FC = () => {
+    const systemLocale = Localization.getLocales()[0].languageCode ?? 'en';
+    const colors = useThemeColor({ light: Colors.light.text, dark: Colors.dark.text }, 'text');
     const colorScheme = useColorScheme();
-
+    const [locale, setLocale] = useMMKVString('locale', storage);
     const scrollY = useSharedValue(0);
-    const sectionsColors = colorScheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground;
+    
+    const { updateLocale } = useLocale();
 
-    const scrollHandler = useAnimatedScrollHandler((event) => {
-        scrollY.value = event.contentOffset.y;
-    });
+    // Màu nền chỉ được tính toán lại khi `colorScheme` thay đổi
+    const sectionsColors = useMemo(() => (
+        colorScheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground
+    ), [colorScheme]);
 
-    const translateY = useDerivedValue(() => {
-        return interpolate(scrollY.value, [0, 140], [0, -35], Extrapolation.CLAMP);
-    });
-
-    const opacity = useDerivedValue(() => {
-        return withTiming(scrollY.value > 70 ? 0 : 1, {
-            duration: 300,
-            easing: Easing.out(Easing.ease),
-        });
+    const scrollHandler = useAnimatedScrollHandler({
+        onScroll: (event) => {
+            scrollY.value = event.contentOffset.y;
+        },
     });
 
     const titleContainerStyle = useAnimatedStyle(() => {
+        const translateY = interpolate(scrollY.value, [0, 140], [0, -35], Extrapolation.CLAMP);
+        const opacity = withTiming(scrollY.value > 70 ? 0 : 1, {
+            duration: 300,
+            easing: Easing.out(Easing.ease),
+        });
         return {
-            opacity: opacity.value,
-            transform: [{ translateY: translateY.value }],
-            zIndex: (scrollY.value > 50) ? 0 : 20,
+            opacity,
+            transform: [{ translateY }],
+            zIndex: scrollY.value > 50 ? 0 : 20,
         };
     });
 
@@ -64,11 +63,14 @@ function LanguageScreen() {
         router.back();
     }, []);
 
-    const handleLanguageChange = (newLocale: string) => {
-        changeLocale(newLocale); // Cập nhật ngôn ngữ trong i18n
-        setLocale(newLocale);    // Cập nhật state để render lại giao diện
-    };
-
+    const handleLanguageChange = useCallback((newLocale: string) => {
+        updateLocale(newLocale); // Chỉ gọi `updateLocale`, không cần set trực tiếp vào MMKV
+    }, [updateLocale]);
+    
+    const handleSystemLocale = useCallback(() => {
+        updateLocale(systemLocale); // Tương tự, chỉ cập nhật qua context
+    }, [updateLocale, systemLocale]);
+    
     return (
         <ThemedView style={styles.container}>
             {Platform.OS === 'android' ? (
@@ -88,17 +90,22 @@ function LanguageScreen() {
                     <ThemedText style={styles.title} type="title">{t('languageScreen.title')}</ThemedText>
                 </View>
             </Animated.View>
-            <Animated.ScrollView contentContainerStyle={styles.scrollContainer} onScroll={scrollHandler}>
+            <Animated.ScrollView style={styles.scrollContainer} onScroll={scrollHandler}>
                 <View style={[styles.sectionContainer, { backgroundColor: sectionsColors }]}>
                     <Pressable
                         android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
                         onPress={() => handleLanguageChange('vi')}
                     >
-                        <View style={styles.leftSectionContainer}>
-                            <View style={styles.flagIconContainer}>
-                                <VN width={35} height={35} />
+                        <View style={styles.section}>
+                            <View style={styles.leftSectionContainer}>
+                                <View style={styles.flagIconContainer}>
+                                    <VN width={35} height={35} />
+                                </View>
+                                <ThemedText>{t('languageScreen.vietnamese')}</ThemedText>
                             </View>
-                            <ThemedText>{t('languageScreen.vietnamese')}</ThemedText>
+                            {locale === 'vi' && (
+                                <Ionicons name="checkmark" size={20} color={colors} />
+                            )}
                         </View>
                     </Pressable>
 
@@ -106,11 +113,36 @@ function LanguageScreen() {
                         android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
                         onPress={() => handleLanguageChange('en')}
                     >
-                        <View style={styles.leftSectionContainer}>
-                            <View style={styles.flagIconContainer}>
-                                <GB width={35} height={35} />
+                        <View style={styles.section}>
+                            <View style={styles.leftSectionContainer}>
+                                <View style={styles.flagIconContainer}>
+                                    <GB width={35} height={35} />
+                                </View>
+                                <ThemedText>{t('languageScreen.english')}</ThemedText>
                             </View>
-                            <ThemedText>{t('languageScreen.english')}</ThemedText>
+                            {locale === 'en' && (
+                                <Ionicons name="checkmark" size={20} color={colors} />
+                            )}
+                        </View>
+                    </Pressable>
+
+                    <Pressable
+                        android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
+                        onPress={handleSystemLocale}
+                    >
+                        <View style={styles.section}>
+                            <View style={styles.leftSectionContainer}>
+                                <View style={[
+                                    styles.iconContainer,
+                                    colorScheme === 'dark' ? { backgroundColor: Colors.dark.buttonBackground } : { backgroundColor: Colors.light.buttonBackground }
+                                ]}>
+                                    <Ionicons name="cog" size={20} color={colors} />
+                                </View>
+                                <ThemedText>{t('languageScreen.system')}</ThemedText>
+                            </View>
+                            {locale === undefined && (
+                                <Ionicons name="checkmark" size={20} color={colors} />
+                            )}
                         </View>
                     </Pressable>
                 </View>
@@ -166,12 +198,18 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         overflow: 'hidden',
     },
+    section: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 15,
+        pointerEvents: 'none',
+    },
     leftSectionContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 10,
-        paddingHorizontal: 15,
-        paddingVertical: 10
+        paddingVertical: 10,
     },
     flagIconContainer: {
         width: 25,
@@ -179,6 +217,11 @@ const styles = StyleSheet.create({
         borderRadius: 50,
         justifyContent: 'center',
         alignItems: 'center',
+        overflow: 'hidden',
+    },
+    iconContainer: {
+        padding: 5,
+        borderRadius: 50,
         overflow: 'hidden',
     },
 });

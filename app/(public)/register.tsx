@@ -15,9 +15,11 @@ import { t } from '@/i18n';
 import { registrationSchema } from '@/utils/validationSchemas';
 import { register } from '@/services/auth';
 import { width, height } from '@/constants/Constants';
+import {useLocale} from "@/context/LocaleContext";
 
 export default function RegisterScreen() {
     const colorScheme = useColorScheme();
+    const { locale } = useLocale();
     const [isToastVisible, setIsToastVisible] = useState(false);
     const [isKeyboardVisible, setKeyboardVisible] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');

@@ -26,6 +26,7 @@ import { triggerLightHapticFeedback } from '@/utils/haptic';
 import useHandleCodeScanned from '@/hooks/useHandleCodeScanned'; // Import the custom hook
 import Animated from 'react-native-reanimated';
 import RNQRGenerator from 'rn-qr-generator';
+import { useLocale } from '@/context/LocaleContext';
 
 const ReanimatedCamera = Reanimated.createAnimatedComponent(Camera);
 Reanimated.addWhitelistedNativeProps({ zoom: true });
@@ -104,6 +105,7 @@ const useFocusGesture = (cameraRef: React.RefObject<Camera>, zoom: SharedValue<n
 
 // Main component
 export default function ScanScreen() {
+  const { locale } = useLocale();
   const router = useRouter();
   const cameraRef = useRef<Camera>(null);
   const { device, hasPermission, torch, toggleFlash } = useCameraSetup(cameraRef);

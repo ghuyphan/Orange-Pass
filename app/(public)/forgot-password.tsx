@@ -14,12 +14,15 @@ import { forgotPasswordSchema } from '@/utils/validationSchemas';
 import { forgot } from '@/services/auth';
 import { ThemedText } from '@/components/ThemedText';
 import { width, height } from '@/constants/Constants';
+import { useLocale } from '@/context/LocaleContext';
 
 export default function ForgotPasswordScreen() {
   const colorScheme = useColorScheme();
   const [isToastVisible, setIsToastVisible] = useState(false);
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+
+  const { locale } = useLocale();
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {

@@ -75,7 +75,7 @@ export function ThemedModal({
                     {/* Icon */}
                     <Ionicons
                         name={iconName || 'information-circle'}
-                        size={28}
+                        size={25}
                         color={color}
                         style={styles.icon}
                     />
@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
         marginBottom: 15,
     },
     titleText: {
-        fontSize: 20,
+        fontSize: 18,
         textAlign: 'center',
     },
     messageText: {
@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
         // justifyContent: 'space-between',
         width: '100%',
         marginTop: 10,
-        gap: 5,
+        gap: 10,
     },
     actionButton: {
         // paddingVertical: 10,

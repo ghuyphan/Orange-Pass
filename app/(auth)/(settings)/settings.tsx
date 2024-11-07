@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { StyleSheet, View, Platform, useColorScheme } from 'react-native';
-import { getLocales } from "expo-localization";
 import { useSelector, useDispatch } from 'react-redux';
 import * as SecureStore from 'expo-secure-store';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -34,10 +33,41 @@ import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
 import { clearAuthData } from '@/store/reducers/authSlice';
 import pb from '@/services/pocketBase';
 import { useMMKVBoolean } from 'react-native-mmkv';
+import { useLocale } from '@/context/LocaleContext';
+import { useMMKVString } from 'react-native-mmkv';
+import { ActivityIndicator } from 'react-native-paper';
 
 
 function SettingsScreen() {
+    const { updateLocale } = useLocale();
+
     const [avatarConfig, setAvatarConfig] = useState<{ [key: string]: any } | null>(null);
+
+    const loadAvatarConfig = () => {
+        setTimeout(() => {
+            const savedConfig = storage.getString('avatarConfig');
+            if (savedConfig) {
+                setAvatarConfig(JSON.parse(savedConfig)); // Cập nhật cấu hình đã lưu
+            } else {
+                const newConfig = genConfig({
+                    bgColor: '#FFF5E1',
+                    hatStyle: "none",
+                    faceColor: '#F9C9B6',
+                });
+
+                storage.set('avatarConfig', JSON.stringify(newConfig));
+                setAvatarConfig(newConfig); // Cập nhật cấu hình mới
+            }
+        }, 500); // Trì hoãn 100ms hoặc giá trị phù hợp
+    };
+
+    // Gọi hàm này khi render
+    loadAvatarConfig();
+
+    // Gọi hàm trước khi render thành phần
+    // const avatarConfig = loadAvatarConfig();
+
+    // const [avatarConfig, setAvatarConfig] = useState<{ [key: string]: any } | null>(null);
     const colorScheme = useColorScheme();
     const [isLoading, setIsLoading] = useState(false);
     const [isModalVisible, setIsModalVisible] = useState(false);
@@ -47,8 +77,7 @@ function SettingsScreen() {
     const email = useSelector((state: RootState) => state.auth.user?.email ?? '-');
     const name = useSelector((state: RootState) => state.auth.user?.name ?? '-');
     const [darkMode, setDarkMode] = useMMKVBoolean('quickScan', storage);
-    console.log('darkMode', darkMode);
-    const locale = getLocales()[0].languageCode ?? 'en';
+    const [locale, setLocale] = useMMKVString('locale', storage);
 
     const sectionsColors = colorScheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground
 
@@ -74,21 +103,6 @@ function SettingsScreen() {
             zIndex: (scrollY.value > 50) ? 0 : 20,
         };
     });
-
-    useEffect(() => {
-        const savedConfig = storage.getString('avatarConfig');
-        if (savedConfig) {
-            setAvatarConfig(JSON.parse(savedConfig));
-        } else {
-            const newConfig = genConfig({
-                bgColor: '#FCEDEF',
-                hatStyle: "none",
-                faceColor: '#F9C9B6',
-            });
-            setAvatarConfig(newConfig);
-            storage.set('avatarConfig', JSON.stringify(newConfig));
-        }
-    }, []);
 
     const onNavigateBack = useCallback(() => {
         router.back();
@@ -136,17 +150,20 @@ function SettingsScreen() {
             </Animated.View>
             <Animated.ScrollView contentContainerStyle={styles.scrollContainer} onScroll={scrollHandler}>
                 <View style={[styles.avatarContainer, { backgroundColor: sectionsColors }]}>
-                    {avatarConfig &&
-                        <LinearGradient
-                            colors={['#6ac3ff', '#8a94ff', '#c87cff']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                            style={styles.gradient}
-                        >
-
+                    <LinearGradient
+                        colors={['#6ac3ff', '#8a94ff', '#c87cff']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={styles.gradient}
+                    >
+                        {avatarConfig ? (
                             <Avatar size={45} {...avatarConfig} />
-                        </LinearGradient>
-                    }
+                        ): (
+                            <View style={styles.avatarLoadContainer}>
+                            <ActivityIndicator size={30} color="white" />
+                            </View>
+                        )}
+                    </LinearGradient>
                     <View style={styles.userContainer}>
                         <ThemedText numberOfLines={1} style={styles.userEmail}>{email}</ThemedText>
                         <ThemedText numberOfLines={1} style={styles.userName}>{name ? name : '-'}</ThemedText>
@@ -179,7 +196,7 @@ function SettingsScreen() {
                     />
                     <ThemedSettingsCardItem
                         settingsTitle={t('settingsScreen.language')}
-                        settingsText={locale ? 'English' : 'Vietnamese'}
+                        settingsText={locale == undefined ? 'System' : locale == 'en' ? 'English' : 'Vietnamese'}
                         leftIcon='language'
                         onPress={() => router.push('/language')}
                     />
@@ -270,6 +287,13 @@ const styles = StyleSheet.create({
         marginBottom: 30,
         borderRadius: 10,
         gap: 0,
+    },
+    avatarLoadContainer: {
+        width: 45,
+        aspectRatio: 1,
+        borderRadius: 50,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     userContainer: {
         justifyContent: 'center',

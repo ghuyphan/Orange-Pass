@@ -13,7 +13,6 @@ const i18n = new I18n({
 
 i18n.enableFallback = true;
 
-// Function to set locale based on stored value or system default
 const updateLocale = () => {
     const storedLocale = storage.getString("locale");
     if (storedLocale) {
@@ -35,6 +34,9 @@ export const t = (key: string) => i18n.t(key);
 export const changeLocale = (newLocale: string) => {
     i18n.locale = newLocale;
     storage.set('locale', newLocale);
+    i18n.onChange(() => {
+        // Lắng nghe sự kiện thay đổi trong ứng dụng
+    });
 };
 
 // Listen for app state changes to re-check locale
@@ -46,3 +48,5 @@ AppState.addEventListener("change", (nextAppState) => {
         }
     }
 });
+
+export { i18n };

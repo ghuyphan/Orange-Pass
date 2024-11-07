@@ -18,8 +18,10 @@ import { t } from '@/i18n';
 import { loginSchema } from '@/utils/validationSchemas';
 import { login } from '@/services/auth';
 import { width, height } from '@/constants/Constants';
+import { useLocale } from '@/context/LocaleContext';
 
 export default function LoginScreen() {
+  const { locale } = useLocale();
   const colorScheme = useColorScheme();
   const authRefreshError = useSelector((state: RootState) => state.error.message)
   const [isToastVisible, setIsToastVisible] = useState(false);

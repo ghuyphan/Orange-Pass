@@ -151,6 +151,7 @@
   "languageScreen": {
     "title": "Language",
     "english": "English",
-    "vietnamese": "Vietnamese"
+    "vietnamese": "Vietnamese",
+    "system": "System"
   }
 }

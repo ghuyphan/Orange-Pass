@@ -152,6 +152,7 @@
   "languageScreen": {
     "title": "Ngôn ngữ",
     "english": "Tiếng Anh",
-    "vietnamese": "Tiếng Việt"
+    "vietnamese": "Tiếng Việt",
+    "system": "Hệ thống"
   }
 }

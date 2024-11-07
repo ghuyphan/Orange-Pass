@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
-import { StyleSheet, View, TouchableWithoutFeedback, useColorScheme, Linking, Keyboard, FlatList, TouchableOpacity, TextInput, Pressable } from 'react-native';
+import { StyleSheet, View, TouchableWithoutFeedback, useColorScheme, Linking, Keyboard, FlatList, TouchableOpacity, TextInput, Pressable, InteractionManager } from 'react-native';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store/rootReducer';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
@@ -22,6 +22,7 @@ import { getVietQRData } from '@/utils/vietQR';
 import { ThemedStatusToast } from '@/components/toast/ThemedOfflineToast';
 import { throttle } from 'lodash';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
+import { useLocale } from '@/context/LocaleContext';
 
 // Utility function to format the amount
 const formatAmount = (amount: string) => {
@@ -29,7 +30,10 @@ const formatAmount = (amount: string) => {
 };
 
 export default function DetailScreen() {
+    const { locale } = useLocale();
+    
     const { item: encodedItem } = useLocalSearchParams();
+    
     const bottomSheetRef = useRef<BottomSheet>(null);
     const router = useRouter();
     const colorScheme = useColorScheme();
@@ -45,17 +49,19 @@ export default function DetailScreen() {
     useUnmountBrightness(0.8, false);
 
     useEffect(() => {
-        const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
-            setKeyboardVisible(true);
-        });
-        const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
-            setKeyboardVisible(false);
-        });
+        InteractionManager.runAfterInteractions(() => {
+            const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
+                setKeyboardVisible(true);
+            });
+            const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+                setKeyboardVisible(false);
+            });
 
-        return () => {
-            keyboardDidHideListener.remove();
-            keyboardDidShowListener.remove();
-        };
+            return () => {
+                keyboardDidHideListener.remove();
+                keyboardDidShowListener.remove();
+            };
+        })
     }, [isKeyboardVisible]);
 
     const item: QRRecord | null = useMemo(() => {
@@ -358,14 +364,14 @@ const styles = StyleSheet.create({
     suggestionListContent: {
         gap: 10,
         paddingHorizontal: 15,
-        paddingBottom: 10,  
+        paddingBottom: 10,
     },
     suggestionItem: {
         paddingHorizontal: 15,
         paddingVertical: 5,
         borderRadius: 10,
         overflow: 'hidden',
-        
+
     },
     suggestionText: {
         fontSize: 16,

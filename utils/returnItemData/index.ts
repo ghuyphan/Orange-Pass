@@ -41,6 +41,7 @@ let searchIndex: { [type: string]: { [normalizedTerm: string]: Set<string> } } =
 // Initialize data and build indices
 function initializeData() {
     const languageCode = getLocales()[0]?.languageCode || 'en';
+    console.log('Language code:', languageCode);
 
     if (languageCode !== cachedLanguageCode) {
         cachedLanguageCode = languageCode;
