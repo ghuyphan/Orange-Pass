@@ -1,9 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { StyleSheet, View, Platform, useColorScheme } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { StyleSheet, View, Platform, useColorScheme, Pressable } from 'react-native';
 import { getLocales } from "expo-localization";
 import { useSelector, useDispatch } from 'react-redux';
-import * as SecureStore from 'expo-secure-store';
-import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 
 import Animated, {
@@ -23,37 +21,21 @@ import { RootState } from '@/store/rootReducer';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedButton } from '@/components/buttons/ThemedButton';
-import Avatar, { genConfig } from '@zamplyy/react-native-nice-avatar';
-import { ThemedSettingsCardItem } from '@/components/cards/ThemedSettingsCard';
-import { ThemedModal } from '@/components/modals/ThemedIconModal';
 
-import { t } from '@/i18n';
+import { t, changeLocale } from '@/i18n';
 import { storage } from '@/utils/storage';
 import { Colors } from '@/constants/Colors';
 import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
-import { clearAuthData } from '@/store/reducers/authSlice';
-import pb from '@/services/pocketBase';
 import { useMMKVBoolean } from 'react-native-mmkv';
-
+import GB from '@/assets/svgs/GB.svg';
+import VN from '@/assets/svgs/VN.svg';
 
 function LanguageScreen() {
-    const [avatarConfig, setAvatarConfig] = useState<{ [key: string]: any } | null>(null);
+    const [locale, setLocale] = useState(storage.getString("locale") || getLocales()[0].languageCode || 'en');
     const colorScheme = useColorScheme();
-    const [isLoading, setIsLoading] = useState(false);
-    const [isModalVisible, setIsModalVisible] = useState(false);
-    const dispatch = useDispatch();
 
-    const color = colorScheme === 'light' ? Colors.light.text : Colors.dark.text;
     const scrollY = useSharedValue(0);
-    const isOffline = useSelector((state: RootState) => state.network.isOffline);
-    const email = useSelector((state: RootState) => state.auth.user?.email ?? '-');
-    const name = useSelector((state: RootState) => state.auth.user?.name ?? '-');
-    const [darkMode, setDarkMode] = useMMKVBoolean('quickScan', storage);
-    console.log('darkMode', darkMode);
-    const storedLocale = storage.getString("locale");
-    const locale = getLocales()[0].languageCode ?? 'en';
-
-    const sectionsColors = colorScheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground
+    const sectionsColors = colorScheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground;
 
     const scrollHandler = useAnimatedScrollHandler((event) => {
         scrollY.value = event.contentOffset.y;
@@ -78,45 +60,14 @@ function LanguageScreen() {
         };
     });
 
-    useEffect(() => {
-        const savedConfig = storage.getString('avatarConfig');
-        if (savedConfig) {
-            setAvatarConfig(JSON.parse(savedConfig));
-        } else {
-            const newConfig = genConfig({
-                bgColor: '#FCEDEF',
-                hatStyle: "none",
-                faceColor: '#F9C9B6',
-            });
-            setAvatarConfig(newConfig);
-            storage.set('avatarConfig', JSON.stringify(newConfig));
-        }
-    }, []);
-
     const onNavigateBack = useCallback(() => {
         router.back();
-    }, [])
+    }, []);
 
-    const logout = async () => {
-        try {
-            setIsModalVisible(false);
-            setIsLoading(true);
-            await SecureStore.deleteItemAsync('authToken');
-            pb.authStore.clear();
-        } catch (error) {
-            console.log(error);
-        } finally {
-            setTimeout(() => {
-                setIsLoading(false);
-                dispatch(clearAuthData());
-                router.replace('/login');
-            }, 1000);
-        }
-    }
-
-    const onLogout = useCallback(() => {
-        setIsModalVisible(true);
-    }, [])
+    const handleLanguageChange = (newLocale: string) => {
+        changeLocale(newLocale); // Cập nhật ngôn ngữ trong i18n
+        setLocale(newLocale);    // Cập nhật state để render lại giao diện
+    };
 
     return (
         <ThemedView style={styles.container}>
@@ -134,39 +85,36 @@ function LanguageScreen() {
                             onPress={onNavigateBack}
                         />
                     </View>
-                    <ThemedText type="title">Language</ThemedText>
+                    <ThemedText style={styles.title} type="title">{t('languageScreen.title')}</ThemedText>
                 </View>
             </Animated.View>
             <Animated.ScrollView contentContainerStyle={styles.scrollContainer} onScroll={scrollHandler}>
-                <View style={[styles.avatarContainer, { backgroundColor: sectionsColors }]}>
-                    {avatarConfig &&
-                        <LinearGradient
-                            colors={['#178bff', '#ff6868']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                            style={styles.gradient}
-                        >
-                            <Avatar size={60} {...avatarConfig} />
-                        </LinearGradient>
-                    }
-                    <View style={styles.userContainer}>
-                        <ThemedText numberOfLines={1} type='defaultSemiBold' style={styles.userName}>{email}</ThemedText>
-                        <ThemedText numberOfLines={1} style={styles.editProfile}>{name ? name : '-'}</ThemedText>
-                    </View>
-                </View>
+                <View style={[styles.sectionContainer, { backgroundColor: sectionsColors }]}>
+                    <Pressable
+                        android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
+                        onPress={() => handleLanguageChange('vi')}
+                    >
+                        <View style={styles.leftSectionContainer}>
+                            <View style={styles.flagIconContainer}>
+                                <VN width={35} height={35} />
+                            </View>
+                            <ThemedText>{t('languageScreen.vietnamese')}</ThemedText>
+                        </View>
+                    </Pressable>
 
+                    <Pressable
+                        android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
+                        onPress={() => handleLanguageChange('en')}
+                    >
+                        <View style={styles.leftSectionContainer}>
+                            <View style={styles.flagIconContainer}>
+                                <GB width={35} height={35} />
+                            </View>
+                            <ThemedText>{t('languageScreen.english')}</ThemedText>
+                        </View>
+                    </Pressable>
+                </View>
             </Animated.ScrollView>
-            <ThemedModal
-                dismissable={true}
-                primaryActionText={t('settingsScreen.logout')}
-                onPrimaryAction={logout}
-                onSecondaryAction={() => setIsModalVisible(false)}
-                secondaryActionText={t('settingsScreen.cancel')}
-                title={t('settingsScreen.confirmLogoutTitle')}
-                message={t('settingsScreen.confirmLogoutMessage')}
-                isVisible={isModalVisible}
-                iconName="log-out-outline"
-            />
         </ThemedView>
     );
 }
@@ -194,6 +142,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         gap: 15,
     },
+    title: {
+        fontSize: 28,
+    },
     titleButton: {
         zIndex: 11,
     },
@@ -210,60 +161,24 @@ const styles = StyleSheet.create({
         paddingHorizontal: 15,
         paddingTop: STATUSBAR_HEIGHT + 105,
     },
-    gradient: {
-        borderRadius: 50, // Make it circular
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 5, // Optional: Add padding if needed
-    },
-    avatarContainer: {
-        alignItems: 'center',
-        flexDirection: 'row',
-        paddingVertical: 10,
-        paddingHorizontal: 15,
-        marginBottom: 40,
-        borderRadius: 10,
-        gap: 10,
-    },
-    userContainer: {
-        justifyContent: 'center',
-        flexDirection: 'column',
-        paddingVertical: 10,
-        paddingHorizontal: 15,
-        borderRadius: 10,
+    sectionContainer: {
         gap: 5,
-        maxWidth: '80%',
+        borderRadius: 10,
         overflow: 'hidden',
     },
-    userName: {
-        fontSize: 18,
-    },
-    editProfile: {
-        opacity: 0.7,
-        fontSize: 18,
-    },
-    sectionContainer: {
-        borderRadius: 10,
-        backgroundColor: 'white',
-        marginBottom: 20,
-    },
-    settingsContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: 15,
-    },
-    sectionTitle: {
-        fontSize: 16,
-        paddingVertical: 15,
-    },
-    settingsText: {
-        fontSize: 16,
-        opacity: 0.7,
-    },
-    languageContainer: {
+    leftSectionContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 10,
+        paddingHorizontal: 15,
+        paddingVertical: 10
+    },
+    flagIconContainer: {
+        width: 25,
+        aspectRatio: 1,
+        borderRadius: 50,
+        justifyContent: 'center',
+        alignItems: 'center',
+        overflow: 'hidden',
     },
 });

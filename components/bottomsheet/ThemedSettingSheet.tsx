@@ -198,14 +198,14 @@ const styles = StyleSheet.create({
         backgroundColor: 'black', // Darken the backdrop
     },
     container: {
-        paddingHorizontal: 15,
+        paddingHorizontal: 0,
     },
     contentContainer: {
         flexDirection: 'column',
         marginBottom: 15,
         borderRadius: 10,
         paddingVertical: 5,
-        paddingHorizontal: 10,
+        paddingHorizontal: 25,
     },
     touchableHighlight: {
         borderRadius: 10, // Ensures the highlight covers the entire button, including rounded corners
@@ -219,15 +219,15 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
     },
     title: {
-        fontSize: 18,
+        fontSize: 16,
         color: 'white'
     },
     description: {
         fontSize: 14,
         maxWidth: 280,
         overflow: 'hidden',
-        lineHeight: 20,
-        opacity: 0.7,
+        lineHeight: 18,
+        opacity: 0.5,
         color: 'white',
     },
     iconContainer: {

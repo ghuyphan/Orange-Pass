@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import React, { useMemo } from 'react';
-import { StyleSheet, View, TouchableHighlight, StyleProp, ViewStyle, ActivityIndicator, TouchableWithoutFeedback, Pressable } from 'react-native';
+import { StyleSheet, Platform, StyleProp, ViewStyle, ActivityIndicator, TouchableWithoutFeedback, Pressable } from 'react-native';
 import { ThemedText } from '../ThemedText';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -65,6 +65,7 @@ export function ThemedButton({
         {
             backgroundColor: colorScheme === 'light' ? Colors.light.buttonBackground : Colors.dark.buttonBackground,
             opacity: disabled || loading ? 0.7 : 1,
+            borderRadius: Platform.OS === 'ios' ? 10 : 50,
         },
         styles.touchable,
     ]), [colorScheme, disabled, loading, style]);
@@ -101,7 +102,6 @@ export function ThemedButton({
 
 const styles = StyleSheet.create({
     touchable: {
-        borderRadius: 50,
         padding: 10,
         alignItems: 'center',
         justifyContent: 'center',

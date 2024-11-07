@@ -43,7 +43,7 @@ export default function CreateQRScreen() {
     return (
             <ThemedView style={styles.mainContainer}>
                 <View style={styles.headerWrapper}>
-                    <ThemedButton onPress={router.back} iconName="chevron-back-outline" />
+                    <ThemedButton onPress={router.back} iconName="chevron-back" />
                 </View>
                 <ThemedVietQRCard
                     style={styles.pinnedCardWrapper}
@@ -53,7 +53,7 @@ export default function CreateQRScreen() {
                     metadata={metadata.toString()}
                     accountName={item.account_name}
                     accountNumber={item.account_number}
-                    amount={amount}
+                    // amount={amount}
                 />
             </ThemedView>
     );
@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginBottom: 40,
+        marginBottom: 30,
     },
     pinnedCardWrapper: {
         marginTop: 20,

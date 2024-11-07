@@ -83,8 +83,8 @@ const ThemedBottomSheet = React.memo(forwardRef<BottomSheet, ThemedBottomSheetPr
                                 style={styles.buttonContainer}
                                 android_ripple={{color: rippleColor, foreground: true, borderless: false }}
                             >
-                                    <Ionicons name="create-outline" size={20} color={iconColor} />
-                                    <ThemedText type='defaultSemiBold' style={styles.buttonText}>{editText}</ThemedText>
+                                    <Ionicons name="create" size={18} color={iconColor} />
+                                    <ThemedText style={styles.buttonText}>{editText}</ThemedText>
                             </Pressable>
                             <Pressable
                                 // underlayColor={underlayColor}
@@ -93,8 +93,8 @@ const ThemedBottomSheet = React.memo(forwardRef<BottomSheet, ThemedBottomSheetPr
                                 android_ripple={{ color: rippleColor, foreground: true, borderless: false }}
                             >
 
-                                    <Ionicons name="trash-outline" size={20} color={iconColor} />
-                                    <ThemedText type='defaultSemiBold' style={styles.buttonText}>{deleteText}</ThemedText>
+                                    <Ionicons name="trash" size={18} color={iconColor} />
+                                    <ThemedText style={styles.buttonText}>{deleteText}</ThemedText>
                             </Pressable>
                         </View>
                     </BottomSheetScrollView>
@@ -131,21 +131,21 @@ const styles = StyleSheet.create({
         flexDirection: 'column',
         marginBottom: 15,
         borderRadius: 10,
-        
+        gap: 5
     },
     touchableHighlight: {
         borderRadius: 10, // Ensures the highlight covers the entire button, including rounded corners
-        marginVertical: 5, // Adds spacing between buttons
+        // marginVertical: 5, // Adds spacing between buttons
     },
     buttonContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 10,
         paddingVertical: 10,
-        paddingHorizontal: 15,
+        paddingHorizontal: 25,
         overflow: 'hidden',
         // borderRadius: 10,
-        marginVertical: 5,
+        // marginVertical: 5,
     },
     buttonText: {
         fontSize: 16,

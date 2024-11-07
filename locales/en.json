@@ -63,7 +63,7 @@
     }
   },
   "forgotPasswordScreen": {
-    "forgotPassword": "Forgot password?",
+    "forgotPassword": "Forgot your password?",
     "email": "Email",
     "emailPlaceholder": "Enter your email",
     "sendResetLink": "Send reset link",
@@ -147,5 +147,10 @@
     "confirmLogoutTitle": "Logout?",
     "confirmLogoutMessage": "Are you sure you want to logout?",
     "confirmLogoutButton": "Logout"
+  },
+  "languageScreen": {
+    "title": "Language",
+    "english": "English",
+    "vietnamese": "Vietnamese"
   }
 }

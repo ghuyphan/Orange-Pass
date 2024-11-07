@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { StyleSheet, View, TouchableWithoutFeedback, Dimensions } from 'react-native';
+import { StyleSheet, View, TouchableWithoutFeedback, Dimensions, Pressable } from 'react-native';
 import { ThemedText } from '../ThemedText';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -27,22 +27,22 @@ export const ThemedSettingsCardItem = memo(function ThemedSettingsCardItem(props
         iconSize = 18,
     } = props;
 
-    const colorScheme = useColorScheme();
     const colors = useThemeColor({ light: Colors.light.text, dark: Colors.dark.text }, 'text');
+    const iconsColor = useThemeColor({ light: Colors.light.logoIcon, dark: Colors.dark.buttonBackground }, 'icon');
 
     return (
-        <TouchableWithoutFeedback onPress={onPress}>
+        <Pressable onPress={onPress} android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}>
             <View style={styles.settingsCardContainer}>
-                <View style={styles.leftContainer}> 
-                <Ionicons name={leftIcon} size={iconSize} color={iconColor || colors}/>
-                <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>{settingsTitle}</ThemedText>
+                <View style={styles.leftContainer}>
+                    <Ionicons name={leftIcon} size={iconSize} color={iconColor || colors} />
+                    <ThemedText style={styles.sectionTitle}>{settingsTitle}</ThemedText>
                 </View>
                 <View style={styles.rightContainer}>
                     <ThemedText style={styles.settingsText}>{settingsText}</ThemedText>
-                    <Ionicons name={rightIcon} size={iconSize} color={iconColor || colors} />
+                    <Ionicons style={{ opacity: 0.5 }} name={rightIcon} size={iconSize} color={iconColor || colors} />
                 </View>
             </View>
-        </TouchableWithoutFeedback>
+        </Pressable>
     );
 });
 
@@ -52,23 +52,35 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 15,
-        paddingVertical: 10
+        paddingVertical: 10,
+        overflow: 'hidden',
+        borderRadius: 10,
     },
     sectionTitle: {
         fontSize: 16,
     },
     settingsText: {
         fontSize: 16,
-        opacity: 0.7,
+        opacity: 0.5,
+    },
+    iconContainer: {
+        width: 30,
+        height: 30,
+        borderRadius: 50,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'white',
     },
     leftContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 10,
+        pointerEvents: 'none',
     },
     rightContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 10,
+        pointerEvents: 'none',
     }
 });

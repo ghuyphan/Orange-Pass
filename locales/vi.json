@@ -148,5 +148,10 @@
     "confirmLogoutTitle": "Đăng xuất?",
     "confirmLogoutMessage": "Bạn có chắc chắn muốn đăng xuất không?",
     "confirmLogoutButton": "Đăng xuất"
+  },
+  "languageScreen": {
+    "title": "Ngôn ngữ",
+    "english": "Tiếng Anh",
+    "vietnamese": "Tiếng Việt"
   }
 }

@@ -43,14 +43,11 @@ function SettingsScreen() {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const dispatch = useDispatch();
 
-    const color = colorScheme === 'light' ? Colors.light.text : Colors.dark.text;
     const scrollY = useSharedValue(0);
-    const isOffline = useSelector((state: RootState) => state.network.isOffline);
     const email = useSelector((state: RootState) => state.auth.user?.email ?? '-');
     const name = useSelector((state: RootState) => state.auth.user?.name ?? '-');
     const [darkMode, setDarkMode] = useMMKVBoolean('quickScan', storage);
     console.log('darkMode', darkMode);
-    const storedLocale = storage.getString("locale");
     const locale = getLocales()[0].languageCode ?? 'en';
 
     const sectionsColors = colorScheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground
@@ -141,34 +138,35 @@ function SettingsScreen() {
                 <View style={[styles.avatarContainer, { backgroundColor: sectionsColors }]}>
                     {avatarConfig &&
                         <LinearGradient
-                            colors={['#178bff', '#ff6868']}
+                            colors={['#6ac3ff', '#8a94ff', '#c87cff']}
                             start={{ x: 0, y: 0 }}
                             end={{ x: 1, y: 1 }}
                             style={styles.gradient}
                         >
-                            <Avatar size={60} {...avatarConfig} />
+
+                            <Avatar size={45} {...avatarConfig} />
                         </LinearGradient>
                     }
                     <View style={styles.userContainer}>
-                        <ThemedText numberOfLines={1} type='defaultSemiBold' style={styles.userName}>{email}</ThemedText>
-                        <ThemedText numberOfLines={1} style={styles.editProfile}>{name ? name : '-'}</ThemedText>
+                        <ThemedText numberOfLines={1} style={styles.userEmail}>{email}</ThemedText>
+                        <ThemedText numberOfLines={1} style={styles.userName}>{name ? name : '-'}</ThemedText>
                     </View>
                 </View>
 
                 <View style={[styles.sectionContainer, { backgroundColor: colorScheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground }]}>
                     <ThemedSettingsCardItem
-                        leftIcon='person-outline'
+                        leftIcon='person'
                         settingsTitle='Edit Profile'
                     // onPress={() => router.push('/settings/language')}
                     />
                     <ThemedSettingsCardItem
                         settingsTitle='Change Password'
-                        leftIcon='lock-closed-outline'
+                        leftIcon='lock-closed'
                     // onPress={() => router.push('/settings/language')}
                     />
                     <ThemedSettingsCardItem
                         settingsTitle='Change Email Address'
-                        leftIcon='mail-outline'
+                        leftIcon='mail'
                     // onPress={() => router.push('/settings/language')}
                     />
                 </View>
@@ -176,24 +174,24 @@ function SettingsScreen() {
                 <View style={[styles.sectionContainer, { backgroundColor: colorScheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground }]}>
                     <ThemedSettingsCardItem
                         settingsTitle='About Orange⁺'
-                        leftIcon='information-circle-outline'
+                        leftIcon='information-circle'
                     // onPress={() => router.push('/settings/language')}
                     />
                     <ThemedSettingsCardItem
                         settingsTitle={t('settingsScreen.language')}
                         settingsText={locale ? 'English' : 'Vietnamese'}
-                        leftIcon='language-outline'
+                        leftIcon='language'
                         onPress={() => router.push('/language')}
                     />
                     <ThemedSettingsCardItem
                         settingsTitle={t('settingsScreen.appTheme')}
                         settingsText={darkMode == undefined ? 'System' : (darkMode ? 'Dark' : 'Light')}
-                        leftIcon='contrast-outline'
+                        leftIcon='contrast'
                     // onPress={() => router.push('/settings/language')}
                     />
                 </View>
                 <ThemedButton
-                    iconName="log-out-outline"
+                    iconName="log-out"
                     label={t('settingsScreen.logout')}
                     loadingLabel='Logging out...'
                     loading={isLoading}
@@ -210,7 +208,7 @@ function SettingsScreen() {
                 title={t('settingsScreen.confirmLogoutTitle')}
                 message={t('settingsScreen.confirmLogoutMessage')}
                 isVisible={isModalVisible}
-                iconName="log-out-outline"
+                iconName="log-out"
             />
         </ThemedView>
     );
@@ -269,31 +267,32 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         paddingVertical: 10,
         paddingHorizontal: 15,
-        marginBottom: 40,
+        marginBottom: 30,
         borderRadius: 10,
-        gap: 10,
+        gap: 0,
     },
     userContainer: {
         justifyContent: 'center',
         flexDirection: 'column',
-        paddingVertical: 10,
         paddingHorizontal: 15,
         borderRadius: 10,
         gap: 5,
         maxWidth: '80%',
         overflow: 'hidden',
     },
-    userName: {
+    userEmail: {
         fontSize: 18,
     },
-    editProfile: {
-        opacity: 0.7,
+    userName: {
+        opacity: 0.5,
         fontSize: 18,
     },
     sectionContainer: {
         borderRadius: 10,
         backgroundColor: 'white',
-        marginBottom: 20,
+        marginBottom: 30,
+        gap: 5,
+        overflow: 'hidden',
     },
     settingsContainer: {
         flexDirection: 'row',

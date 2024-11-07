@@ -102,7 +102,7 @@ export default function DetailScreen() {
         triggerLightHapticFeedback();
 
         // Chuyển đổi giữa mở và đóng `transfer container` bằng cách thay đổi `height`
-        transferHeight.value = transferHeight.value === 0 ? 90 : 0; // Điều chỉnh 90 thành chiều cao mong muốn
+        transferHeight.value = transferHeight.value === 0 ? 100 : 0; // Điều chỉnh 90 thành chiều cao mong muốn
     }, [isOffline]);
 
     const transferAmount = useCallback(throttle(async () => {
@@ -180,7 +180,7 @@ export default function DetailScreen() {
         >
             <ThemedView style={styles.mainContainer}>
                 <View style={styles.headerWrapper}>
-                    <ThemedButton onPress={router.back} iconName="chevron-back-outline" />
+                    <ThemedButton onPress={router.back} iconName="chevron-back" />
                     <ThemedButton onPress={handleExpandPress} iconName="ellipsis-vertical" />
                 </View>
                 <ThemedPinnedCard
@@ -202,8 +202,8 @@ export default function DetailScreen() {
                         style={styles.actionButton}
                     >
                         {/* <View style={styles.actionButton}> */}
-                        <Ionicons name="location-outline" size={20} color={iconColor} />
-                        <ThemedText style={styles.labelText} type="defaultSemiBold">
+                        <Ionicons name="location" size={18} color={iconColor} />
+                        <ThemedText style={styles.labelText}>
                             {t('detailsScreen.nearbyLocation')}
                         </ThemedText>
                         {/* </View> */}
@@ -216,12 +216,12 @@ export default function DetailScreen() {
                                 android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
                             >
                                 <View style={styles.actionButton}>
-                                    <Ionicons name="qr-code-outline" size={20} color={iconColor} />
-                                    <ThemedText style={styles.labelText} type="defaultSemiBold">
+                                    <Ionicons color={iconColor} name="qr-code" size={18} color={iconColor} />
+                                    <ThemedText style={styles.labelText}>
                                         {t('detailsScreen.createQrCode')}
                                     </ThemedText>
                                     {isOffline && (
-                                        <Ionicons name="cloud-offline-outline" size={20} color={iconColor} />
+                                        <Ionicons name="cloud-offline" size={18} color={iconColor} />
                                     )}
                                 </View>
                             </Pressable>
@@ -237,12 +237,13 @@ export default function DetailScreen() {
                                         onChangeText={(text) => setAmount(formatAmount(text))}
                                     />
                                     <Pressable onPress={transferAmount} style={[styles.transferButton, { opacity: amount ? 1 : 0.3 }]}>
-                                        <Ionicons name="chevron-forward-outline" size={18} color={iconColor} />
+                                        <Ionicons name="chevron-forward" size={18} color={iconColor} />
                                     </Pressable>
                                 </View>
                                 <FlatList
                                     data={amountSuggestions}
                                     horizontal
+                                    style={styles.suggestionList}
                                     showsHorizontalScrollIndicator={false}
                                     keyExtractor={(item) => item}
                                     contentContainerStyle={styles.suggestionListContent}
@@ -286,16 +287,14 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginBottom: 20,
+        marginBottom: 30,
     },
     pinnedCardWrapper: {
-        marginTop: 20,
         marginBottom: 30,
     },
     cardWrapper: {
         padding: 15,
         borderRadius: 12,
-        marginBottom: 10,
     },
     storeDetails: {
         flexDirection: 'row',
@@ -311,11 +310,10 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
     },
     infoWrapper: {
-        marginTop: 30,
         borderRadius: 10,
         gap: 5,
         overflow: 'hidden',
-        paddingVertical: 10,
+        // paddingVertical: 10,
     },
     actionButton: {
         flexDirection: 'row',
@@ -323,7 +321,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: 15,
         paddingVertical: 10,
         gap: 10,
-        padding: 5,
         borderRadius: 10,
         overflow: 'hidden'
     },
@@ -355,15 +352,20 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         paddingVertical: 10,
     },
+    suggestionList: {
+
+    },
     suggestionListContent: {
         gap: 10,
         paddingHorizontal: 15,
+        paddingBottom: 10,  
     },
     suggestionItem: {
         paddingHorizontal: 15,
         paddingVertical: 5,
         borderRadius: 10,
         overflow: 'hidden',
+        
     },
     suggestionText: {
         fontSize: 16,

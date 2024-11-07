@@ -172,16 +172,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 15,
+    paddingTop: 10,
     paddingHorizontal: 15,
   },
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     pointerEvents: 'none',
+    gap: 10,
   },
   dragIconContainer: {
-    paddingRight: 10,
+    pointerEvents: 'none'
   },
   leftHeaderContainer: {
     flexDirection: 'row',
@@ -219,7 +220,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   qrContainer: {
-    paddingVertical: 10,
+    paddingVertical: 15,
     paddingHorizontal: 15,
     alignItems: 'flex-end',
     pointerEvents: 'none',

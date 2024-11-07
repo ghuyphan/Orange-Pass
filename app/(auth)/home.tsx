@@ -255,17 +255,19 @@ function HomeScreen() {
     router.push('/empty');
   }, []);
 
-  const onNavigateToDetailScreen = useRef(throttle((item: QRRecord) => {
-    router.push({
-      pathname: `/detail`,
-      params: {
-        id: item.id,
-        item: encodeURIComponent(JSON.stringify(item))
-      },
-    });
-  }, 1000)).current;
-
-
+  const onNavigateToDetailScreen = useCallback(
+    throttle((item: QRRecord) => {
+      router.push({
+        pathname: `/detail`,
+        params: {
+          id: item.id,
+          item: encodeURIComponent(JSON.stringify(item))
+        },
+      });
+    }, 1000),
+    [] // Empty dependencies if item structure is stable; adjust if props change frequently
+  );
+  
   const onNavigateToScanScreen = useCallback(() => {
     router.push('/(scan)/scan-main');
   }, []);
@@ -405,12 +407,12 @@ function HomeScreen() {
           <ThemedText style={styles.titleText} type="title">{t('homeScreen.title')}</ThemedText>
           <View style={styles.titleButtonContainer}>
             <ThemedButton
-              iconName="scan-outline"
+              iconName="scan"
               style={styles.titleButton}
               onPress={onNavigateToScanScreen}
             />
             <ThemedButton
-              iconName="settings-outline"
+              iconName="settings"
               style={styles.titleButton}
               onPress={onNavigateToSettingsScreen} />
           </View>
@@ -516,7 +518,7 @@ function HomeScreen() {
         title={t('homeScreen.confirmDeleteTitle')}
         message={t('homeScreen.confirmDeleteMessage')}
         isVisible={isModalVisible}
-        iconName="trash-outline"
+        iconName="trash"
       />
     </ThemedView>
   );
