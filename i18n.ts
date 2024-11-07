@@ -13,40 +13,36 @@ const i18n = new I18n({
 
 i18n.enableFallback = true;
 
-const updateLocale = () => {
+/** 
+ * Cập nhật `locale` từ `MMKV` hoặc lấy từ hệ thống nếu không có trong `MMKV`
+ */
+const initializeLocale = () => {
     const storedLocale = storage.getString("locale");
     if (storedLocale) {
         i18n.locale = storedLocale;
     } else {
+        // Dùng ngôn ngữ hệ thống mặc định
         const systemLocale = getLocales()[0].languageCode ?? 'en';
         i18n.locale = Platform.OS !== 'web' ? systemLocale : 'en';
-        if (Platform.OS === 'web') storage.set('locale', 'en');
     }
 };
 
-// Initial setup for locale
-updateLocale();
+// Khởi tạo `locale`
+initializeLocale();
 
-/** i18n for translation */
+/** Hàm dịch */
 export const t = (key: string) => i18n.t(key);
 
-/** Function to change locale manually */
-export const changeLocale = (newLocale: string) => {
-    i18n.locale = newLocale;
-    storage.set('locale', newLocale);
-    i18n.onChange(() => {
-        // Lắng nghe sự kiện thay đổi trong ứng dụng
-    });
-};
-
-// Listen for app state changes to re-check locale
-AppState.addEventListener("change", (nextAppState) => {
-    if (nextAppState === "active") {
-        const systemLocale = getLocales()[0].languageCode ?? 'en';
-        if (!storage.getString("locale") && i18n.locale !== systemLocale) {
-            i18n.locale = systemLocale;
-        }
+/** Hàm để thay đổi `locale` thủ công */
+export const changeLocale = (newLocale?: string) => {
+    if (newLocale) {
+        i18n.locale = newLocale;
+        storage.set('locale', newLocale); // Lưu vào `MMKV` khi chọn ngôn ngữ
+    } else {
+        // Khi chọn ngôn ngữ hệ thống, xóa `locale` khỏi `MMKV`
+        storage.delete('locale');
+        i18n.locale = getLocales()[0].languageCode ?? 'en'; // Lấy lại ngôn ngữ hệ thống
     }
-});
+};
 
 export { i18n };

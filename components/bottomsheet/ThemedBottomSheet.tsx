@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
     },
     contentContainer: {
         flexDirection: 'column',
-        marginBottom: 15,
+        // marginBottom: 15,
         borderRadius: 10,
         gap: 5
     },

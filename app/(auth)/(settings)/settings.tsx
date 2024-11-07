@@ -39,7 +39,7 @@ import { ActivityIndicator } from 'react-native-paper';
 
 
 function SettingsScreen() {
-    const { updateLocale } = useLocale();
+    const { locale, updateLocale } = useLocale();
 
     const [avatarConfig, setAvatarConfig] = useState<{ [key: string]: any } | null>(null);
 
@@ -60,12 +60,10 @@ function SettingsScreen() {
             }
         }, 500); // Trì hoãn 100ms hoặc giá trị phù hợp
     };
-
-    // Gọi hàm này khi render
-    loadAvatarConfig();
-
-    // Gọi hàm trước khi render thành phần
-    // const avatarConfig = loadAvatarConfig();
+    
+    useEffect(() => {
+        loadAvatarConfig();
+    }, []);
 
     // const [avatarConfig, setAvatarConfig] = useState<{ [key: string]: any } | null>(null);
     const colorScheme = useColorScheme();
@@ -77,7 +75,7 @@ function SettingsScreen() {
     const email = useSelector((state: RootState) => state.auth.user?.email ?? '-');
     const name = useSelector((state: RootState) => state.auth.user?.name ?? '-');
     const [darkMode, setDarkMode] = useMMKVBoolean('quickScan', storage);
-    const [locale, setLocale] = useMMKVString('locale', storage);
+    // const [locale, setLocale] = useMMKVString('locale', storage);
 
     const sectionsColors = colorScheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground
 

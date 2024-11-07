@@ -3,8 +3,8 @@ import { i18n, changeLocale } from '@/i18n';
 import { storage } from '@/utils/storage';
 
 interface LocaleContextProps {
-    locale: string;
-    updateLocale: (newLocale: string) => void;
+    locale: string | undefined;
+    updateLocale: (newLocale?: string) => void;
 }
 
 const LocaleContext = createContext<LocaleContextProps | undefined>(undefined);
@@ -14,19 +14,24 @@ interface LocaleProviderProps {
 }
 
 export const LocaleProvider: React.FC<LocaleProviderProps> = ({ children }) => {
-    // Initialize locale from MMKV only once when provider mounts
+    // Lấy `locale` từ MMKV khi ứng dụng khởi động, nếu không có thì mặc định theo hệ thống
     const initialLocale = storage.getString('locale') || i18n.locale;
-    const [locale, setLocale] = useState(initialLocale);
+    const [locale, setLocale] = useState<string | undefined>(initialLocale);
 
-    const updateLocale = useCallback((newLocale: string) => {
-        if (newLocale !== locale) { // Only update if different
-            setLocale(newLocale); // Update local state
-            storage.set('locale', newLocale); // Save to MMKV
+    const updateLocale = useCallback((newLocale?: string) => {
+        if (newLocale) {
+            setLocale(newLocale);
+            storage.set('locale', newLocale); // Lưu vào MMKV nếu có `newLocale`
+        } else {
+            setLocale(undefined); // Xóa `locale` trong state
+            storage.delete('locale'); // Xóa khỏi MMKV để dùng ngôn ngữ hệ thống
         }
-    }, [locale]);
+    }, []);
 
     useEffect(() => {
-        changeLocale(locale); // Update i18n only when locale changes
+        // Nếu `locale` là undefined, dùng ngôn ngữ hệ thống
+        const effectiveLocale = locale || i18n.locale;
+        changeLocale(effectiveLocale);
     }, [locale]);
 
     const contextValue = useMemo(() => ({ locale, updateLocale }), [locale, updateLocale]);

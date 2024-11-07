@@ -27,13 +27,10 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Localization from 'expo-localization';
 
 const LanguageScreen: React.FC = () => {
-    const systemLocale = Localization.getLocales()[0].languageCode ?? 'en';
     const colors = useThemeColor({ light: Colors.light.text, dark: Colors.dark.text }, 'text');
     const colorScheme = useColorScheme();
-    const [locale, setLocale] = useMMKVString('locale', storage);
+    const { locale, updateLocale } = useLocale();
     const scrollY = useSharedValue(0);
-    
-    const { updateLocale } = useLocale();
 
     // Màu nền chỉ được tính toán lại khi `colorScheme` thay đổi
     const sectionsColors = useMemo(() => (
@@ -64,12 +61,12 @@ const LanguageScreen: React.FC = () => {
     }, []);
 
     const handleLanguageChange = useCallback((newLocale: string) => {
-        updateLocale(newLocale); // Chỉ gọi `updateLocale`, không cần set trực tiếp vào MMKV
+        updateLocale(newLocale);
     }, [updateLocale]);
     
     const handleSystemLocale = useCallback(() => {
-        updateLocale(systemLocale); // Tương tự, chỉ cập nhật qua context
-    }, [updateLocale, systemLocale]);
+        updateLocale(); 
+    }, [updateLocale]);
     
     return (
         <ThemedView style={styles.container}>

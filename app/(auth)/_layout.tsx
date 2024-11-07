@@ -21,7 +21,7 @@ export default function HomeLayout() {
           animationTypeForReplace: 'push',
         }}
       >
-        <Stack.Screen name="home"/>
+        <Stack.Screen name="home" options={{ animation: 'none'}}/>
         <Stack.Screen name="explore" />
         <Stack.Screen name="(add)" />
         <Stack.Screen name="(detail)" />
