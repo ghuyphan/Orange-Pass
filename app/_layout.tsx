@@ -1,10 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Image, StyleSheet, UIManager, Platform, Dimensions, ActivityIndicator, StatusBar } from 'react-native';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack, useRouter } from 'expo-router';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
-import 'react-native-reanimated';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { checkInitialAuth } from '@/services/auth';
 import { checkOfflineStatus } from '@/services/network';
@@ -17,14 +16,14 @@ import { createTable } from '@/services/localDB/userDB';
 import { storage } from '@/utils/storage';
 import { useMMKVBoolean } from 'react-native-mmkv';
 import { ThemedView } from '@/components/ThemedView';
-import { LocaleProvider } from '@/context/LocaleContext'; // Import LocaleProvider
+import { LocaleProvider } from '@/context/LocaleContext';
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const systemColorScheme = useColorScheme();  // Use system color scheme
-  const [dark, setDark] = useMMKVBoolean('dark-mode', storage);
-  // const [seenOnboard] = useMMKVBoolean('hasSeenOnboarding', storage);
+  const systemColorScheme = useColorScheme();
+  const [darkMode, setDarkMode] = useState<boolean | null>(null);
+  const [themeLoaded, setThemeLoaded] = useState(false);
   const [fontsLoaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
@@ -35,53 +34,56 @@ export default function RootLayout() {
   const router = useRouter();
 
   if (Platform.OS === 'android') {
-    UIManager.setLayoutAnimationEnabledExperimental &&
-      UIManager.setLayoutAnimationEnabledExperimental(true);
+    UIManager.setLayoutAnimationEnabledExperimental?.(true);
   }
+
+  // Load theme from MMKV storage
+  useEffect(() => {
+    const loadTheme = async () => {
+      const savedTheme = storage.getBoolean('dark-mode');
+      setDarkMode(savedTheme !== undefined ? savedTheme : null);
+      setThemeLoaded(true);
+    };
+    loadTheme();
+  }, []);
+
+  useEffect(() => {
+    console.log('Dark mode:', darkMode);
+  }, [darkMode]);
 
   useEffect(() => {
     const prepareApp = async () => {
       try {
         await createTable();
-  
-        // Check onboarding status first
-        let onboardingStatus = storage.getBoolean('hasSeenOnboarding');
-        if (onboardingStatus === undefined) {
-          onboardingStatus = false; // Default to false if undefined (user hasn't seen onboarding)
-        }
+
+        const onboardingStatus = storage.getBoolean('hasSeenOnboarding') ?? false;
         setHasSeenOnboarding(onboardingStatus);
-  
-        // If onboarding has been seen, check auth status
+
         if (onboardingStatus) {
           const authStatus = await checkInitialAuth();
           setIsAuthenticated(authStatus);
         } else {
-          // Skip auth check if onboarding hasn't been seen
           setIsAuthenticated(false);
         }
-  
-        // Only hide the splash screen after all initialization is done
+
         if (fontsLoaded) {
           setIsAppReady(true);
         }
       } catch (error) {
         console.error("Error during app initialization:", error);
       } finally {
-        // Hide the splash screen after setting the app as ready
         await SplashScreen.hideAsync();
       }
     };
-  
+
     if (fontsLoaded) {
       prepareApp();
     }
-  
+
     const unsubscribe = checkOfflineStatus();
-    return () => {
-      unsubscribe();
-    };
+    return () => unsubscribe();
   }, [fontsLoaded]);
-  
+
   useEffect(() => {
     if (isAppReady && hasSeenOnboarding !== null && isAuthenticated !== null) {
       if (!hasSeenOnboarding) {
@@ -94,12 +96,27 @@ export default function RootLayout() {
     }
   }, [isAppReady, hasSeenOnboarding, isAuthenticated]);
 
-  // Delay rendering the stack until the app is ready and status checks are done
+  // Memoize the current theme
+  const currentTheme = useMemo(() => {
+    if (darkMode !== null) {
+      return darkMode ? DarkTheme : DefaultTheme;
+    }
+    return systemColorScheme === 'dark' ? DarkTheme : DefaultTheme;
+  }, [darkMode, systemColorScheme]);
+
+  if (!themeLoaded) {
+    return (
+      <ThemedView style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color='#8FCB8F' />
+      </ThemedView>
+    );
+  }
+
   if (!isAppReady || isAuthenticated === null || hasSeenOnboarding === null) {
     return (
       <ThemedView style={styles.loadingContainer}>
         <Image resizeMode='contain' source={require('@/assets/images/orange-icon.png')} style={styles.orangeLogo} />
-        <ActivityIndicator style={styles.activityIndicator} size="small" color='##8FCB8F' />
+        <ActivityIndicator style={styles.activityIndicator} size="small" color='#8FCB8F' />
       </ThemedView>
     );
   }
@@ -108,25 +125,23 @@ export default function RootLayout() {
     <Provider store={store}>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <PaperProvider>
-        <LocaleProvider>
-          <ThemeProvider
-            value={
-              dark !== undefined ?
-                (dark ? DarkTheme : DefaultTheme) :
-                (systemColorScheme === 'dark' ? DarkTheme : DefaultTheme)
-            }
-          >
-            <ThemedView style={{ flex: 1 }}>
-              <StatusBar barStyle={dark !== undefined ? (dark ? 'light-content' : 'dark-content') : systemColorScheme === 'dark' ? 'light-content' : 'dark-content'}/>
-              <Stack screenOptions={{ headerShown: false, animation: 'ios'}}>
-                <Stack.Screen name="(public)" />
-                <Stack.Screen name="(auth)" />
-                <Stack.Screen name="+not-found" />
-                <Stack.Screen name="onboard" options={{ animation: 'none' }} />
-              </Stack>
-            </ThemedView>
-          </ThemeProvider>
-        </LocaleProvider>
+          <LocaleProvider>
+            <ThemeProvider value={currentTheme}>
+              <ThemedView style={{ flex: 1 }}>
+                <StatusBar
+                  barStyle={darkMode !== null
+                    ? (darkMode ? 'light-content' : 'dark-content')
+                    : (systemColorScheme === 'dark' ? 'light-content' : 'dark-content')}
+                />
+                <Stack screenOptions={{ headerShown: false, animation: 'ios' }}>
+                  <Stack.Screen name="(public)" />
+                  <Stack.Screen name="(auth)" />
+                  <Stack.Screen name="+not-found" />
+                  <Stack.Screen name="onboard" options={{ animation: 'none' }} />
+                </Stack>
+              </ThemedView>
+            </ThemeProvider>
+          </LocaleProvider>
         </PaperProvider>
       </GestureHandlerRootView>
     </Provider>
@@ -138,21 +153,15 @@ const { width, height } = Dimensions.get('window');
 const styles = StyleSheet.create({
   loadingContainer: {
     flex: 1,
-    flexDirection: 'column',
     justifyContent: 'center',
     alignItems: 'center',
   },
   orangeLogo: {
-    justifyContent: 'center',
-    alignItems: 'center',
     height: height * 0.15,
     width: width * 0.28,
-    // aspectRatio: 1,
   },
   activityIndicator: {
     position: 'absolute',
     bottom: 85,
-    left: 0,
-    right: 0,
   },
 });

@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useEffect, useState } from 'react';
 import { StyleSheet, View, Platform, useColorScheme, Pressable, Appearance } from 'react-native';
 import { BlurView } from 'expo-blur';
 import Animated, {
@@ -21,23 +21,37 @@ import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
 
 import { useLocale } from '@/context/LocaleContext';
 import { Ionicons } from '@expo/vector-icons';
-import { useMMKVBoolean, useMMKVString } from 'react-native-mmkv';
+import { useMMKVBoolean } from 'react-native-mmkv';
 import { storage } from '@/utils/storage';
 import DARK from '@/assets/svgs/dark.svg';
 import LIGHT from '@/assets/svgs/light.svg';
 
 const ThemeScreen: React.FC = () => {
     const colors = useThemeColor({ light: Colors.light.text, dark: Colors.dark.text }, 'text');
-    const colorScheme = useColorScheme();
+    const systemColorScheme = useColorScheme();
     const { updateLocale } = useLocale();
+
     const [dark, setDark] = useMMKVBoolean('dark-mode', storage);
-    console.log('dark', dark);
+    const [currentTheme, setCurrentTheme] = useState(
+        dark !== undefined ? (dark ? 'dark' : 'light') : 'system'
+    );
+
     const scrollY = useSharedValue(0);
 
-    // Màu nền chỉ được tính toán lại khi `colorScheme` thay đổi
-    const sectionsColors = useMemo(() => (
-        colorScheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground
-    ), [colorScheme]);
+    const sectionsColors = useMemo(() => {
+        if (currentTheme === 'dark' || (currentTheme === 'system' && systemColorScheme === 'dark')) {
+            return Colors.dark.cardBackground;
+        }
+        return Colors.light.cardBackground;
+    }, [currentTheme, systemColorScheme]);
+
+    useEffect(() => {
+        if (currentTheme === 'dark') {
+            Appearance.setColorScheme('dark');
+        } else if (currentTheme === 'light') {
+            Appearance.setColorScheme('light');
+        }
+    }, [currentTheme]);
 
     const scrollHandler = useAnimatedScrollHandler({
         onScroll: (event) => {
@@ -62,20 +76,16 @@ const ThemeScreen: React.FC = () => {
         router.back();
     }, []);
 
-
-    const handleSystemLocale = useCallback(() => {
-        updateLocale(undefined);
-    }, [updateLocale]);
-
-    const handleThemeChange = useCallback(async () => {
-        setDark(!dark);
-
-        if (dark) {
-            Appearance.setColorScheme('light');
+    const handleThemeChange = useCallback((theme: string) => {
+        setCurrentTheme(theme);
+        if (theme === 'dark') {
+            setDark(true);
+        } else if (theme === 'light') {
+            setDark(false);
         } else {
-            Appearance.setColorScheme('dark');
+            setDark(undefined);
         }
-    }, []);
+    }, [setDark]);
 
     return (
         <ThemedView style={styles.container}>
@@ -84,87 +94,78 @@ const ThemeScreen: React.FC = () => {
             ) : (
                 <BlurView intensity={10} style={styles.blurContainer} />
             )}
-            <Animated.View style={[styles.titleContainer, titleContainerStyle]} pointerEvents="auto">
+            <Animated.View style={[styles.titleContainer, titleContainerStyle]}>
                 <View style={styles.headerContainer}>
-                    <View style={styles.titleButtonContainer}>
-                        <ThemedButton
-                            iconName="chevron-back"
-                            style={styles.titleButton}
-                            onPress={onNavigateBack}
-                        />
-                    </View>
-                    <ThemedText style={styles.title} type="title">{t('themeScreen.title')}</ThemedText>
+                    <ThemedButton
+                        iconName="chevron-back"
+                        style={styles.titleButton}
+                        onPress={onNavigateBack}
+                    />
+                    <ThemedText type='title' style={styles.title}>{t('themeScreen.title')}</ThemedText>
                 </View>
             </Animated.View>
+
             <Animated.ScrollView style={styles.scrollContainer} onScroll={scrollHandler}>
                 <View style={[styles.descriptionContainer, { backgroundColor: sectionsColors }]}>
                     <View style={styles.descriptionItem}>
                         <LIGHT width={120} height={120} />
-                        <ThemedText style={styles.descriptionText}>{t('themeScreen.light')}</ThemedText>
+                        <ThemedText>{t('themeScreen.light')}</ThemedText>
                     </View>
                     <View style={styles.descriptionItem}>
                         <DARK width={120} height={120} />
-                        <ThemedText style={styles.descriptionText}>{t('themeScreen.dark')}</ThemedText>
+                        <ThemedText>{t('themeScreen.dark')}</ThemedText>
                     </View>
                 </View>
 
                 <View style={[styles.sectionContainer, { backgroundColor: sectionsColors }]}>
                     <Pressable
                         android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
-                        onPress={handleSystemLocale}
+                        onPress={() => handleThemeChange('light')}
                     >
                         <View style={styles.section}>
                             <View style={styles.leftSectionContainer}>
-                                <View style={[
+                            <View style={[
                                     styles.iconContainer,
-                                    colorScheme === 'dark' ? { backgroundColor: Colors.dark.buttonBackground } : { backgroundColor: Colors.light.buttonBackground }
+                                    useColorScheme() === 'dark' ? { backgroundColor: Colors.dark.buttonBackground } : { backgroundColor: Colors.light.buttonBackground }
                                 ]}>
-                                    <Ionicons name="sunny" size={20} color={colors} />
-                                </View>
+                                <Ionicons name="sunny" size={20} color={colors} />
+                            </View>
                                 <ThemedText>{t('themeScreen.light')}</ThemedText>
                             </View>
-                            {dark === false && (
-                                <Ionicons name="checkmark" size={20} color={colors} />
-                            )}
+                            {currentTheme === 'light' && <Ionicons name="checkmark" size={20} color={Colors.light.text} />}
                         </View>
                     </Pressable>
 
                     <Pressable
                         android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
-                        onPress={handleThemeChange}
+                        onPress={() => handleThemeChange('dark')}
                     >
                         <View style={styles.section}>
                             <View style={styles.leftSectionContainer}>
-                                <View style={[
+                            <View style={[
                                     styles.iconContainer,
-                                    colorScheme === 'dark' ? { backgroundColor: Colors.dark.buttonBackground } : { backgroundColor: Colors.light.buttonBackground }
+                                    useColorScheme() === 'dark' ? { backgroundColor: Colors.dark.buttonBackground } : { backgroundColor: Colors.light.buttonBackground }
                                 ]}>
-                                    <Ionicons name="moon" size={20} color={colors} />
-                                </View>
+                                <Ionicons name="moon" size={20} color={colors} />
+                            </View>
                                 <ThemedText>{t('themeScreen.dark')}</ThemedText>
                             </View>
-                            {dark === true && (
-                                <Ionicons name="checkmark" size={20} color={colors} />
-                            )}
+                            {currentTheme === 'dark' && <Ionicons name="checkmark" size={20} color={Colors.dark.text} />}
                         </View>
                     </Pressable>
-                    <Pressable
-                        android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
-                        onPress={handleSystemLocale}
-                    >
+
+                    <Pressable onPress={() => handleThemeChange('system')}>
                         <View style={styles.section}>
                             <View style={styles.leftSectionContainer}>
-                                <View style={[
+                            <View style={[
                                     styles.iconContainer,
-                                    colorScheme === 'dark' ? { backgroundColor: Colors.dark.buttonBackground } : { backgroundColor: Colors.light.buttonBackground }
+                                    useColorScheme() === 'dark' ? { backgroundColor: Colors.dark.buttonBackground } : { backgroundColor: Colors.light.buttonBackground }
                                 ]}>
-                                    <Ionicons name="cog" size={20} color={colors} />
-                                </View>
+                                <Ionicons name="cog" size={20} color={colors} />
+                            </View>
                                 <ThemedText>{t('themeScreen.system')}</ThemedText>
                             </View>
-                            {dark === undefined && (
-                                <Ionicons name="checkmark" size={20} color={colors} />
-                            )}
+                            {currentTheme === 'system' && <Ionicons name="checkmark" size={20} color={colors} />}
                         </View>
                     </Pressable>
                 </View>
@@ -225,14 +226,14 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 30,
     },
-    descriptionItem:{
+    descriptionItem: {
         alignItems: 'center',
         justifyContent: 'center',
         gap: 10,
         flexDirection: 'column',
 
     },
-    descriptionText:{ 
+    descriptionText: {
         fontSize: 14,
     },
     sectionContainer: {

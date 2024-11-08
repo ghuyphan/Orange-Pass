@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { StyleSheet, View, Platform, FlatList, RefreshControl } from 'react-native';
+import { StyleSheet, View, Platform, FlatList } from 'react-native';
 import { useSelector } from 'react-redux';
 import Animated, {
   useAnimatedStyle,
@@ -40,7 +40,6 @@ import { triggerHapticFeedback } from '@/utils/haptic';
 import { useLocale } from '@/context/LocaleContext';
 import { useMMKVString } from 'react-native-mmkv';
 import { storage } from '@/utils/storage';
-
 import {
   createTable,
   getQrCodesByUserId,
@@ -112,6 +111,28 @@ function HomeScreen() {
     }
   }, []); // Removed isOffline from dependencies
 
+  const fetchServerData = async (userId: string) => {
+    try {
+      const [serverData, locallyDeletedData] = await Promise.all([
+        fetchQrData(userId, 1, 30),
+        getLocallyDeletedQrCodes(userId),
+      ]);
+
+      // Lọc dữ liệu từ server dựa trên danh sách đã xóa cục bộ
+      return serverData.items.filter(
+        item => !locallyDeletedData.some(deletedItem => deletedItem.id === item.id)
+      );
+    } catch (error) {
+      console.error('Error fetching server data:', error);
+      throw error;
+    }
+  };
+
+  const fetchLocalData = async (userId: string) => {
+    const localData = await getQrCodesByUserId(userId);
+    setQrData(localData);
+    setIsEmpty(localData.length === 0);
+  };
   const fetchData = useCallback(
     throttle(async () => {
       if (!userId) return;
@@ -119,40 +140,19 @@ function HomeScreen() {
       setIsLoading(true);
 
       try {
-        // Fetch local data immediately
-        const localData = await getQrCodesByUserId(userId);
-        setQrData(localData);
+        // Bước 1: Fetch dữ liệu local
+        await fetchLocalData(userId);
 
-        // Update empty state and animation conditionally
-        const isLocalDataEmpty = localData.length === 0;
-        if (isEmpty !== isLocalDataEmpty) {
-          setIsEmpty(isLocalDataEmpty);
-          if (isLocalDataEmpty) animateEmptyCard();
-        }
+        // Bước 2: Chỉ đồng bộ và fetch dữ liệu từ server nếu đang online
+        if (!isOffline) {
+          await syncWithServer(userId);
+          const serverData = await fetchServerData(userId);
 
-        // Skip server sync if offline
-        if (isOffline) return;
-
-        // Sync with server if online
-        await syncWithServer(userId);
-
-        // Fetch server data
-        const [serverData, locallyDeletedData] = await Promise.all([
-          fetchQrData(userId, 1, 30),
-          getLocallyDeletedQrCodes(userId),
-        ]);
-
-        // Filter and update data as needed
-        const filteredServerData = serverData.items.filter(
-          item => !locallyDeletedData.some(deletedItem => deletedItem.id === item.id)
-        );
-
-        // Merge only if new data exists
-        if (filteredServerData.length > 0) {
-          await insertOrUpdateQrCodes(filteredServerData);
-          const updatedLocalData = await getQrCodesByUserId(userId);
-          setQrData(updatedLocalData);
-          setIsEmpty(updatedLocalData.length === 0);
+          // Bước 3: Cập nhật dữ liệu vào local database nếu có thay đổi
+          if (serverData.length > 0) {
+            await insertOrUpdateQrCodes(serverData);
+            await fetchLocalData(userId);
+          }
         }
       } catch (error) {
         console.error('Error in fetchData:', error);
@@ -160,34 +160,56 @@ function HomeScreen() {
         setIsToastVisible(true);
       } finally {
         setIsLoading(false);
-        setTimeout(() => {
-          setIsSyncing(false);
-        }, 300);
       }
-    }, 1000), // Throttle limit of 1 second
-    [userId, isEmpty]
+    }, 1000),
+    [userId, isOffline]
   );
 
-  // Animate empty card when isEmpty changes
+  // Fetch dữ liệu local khi ứng dụng khởi động
   useEffect(() => {
-    isEmptyShared.value = isEmpty ? 1 : 0;
-    if (isEmpty) {
-      animateEmptyCard();
-    }
-  }, [isEmpty]);
-
-  useEffect(() => {
-    const setupDatabase = async () => {
+    const loadLocalData = async () => {
       try {
         await createTable();
-        fetchData();
+        await fetchLocalData(userId);
+        setIsLoading(false);
       } catch (error) {
-        console.error('Error creating table:', error);
+        console.error('Error loading local data:', error);
+        setToastMessage(t('homeScreen.loadError'));
+        setIsToastVisible(true);
+      }
+    };
+    loadLocalData();
+  }, [userId]);
+
+  // Đồng bộ dữ liệu với server sau khi local data đã tải xong
+  useEffect(() => {
+    if (isOffline || !userId) return;
+
+    const syncAndFetchServerData = async () => {
+      try {
+        setIsSyncing(true);
+        await syncWithServer(userId);
+        const serverData = await fetchServerData(userId);
+
+        // Cập nhật local database nếu có dữ liệu mới từ server
+        if (serverData.length > 0) {
+          await insertOrUpdateQrCodes(serverData);
+          await fetchLocalData(userId);
+        }
+      } catch (error) {
+        console.error('Error syncing with server:', error);
+        setToastMessage(t('homeScreen.syncError'));
+        setIsToastVisible(true);
+      } finally {
+        setIsSyncing(false);
       }
     };
 
-    setupDatabase();
-  }, [fetchData]);
+    // Chỉ đồng bộ khi ứng dụng khởi động xong và đã tải dữ liệu local
+    const syncTimeout = setTimeout(syncAndFetchServerData, 2000); // Đợi 2 giây trước khi đồng bộ
+    return () => clearTimeout(syncTimeout);
+  }, [isOffline, userId]);
+
 
   useEffect(() => {
     setBottomToastMessage(t('homeScreen.offline'));
@@ -217,6 +239,14 @@ function HomeScreen() {
       filterQrCodes(userId, debouncedSearchQuery, filter).then(setQrData);
     }
   }, [userId, debouncedSearchQuery, filter]);
+  
+  // Animate empty card when isEmpty changes
+  useEffect(() => {
+    isEmptyShared.value = isEmpty ? 1 : 0;
+    if (isEmpty) {
+      animateEmptyCard();
+    }
+  }, [isEmpty]);
 
   const animateEmptyCard = () => {
     emptyCardOffset.value = withSpring(0, {
@@ -276,7 +306,7 @@ function HomeScreen() {
     }, 1000),
     [] // Empty dependencies if item structure is stable; adjust if props change frequently
   );
-  
+
   const onNavigateToScanScreen = useCallback(() => {
     router.push('/(scan)/scan-main');
   }, []);
@@ -596,7 +626,7 @@ const styles = StyleSheet.create({
     left: 15,
     right: 15,
   },
-  bottomToastContainer:{
+  bottomToastContainer: {
     position: 'absolute',
     bottom: 0,
     left: 0,

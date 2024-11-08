@@ -7,8 +7,8 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 export default function ThemedFilterSkeleton({ show = true }) {
   const colorScheme = useColorScheme();
   const colorsArray = colorScheme === 'dark'
-  ? ['#6B5A4E', '#5A3D30', '#6B5A4E', '#5A3D30', '#4F3C31']
-  : ['#D3B8A3', '#DFCABB', '#D3B8A3', '#DFCABB', '#C9B4A9'];
+  ? ['#6B5A4E', '#5D4D42', '#4F4036', '#41332A', '#33261E']
+  : ['#D3B8A3', '#DCCCBD', '#E5D0C7', '#EED4D1', '#F7E8DB'];
 
   return (
     <MotiView
@@ -21,7 +21,7 @@ export default function ThemedFilterSkeleton({ show = true }) {
       <Skeleton.Group show={show}>
         {Array.from({ length: 4 }).map((_, index) => (
           <View key={index} style={styles.filterButton}>
-            <Skeleton colors={colorsArray} width={80} height={30} radius={10} />
+            <Skeleton colors={colorsArray} width={90} height={30} radius={10} />
           </View>
         ))}
       </Skeleton.Group>
@@ -32,10 +32,9 @@ export default function ThemedFilterSkeleton({ show = true }) {
 const styles = StyleSheet.create({
   filterContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     marginBottom: 10,
     paddingLeft: 15,
-    gap: 10,
+    gap: 15,
   },
   filterButton: {
     // paddingVertical: 5,

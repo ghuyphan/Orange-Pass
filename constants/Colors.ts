@@ -12,7 +12,7 @@ export const Colors = {
     tabIconDefault: '#BDBDBD', // Light gray for unselected tab icons
     tabIconSelected: tintColorLight,
     error: '#E53935', // Bright red for clear error notifications
-    toastBackground: '#FFE0B2', // Light orange for toast notifications
+    toastBackground: '#E0C4B0', // Light orange for toast notifications
     buttonBackground: '#D3B8A3', // Soft orange for button backgrounds
     buttonHighlight: '#FFECB3', // Brighter to highlight on hover
     cardBackground: '#F9F2EC', // Light beige for card background
@@ -29,7 +29,7 @@ export const Colors = {
     tabIconDefault: '#757575', // Gray for unselected tab icons
     tabIconSelected: tintColorDark,
     error: '#EF5350', // Bright red for error notifications
-    toastBackground: '#4E342E', // Dark brown for toast notifications
+    toastBackground: '#7A6354', // Dark brown for toast notifications
     buttonBackground: '#6B5A4E', // Dark brown for button backgrounds
     buttonHighlight: '#8D6E63', // Brighter for hover effect
     cardBackground: '#2E2E2E', // Dark gray for card background
