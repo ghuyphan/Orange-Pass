@@ -22,7 +22,7 @@ export default function ScanLayout() {
         }}
       >
         <Stack.Screen name="settings" options={{ animation: 'none' }}/>
-        <Stack.Screen name = "language"/>
+        <Stack.Screen name = "theme"/>
       </Stack>
       {showHeader &&
         <View style={styles.headerContainer}>

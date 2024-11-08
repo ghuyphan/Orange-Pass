@@ -83,7 +83,7 @@
     "delete": "Move to trash",
     "syncing": "Syncing...",
     "deleting": "Deleting...",
-    "offline": "You are offline. Some features are unavailable.",
+    "offline": "You are offline.",
     "confirmDeleteTitle": "Move to trash?",
     "confirmDeleteMessage": "Are you sure you want to move this card to trash?",
     "cancel": "Cancel",
@@ -152,6 +152,12 @@
     "title": "Language",
     "english": "English",
     "vietnamese": "Vietnamese",
+    "system": "System"
+  },
+  "themeScreen": {
+    "title": "Appearance",
+    "light": "Light",
+    "dark": "Dark",
     "system": "System"
   }
 }

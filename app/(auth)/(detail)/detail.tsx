@@ -79,7 +79,7 @@ export default function DetailScreen() {
     }, []);
 
     const openMap = useCallback(() => {
-        triggerLightHapticFeedback();
+        // triggerLightHapticFeedback();
         if (!item || !item.type || !item.code) return;
 
         let itemName = returnItemData(item.code, item.type);
@@ -105,7 +105,7 @@ export default function DetailScreen() {
 
     const onToggleTransfer = useCallback(() => {
         if (isOffline) return;
-        triggerLightHapticFeedback();
+        // triggerLightHapticFeedback();
 
         // Chuyển đổi giữa mở và đóng `transfer container` bằng cách thay đổi `height`
         transferHeight.value = transferHeight.value === 0 ? 100 : 0; // Điều chỉnh 90 thành chiều cao mong muốn
@@ -115,7 +115,7 @@ export default function DetailScreen() {
 
         if (!item || !item.type || !item.code || !amount) return;
 
-        triggerLightHapticFeedback();
+        // triggerLightHapticFeedback();
         setIsSyncing(true);
         setIsToastVisible(true);
 
@@ -243,7 +243,8 @@ export default function DetailScreen() {
                                         onChangeText={(text) => setAmount(formatAmount(text))}
                                     />
                                     <Pressable onPress={transferAmount} style={[styles.transferButton, { opacity: amount ? 1 : 0.3 }]}>
-                                        <Ionicons name="chevron-forward" size={18} color={iconColor} />
+                                        {amount ? <Ionicons name="send" size={18} color={iconColor} /> : 
+                                        <Ionicons name="send-outline" size={18} color={iconColor} />}
                                     </Pressable>
                                 </View>
                                 <FlatList

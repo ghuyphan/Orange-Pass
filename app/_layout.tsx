@@ -43,7 +43,6 @@ export default function RootLayout() {
     const prepareApp = async () => {
       try {
         await createTable();
-        await SplashScreen.hideAsync();
 
         // Check onboarding status first
         let onboardingStatus = storage.getBoolean('hasSeenOnboarding');
@@ -61,12 +60,15 @@ export default function RootLayout() {
           setIsAuthenticated(false);
         }
 
-      } catch (error) {
-        console.error("Error during app initialization:", error);
-      } finally {
+        // Only hide the splash screen after all initialization is done
         if (fontsLoaded) {
           setIsAppReady(true);
         }
+      } catch (error) {
+        console.error("Error during app initialization:", error);
+      } finally {
+        // Hide the splash screen after setting the app as ready
+        await SplashScreen.hideAsync();
       }
     };
 
@@ -106,24 +108,22 @@ export default function RootLayout() {
     <Provider store={store}>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <PaperProvider>
-        <LocaleProvider>
-          <ThemeProvider
-            value={
-              dark !== undefined ?
-                (dark ? DarkTheme : DefaultTheme) :
-                (systemColorScheme === 'dark' ? DarkTheme : DefaultTheme)
-            }
-          >
-            <ThemedView style={{ flex: 1 }}>
-              <Stack screenOptions={{ headerShown: false, animation: 'ios'}}>
-                <Stack.Screen name="(public)" />
+          <LocaleProvider>
+            <ThemeProvider
+              value={
+                dark !== undefined ?
+                  (dark ? DarkTheme : DefaultTheme) :
+                  (systemColorScheme === 'dark' ? DarkTheme : DefaultTheme)
+              }
+            >
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="(public)" options={{ animation: 'none' }} />
                 <Stack.Screen name="(auth)" />
                 <Stack.Screen name="+not-found" />
                 <Stack.Screen name="onboard" options={{ animation: 'none' }} />
               </Stack>
-            </ThemedView>
-          </ThemeProvider>
-        </LocaleProvider>
+            </ThemeProvider>
+          </LocaleProvider>
         </PaperProvider>
       </GestureHandlerRootView>
     </Provider>

@@ -39,7 +39,8 @@ import { ActivityIndicator } from 'react-native-paper';
 
 
 function SettingsScreen() {
-    const { locale, updateLocale } = useLocale();
+    const { updateLocale } = useLocale();
+    const [locale, setLocale] = useMMKVString('locale', storage);
 
     const [avatarConfig, setAvatarConfig] = useState<{ [key: string]: any } | null>(null);
 
@@ -60,7 +61,7 @@ function SettingsScreen() {
             }
         }, 500); // Trì hoãn 100ms hoặc giá trị phù hợp
     };
-    
+
     useEffect(() => {
         loadAvatarConfig();
     }, []);
@@ -156,9 +157,9 @@ function SettingsScreen() {
                     >
                         {avatarConfig ? (
                             <Avatar size={45} {...avatarConfig} />
-                        ): (
+                        ) : (
                             <View style={styles.avatarLoadContainer}>
-                            <ActivityIndicator size={30} color="white" />
+                                <ActivityIndicator size={30} color="white" />
                             </View>
                         )}
                     </LinearGradient>
@@ -194,7 +195,7 @@ function SettingsScreen() {
                     />
                     <ThemedSettingsCardItem
                         settingsTitle={t('settingsScreen.language')}
-                        settingsText={locale == undefined ? 'System' : locale == 'en' ? 'English' : 'Vietnamese'}
+                        settingsText={locale == undefined ? 'System' : locale == 'en' ? t('languageScreen.english') : t('languageScreen.vietnamese')}
                         leftIcon='language'
                         onPress={() => router.push('/language')}
                     />
@@ -202,7 +203,7 @@ function SettingsScreen() {
                         settingsTitle={t('settingsScreen.appTheme')}
                         settingsText={darkMode == undefined ? 'System' : (darkMode ? 'Dark' : 'Light')}
                         leftIcon='contrast'
-                    // onPress={() => router.push('/settings/language')}
+                        onPress={() => router.push('/theme')}
                     />
                 </View>
                 <ThemedButton

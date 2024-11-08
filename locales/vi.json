@@ -83,7 +83,7 @@
     "delete": "Chuyển vào thùng rấc",
     "syncing": "Đang đồng bộ...",
     "deleting": "Đang xoá...",
-    "offline": "Bạn đang ngoại tuyến. Một số tính năng không khả dụng.",
+    "offline": "Bạn đang ngoại tuyến.",
     "confirmDeleteTitle": "Chuyển vào thùng rác?",
     "confirmDeleteMessage": "Bạn có chắc chắn muốn chuyển thẻ này vào thùng rác không?",
     "cancel": "Hủy",
@@ -91,7 +91,7 @@
     "fetchError": "Đã xảy ra sự cố trong quá trình lấy dữ liệu.",
     "filters": {
       "all": "Tất cả",
-      "bank": "Ngân hàng",
+      "bank": "Tài khoản ngân hàng",
       "store": "Thẻ thành viên",
       "ewallet": "Ví điện tử"
     },
@@ -153,6 +153,12 @@
     "title": "Ngôn ngữ",
     "english": "Tiếng Anh",
     "vietnamese": "Tiếng Việt",
+    "system": "Hệ thống"
+  },
+  "themeScreen": {
+    "title": "Giao diện",
+    "light": "Sáng",
+    "dark": "Tối",
     "system": "Hệ thống"
   }
 }

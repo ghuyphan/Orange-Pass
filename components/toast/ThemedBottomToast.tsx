@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect, useState } from 'react';
-import { StyleSheet, View, StyleProp, ViewStyle, TouchableHighlight, ActivityIndicator, TouchableWithoutFeedback } from 'react-native';
+import { StyleSheet, View, StyleProp, ViewStyle, TouchableHighlight, ActivityIndicator, TouchableWithoutFeedback, Platform } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Portal } from 'react-native-paper';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
@@ -7,13 +7,13 @@ import { ThemedText } from '../ThemedText';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
+import { storage } from '@/utils/storage';
+import { useMMKVString } from 'react-native-mmkv';
 
-export type ThemedStatusToastProps = {
+export type ThemedBottomToastProps = {
     lightColor?: string;
     darkColor?: string;
     iconName?: keyof typeof Ionicons.glyphMap;
-    dismissIconName?: keyof typeof Ionicons.glyphMap;
-    onDismiss?: () => void;
     message: string;
     isVisible?: boolean;
     isSyncing?: boolean; // New prop for syncing state
@@ -22,19 +22,18 @@ export type ThemedStatusToastProps = {
     onVisibilityToggle?: (isVisible: boolean) => void; // Callback to track visibility
 };
 
-export function ThemedStatusToast({
+export function ThemedBottomToast({
     lightColor,
     darkColor,
     iconName,
-    dismissIconName,
-    onDismiss,
     message,
     isVisible = false,
     isSyncing = false, // Default value for syncing state
     style = {},
     duration = 4000, // Default duration for auto-hide
     onVisibilityToggle,
-}: ThemedStatusToastProps) {
+}: ThemedBottomToastProps) {
+    const [locale, setLocale] = useMMKVString('locale', storage);
     const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
     const colorScheme = useColorScheme();
     const [isAnimationComplete, setIsAnimationComplete] = useState(false);
@@ -42,6 +41,7 @@ export function ThemedStatusToast({
     const toastStyle = useMemo(() => ([
         styles.toastContainer,
         {
+            paddingBottom: Platform.OS === 'ios' ? 20 : 0,
             backgroundColor: colorScheme === 'light' ? Colors.light.toastBackground : Colors.dark.toastBackground
         },
         style
@@ -97,7 +97,7 @@ export function ThemedStatusToast({
                     ) : (
                         <Ionicons
                             name={iconName || 'information-circle'}
-                            size={20}
+                            size={15}
                             color={color}
                         />
 
@@ -106,21 +106,6 @@ export function ThemedStatusToast({
                         {message}
                     </ThemedText>
                 </View>
-                {!isSyncing ? (
-                    <View style={styles.rightSection}>
-                        <TouchableWithoutFeedback
-                            onPress={onDismiss}
-                        >
-                            <View style={styles.iconTouchable}>
-                                <Ionicons
-                                    name={dismissIconName || 'close'}
-                                    size={20}
-                                    color={color}
-                                />
-                            </View>
-                        </TouchableWithoutFeedback>
-                    </View>
-                ) : null}
             </Animated.View>
         </Portal>
     );
@@ -128,30 +113,19 @@ export function ThemedStatusToast({
 
 const styles = StyleSheet.create({
     toastContainer: {
-        borderRadius: 10,
-        paddingVertical: 10,
-        paddingHorizontal: 15,
+        paddingTop: 5,
         flexDirection: 'row',
-        justifyContent: 'space-between',
+        justifyContent: 'center',
         alignItems: 'center',
     },
     toastTitle: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 10,
+        gap: 5,
     },
     toastText: {
-        fontSize: 14,
-        width: '80%',
+        fontSize: 12,
         overflow: 'hidden',
         
-    },
-    rightSection: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    iconTouchable: {
-        padding: 5,
-        borderRadius: 50,
     }
 });

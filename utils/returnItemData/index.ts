@@ -2,8 +2,6 @@ import enDatas from '@/assets/enDatas.json';
 import viDatas from '@/assets/viDatas.json';
 import colorConfig from '@/assets/color-config.json';
 import { getLocales } from 'expo-localization';
-import { storage } from '../storage';
-import { useMMKVString } from 'react-native-mmkv';
 
 // Define types
 type ColorConfigType = {
@@ -42,11 +40,11 @@ let searchIndex: { [type: string]: { [normalizedTerm: string]: Set<string> } } =
 
 // Initialize data and build indices
 function initializeData() {
-    const languageCode = storage.getString('locale') || getLocales()[0]?.languageCode || 'en';
-
+    const languageCode = getLocales()[0]?.languageCode;
+    
     if (languageCode !== cachedLanguageCode) {
         cachedLanguageCode = languageCode;
-        const data = languageCode === 'en' ? enDatas : viDatas;
+        const data: { [key: string]: any[] } = languageCode === 'en' ? enDatas : viDatas;
 
         cachedDataByCode = {};
         searchIndex = {};

@@ -65,7 +65,7 @@ export function ThemedButton({
         {
             backgroundColor: colorScheme === 'light' ? Colors.light.buttonBackground : Colors.dark.buttonBackground,
             opacity: disabled || loading ? 0.7 : 1,
-            borderRadius: Platform.OS === 'ios' ? 10 : 50,
+            // borderRadius: Platform.OS === 'ios' ? 10 : 50,
         },
         styles.touchable,
     ]), [colorScheme, disabled, loading, style]);
@@ -103,6 +103,7 @@ export function ThemedButton({
 const styles = StyleSheet.create({
     touchable: {
         padding: 10,
+        borderRadius: 50,
         alignItems: 'center',
         justifyContent: 'center',
         flexDirection: 'row',

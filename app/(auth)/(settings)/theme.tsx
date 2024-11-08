@@ -24,7 +24,7 @@ import { useLocale } from '@/context/LocaleContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useMMKVString } from 'react-native-mmkv';
 
-const LanguageScreen: React.FC = () => {
+const ThemeScreen: React.FC = () => {
     const colors = useThemeColor({ light: Colors.light.text, dark: Colors.dark.text }, 'text');
     const colorScheme = useColorScheme();
     const { updateLocale } = useLocale();
@@ -84,7 +84,7 @@ const LanguageScreen: React.FC = () => {
                             onPress={onNavigateBack}
                         />
                     </View>
-                    <ThemedText style={styles.title} type="title">{t('languageScreen.title')}</ThemedText>
+                    <ThemedText style={styles.title} type="title">{t('themeScreen.title')}</ThemedText>
                 </View>
             </Animated.View>
             <Animated.ScrollView style={styles.scrollContainer} onScroll={scrollHandler}>
@@ -148,7 +148,7 @@ const LanguageScreen: React.FC = () => {
     );
 }
 
-export default React.memo(LanguageScreen);
+export default React.memo(ThemeScreen);
 
 const styles = StyleSheet.create({
     container: {

@@ -1,10 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
 import { i18n, changeLocale } from '@/i18n';
-import { storage } from '@/utils/storage';
 
 interface LocaleContextProps {
     locale: string | undefined;
-    updateLocale: (newLocale?: string) => void;
+    updateLocale: (newLocale: string | undefined) => void;
 }
 
 const LocaleContext = createContext<LocaleContextProps | undefined>(undefined);
@@ -14,26 +13,24 @@ interface LocaleProviderProps {
 }
 
 export const LocaleProvider: React.FC<LocaleProviderProps> = ({ children }) => {
-    // Lấy `locale` từ MMKV khi ứng dụng khởi động, nếu không có thì mặc định theo hệ thống
-    const initialLocale = storage.getString('locale') || i18n.locale;
-    const [locale, setLocale] = useState<string | undefined>(initialLocale);
+    const [locale, setLocale] = useState<string | undefined>(i18n.locale);
 
-    const updateLocale = useCallback((newLocale?: string) => {
-        if (newLocale) {
-            setLocale(newLocale);
-            storage.set('locale', newLocale); // Lưu vào MMKV nếu có `newLocale`
-        } else {
-            setLocale(undefined); // Xóa `locale` trong state
-            storage.delete('locale'); // Xóa khỏi MMKV để dùng ngôn ngữ hệ thống
-        }
+    // useCallback to ensure updateLocale is memoized and stable
+    const updateLocale = useCallback((newLocale: string | undefined) => {
+        setLocale(newLocale); // Update locale in context
     }, []);
 
+    // Update i18n when locale changes
     useEffect(() => {
-        // Nếu `locale` là undefined, dùng ngôn ngữ hệ thống
-        const effectiveLocale = locale || i18n.locale;
-        changeLocale(effectiveLocale);
+        if (locale === undefined) {
+            // Update MMKV variable to a default or null value
+            changeLocale(undefined); // or some other default value
+        } else {
+            changeLocale(locale);
+        }
     }, [locale]);
 
+    // Memoize context value to avoid unnecessary re-renders
     const contextValue = useMemo(() => ({ locale, updateLocale }), [locale, updateLocale]);
 
     return (

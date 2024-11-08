@@ -38,6 +38,8 @@ import BottomSheet from '@gorhom/bottom-sheet';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { triggerHapticFeedback } from '@/utils/haptic';
 import { useLocale } from '@/context/LocaleContext';
+import { useMMKVString } from 'react-native-mmkv';
+import { storage } from '@/utils/storage';
 
 import {
   createTable,
@@ -49,13 +51,18 @@ import {
   updateQrIndexes,
   filterQrCodes,
 } from '@/services/localDB/qrDB';
+import { Colors } from '@/constants/Colors';
+import { ThemedBottomToast } from '@/components/toast/ThemedBottomToast';
 
 function HomeScreen() {
-  const { locale } = useLocale();
+  const { updateLocale } = useLocale();
+  const [locale, setLocale] = useMMKVString('locale', storage);
   const color = useThemeColor({ light: '#5A4639', dark: '#FFF5E1' }, 'text');
   const [isEmpty, setIsEmpty] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [isToastVisible, setIsToastVisible] = useState(false);
+  const [isBottomToastVisible, setIsBottomToastVisible] = useState(false);
+  const [bottomToastMessage, setBottomToastMessage] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -88,17 +95,17 @@ function HomeScreen() {
 
     try {
       setIsSyncing(true);
-      setToastMessage(t('homeScreen.syncing'));
-      setIsToastVisible(true);
+      setBottomToastMessage(t('homeScreen.syncing'));
+      setIsBottomToastVisible(true);
 
       // Sync local changes (new, updated, deleted) to the server
       await syncQrCodes(userId);
     } catch (error) {
       console.error('Error syncing QR codes:', error);
-      setToastMessage(t('homeScreen.syncError'));
+      // setToastMessage(t('homeScreen.syncError'));
       setIsToastVisible(true);
     } finally {
-      setIsToastVisible(false);
+      setIsBottomToastVisible(false);
       setTimeout(() => {
         setIsSyncing(false);
       }, 300);
@@ -158,7 +165,7 @@ function HomeScreen() {
         }, 300);
       }
     }, 1000), // Throttle limit of 1 second
-    [userId, isOffline, isEmpty]
+    [userId, isEmpty]
   );
 
   // Animate empty card when isEmpty changes
@@ -183,8 +190,8 @@ function HomeScreen() {
   }, [fetchData]);
 
   useEffect(() => {
-    setToastMessage(isOffline ? t('homeScreen.offline') : '');
-    setIsToastVisible(isOffline);
+    setBottomToastMessage(t('homeScreen.offline'));
+    setIsBottomToastVisible(isOffline);
   }, [isOffline]);
 
   const debouncedSetSearchQuery = useCallback(
@@ -498,12 +505,18 @@ function HomeScreen() {
         <ThemedButton iconName="chevron-up" style={styles.scrollButton} onPress={scrollToTop} />
       </Animated.View>
       <ThemedStatusToast
-        isSyncing={isSyncing}
         isVisible={isToastVisible}
         message={toastMessage}
         iconName="cloud-offline"
         onDismiss={() => setIsToastVisible(false)}
         style={styles.toastContainer}
+      />
+      <ThemedBottomToast
+        isSyncing={isSyncing}
+        isVisible={isBottomToastVisible}
+        message={bottomToastMessage}
+        iconName="cloud-offline"
+        style={styles.bottomToastContainer}
       />
       <ThemedBottomSheet
         ref={bottomSheetRef}
@@ -583,6 +596,12 @@ const styles = StyleSheet.create({
     left: 15,
     right: 15,
   },
+  bottomToastContainer:{
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
   blurContainer: {
     position: 'absolute',
     opacity: 0.8,
@@ -594,7 +613,7 @@ const styles = StyleSheet.create({
   },
   scrollButton: {
     position: 'absolute',
-    bottom: 70,
+    bottom: 60,
     right: 15,
   },
   loadingContainer: {
