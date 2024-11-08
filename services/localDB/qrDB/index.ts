@@ -32,7 +32,6 @@ export async function createTable() {
         await db.execAsync('CREATE INDEX IF NOT EXISTS idx_qr_is_deleted ON qrcodes(is_deleted);');
         await db.execAsync('CREATE INDEX IF NOT EXISTS idx_qr_index ON qrcodes(qr_index);');
 
-        console.log('Table and indexes created successfully');
     } catch (error) {
         console.error('Error creating qr table or indexes:', error);
     }
@@ -69,7 +68,6 @@ export async function deleteQrCode(id: string) {
             'UPDATE qrcodes SET is_deleted = 1, is_synced = 0, updated = ? WHERE id = ?',
             updatedAt, id
         );
-        console.log(`QR code ${id} marked as deleted and updated timestamp set`);
     } catch (error) {
         console.error(`Failed to delete QR code ${id}:`, error);
     }
@@ -107,7 +105,6 @@ export async function insertQrCodesBulk(qrDataArray: QRRecord[]): Promise<void> 
             VALUES ${placeholders}
         `, values);
         await db.runAsync('COMMIT');
-        console.log('Bulk QR codes inserted successfully');
     } catch (error) {
         await db.runAsync('ROLLBACK');
         console.error('Failed to insert bulk QR codes:', error);
@@ -119,21 +116,15 @@ export async function syncQrCodes(userId: string) {
   try {
     // Get all unsynced local QR codes
     const unsyncedQrCodes = await getUnsyncedQrCodes(userId);
-
-    if (unsyncedQrCodes.length === 0) {
-      console.log('No unsynced QR codes to sync for this user');
-      return;
-    }
+    if (unsyncedQrCodes.length === 0) return;
 
     // Construct the filter expression using logical OR
-    const filterExpression = unsyncedQrCodes
-      .map(qr => `id='${qr.id}'`)
-      .join(' || ');
+    const filterExpression = unsyncedQrCodes.map(qr => `id='${qr.id}'`).join(' || ');
 
-    // Fetch existing records from the server in bulk
+    // Fetch existing records from the server in bulk, only getting the 'id' and 'updated' fields
     const serverRecords = await pb.collection('qr').getFullList({
       filter: filterExpression,
-      // fields: 'id,updated',
+      fields: 'id,updated',
     });
 
     const serverRecordMap = new Map(serverRecords.map(rec => [rec.id, rec.updated]));
@@ -153,26 +144,26 @@ export async function syncQrCodes(userId: string) {
       }
     }
 
-    // Batch create
+    // Batch create new records
     if (recordsToCreate.length > 0) {
       await pb.collection('qr').create(recordsToCreate);
-      console.log('Batch create completed');
     }
 
-    // Batch update
-    for (const { id, data } of recordsToUpdate) {
-      await pb.collection('qr').update(id, data);
+    // Batch update existing records using Promise.all for parallel updates
+    if (recordsToUpdate.length > 0) {
+      await Promise.all(
+        recordsToUpdate.map(({ id, data }) => pb.collection('qr').update(id, data))
+      );
     }
 
     // Mark all QR codes as synced in the local database
-    await db.runAsync(
-      'UPDATE qrcodes SET is_synced = 1 WHERE id IN (' +
-        unsyncedQrCodes.map(() => '?').join(',') +
-        ')',
-      ...unsyncedQrCodes.map(qr => qr.id)
-    );
-
-    console.log('All unsynced QR codes for this user have been processed for syncing.');
+    const idsToUpdate = unsyncedQrCodes.map(qr => qr.id);
+    if (idsToUpdate.length > 0) {
+      await db.runAsync(
+        `UPDATE qrcodes SET is_synced = 1 WHERE id IN (${idsToUpdate.map(() => '?').join(',')})`,
+        ...idsToUpdate
+      );
+    }
   } catch (error) {
     console.error('Error during sync:', error);
   }
@@ -280,7 +271,6 @@ export async function insertOrUpdateQrCodes(qrDataArray: QRRecord[]): Promise<vo
 
       // Commit transaction
       await db.runAsync('COMMIT');
-      console.log('Insert/Update operation completed successfully');
   } catch (error) {
       await db.runAsync('ROLLBACK');
       console.error('Failed to insert/update QR codes:', error);
@@ -409,7 +399,6 @@ export async function updateQrIndexes(qrDataArray: QRRecord[]): Promise<void> {
       await db.runAsync(query, ...ids);
 
       await db.runAsync('COMMIT');
-      console.log('QR indexes and timestamps updated successfully');
   } catch (error) {
       await db.runAsync('ROLLBACK');
       console.error('Failed to update QR indexes and timestamps:', error);
@@ -422,7 +411,6 @@ export async function closeDatabase() {
     const db = await openDatabase();
     try {
         await db.closeAsync();
-        console.log('Database closed');
     } catch (error) {
         console.error('Error closing the database:', error);
     }

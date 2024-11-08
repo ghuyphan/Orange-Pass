@@ -36,7 +36,6 @@ export async function createTable() {
                 avatar TEXT
             );
         `);        
-        console.log('Table was created successfully');
     } catch (error) {
         console.error('Error creating table:', error);
         throw error;
@@ -151,10 +150,8 @@ export async function getUserById(userId: string) {
     try {
         const user = await db.getFirstAsync<UserRecord>('SELECT * FROM users WHERE id = ?', [userId]);
         if (user) {
-            console.log(`User found: ${user.username}, Email: ${user.email}`);
             return user;
         } else {
-            console.log(`User with ID ${userId} not found in the database.`);
             return null;
         }
     } catch (error) {
@@ -168,7 +165,6 @@ export async function closeDatabase() {
     const db = await openDatabase();
     try {
         await db.closeAsync();
-        console.log('Database closed');
     } catch (error) {
         console.error('Failed to close the database:', error);
         throw error;

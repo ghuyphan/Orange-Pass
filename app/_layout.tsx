@@ -48,10 +48,6 @@ export default function RootLayout() {
   }, []);
 
   useEffect(() => {
-    console.log('Dark mode:', darkMode);
-  }, [darkMode]);
-
-  useEffect(() => {
     const prepareApp = async () => {
       try {
         await createTable();

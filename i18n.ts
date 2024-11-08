@@ -37,7 +37,6 @@ export const t = (key: string) => i18n.t(key);
 
 /** Hàm để thay đổi `locale` thủ công */
 export const changeLocale = (newLocale?: string) => {
-    console.log('changeLocale', newLocale);
     if (newLocale) {
         i18n.locale = newLocale;
         storage.set('locale', newLocale); // Lưu vào `MMKV` khi chọn ngôn ngữ
