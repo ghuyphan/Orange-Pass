@@ -1,14 +1,16 @@
-import { Platform, AppState } from "react-native";
+import { Platform } from "react-native";
 import { getLocales } from "expo-localization";
 import { I18n } from "i18n-js";
 import { storage } from "./utils/storage";
 
 import en from './locales/en.json';
 import vi from './locales/vi.json';
+import ru from './locales/ru.json';
 
 const i18n = new I18n({
     en,
     vi,
+    ru
 });
 
 i18n.enableFallback = true;
@@ -35,6 +37,7 @@ export const t = (key: string) => i18n.t(key);
 
 /** Hàm để thay đổi `locale` thủ công */
 export const changeLocale = (newLocale?: string) => {
+    console.log('changeLocale', newLocale);
     if (newLocale) {
         i18n.locale = newLocale;
         storage.set('locale', newLocale); // Lưu vào `MMKV` khi chọn ngôn ngữ

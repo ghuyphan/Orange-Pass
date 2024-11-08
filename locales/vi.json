@@ -153,12 +153,13 @@
     "title": "Ngôn ngữ",
     "english": "Tiếng Anh",
     "vietnamese": "Tiếng Việt",
-    "system": "Hệ thống"
+    "russian": "Tiếng Nga",
+    "system": "Theo hệ thống"
   },
   "themeScreen": {
-    "title": "Giao diện",
-    "light": "Sáng",
-    "dark": "Tối",
-    "system": "Hệ thống"
+    "title": "Giao Diện",
+    "light": "Chế Độ Sáng",
+    "dark": "Chế Độ Tối",
+    "system": "Theo Hệ Thống"
   }
 }

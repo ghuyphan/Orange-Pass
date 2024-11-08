@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Image, StyleSheet, View, UIManager, Platform, Dimensions, ActivityIndicator } from 'react-native';
+import { Image, StyleSheet, UIManager, Platform, Dimensions, ActivityIndicator, StatusBar } from 'react-native';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack, useRouter } from 'expo-router';
 import { useFonts } from 'expo-font';
@@ -43,14 +43,14 @@ export default function RootLayout() {
     const prepareApp = async () => {
       try {
         await createTable();
-
+  
         // Check onboarding status first
         let onboardingStatus = storage.getBoolean('hasSeenOnboarding');
         if (onboardingStatus === undefined) {
           onboardingStatus = false; // Default to false if undefined (user hasn't seen onboarding)
         }
         setHasSeenOnboarding(onboardingStatus);
-
+  
         // If onboarding has been seen, check auth status
         if (onboardingStatus) {
           const authStatus = await checkInitialAuth();
@@ -59,7 +59,7 @@ export default function RootLayout() {
           // Skip auth check if onboarding hasn't been seen
           setIsAuthenticated(false);
         }
-
+  
         // Only hide the splash screen after all initialization is done
         if (fontsLoaded) {
           setIsAppReady(true);
@@ -71,17 +71,17 @@ export default function RootLayout() {
         await SplashScreen.hideAsync();
       }
     };
-
+  
     if (fontsLoaded) {
       prepareApp();
     }
-
+  
     const unsubscribe = checkOfflineStatus();
     return () => {
       unsubscribe();
     };
   }, [fontsLoaded]);
-
+  
   useEffect(() => {
     if (isAppReady && hasSeenOnboarding !== null && isAuthenticated !== null) {
       if (!hasSeenOnboarding) {
@@ -108,22 +108,25 @@ export default function RootLayout() {
     <Provider store={store}>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <PaperProvider>
-          <LocaleProvider>
-            <ThemeProvider
-              value={
-                dark !== undefined ?
-                  (dark ? DarkTheme : DefaultTheme) :
-                  (systemColorScheme === 'dark' ? DarkTheme : DefaultTheme)
-              }
-            >
-              <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="(public)" options={{ animation: 'none' }} />
+        <LocaleProvider>
+          <ThemeProvider
+            value={
+              dark !== undefined ?
+                (dark ? DarkTheme : DefaultTheme) :
+                (systemColorScheme === 'dark' ? DarkTheme : DefaultTheme)
+            }
+          >
+            <ThemedView style={{ flex: 1 }}>
+              <StatusBar barStyle={dark !== undefined ? (dark ? 'light-content' : 'dark-content') : systemColorScheme === 'dark' ? 'light-content' : 'dark-content'}/>
+              <Stack screenOptions={{ headerShown: false, animation: 'ios'}}>
+                <Stack.Screen name="(public)" />
                 <Stack.Screen name="(auth)" />
                 <Stack.Screen name="+not-found" />
                 <Stack.Screen name="onboard" options={{ animation: 'none' }} />
               </Stack>
-            </ThemeProvider>
-          </LocaleProvider>
+            </ThemedView>
+          </ThemeProvider>
+        </LocaleProvider>
         </PaperProvider>
       </GestureHandlerRootView>
     </Provider>

@@ -1,39 +1,39 @@
-const tintColorLight = '#FFC482'; // Warm, light accent color
-const tintColorDark = '#D8A657';  // Darker, but same hue as light tint
+const tintColorLight = '#FF8C42'; // Bright, emphasizing a warm orange
+const tintColorDark = '#FFA726';  // Brighter to stand out in dark mode
 
 export const Colors = {
   light: {
-    text: '#000000', // Warm dark brown
-    background: '#FFF5E1', // Very light warm beige
+    text: '#212121', // Dark gray-black for readability
+    background: '#FFFFFF', // Pure white for background
     tint: tintColorLight,
-    icon: '#D3B8A3', // Warm light brown
-    inputBackground: '#ffe7d2', // Light beige
-    placeHolder: '#00000080', // Semi-transparent version of text color
-    tabIconDefault: '#C19A7C', // Warm medium brown
+    icon: '#FFB74D', // Soft orange for icons
+    inputBackground: '#F9F2EC', // Light beige for input background
+    placeHolder: '#9E9E9E', // Gray for placeholders
+    tabIconDefault: '#BDBDBD', // Light gray for unselected tab icons
     tabIconSelected: tintColorLight,
-    error: '#D9534F', // Standard bootstrap red for better cross-theme consistency
-    toastBackground: '#D3B8A3', // Matches icon color
-    buttonBackground: '#D3B8A3', // Matches icon and toast background
-    buttonHighlight: '#EAC9B8', // Lighter shade for highlight
-    cardBackground: '#ffe7d2', // Light warm beige
-    cardFooter: '#e6d1be', // Slightly darker than card background
-    logoIcon: '#D3B8A3', // Matches icon color
+    error: '#E53935', // Bright red for clear error notifications
+    toastBackground: '#FFE0B2', // Light orange for toast notifications
+    buttonBackground: '#D3B8A3', // Soft orange for button backgrounds
+    buttonHighlight: '#FFECB3', // Brighter to highlight on hover
+    cardBackground: '#F9F2EC', // Light beige for card background
+    cardFooter: '#FFCCBC', // Bright orange for card footer
+    logoIcon: '#FF8A65', // Dark orange for logos
   },
   dark: {
-    text: '#FFFFFF', // Light warm beige for contrast on dark background
-    background: '#2A241F', // Very dark warm brown, matches hue of light background
+    text: '#E0E0E0', // Light gray for text on dark background
+    background: '#1E1E1E', // Very dark background for dark mode
     tint: tintColorDark,
-    icon: '#8A5C42', // Darker brown, same hue as light icon
-    inputBackground: '#3E352E', // Dark warm brown, matches hue of light input background
-    placeHolder: '#FFFFFF80', // Semi-transparent version of text color
-    tabIconDefault: '#8F6E46', // Darker brown, same hue as light tab icon default
+    icon: '#FFB74D', // Bright orange for icons
+    inputBackground: '#333333', // Dark gray for input background
+    placeHolder: '#B0BEC5', // Light blue-gray for placeholders
+    tabIconDefault: '#757575', // Gray for unselected tab icons
     tabIconSelected: tintColorDark,
-    error: '#D9534F', // Same as light mode for consistency
-    toastBackground: '#5A3D30', // Darker warm brown, matches dark icon color
-    buttonBackground: '#5A3D30', // Matches toast background
-    buttonHighlight: '#7B5A48', // Slightly lighter for highlight
-    cardBackground: '#3E352E', // Dark warm brown, matches hue of light card background
-    cardFooter: '#695144', // Slightly lighter than card background
-    logoIcon: '#8A5C42', // Matches dark icon color
+    error: '#EF5350', // Bright red for error notifications
+    toastBackground: '#4E342E', // Dark brown for toast notifications
+    buttonBackground: '#6B5A4E', // Dark brown for button backgrounds
+    buttonHighlight: '#8D6E63', // Brighter for hover effect
+    cardBackground: '#2E2E2E', // Dark gray for card background
+    cardFooter: '#5D4037', // Soft brown for card footer
+    logoIcon: '#FF7043', // Dark orange for logos
   },
 };

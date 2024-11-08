@@ -195,7 +195,13 @@ function SettingsScreen() {
                     />
                     <ThemedSettingsCardItem
                         settingsTitle={t('settingsScreen.language')}
-                        settingsText={locale == undefined ? 'System' : locale == 'en' ? t('languageScreen.english') : t('languageScreen.vietnamese')}
+                        settingsText={
+                            locale == undefined ? 'System' : 
+                            locale == 'en' ? t('languageScreen.english') : 
+                            locale == 'vi' ? t('languageScreen.vietnamese') :
+                            locale == 'ru' ? t('languageScreen.russian') :
+                            t('languageScreen.system')
+                          }
                         leftIcon='language'
                         onPress={() => router.push('/language')}
                     />

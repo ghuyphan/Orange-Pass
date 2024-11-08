@@ -8,9 +8,8 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 export default function ThemedCardSkeleton({ show = true, index = 0 }) {
   const colorScheme = useColorScheme();
   const colorsArray = colorScheme === 'dark'
-  ? ['#6B5A4E', '#5A3D30', '#6B5A4E', '#5A3D30', '#6B5A4E']
-  : ['#D3B8A3', '#dfcabb', '#D3B8A3', '#dfcabb', '#D3B8A3'];
-
+  ? ['#6B5A4E', '#5A3D30', '#6B5A4E', '#5A3D30', '#4F3C31']
+  : ['#D3B8A3', '#DFCABB', '#D3B8A3', '#DFCABB', '#C9B4A9'];
 
   const qrWidth = index % 2 === 0 ? 170 : 90;
 

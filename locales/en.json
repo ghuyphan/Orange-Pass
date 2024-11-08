@@ -152,12 +152,13 @@
     "title": "Language",
     "english": "English",
     "vietnamese": "Vietnamese",
-    "system": "System"
+    "russian": "Russian",
+    "system": "Follow system"
   },
   "themeScreen": {
     "title": "Appearance",
-    "light": "Light",
-    "dark": "Dark",
-    "system": "System"
+    "light": "Light mode",
+    "dark": "Dark mode",
+    "system": "Follow system"
   }
 }

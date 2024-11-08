@@ -20,6 +20,7 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
 import GB from '@/assets/svgs/GB.svg';
 import VN from '@/assets/svgs/VN.svg';
+import RU from '@/assets/svgs/RU.svg';
 import { useLocale } from '@/context/LocaleContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useMMKVString } from 'react-native-mmkv';
@@ -29,7 +30,6 @@ const LanguageScreen: React.FC = () => {
     const colorScheme = useColorScheme();
     const { updateLocale } = useLocale();
     const [locale, setLocale] = useMMKVString('locale');
-    console.log('locale', locale);
     const scrollY = useSharedValue(0);
 
     // Màu nền chỉ được tính toán lại khi `colorScheme` thay đổi
@@ -108,6 +108,23 @@ const LanguageScreen: React.FC = () => {
 
                     <Pressable
                         android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
+                        onPress={() => handleLanguageChange('ru')}
+                    >
+                        <View style={styles.section}>
+                            <View style={styles.leftSectionContainer}>
+                                <View style={styles.flagIconContainer}>
+                                    <RU width={35} height={35} />
+                                </View>
+                                <ThemedText>{t('languageScreen.russian')}</ThemedText>
+                            </View>
+                            {locale === 'ru' && (
+                                <Ionicons name="checkmark" size={20} color={colors} />
+                            )}
+                        </View>
+                    </Pressable>
+
+                    <Pressable
+                        android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
                         onPress={() => handleLanguageChange('en')}
                     >
                         <View style={styles.section}>
@@ -133,7 +150,7 @@ const LanguageScreen: React.FC = () => {
                                     styles.iconContainer,
                                     colorScheme === 'dark' ? { backgroundColor: Colors.dark.buttonBackground } : { backgroundColor: Colors.light.buttonBackground }
                                 ]}>
-                                    <Ionicons name="cog" size={15} color={colors} />
+                                    <Ionicons name="cog" size={20} color={colors} />
                                 </View>
                                 <ThemedText>{t('languageScreen.system')}</ThemedText>
                             </View>
@@ -217,8 +234,11 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
     },
     iconContainer: {
-        padding: 5,
+        width: 25,
+        aspectRatio: 1,
         borderRadius: 50,
         overflow: 'hidden',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
 });

@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo } from 'react';
-import { StyleSheet, View, Platform, useColorScheme, Pressable } from 'react-native';
+import { StyleSheet, View, Platform, useColorScheme, Pressable, Appearance } from 'react-native';
 import { BlurView } from 'expo-blur';
 import Animated, {
     useAnimatedStyle,
@@ -18,18 +18,20 @@ import { t } from '@/i18n';
 import { Colors } from '@/constants/Colors';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
-import GB from '@/assets/svgs/GB.svg';
-import VN from '@/assets/svgs/VN.svg';
+
 import { useLocale } from '@/context/LocaleContext';
 import { Ionicons } from '@expo/vector-icons';
-import { useMMKVString } from 'react-native-mmkv';
+import { useMMKVBoolean, useMMKVString } from 'react-native-mmkv';
+import { storage } from '@/utils/storage';
+import DARK from '@/assets/svgs/dark.svg';
+import LIGHT from '@/assets/svgs/light.svg';
 
 const ThemeScreen: React.FC = () => {
     const colors = useThemeColor({ light: Colors.light.text, dark: Colors.dark.text }, 'text');
     const colorScheme = useColorScheme();
     const { updateLocale } = useLocale();
-    const [locale, setLocale] = useMMKVString('locale');
-    console.log('locale', locale);
+    const [dark, setDark] = useMMKVBoolean('dark-mode', storage);
+    console.log('dark', dark);
     const scrollY = useSharedValue(0);
 
     // Màu nền chỉ được tính toán lại khi `colorScheme` thay đổi
@@ -60,14 +62,21 @@ const ThemeScreen: React.FC = () => {
         router.back();
     }, []);
 
-    const handleLanguageChange = useCallback((newLocale: string) => {
-        updateLocale(newLocale);
-    }, [updateLocale]);
-    
+
     const handleSystemLocale = useCallback(() => {
-        updateLocale(undefined); 
+        updateLocale(undefined);
     }, [updateLocale]);
-    
+
+    const handleThemeChange = useCallback(async () => {
+        setDark(!dark);
+
+        if (dark) {
+            Appearance.setColorScheme('light');
+        } else {
+            Appearance.setColorScheme('dark');
+        }
+    }, []);
+
     return (
         <ThemedView style={styles.container}>
             {Platform.OS === 'android' ? (
@@ -88,41 +97,18 @@ const ThemeScreen: React.FC = () => {
                 </View>
             </Animated.View>
             <Animated.ScrollView style={styles.scrollContainer} onScroll={scrollHandler}>
+                <View style={[styles.descriptionContainer, { backgroundColor: sectionsColors }]}>
+                    <View style={styles.descriptionItem}>
+                        <LIGHT width={120} height={120} />
+                        <ThemedText style={styles.descriptionText}>{t('themeScreen.light')}</ThemedText>
+                    </View>
+                    <View style={styles.descriptionItem}>
+                        <DARK width={120} height={120} />
+                        <ThemedText style={styles.descriptionText}>{t('themeScreen.dark')}</ThemedText>
+                    </View>
+                </View>
+
                 <View style={[styles.sectionContainer, { backgroundColor: sectionsColors }]}>
-                    <Pressable
-                        android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
-                        onPress={() => handleLanguageChange('vi')}
-                    >
-                        <View style={styles.section}>
-                            <View style={styles.leftSectionContainer}>
-                                <View style={styles.flagIconContainer}>
-                                    <VN width={35} height={35} />
-                                </View>
-                                <ThemedText>{t('languageScreen.vietnamese')}</ThemedText>
-                            </View>
-                            {locale === 'vi' && (
-                                <Ionicons name="checkmark" size={20} color={colors} />
-                            )}
-                        </View>
-                    </Pressable>
-
-                    <Pressable
-                        android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
-                        onPress={() => handleLanguageChange('en')}
-                    >
-                        <View style={styles.section}>
-                            <View style={styles.leftSectionContainer}>
-                                <View style={styles.flagIconContainer}>
-                                    <GB width={35} height={35} />
-                                </View>
-                                <ThemedText>{t('languageScreen.english')}</ThemedText>
-                            </View>
-                            {locale === 'en' && (
-                                <Ionicons name="checkmark" size={20} color={colors} />
-                            )}
-                        </View>
-                    </Pressable>
-
                     <Pressable
                         android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
                         onPress={handleSystemLocale}
@@ -133,11 +119,50 @@ const ThemeScreen: React.FC = () => {
                                     styles.iconContainer,
                                     colorScheme === 'dark' ? { backgroundColor: Colors.dark.buttonBackground } : { backgroundColor: Colors.light.buttonBackground }
                                 ]}>
-                                    <Ionicons name="cog" size={15} color={colors} />
+                                    <Ionicons name="sunny" size={20} color={colors} />
                                 </View>
-                                <ThemedText>{t('languageScreen.system')}</ThemedText>
+                                <ThemedText>{t('themeScreen.light')}</ThemedText>
                             </View>
-                            {locale == undefined && (
+                            {dark === false && (
+                                <Ionicons name="checkmark" size={20} color={colors} />
+                            )}
+                        </View>
+                    </Pressable>
+
+                    <Pressable
+                        android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
+                        onPress={handleThemeChange}
+                    >
+                        <View style={styles.section}>
+                            <View style={styles.leftSectionContainer}>
+                                <View style={[
+                                    styles.iconContainer,
+                                    colorScheme === 'dark' ? { backgroundColor: Colors.dark.buttonBackground } : { backgroundColor: Colors.light.buttonBackground }
+                                ]}>
+                                    <Ionicons name="moon" size={20} color={colors} />
+                                </View>
+                                <ThemedText>{t('themeScreen.dark')}</ThemedText>
+                            </View>
+                            {dark === true && (
+                                <Ionicons name="checkmark" size={20} color={colors} />
+                            )}
+                        </View>
+                    </Pressable>
+                    <Pressable
+                        android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
+                        onPress={handleSystemLocale}
+                    >
+                        <View style={styles.section}>
+                            <View style={styles.leftSectionContainer}>
+                                <View style={[
+                                    styles.iconContainer,
+                                    colorScheme === 'dark' ? { backgroundColor: Colors.dark.buttonBackground } : { backgroundColor: Colors.light.buttonBackground }
+                                ]}>
+                                    <Ionicons name="cog" size={20} color={colors} />
+                                </View>
+                                <ThemedText>{t('themeScreen.system')}</ThemedText>
+                            </View>
+                            {dark === undefined && (
                                 <Ionicons name="checkmark" size={20} color={colors} />
                             )}
                         </View>
@@ -190,6 +215,26 @@ const styles = StyleSheet.create({
         paddingHorizontal: 15,
         paddingTop: STATUSBAR_HEIGHT + 105,
     },
+    descriptionContainer: {
+        flexDirection: 'row',
+        borderRadius: 10,
+        paddingVertical: 10,
+        paddingHorizontal: 35,
+        overflow: 'hidden',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 30,
+    },
+    descriptionItem:{
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 10,
+        flexDirection: 'column',
+
+    },
+    descriptionText:{ 
+        fontSize: 14,
+    },
     sectionContainer: {
         gap: 5,
         borderRadius: 10,
@@ -217,8 +262,11 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
     },
     iconContainer: {
-        padding: 5,
+        width: 28,
+        aspectRatio: 1,
         borderRadius: 50,
         overflow: 'hidden',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
 });
