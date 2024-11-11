@@ -53,7 +53,7 @@ export default function RegisterScreen() {
                     setIsToastVisible(true);
                     setErrorMessage(t('registerScreen.registerSuccess'));
                     setTimeout(() => {
-                        router.replace('/(login)');
+                        router.replace('/login');
                     }, 1000);
                 } catch (error) {
                     const errorAsError = error as Error;

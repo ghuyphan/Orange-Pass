@@ -25,25 +25,18 @@ import { useMMKVBoolean } from 'react-native-mmkv';
 import { storage } from '@/utils/storage';
 import DARK from '@/assets/svgs/dark.svg';
 import LIGHT from '@/assets/svgs/light.svg';
-
+import { useTheme } from '@/context/ThemeContext';
 const ThemeScreen: React.FC = () => {
     const colors = useThemeColor({ light: Colors.light.text, dark: Colors.dark.text }, 'text');
-    const systemColorScheme = useColorScheme();
+    const sectionsColors = useThemeColor({ light: Colors.light.cardBackground, dark: Colors.dark.cardBackground }, 'cardBackground');
+    const { toggleTheme, setDarkMode, useSystemTheme, isDarkMode } = useTheme();
     const { updateLocale } = useLocale();
 
-    const [dark, setDark] = useMMKVBoolean('dark-mode', storage);
     const [currentTheme, setCurrentTheme] = useState(
-        dark !== undefined ? (dark ? 'dark' : 'light') : 'system'
+        isDarkMode !== undefined ? (isDarkMode ? 'dark' : 'light') : 'system'
     );
 
     const scrollY = useSharedValue(0);
-
-    const sectionsColors = useMemo(() => {
-        if (currentTheme === 'dark' || (currentTheme === 'system' && systemColorScheme === 'dark')) {
-            return Colors.dark.cardBackground;
-        }
-        return Colors.light.cardBackground;
-    }, [currentTheme, systemColorScheme]);
 
     useEffect(() => {
         if (currentTheme === 'dark') {
@@ -79,13 +72,13 @@ const ThemeScreen: React.FC = () => {
     const handleThemeChange = useCallback((theme: string) => {
         setCurrentTheme(theme);
         if (theme === 'dark') {
-            setDark(true);
+            setDarkMode(true);
         } else if (theme === 'light') {
-            setDark(false);
+            setDarkMode(false);
         } else {
-            setDark(undefined);
+            useSystemTheme(); // Switch to system theme
         }
-    }, [setDark]);
+    }, [setDarkMode, useSystemTheme]);
 
     return (
         <ThemedView style={styles.container}>
@@ -117,7 +110,7 @@ const ThemeScreen: React.FC = () => {
                     </View>
                 </View>
 
-                <View style={[styles.sectionContainer, { backgroundColor: sectionsColors }]}>
+                <ThemedView style={[styles.sectionContainer, { backgroundColor: sectionsColors }]}>
                     <Pressable
                         android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
                         onPress={() => handleThemeChange('light')}
@@ -168,7 +161,7 @@ const ThemeScreen: React.FC = () => {
                             {currentTheme === 'system' && <Ionicons name="checkmark" size={20} color={colors} />}
                         </View>
                     </Pressable>
-                </View>
+                </ThemedView>
             </Animated.ScrollView>
         </ThemedView>
     );

@@ -13,7 +13,7 @@
         "image": "./assets/images/splash.png",
         "resizeMode": "contain",
         "dark": {
-          "backgroundColor": "#2A2521",
+          "backgroundColor": "#1E1E1E",
           "image": "./assets/images/splash.png",
           "resizeMode": "contain"
         }
@@ -27,7 +27,7 @@
         "image": "./assets/images/splash.png",
         "resizeMode": "contain",
         "dark": {
-          "backgroundColor": "#2A2521",
+          "backgroundColor": "#1E1E1E",
           "image": "./assets/images/splash.png",
           "resizeMode": "contain"
         }

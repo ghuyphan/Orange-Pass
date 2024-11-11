@@ -242,9 +242,9 @@ export default function DetailScreen() {
                                         placeholderTextColor={colorScheme === 'light' ? Colors.light.placeHolder : Colors.dark.placeHolder}
                                         onChangeText={(text) => setAmount(formatAmount(text))}
                                     />
-                                    <Pressable onPress={transferAmount} style={[styles.transferButton, { opacity: amount ? 1 : 0.3 }]}>
-                                        {amount ? <Ionicons name="send" size={18} color={iconColor} /> : 
-                                        <Ionicons name="send-outline" size={18} color={iconColor} />}
+                                    <Pressable hitSlop={{ bottom: 40, left: 30, right: 30, top: 30 }} onPress={transferAmount} style={[styles.transferButton, { opacity: amount ? 1 : 0.3 }]}>
+                                        {amount ? <Ionicons name="chevron-forward" size={18} color={iconColor} /> : 
+                                        <Ionicons name="chevron-forward-outline" size={18} color={iconColor} />}
                                     </Pressable>
                                 </View>
                                 <FlatList
@@ -356,8 +356,6 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
     },
     transferButton: {
-        paddingHorizontal: 10,
-        paddingVertical: 10,
     },
     suggestionList: {
 

@@ -214,7 +214,7 @@ function HomeScreen() {
   useEffect(() => {
     setBottomToastMessage(t('homeScreen.offline'));
     setIsBottomToastVisible(isOffline);
-  }, [isOffline]);
+  }, [isOffline, locale]);
 
   const debouncedSetSearchQuery = useCallback(
     debounce((query) => {
@@ -260,8 +260,8 @@ function HomeScreen() {
     const opacity = scrollY.value > 50 ? 0 : 1;
     const translateY = interpolate(
       scrollY.value,
-      [0, 80],
-      [0, -35],
+      [0, 100],
+      [0, -25],
       Extrapolation.CLAMP
     );
     const zIndex = scrollY.value > 50 || isActive ? 0 : 1;
@@ -537,9 +537,9 @@ function HomeScreen() {
       <ThemedStatusToast
         isVisible={isToastVisible}
         message={toastMessage}
-        iconName="cloud-offline"
         onDismiss={() => setIsToastVisible(false)}
         style={styles.toastContainer}
+        isSyncing={isSyncing}
       />
       <ThemedBottomToast
         isSyncing={isSyncing}

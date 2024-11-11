@@ -64,7 +64,6 @@ export async function insertUser(userData: {
         const verifiedValue = userData.verified ? 1 : 0;
 
         if (existingUser) {
-            console.log('User already exists in the database:', existingUser);
             // Optionally, update the existing user's data if needed
             await db.runAsync(
                 'UPDATE users SET username = ?, email = ?, verified = ?, name = ?, avatar = ? WHERE id = ?',
@@ -77,9 +76,7 @@ export async function insertUser(userData: {
                     userData.id,
                 ]
             );
-            console.log('User data updated:', userData);
         } else {
-            console.log('User does not exist in the database');
             // Insert the new user if they don't already exist
             const result = await db.runAsync(
                 'INSERT INTO users (id, username, email, verified, name, avatar) VALUES (?, ?, ?, ?, ?, ?)',

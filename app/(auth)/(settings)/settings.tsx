@@ -44,23 +44,32 @@ function SettingsScreen() {
 
     const [avatarConfig, setAvatarConfig] = useState<{ [key: string]: any } | null>(null);
 
-    const loadAvatarConfig = () => {
-        setTimeout(() => {
+    const loadAvatarConfig = async () => {
+        setTimeout(async () => {
             const savedConfig = storage.getString('avatarConfig');
             if (savedConfig) {
+                console.log(savedConfig);
                 setAvatarConfig(JSON.parse(savedConfig)); // Cập nhật cấu hình đã lưu
             } else {
                 const newConfig = genConfig({
-                    bgColor: '#FFF5E1',
+                    bgColor: '#FFFFFF',
                     hatStyle: "none",
                     faceColor: '#F9C9B6',
                 });
-
                 storage.set('avatarConfig', JSON.stringify(newConfig));
+                // const avatarConfig = {
+                //     "avatar": JSON.stringify(newConfig)
+                // }
+                // await pb.collection('users').update('RECORD_ID', avatarConfig);
+    
                 setAvatarConfig(newConfig); // Cập nhật cấu hình mới
             }
         }, 500); // Trì hoãn 100ms hoặc giá trị phù hợp
     };
+    
+    useEffect(() => {
+        loadAvatarConfig();
+    }, []);
 
     useEffect(() => {
         loadAvatarConfig();
@@ -75,7 +84,7 @@ function SettingsScreen() {
     const scrollY = useSharedValue(0);
     const email = useSelector((state: RootState) => state.auth.user?.email ?? '-');
     const name = useSelector((state: RootState) => state.auth.user?.name ?? '-');
-    const [darkMode, setDarkMode] = useMMKVBoolean('quickScan', storage);
+    const [darkMode, setDarkMode] = useMMKVBoolean('dark-mode', storage);
     // const [locale, setLocale] = useMMKVString('locale', storage);
 
     const sectionsColors = colorScheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground
@@ -195,19 +204,11 @@ function SettingsScreen() {
                     />
                     <ThemedSettingsCardItem
                         settingsTitle={t('settingsScreen.language')}
-                        settingsText={
-                            locale == undefined ? 'System' : 
-                            locale == 'en' ? t('languageScreen.english') : 
-                            locale == 'vi' ? t('languageScreen.vietnamese') :
-                            locale == 'ru' ? t('languageScreen.russian') :
-                            t('languageScreen.system')
-                          }
                         leftIcon='language'
                         onPress={() => router.push('/language')}
                     />
                     <ThemedSettingsCardItem
                         settingsTitle={t('settingsScreen.appTheme')}
-                        settingsText={darkMode == undefined ? 'System' : (darkMode ? 'Dark' : 'Light')}
                         leftIcon='contrast'
                         onPress={() => router.push('/theme')}
                     />

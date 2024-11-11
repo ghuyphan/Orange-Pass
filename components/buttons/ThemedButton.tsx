@@ -59,6 +59,7 @@ export function ThemedButton({
     loading = false,
 }: ThemedButtonProps): JSX.Element {
     const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
+    const icon = useThemeColor({ light: Colors.light.text, dark: Colors.dark.text }, 'icon');
     const colorScheme = useColorScheme();
 
     const buttonStyle = useMemo(() => ([
@@ -92,7 +93,7 @@ export function ThemedButton({
                     </>
                 ) : (
                     <>
-                        {iconName && <Ionicons name={iconName} size={iconSize} color={iconColor ? iconColor : color} />}
+                        {iconName && <Ionicons name={iconName} size={iconSize} color= {icon}/>}
                         {label && <ThemedText style={[styles.label, { color }]} type='defaultSemiBold'>{label}</ThemedText>}
                     </>
                 )}

@@ -9,6 +9,7 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { storage } from '@/utils/storage';
 import { useMMKVString } from 'react-native-mmkv';
+import { useLocale } from '@/context/LocaleContext';
 
 export type ThemedBottomToastProps = {
     lightColor?: string;
@@ -33,6 +34,7 @@ export function ThemedBottomToast({
     duration = 4000, // Default duration for auto-hide
     onVisibilityToggle,
 }: ThemedBottomToastProps) {
+      const { updateLocale } = useLocale();
     const [locale, setLocale] = useMMKVString('locale', storage);
     const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
     const colorScheme = useColorScheme();
@@ -93,7 +95,7 @@ export function ThemedBottomToast({
             <Animated.View style={[toastStyle, animatedStyle]}>
                 <View style={styles.toastTitle}>
                     {isSyncing ? (
-                        <ActivityIndicator size="small" color={color} />
+                        <ActivityIndicator size={15} color={color} />
                     ) : (
                         <Ionicons
                             name={iconName || 'information-circle'}
