@@ -99,6 +99,7 @@ export function ThemedToast({
                 <Pressable
                     onPress={onDismiss}
                     style={styles.iconTouchable}
+                    hitSlop={30}
                 >
                     <Ionicons
                         name={dismissIconName || 'close'}
@@ -132,7 +133,6 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
     },
     iconTouchable: {
-        padding: 5,
         borderRadius: 50,
     }
 });

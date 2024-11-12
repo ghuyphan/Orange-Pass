@@ -16,6 +16,7 @@ import { registrationSchema } from '@/utils/validationSchemas';
 import { register } from '@/services/auth';
 import { width, height } from '@/constants/Constants';
 import {useLocale} from "@/context/LocaleContext";
+import { genConfig } from '@zamplyy/react-native-nice-avatar';
 
 export default function RegisterScreen() {
     const colorScheme = useColorScheme();
@@ -44,12 +45,18 @@ export default function RegisterScreen() {
 
     return (
         <Formik
-            initialValues={{ fullName: '', email: '', password: '', confirmPassword: '' }}
+            initialValues={{ fullName: '', email: '', password: '', confirmPassword: '', avatar: '' }}
             validationSchema={registrationSchema}
             onSubmit={async (values, { setSubmitting }) => {
                 setSubmitting(true);
                 try {
-                    await register(values.fullName, values.email, values.password, values.confirmPassword);
+                    const avatarConfig = genConfig({
+                        bgColor: '#FFFFFF',
+                        hatStyle: "none",
+                        faceColor: '#F9C9B6',
+                    });
+                    const avatar = JSON.stringify(avatarConfig);
+                    await register(values.fullName, values.email, values.password, values.confirmPassword, avatar);
                     setIsToastVisible(true);
                     setErrorMessage(t('registerScreen.registerSuccess'));
                     setTimeout(() => {
@@ -173,7 +180,7 @@ const styles = StyleSheet.create({
     },
     toastContainer: {
         position: 'absolute',
-        bottom: 20,
+        bottom: 10,
         left: 0,
         right: 0,
         marginHorizontal: 15,

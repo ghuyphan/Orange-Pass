@@ -1,71 +1,79 @@
-import React, { createContext, useContext, useEffect } from 'react';
-import { Appearance, StatusBar, useColorScheme } from 'react-native';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { Appearance, StatusBar } from 'react-native';
 import { useMMKVBoolean } from 'react-native-mmkv';
 import { storage } from '@/utils/storage';
 
 type ThemeContextType = {
-  isDarkMode: boolean | undefined;
-  currentTheme: 'light' | 'dark';
-  toggleTheme: () => void;
-  setDarkMode: (value: boolean) => void;
-  useSystemTheme: () => void;
+    isDarkMode: boolean | undefined;
+    setDarkMode: (value: boolean) => void;
+    useSystemTheme: () => void;
 };
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const useTheme = () => {
-  const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error('useTheme must be used within a ThemeProvider');
-  }
-  return context;
+    const context = useContext(ThemeContext);
+    if (!context) {
+        throw new Error('useTheme must be used within a ThemeProvider');
+    }
+    return context;
 };
 
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
-  // Load the user's theme preference from MMKV storage
-  const [isDarkMode, setIsDarkMode] = useMMKVBoolean('dark-mode', storage);
-  const systemColorScheme = useColorScheme();
+    const [isDarkMode, setIsDarkMode] = useMMKVBoolean('dark-mode', storage);
+    const [systemTheme, setSystemTheme] = useState<'light' | 'dark'>(Appearance.getColorScheme() || 'light');
 
-  // Determine the current theme: use the system theme if `isDarkMode` is undefined
-  const currentTheme =
-    isDarkMode === undefined ? (systemColorScheme === 'dark' ? 'dark' : 'light') : isDarkMode ? 'dark' : 'light';
+    const getCurrentTheme = (): 'light' | 'dark' => {
+        if (isDarkMode === undefined) {
+            return systemTheme;
+        }
+        return isDarkMode ? 'dark' : 'light';
+    };
 
-  // Update the StatusBar based on the current theme
-  useEffect(() => {
-    StatusBar.setBarStyle(currentTheme === 'dark' ? 'light-content' : 'dark-content');
-  }, [currentTheme]);
+    const [currentTheme, setCurrentTheme] = useState<'light' | 'dark'>(getCurrentTheme());
 
-  // Toggle between light and dark mode manually
-  const toggleTheme = () => {
-    if (isDarkMode !== undefined) {
-      setIsDarkMode(!isDarkMode);
-    } else {
-      setIsDarkMode(systemColorScheme !== 'dark');
-    }
-  };
+    // Listen for system theme changes and update accordingly
+    useEffect(() => {
+        const updateSystemTheme = () => {
+            const colorScheme = Appearance.getColorScheme();
+            setSystemTheme(colorScheme === 'dark' ? 'dark' : 'light');
+        };
 
-  // Force set dark mode or light mode
-  const setDarkMode = (value: boolean) => {
-    setIsDarkMode(value);
-  };
+        const listener = Appearance.addChangeListener(updateSystemTheme);
+        return () => listener.remove();
+    }, []);
 
-  // Function to reset to system theme
-  const useSystemTheme = () => {
-    setIsDarkMode(undefined);
-    storage.delete('dark-mode');
-  };
+    // Update theme based on user preference or system theme changes
+    useEffect(() => {
+        const newTheme = getCurrentTheme();
+        setCurrentTheme(newTheme);
 
-  return (
-    <ThemeContext.Provider
-      value={{
-        isDarkMode,
-        currentTheme,
-        toggleTheme,
-        setDarkMode,
-        useSystemTheme,
-      }}
-    >
-      {children}
-    </ThemeContext.Provider>
-  );
+        // Update the MMKV storage if the theme changes
+        if (isDarkMode !== undefined) {
+            storage.set('dark-mode', isDarkMode);
+            Appearance.setColorScheme(newTheme);
+        }
+    }, [isDarkMode]);
+
+    // Update the StatusBar style based on the current theme
+    useEffect(() => {
+        StatusBar.setBarStyle(currentTheme === 'dark' ? 'light-content' : 'dark-content');
+    }, [currentTheme]);
+
+    // Function to explicitly set dark mode and update storage
+    const setDarkMode = (value: boolean) => {
+        setIsDarkMode(value);
+        storage.set('dark-mode', value);
+    };
+
+    // Function to switch to system theme and clear storage
+    const useSystemTheme = () => {
+        storage.delete('dark-mode');
+    };
+
+    return (
+        <ThemeContext.Provider value={{ isDarkMode, setDarkMode, useSystemTheme }}>
+            {children}
+        </ThemeContext.Provider>
+    );
 };

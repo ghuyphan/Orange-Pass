@@ -11,12 +11,7 @@
       "splash": {
         "backgroundColor": "#FFF5E1",
         "image": "./assets/images/splash.png",
-        "resizeMode": "contain",
-        "dark": {
-          "backgroundColor": "#1E1E1E",
-          "image": "./assets/images/splash.png",
-          "resizeMode": "contain"
-        }
+        "resizeMode": "contain"
       },
       "supportsTablet": false,
       "bundleIdentifier": "com.giahuyphan0110.orange2"
@@ -25,12 +20,7 @@
       "splash": {
         "backgroundColor": "#FFF5E1",
         "image": "./assets/images/splash.png",
-        "resizeMode": "contain",
-        "dark": {
-          "backgroundColor": "#1E1E1E",
-          "image": "./assets/images/splash.png",
-          "resizeMode": "contain"
-        }
+        "resizeMode": "contain"
       },
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",

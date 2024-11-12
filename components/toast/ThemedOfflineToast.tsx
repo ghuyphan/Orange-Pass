@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect, useState } from 'react';
-import { StyleSheet, View, StyleProp, ViewStyle, TouchableHighlight, ActivityIndicator, TouchableWithoutFeedback } from 'react-native';
+import { StyleSheet, View, StyleProp, ViewStyle, TouchableHighlight, ActivityIndicator, TouchableWithoutFeedback, Pressable } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Portal } from 'react-native-paper';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
@@ -108,7 +108,8 @@ export function ThemedStatusToast({
                 </View>
                 {!isSyncing ? (
                     <View style={styles.rightSection}>
-                        <TouchableWithoutFeedback
+                        <Pressable
+                            hitSlop={30}
                             onPress={onDismiss}
                         >
                             <View style={styles.iconTouchable}>
@@ -118,7 +119,7 @@ export function ThemedStatusToast({
                                     color={color}
                                 />
                             </View>
-                        </TouchableWithoutFeedback>
+                        </Pressable>
                     </View>
                 ) : null}
             </Animated.View>
@@ -151,7 +152,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     iconTouchable: {
-        padding: 5,
         borderRadius: 50,
     }
 });

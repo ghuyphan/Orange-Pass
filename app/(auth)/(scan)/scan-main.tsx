@@ -534,8 +534,7 @@ const styles = StyleSheet.create({
   },
   toastContainer: {
     position: 'absolute',
-    backgroundColor: 'grey',
-    bottom: 40,
+    bottom: 10,
     left: 15,
     right: 15,
 },

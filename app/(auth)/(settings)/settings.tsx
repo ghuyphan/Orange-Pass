@@ -22,7 +22,7 @@ import { RootState } from '@/store/rootReducer';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedButton } from '@/components/buttons/ThemedButton';
-import Avatar, { genConfig } from '@zamplyy/react-native-nice-avatar';
+import Avatar from '@zamplyy/react-native-nice-avatar';
 import { ThemedSettingsCardItem } from '@/components/cards/ThemedSettingsCard';
 import { ThemedModal } from '@/components/modals/ThemedIconModal';
 
@@ -41,39 +41,27 @@ import { ActivityIndicator } from 'react-native-paper';
 function SettingsScreen() {
     const { updateLocale } = useLocale();
     const [locale, setLocale] = useMMKVString('locale', storage);
-
+    const avatarConfigString = useSelector((state: RootState) => state.auth.user?.avatar ?? '');
     const [avatarConfig, setAvatarConfig] = useState<{ [key: string]: any } | null>(null);
 
-    const loadAvatarConfig = async () => {
-        setTimeout(async () => {
-            const savedConfig = storage.getString('avatarConfig');
-            if (savedConfig) {
-                console.log(savedConfig);
-                setAvatarConfig(JSON.parse(savedConfig)); // Cập nhật cấu hình đã lưu
-            } else {
-                const newConfig = genConfig({
-                    bgColor: '#FFFFFF',
-                    hatStyle: "none",
-                    faceColor: '#F9C9B6',
-                });
-                storage.set('avatarConfig', JSON.stringify(newConfig));
-                // const avatarConfig = {
-                //     "avatar": JSON.stringify(newConfig)
-                // }
-                // await pb.collection('users').update('RECORD_ID', avatarConfig);
+    useEffect(() => {
+        let parsedConfig;
     
-                setAvatarConfig(newConfig); // Cập nhật cấu hình mới
+        // Check if avatarConfigString is already an object
+        if (typeof avatarConfigString === 'string') {
+            try {
+                parsedConfig = JSON.parse(avatarConfigString);
+            } catch (error) {
+                console.error("Error parsing avatar config:", error);
+                parsedConfig = null;
             }
-        }, 500); // Trì hoãn 100ms hoặc giá trị phù hợp
-    };
+        } else if (typeof avatarConfigString === 'object' && avatarConfigString !== null) {
+            // If it's already an object, directly assign it
+            parsedConfig = avatarConfigString;
+        }
     
-    useEffect(() => {
-        loadAvatarConfig();
-    }, []);
-
-    useEffect(() => {
-        loadAvatarConfig();
-    }, []);
+        setAvatarConfig(parsedConfig || null);
+    }, [avatarConfigString]);
 
     // const [avatarConfig, setAvatarConfig] = useState<{ [key: string]: any } | null>(null);
     const colorScheme = useColorScheme();
@@ -84,6 +72,7 @@ function SettingsScreen() {
     const scrollY = useSharedValue(0);
     const email = useSelector((state: RootState) => state.auth.user?.email ?? '-');
     const name = useSelector((state: RootState) => state.auth.user?.name ?? '-');
+
     const [darkMode, setDarkMode] = useMMKVBoolean('dark-mode', storage);
     // const [locale, setLocale] = useMMKVString('locale', storage);
 
@@ -168,13 +157,13 @@ function SettingsScreen() {
                             <Avatar size={45} {...avatarConfig} />
                         ) : (
                             <View style={styles.avatarLoadContainer}>
-                                <ActivityIndicator size={30} color="white" />
+                                <ActivityIndicator size={10} color="white" />
                             </View>
                         )}
                     </LinearGradient>
                     <View style={styles.userContainer}>
-                        <ThemedText numberOfLines={1} style={styles.userEmail}>{email}</ThemedText>
-                        <ThemedText numberOfLines={1} style={styles.userName}>{name ? name : '-'}</ThemedText>
+                        <ThemedText numberOfLines={1} style={styles.userEmail}>{name ? name : '-'}</ThemedText>
+                        <ThemedText numberOfLines={1} style={styles.userName}>{email ? email : '-'}</ThemedText>
                     </View>
                 </View>
 
@@ -306,7 +295,6 @@ const styles = StyleSheet.create({
         flexDirection: 'column',
         paddingHorizontal: 15,
         borderRadius: 10,
-        gap: 5,
         maxWidth: '80%',
         overflow: 'hidden',
     },
@@ -315,7 +303,8 @@ const styles = StyleSheet.create({
     },
     userName: {
         opacity: 0.5,
-        fontSize: 18,
+        fontSize: 13.5,
+        width: '100%',
     },
     sectionContainer: {
         borderRadius: 10,

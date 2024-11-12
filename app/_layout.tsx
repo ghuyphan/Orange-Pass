@@ -1,6 +1,5 @@
-import { useEffect, useState, useMemo } from 'react';
-import { Image, StyleSheet, UIManager, Platform, Dimensions, ActivityIndicator, StatusBar } from 'react-native';
-import { DarkTheme, DefaultTheme } from '@react-navigation/native';
+import { useEffect, useState, useCallback } from 'react';
+import { Image, StyleSheet, UIManager, Platform, Dimensions, ActivityIndicator, View } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
@@ -11,12 +10,11 @@ import { store } from '@/store';
 import { createTable } from '@/services/localDB/userDB';
 import { checkInitialAuth } from '@/services/auth';
 import { checkOfflineStatus } from '@/services/network';
-import { ThemedView } from '@/components/ThemedView';
 import { LocaleProvider } from '@/context/LocaleContext';
-import { ThemeProvider, useTheme } from '@/context/ThemeContext';
+import { ThemeProvider } from '@/context/ThemeContext';
 import { storage } from '@/utils/storage';
-import { useMMKVBoolean } from 'react-native-mmkv';
 
+// Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -26,12 +24,24 @@ export default function RootLayout() {
     const [isAppReady, setIsAppReady] = useState(false);
     const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
     const [hasSeenOnboarding, setHasSeenOnboarding] = useState<boolean | null>(null);
-    const [dark, setDark] = useMMKVBoolean('dark-mode', storage);
     const router = useRouter();
 
+    // Enable layout animation on Android
     if (Platform.OS === 'android') {
         UIManager.setLayoutAnimationEnabledExperimental?.(true);
     }
+
+    const onLayoutRootView = useCallback(async () => {
+        if (isAppReady) {
+            try {
+                // Add a small delay to ensure the new screen is ready
+                await new Promise(resolve => setTimeout(resolve, 50));
+                await SplashScreen.hideAsync();
+            } catch (error) {
+                console.error("Error hiding splash screen:", error);
+            }
+        }
+    }, [isAppReady]);
 
     useEffect(() => {
         const prepareApp = async () => {
@@ -53,14 +63,10 @@ export default function RootLayout() {
                 }
             } catch (error) {
                 console.error("Error during app initialization:", error);
-            } finally {
-                await SplashScreen.hideAsync();
             }
         };
 
-        if (fontsLoaded) {
-            prepareApp();
-        }
+        prepareApp();
 
         const unsubscribe = checkOfflineStatus();
         return () => unsubscribe();
@@ -68,6 +74,7 @@ export default function RootLayout() {
 
     useEffect(() => {
         if (isAppReady && hasSeenOnboarding !== null && isAuthenticated !== null) {
+            // Navigate to the appropriate screen
             if (!hasSeenOnboarding) {
                 router.replace('/onboard');
             } else if (isAuthenticated) {
@@ -78,30 +85,60 @@ export default function RootLayout() {
         }
     }, [isAppReady, hasSeenOnboarding, isAuthenticated]);
 
-
     if (!isAppReady || isAuthenticated === null || hasSeenOnboarding === null) {
         return (
-            <ThemedView lightColor='#FFF5E1' style={styles.loadingContainer}>
-                <Image resizeMode='contain' source={require('@/assets/images/orange-icon.png')} style={styles.orangeLogo} />
-                <ActivityIndicator style={styles.activityIndicator} size="small" color='#8FCB8F' />
-            </ThemedView>
+            <View style={styles.loadingContainer} onLayout={onLayoutRootView}>
+                <Image 
+                    resizeMode='contain' 
+                    source={require('@/assets/images/orange-icon.png')} 
+                    style={styles.orangeLogo} 
+                />
+                <ActivityIndicator 
+                    style={styles.activityIndicator} 
+                    size="small" 
+                    color='#8FCB8F' 
+                />
+            </View>
         );
     }
 
     return (
         <Provider store={store}>
-            <GestureHandlerRootView style={{ flex: 1 }}>
+            <GestureHandlerRootView onLayout={onLayoutRootView}>
                 <PaperProvider>
                     <LocaleProvider>
                         <ThemeProvider>
-                            <ThemedView style={{ flex: 1 }}>
-                                <Stack screenOptions={{ headerShown: false, animation: 'ios' }}>
-                                    <Stack.Screen name="(public)" />
-                                    <Stack.Screen name="(auth)" />
-                                    <Stack.Screen name="+not-found" />
-                                    <Stack.Screen name="onboard" options={{ animation: 'none' }} />
-                                </Stack>
-                            </ThemedView>
+                            <Stack
+                                screenOptions={{
+                                    headerShown: false,
+                                    animation: 'none',
+                                }}
+                            >
+                                <Stack.Screen 
+                                    name="(public)"
+                                    options={{
+                                        contentStyle: { backgroundColor: '#FFF5E1' }
+                                    }}
+                                />
+                                <Stack.Screen 
+                                    name="(auth)"
+                                    options={{
+                                        contentStyle: { backgroundColor: '#FFF5E1' }
+                                    }}
+                                />
+                                <Stack.Screen 
+                                    name="+not-found"
+                                    options={{
+                                        contentStyle: { backgroundColor: '#FFF5E1' }
+                                    }}
+                                />
+                                <Stack.Screen 
+                                    name="onboard"
+                                    options={{
+                                        contentStyle: { backgroundColor: '#FFF5E1' }
+                                    }}
+                                />
+                            </Stack>
                         </ThemeProvider>
                     </LocaleProvider>
                 </PaperProvider>
@@ -113,10 +150,15 @@ export default function RootLayout() {
 const { width, height } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
+    root: {
+        flex: 1,
+        backgroundColor: '#FFF5E1',
+    },
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        backgroundColor: '#FFF5E1',
     },
     orangeLogo: {
         height: height * 0.15,

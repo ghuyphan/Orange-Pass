@@ -160,6 +160,7 @@
     "title": "Giao Diện",
     "light": "Chế Độ Sáng",
     "dark": "Chế Độ Tối",
-    "system": "Theo Hệ Thống"
+    "system": "Theo Hệ Thống",
+    "successMessage": "Khởi động lại ứng dụng để thấy các thay đổi."
   }
 }

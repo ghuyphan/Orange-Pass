@@ -21,30 +21,21 @@ import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
 
 import { useLocale } from '@/context/LocaleContext';
 import { Ionicons } from '@expo/vector-icons';
-import { useMMKVBoolean } from 'react-native-mmkv';
-import { storage } from '@/utils/storage';
 import DARK from '@/assets/svgs/dark.svg';
 import LIGHT from '@/assets/svgs/light.svg';
 import { useTheme } from '@/context/ThemeContext';
+import { ThemedStatusToast } from '@/components/toast/ThemedOfflineToast';
+import { storage } from '@/utils/storage';
+import { useMMKVBoolean } from 'react-native-mmkv';
+
 const ThemeScreen: React.FC = () => {
     const colors = useThemeColor({ light: Colors.light.text, dark: Colors.dark.text }, 'text');
     const sectionsColors = useThemeColor({ light: Colors.light.cardBackground, dark: Colors.dark.cardBackground }, 'cardBackground');
-    const { toggleTheme, setDarkMode, useSystemTheme, isDarkMode } = useTheme();
+    const { setDarkMode, useSystemTheme, isDarkMode } = useTheme();
     const { updateLocale } = useLocale();
-
-    const [currentTheme, setCurrentTheme] = useState(
-        isDarkMode !== undefined ? (isDarkMode ? 'dark' : 'light') : 'system'
-    );
+    const [isToastVisible, setIsToastVisible] = useState(false);
 
     const scrollY = useSharedValue(0);
-
-    useEffect(() => {
-        if (currentTheme === 'dark') {
-            Appearance.setColorScheme('dark');
-        } else if (currentTheme === 'light') {
-            Appearance.setColorScheme('light');
-        }
-    }, [currentTheme]);
 
     const scrollHandler = useAnimatedScrollHandler({
         onScroll: (event) => {
@@ -70,15 +61,15 @@ const ThemeScreen: React.FC = () => {
     }, []);
 
     const handleThemeChange = useCallback((theme: string) => {
-        setCurrentTheme(theme);
         if (theme === 'dark') {
             setDarkMode(true);
         } else if (theme === 'light') {
             setDarkMode(false);
         } else {
-            useSystemTheme(); // Switch to system theme
+            useSystemTheme();
         }
     }, [setDarkMode, useSystemTheme]);
+
 
     return (
         <ThemedView style={styles.container}>
@@ -117,15 +108,15 @@ const ThemeScreen: React.FC = () => {
                     >
                         <View style={styles.section}>
                             <View style={styles.leftSectionContainer}>
-                            <View style={[
+                                <View style={[
                                     styles.iconContainer,
                                     useColorScheme() === 'dark' ? { backgroundColor: Colors.dark.buttonBackground } : { backgroundColor: Colors.light.buttonBackground }
                                 ]}>
-                                <Ionicons name="sunny" size={20} color={colors} />
-                            </View>
+                                    <Ionicons name="sunny" size={20} color={colors} />
+                                </View>
                                 <ThemedText>{t('themeScreen.light')}</ThemedText>
                             </View>
-                            {currentTheme === 'light' && <Ionicons name="checkmark" size={20} color={Colors.light.text} />}
+                            {isDarkMode === false && <Ionicons name="checkmark" size={20} color={Colors.light.text} />}
                         </View>
                     </Pressable>
 
@@ -135,33 +126,40 @@ const ThemeScreen: React.FC = () => {
                     >
                         <View style={styles.section}>
                             <View style={styles.leftSectionContainer}>
-                            <View style={[
+                                <View style={[
                                     styles.iconContainer,
                                     useColorScheme() === 'dark' ? { backgroundColor: Colors.dark.buttonBackground } : { backgroundColor: Colors.light.buttonBackground }
                                 ]}>
-                                <Ionicons name="moon" size={20} color={colors} />
-                            </View>
+                                    <Ionicons name="moon" size={20} color={colors} />
+                                </View>
                                 <ThemedText>{t('themeScreen.dark')}</ThemedText>
                             </View>
-                            {currentTheme === 'dark' && <Ionicons name="checkmark" size={20} color={Colors.dark.text} />}
+                            {isDarkMode === true && <Ionicons name="checkmark" size={20} color={Colors.dark.text} />}
                         </View>
                     </Pressable>
 
                     <Pressable onPress={() => handleThemeChange('system')}>
                         <View style={styles.section}>
                             <View style={styles.leftSectionContainer}>
-                            <View style={[
+                                <View style={[
                                     styles.iconContainer,
                                     useColorScheme() === 'dark' ? { backgroundColor: Colors.dark.buttonBackground } : { backgroundColor: Colors.light.buttonBackground }
                                 ]}>
-                                <Ionicons name="cog" size={20} color={colors} />
-                            </View>
+                                    <Ionicons name="cog" size={20} color={colors} />
+                                </View>
                                 <ThemedText>{t('themeScreen.system')}</ThemedText>
                             </View>
-                            {currentTheme === 'system' && <Ionicons name="checkmark" size={20} color={colors} />}
+                            {isDarkMode === undefined && <Ionicons name="checkmark" size={20} color={colors} />}
                         </View>
                     </Pressable>
                 </ThemedView>
+                <ThemedStatusToast
+                    iconName='checkmark-circle'
+                    message={t('themeScreen.successMessage')}
+                    isVisible={true}
+                    style={{ position: 'absolute', bottom: 10, left: 15, right: 15 }}
+                    onDismiss={() => setIsToastVisible(false)}
+                />
             </Animated.ScrollView>
         </ThemedView>
     );

@@ -3,7 +3,7 @@ import { Keyboard } from "react-native";
 import { store } from "@/store";
 import { t } from '@/i18n'
 
-export const register = async (name: string, email: string, password: string, passwordConfirm: string) => {
+export const register = async (name: string, email: string, password: string, passwordConfirm: string, avatar: string) => {
     const isOffline = store.getState().network.isOffline;
     Keyboard.dismiss();
     if (isOffline) {
@@ -15,6 +15,7 @@ export const register = async (name: string, email: string, password: string, pa
                 email: email,
                 password: password,
                 passwordConfirm: passwordConfirm,
+                avatar : avatar
             });
             return authData
         } catch (error) {
