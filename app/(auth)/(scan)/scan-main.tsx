@@ -164,6 +164,8 @@ export default function ScanScreen() {
   const [iconName, setIconName] = useState<keyof typeof Ionicons.glyphMap>('compass');
   const [isConnecting, setIsConnecting] = useState(false);
   const [isToastVisible, setIsToastVisible] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [isDecoding, setIsDecoding] = useState(false);
 
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const handleExpandPress = useCallback(() => {
@@ -254,6 +256,7 @@ export default function ScanScreen() {
         includeBase64: true,
       });
       if (result && 'data' in result && result.data) {
+        setIsDecoding(true);
         const base64Data = result.data;
         decodeQRCode(base64Data);
       }
@@ -264,7 +267,9 @@ export default function ScanScreen() {
 
   const decodeQRCode = async (base64Image: string) => {
     try {
+    
       setIsToastVisible(true);
+      setToastMessage('Decoding image')
       // Detect QR code from the base64 image
       const { values } = await RNQRGenerator.detect({
         base64: base64Image
@@ -273,14 +278,16 @@ export default function ScanScreen() {
       if (values && values.length > 0) {
         console.log('QR code data:', values[0]);
       } else {
+        setToastMessage('No QR code found');
         console.log('No QR code found in image');
       }
     } catch (error) {
       console.error('Error decoding QR code:', error);
     } finally {
       setTimeout(() => {
+        setIsDecoding(false);
         setIsToastVisible(false);
-      },500)
+      },1000)
 
     }
   };
@@ -404,6 +411,7 @@ export default function ScanScreen() {
             underlayColor='#fff'
             onPress={onOpenGallery}
             style={styles.bottomButton}
+            loading={isDecoding}
           />
           <ThemedButton
             iconName="settings"
@@ -422,7 +430,7 @@ export default function ScanScreen() {
       <ThemedStatusToast
         isSyncing={true}
         isVisible={isToastVisible}
-        message='Hello'
+        message={toastMessage}
         onDismiss={() => setIsToastVisible(false)}
         style={styles.toastContainer}
       />

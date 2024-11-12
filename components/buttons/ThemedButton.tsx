@@ -93,7 +93,7 @@ export function ThemedButton({
                     </>
                 ) : (
                     <>
-                        {iconName && <Ionicons name={iconName} size={iconSize} color= {icon}/>}
+                        {iconName && <Ionicons name={iconName} size={iconSize} color= {iconColor? iconColor : icon}/>}
                         {label && <ThemedText style={[styles.label, { color }]} type='defaultSemiBold'>{label}</ThemedText>}
                     </>
                 )}

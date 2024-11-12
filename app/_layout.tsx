@@ -96,7 +96,7 @@ export default function RootLayout() {
                 <ActivityIndicator 
                     style={styles.activityIndicator} 
                     size="small" 
-                    color='#8FCB8F' 
+                    color='#6FC2B4' 
                 />
             </View>
         );

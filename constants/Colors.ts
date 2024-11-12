@@ -24,7 +24,7 @@ export const Colors = {
     background: '#1A1A1A', // Very dark background for dark mode
     tint: tintColorDark,
     icon: '#FFB74D', // Bright orange for icons
-    inputBackground: '#3A332E', // Dark gray for input background
+    inputBackground: '#322C28', // Dark gray for input background
     placeHolder: '#B0BEC5', // Light blue-gray for placeholders
     tabIconDefault: '#757575', // Gray for unselected tab icons
     tabIconSelected: tintColorDark,
@@ -32,7 +32,7 @@ export const Colors = {
     toastBackground: '#6B5A4E', // Dark brown for toast notifications
     buttonBackground: '#6B5A4E', // Dark brown for button backgrounds
     buttonHighlight: '#8D6E63', // Brighter for hover effect
-    cardBackground: '#3A332E', // Dark gray for card background
+    cardBackground: '#322C28', // Dark gray for card background
     cardFooter: '#4E3B32', // Soft brown for card footer
     logoIcon: '#FF7043', // Dark orange for logos
   },

@@ -116,7 +116,7 @@
         },
         {
             "code": "KLB",
-            "name": "KienLong Bank",
+            "name": "Kiên Long Bank",
             "full_name": "Ngân hàng Thương mại Cổ phần Kiên Long",
             "number_code": "970452"
         },
@@ -125,6 +125,30 @@
             "name": "MB Bank",
             "full_name": "Ngân hàng Thương mại Cổ phần Quân Đội",
             "number_code": "970422"
+        },
+        {
+            "code": "MSB",
+            "name": "MSB",
+            "full_name": "Ngân hàng TMCP Hàng Hải",
+            "number_code": "970426"
+        },
+        {
+            "code": "NCB",
+            "name": "NCB",
+            "full_name": "Ngân hàng Thương mại Cổ phần Quốc Dân",
+            "number_code": "970419"
+        },
+        {
+            "code": "OCB",
+            "name": "OCB",
+            "full_name": "Ngân hàng TMCP Phương Đông",
+            "number_code": "970448"
+        },
+        {
+            "code": "PGB",
+            "name": "PG Bank",
+            "full_name": "Ngân hàng TMCP Xăng dầu Petrolimex",
+            "number_code": "970430"
         },
         {
             "code": "MGB",
@@ -137,27 +161,9 @@
             "full_name": "Mizuho Bank, Ltd."
         },
         {
-            "code": "MSB",
-            "name": "MSB",
-            "full_name": "Ngân hàng Thương mại Cổ phần Hàng Hải Việt Nam",
-            "number_code": "970426"
-        },
-        {
             "code": "NAB",
             "name": "NAB",
             "full_name": "National Australia Bank"
-        },
-        {
-            "code": "NCB",
-            "name": "NCB",
-            "full_name": "Ngân hàng Thương mại Cổ phần Quốc Dân",
-            "number_code": "970419"
-        },
-        {
-            "code": "OCB",
-            "name": "OCB",
-            "full_name": "Ngân hàng Thương mại Cổ phần Phương Đông",
-            "number_code": "970448"
         },
         {
             "code": "OCE",
@@ -166,16 +172,22 @@
             "number_code": "970414"
         },
         {
-            "code": "PGB",
-            "name": "PG Bank",
-            "full_name": "Ngân hàng Thương mại Cổ phần Xăng Dầu Petrolimex",
-            "number_code": "970430"
-        },
-        {
-            "code": "PUB",
+            "code": "PBVN",
             "name": "Public Bank",
             "full_name": "Public Bank Berhad",
             "number_code": "970439"
+        },
+        {
+            "code": "SCB",
+            "name": "SCB",
+            "full_name": "Ngân hàng TMCP Sài Gòn",
+            "number_code": "970429"
+        },
+        {
+            "code": "SHB",
+            "name": "SHB",
+            "full_name": "Ngân hàng TMCP Sài Gòn - Hà Nội",
+            "number_code": "970443"
         },
         {
             "code": "PVB",
@@ -184,22 +196,10 @@
             "number_code": "970412"
         },
         {
-            "code": "SCB",
-            "name": "SCB",
-            "full_name": "Ngân hàng Thương mại Cổ phần Sài Gòn",
-            "number_code": "970429"
-        },
-        {
             "code": "SEA",
             "name": "SeaBank",
             "full_name": "Ngân hàng Thương mại Cổ phần Đông Nam Á",
             "number_code": "970440"
-        },
-        {
-            "code": "SHB",
-            "name": "SHB",
-            "full_name": "Ngân hàng Thương mại Cổ phần Sài Gòn - Hà Nội",
-            "number_code": "970443"
         },
         {
             "code": "SHBVN",

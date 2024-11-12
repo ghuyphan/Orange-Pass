@@ -25,8 +25,8 @@ import DARK from '@/assets/svgs/dark.svg';
 import LIGHT from '@/assets/svgs/light.svg';
 import { useTheme } from '@/context/ThemeContext';
 import { ThemedStatusToast } from '@/components/toast/ThemedOfflineToast';
-import { storage } from '@/utils/storage';
-import { useMMKVBoolean } from 'react-native-mmkv';
+import { throttle } from 'lodash';
+import { ThemedToast } from '@/components/toast/ThemedToast';
 
 const ThemeScreen: React.FC = () => {
     const colors = useThemeColor({ light: Colors.light.text, dark: Colors.dark.text }, 'text');
@@ -60,16 +60,19 @@ const ThemeScreen: React.FC = () => {
         router.back();
     }, []);
 
-    const handleThemeChange = useCallback((theme: string) => {
-        if (theme === 'dark') {
-            setDarkMode(true);
-        } else if (theme === 'light') {
-            setDarkMode(false);
-        } else {
-            useSystemTheme();
-        }
-    }, [setDarkMode, useSystemTheme]);
-
+    const handleThemeChange = useCallback(
+        throttle((theme: string) => {
+            if (theme === 'dark') {
+                setDarkMode(true);
+            } else if (theme === 'light') {
+                setDarkMode(false);
+            } else {
+                useSystemTheme();
+                setIsToastVisible(true);
+            }
+        }, 800), 
+        [setDarkMode, useSystemTheme]
+    );
 
     return (
         <ThemedView style={styles.container}>
@@ -138,7 +141,10 @@ const ThemeScreen: React.FC = () => {
                         </View>
                     </Pressable>
 
-                    <Pressable onPress={() => handleThemeChange('system')}>
+                    <Pressable
+                        android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
+                        onPress={() => handleThemeChange('system')}
+                    >
                         <View style={styles.section}>
                             <View style={styles.leftSectionContainer}>
                                 <View style={[
@@ -153,10 +159,11 @@ const ThemeScreen: React.FC = () => {
                         </View>
                     </Pressable>
                 </ThemedView>
-                <ThemedStatusToast
+                <ThemedToast
                     iconName='checkmark-circle'
                     message={t('themeScreen.successMessage')}
-                    isVisible={true}
+                    isVisible={isToastVisible}
+                    duration={1000}
                     style={{ position: 'absolute', bottom: 10, left: 15, right: 15 }}
                     onDismiss={() => setIsToastVisible(false)}
                 />

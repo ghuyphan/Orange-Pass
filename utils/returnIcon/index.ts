@@ -39,7 +39,7 @@ export function getIconPath(key: string): any {
       'OCB': require('@/assets/images/logoIcons/OCB.png'),
       'OCE': require('@/assets/images/logoIcons/OCE.png'),
       'PGB': require('@/assets/images/logoIcons/PGB.png'),
-      'PUB': require('@/assets/images/logoIcons/PUB.png'),
+      'PBVN': require('@/assets/images/logoIcons/PBVN.png'),
       'PVB': require('@/assets/images/logoIcons/PVB.png'),
       'SCB': require('@/assets/images/logoIcons/SCB.png'),
       'SEA': require('@/assets/images/logoIcons/SEA.png'),

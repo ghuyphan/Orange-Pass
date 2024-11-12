@@ -133,37 +133,6 @@ function HomeScreen() {
     setQrData(localData);
     setIsEmpty(localData.length === 0);
   };
-  // const fetchData = useCallback(
-  //   throttle(async () => {
-  //     if (!userId) return;
-
-  //     setIsLoading(true);
-
-  //     try {
-  //       // Bước 1: Fetch dữ liệu local
-  //       await fetchLocalData(userId);
-
-  //       // Bước 2: Chỉ đồng bộ và fetch dữ liệu từ server nếu đang online
-  //       if (!isOffline) {
-  //         await syncWithServer(userId);
-  //         const serverData = await fetchServerData(userId);
-
-  //         // Bước 3: Cập nhật dữ liệu vào local database nếu có thay đổi
-  //         if (serverData.length > 0) {
-  //           await insertOrUpdateQrCodes(serverData);
-  //           await fetchLocalData(userId);
-  //         }
-  //       }
-  //     } catch (error) {
-  //       console.error('Error in fetchData:', error);
-  //       setToastMessage(t('homeScreen.fetchError'));
-  //       setIsToastVisible(true);
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
-  //   }, 1000),
-  //   [userId, isOffline]
-  // );
 
   // Fetch dữ liệu local khi ứng dụng khởi động
   useEffect(() => {
