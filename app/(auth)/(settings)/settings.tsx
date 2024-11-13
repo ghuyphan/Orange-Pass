@@ -37,31 +37,54 @@ import { useLocale } from '@/context/LocaleContext';
 import { useMMKVString } from 'react-native-mmkv';
 import { ActivityIndicator } from 'react-native-paper';
 
+import {
+    AvatarConfig
+} from '@zamplyy/react-native-nice-avatar';
 
 function SettingsScreen() {
     const { updateLocale } = useLocale();
     const [locale, setLocale] = useMMKVString('locale', storage);
     const avatarConfigString = useSelector((state: RootState) => state.auth.user?.avatar ?? '');
-    const [avatarConfig, setAvatarConfig] = useState<{ [key: string]: any } | null>(null);
+    const [avatarConfig, setAvatarConfig] = useState<AvatarConfig | null>(null);
 
     useEffect(() => {
-        let parsedConfig;
-    
-        // Check if avatarConfigString is already an object
-        if (typeof avatarConfigString === 'string') {
-            try {
-                parsedConfig = JSON.parse(avatarConfigString);
-            } catch (error) {
-                console.error("Error parsing avatar config:", error);
-                parsedConfig = null;
+        let parsedConfig: AvatarConfig | null = null;
+
+        if (typeof avatarConfigString === 'object') {
+            // Online format (already a JSON object)
+            parsedConfig = avatarConfigString as AvatarConfig;
+        } else if (typeof avatarConfigString === 'string') {
+            // Offline format (string with key=value pairs)
+            if (avatarConfigString.startsWith('{') && avatarConfigString.includes('=')) {
+                parsedConfig = parseAvatarString(avatarConfigString);
+            } else {
+                try {
+                    // Attempt to parse as JSON string
+                    parsedConfig = JSON.parse(avatarConfigString) as AvatarConfig;
+                } catch (error) {
+                    console.error("Error parsing avatar config:", error);
+                }
             }
-        } else if (typeof avatarConfigString === 'object' && avatarConfigString !== null) {
-            // If it's already an object, directly assign it
-            parsedConfig = avatarConfigString;
         }
-    
-        setAvatarConfig(parsedConfig || null);
+
+        setAvatarConfig(parsedConfig);
     }, [avatarConfigString]);
+
+    // Function to parse the offline string format
+    const parseAvatarString = (str: string): AvatarConfig => {
+        const cleanStr = str.replace(/[{}]/g, '').trim();
+        const pairs = cleanStr.split(', ');
+        const config: { [key: string]: string } = {};
+
+        pairs.forEach(pair => {
+            const [key, value] = pair.split('=');
+            if (key && value) {
+                config[key.trim()] = value.trim();
+            }
+        });
+
+        return config as AvatarConfig;
+    };
 
     // const [avatarConfig, setAvatarConfig] = useState<{ [key: string]: any } | null>(null);
     const colorScheme = useColorScheme();
@@ -148,7 +171,7 @@ function SettingsScreen() {
             <Animated.ScrollView contentContainerStyle={styles.scrollContainer} onScroll={scrollHandler}>
                 <View style={[styles.avatarContainer, { backgroundColor: sectionsColors }]}>
                     <LinearGradient
-                        colors={['#6ac3ff', '#8a94ff', '#c87cff']}
+                        colors={['#ff9a9e', '#fad0c4', '#fad0c4', '#fbc2eb', '#a18cd1']}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 1 }}
                         style={styles.gradient}
@@ -170,16 +193,16 @@ function SettingsScreen() {
                 <View style={[styles.sectionContainer, { backgroundColor: colorScheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground }]}>
                     <ThemedSettingsCardItem
                         leftIcon='person'
-                        settingsTitle='Edit Profile'
+                        settingsTitle={t('settingsScreen.editProfile')}
                     // onPress={() => router.push('/settings/language')}
                     />
                     <ThemedSettingsCardItem
-                        settingsTitle='Change Password'
+                        settingsTitle={t('settingsScreen.changePassword')}
                         leftIcon='lock-closed'
                     // onPress={() => router.push('/settings/language')}
                     />
                     <ThemedSettingsCardItem
-                        settingsTitle='Change Email Address'
+                        settingsTitle={t('settingsScreen.changeEmail')}
                         leftIcon='mail'
                     // onPress={() => router.push('/settings/language')}
                     />
@@ -187,7 +210,7 @@ function SettingsScreen() {
 
                 <View style={[styles.sectionContainer, { backgroundColor: colorScheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground }]}>
                     <ThemedSettingsCardItem
-                        settingsTitle='About Orange⁺'
+                        settingsTitle={t('settingsScreen.about')}
                         leftIcon='information-circle'
                     // onPress={() => router.push('/settings/language')}
                     />

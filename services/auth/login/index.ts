@@ -16,7 +16,6 @@ export const login = async (email: string, password: string) => {
     } else {
         try {
             const authData = await pb.collection('users').authWithPassword(email, password);
-            console.log(authData);
             await SecureStore.setItemAsync('authToken', authData.token);
             await SecureStore.setItemAsync('userID', authData.record.id)
             const userData = mapRecordtoUserData(authData.record);

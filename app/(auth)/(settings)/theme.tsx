@@ -60,19 +60,19 @@ const ThemeScreen: React.FC = () => {
         router.back();
     }, []);
 
-    const handleThemeChange = useCallback(
-        throttle((theme: string) => {
-            if (theme === 'dark') {
-                setDarkMode(true);
-            } else if (theme === 'light') {
-                setDarkMode(false);
-            } else {
-                useSystemTheme();
-                setIsToastVisible(true);
-            }
-        }, 800), 
-        [setDarkMode, useSystemTheme]
-    );
+    const handleThemeChange = useCallback((theme: string) => {
+        if (theme === 'dark') {
+            setDarkMode(true);
+        } else if (theme === 'light') {
+            setDarkMode(false);
+        } else {
+            useSystemTheme();
+            setIsToastVisible(true);
+            setTimeout(() => {
+                setIsToastVisible(false);
+            }, 1500)
+        }
+    }, [setDarkMode, useSystemTheme]);
 
     return (
         <ThemedView style={styles.container}>

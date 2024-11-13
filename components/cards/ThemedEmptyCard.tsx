@@ -6,6 +6,7 @@ import { ThemedButton } from '../buttons/ThemedButton';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
+import CARD from '@/assets/svgs/card.svg';
 
 export type ThemedEmptyCard = {
     /** Light color theme for the card text */
@@ -71,10 +72,11 @@ export function ThemedEmptyCard({
                         </ThemedText>
                     </View>
                     <View style={styles.cardImageContainer}>
-                        <Image
+                        {/* <Image
                             source={require('@/assets/images/empty-icon.png')}
                             style={styles.image}
-                        />
+                        /> */}
+                        <CARD width={320} height={350} />
                     </View>
                     <View style={[styles.cardFooterContainer, footerBackground, footerStyle]}>
                         <ThemedText>{footerLabel}</ThemedText>

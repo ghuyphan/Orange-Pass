@@ -145,6 +145,5 @@ const styles = StyleSheet.create({
     },
     iconTouchable: {
         borderRadius: 50,
-        padding: 5,
     },
 });

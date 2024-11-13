@@ -76,7 +76,7 @@
     }
   },
   "homeScreen": {
-    "title": "Orange⁺",
+    "title": "Ví Orange⁺",
     "searchPlaceholder": "Tìm kiếm",
     "noItemFound": "Rất tiếc, không tìm thấy kết quả nào. \nVui lòng thử lại.",
     "edit": "Chỉnh sửa thẻ",
@@ -140,6 +140,10 @@
   "settingsScreen": {
     "title": "Cài đặt",
     "language": "Ngôn ngữ",
+    "About": "Về Orange⁺",
+    "editProfile": "Chỉnh sửa hồ sơ",
+    "changePassword": "Đổi mật khẩu",
+    "changeEmail": "Đổi email",
     "languageTitle": "Chọn ngôn ngữ",
     "appTheme": "Giao diện",
     "cancel": "Huỷ",
@@ -157,10 +161,10 @@
     "system": "Theo hệ thống"
   },
   "themeScreen": {
-    "title": "Giao Diện",
-    "light": "Chế Độ Sáng",
-    "dark": "Chế Độ Tối",
-    "system": "Theo Hệ Thống",
-    "successMessage": "Khởi động lại ứng dụng để thấy các thay đổi."
+    "title": "Giao diện",
+    "light": "Chế độ sáng",
+    "dark": "Chế độ tối",
+    "system": "Theo cài đặt hệ thống",
+    "successMessage": "Vui lòng khởi động lại ứng dụng để thấy các thay đổi."
   }
 }

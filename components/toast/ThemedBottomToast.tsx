@@ -44,7 +44,7 @@ export function ThemedBottomToast({
         styles.toastContainer,
         {
             paddingBottom: Platform.OS === 'ios' ? 20 : 0,
-            backgroundColor: colorScheme === 'light' ? Colors.light.toastBackground : Colors.dark.toastBackground
+            backgroundColor: colorScheme === 'light' ? Colors.light.cardFooter : Colors.dark.cardFooter
         },
         style
     ]), [colorScheme, style]);

@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         // marginVertical: -10, 
         // marginBottom: -30, 
-        // marginVertical: 10,
+        marginVertical: 10,
         paddingRight: 10,
         backgroundColor: '#fff',
         borderRadius: 10,

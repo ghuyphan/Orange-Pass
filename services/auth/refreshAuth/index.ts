@@ -5,37 +5,33 @@ import { store } from "@/store";
 import { setAuthData } from "@/store/reducers/authSlice";
 import { setErrorMessage } from "@/store/reducers/errorSlice";
 import { getTokenExpirationDate } from "@/utils/JWTdecode";
-import { getUserById } from '@/services/localDB/userDB'
+import { getUserById } from '@/services/localDB/userDB';
 import { t } from '@/i18n';
 
 // Mapping function for UserRecord
-const mapRecordtoUserData = (record: any): UserRecord => {
-    return {
-        id: record.id,
-        username: record.username || '',
-        email: record.email || '',
-        verified: record.verified || false,
-        name: record.name || '',
-        avatar: record.avatar || ''
-    };
-};
+const mapRecordtoUserData = (record: any): UserRecord => ({
+    id: record.id,
+    username: record.username || '',
+    email: record.email || '',
+    verified: record.verified || false,
+    name: record.name || '',
+    avatar: record.avatar || ''
+});
 
 // Handle errors during token refresh
 const handleTokenRefreshError = async (error: any, authToken: string): Promise<boolean> => {
     const errorData: { status: number; message: string } = error as { status: number; message: string };
-    const userID = await SecureStore.getItemAsync('userID');
+    await SecureStore.deleteItemAsync('authToken');
 
     switch (errorData.status) {
         case 401:
         case 403:
         case 404:
-            await SecureStore.deleteItemAsync('authToken');
             store.dispatch(setErrorMessage(t(`authRefresh.errors.${errorData.status}`)));
-            return true; // Continue using local data
-        case 500:
+            return true;
         default:
             store.dispatch(setErrorMessage(t('authRefresh.errors.500')));
-            return true; // Continue using local data
+            return true;
     }
 };
 
@@ -47,50 +43,51 @@ const checkInitialAuth = async (): Promise<boolean> => {
         const userID = await SecureStore.getItemAsync('userID');
 
         if (authToken && userID) {
-            // First, attempt to authenticate using local data
             const localUserData = await getUserById(userID);
+            console.log(localUserData);
             if (localUserData) {
-                // Set local user data to the store
                 store.dispatch(setAuthData({ token: authToken, user: localUserData }));
 
-                // Proceed to refresh token in the background if online
                 if (!isOffline) {
-                    // Refresh token asynchronously
-                    refreshAuthToken(authToken);
+                    const refreshSuccess = await refreshAuthToken(authToken);
+                    return refreshSuccess;
                 }
-                // Return true immediately to allow app to proceed
                 return true;
-            } else {
-                // No local user data found
-                // store.dispatch(setErrorMessage(t('authRefresh.errors.localUserDataNotFound')));
-                return false; // Authentication failed due to missing local data
             }
-        } else {
-            return false; // No auth token or user ID, not authenticated
+            return false;
         }
-    } catch (error) {
-        console.error("Error checking initial auth:", error);
-        return false; // Handle any other errors
+        return false;
+    } catch {
+        return false;
     }
 };
 
 // Function to refresh auth token in the background
-const refreshAuthToken = async (authToken: string) => {
+const refreshAuthToken = async (authToken: string): Promise<boolean> => {
     try {
         pb.authStore.save(authToken, null);
-        if (pb.authStore.isValid) {
-            const authData = await pb.collection('users').authRefresh();
-            const userData = mapRecordtoUserData(authData.record);
-            store.dispatch(setAuthData({ token: authData.token, user: userData }));
-            await SecureStore.setItemAsync('authToken', authData.token);
-            // Optionally, update local database with new user data
-        } else {
+
+        if (!pb.authStore.isValid) {
             await SecureStore.deleteItemAsync('authToken');
             store.dispatch(setErrorMessage(t('authRefresh.errors.401')));
+            return false;
         }
-    } catch (error) {
-        console.error('Error during auth refresh:', error);
+
+        const authData = await pb.collection('users').authRefresh();
+
+        if (!authData?.token || !authData?.record) {
+            throw new Error("Invalid auth refresh response");
+        }
+
+        const userData = mapRecordtoUserData(authData.record);
+        await SecureStore.setItemAsync('authToken', authData.token);
+        pb.authStore.save(authData.token, authData.record);
+
+        store.dispatch(setAuthData({ token: authData.token, user: userData }));
+        return true;
+    } catch (error: any) {
         await handleTokenRefreshError(error, authToken);
+        return false;
     }
 };
 

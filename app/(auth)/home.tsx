@@ -156,6 +156,7 @@ function HomeScreen() {
 
     const syncAndFetchServerData = async () => {
       try {
+        // setIsLoading(true);
         setIsSyncing(true);
         await syncWithServer(userId);
         const serverData = await fetchServerData(userId);
@@ -170,6 +171,7 @@ function HomeScreen() {
         setToastMessage(t('homeScreen.syncError'));
         setIsToastVisible(true);
       } finally {
+        // setIsLoading(false);
         setIsSyncing(false);
       }
     };
@@ -226,14 +228,14 @@ function HomeScreen() {
 
   // Combine animations for opacity and translateY based on scrollY in useDerivedValue
   const headerAnimation = useDerivedValue(() => {
-    const opacity = scrollY.value > 50 ? 0 : 1;
+    const opacity = scrollY.value > 75 ? 0 : 1;
     const translateY = interpolate(
       scrollY.value,
       [0, 100],
       [0, -25],
       Extrapolation.CLAMP
     );
-    const zIndex = scrollY.value > 50 || isActive ? 0 : 1;
+    const zIndex = scrollY.value > 70 || isActive ? 0 : 1;
     return { opacity, translateY, zIndex };
   }, [scrollY, isActive]);
 
@@ -250,7 +252,7 @@ function HomeScreen() {
 
   const scrollContainerStyle = useAnimatedStyle(() => {
     return {
-      opacity: scrollY.value > 50 ? withTiming(1) : withTiming(0),
+      opacity: scrollY.value > 60 ? withTiming(1) : withTiming(0),
       pointerEvents: scrollY.value > 50 ? 'auto' : 'none',
     };
   });
@@ -550,7 +552,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     flexDirection: 'column',
-    gap: 20,
+    gap: 15,
   },
   headerContainer: {
     flexDirection: 'row',
@@ -571,14 +573,14 @@ const styles = StyleSheet.create({
   titleButton: {
   },
   scrollContainer: {
-    paddingTop: STATUSBAR_HEIGHT + 95,
+    paddingTop: STATUSBAR_HEIGHT + 105,
     flex: 1,
   },
   emptyCard: {
     marginHorizontal: 15,
   },
   listContainer: {
-    paddingTop: STATUSBAR_HEIGHT + 215,
+    paddingTop: STATUSBAR_HEIGHT + 230,
     paddingHorizontal: 15,
     flexGrow: 1,
     paddingBottom: 20,
@@ -616,7 +618,7 @@ const styles = StyleSheet.create({
     right: 15,
   },
   loadingContainer: {
-    paddingTop: STATUSBAR_HEIGHT + 215,
+    paddingTop: STATUSBAR_HEIGHT + 230,
     paddingHorizontal: 15,
     flex: 1,
   },

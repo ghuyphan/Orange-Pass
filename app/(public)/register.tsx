@@ -51,7 +51,7 @@ export default function RegisterScreen() {
                 setSubmitting(true);
                 try {
                     const avatarConfig = genConfig({
-                        bgColor: '#FFFFFF',
+                        bgColor: '#FAFAFA',
                         hatStyle: "none",
                         faceColor: '#F9C9B6',
                     });

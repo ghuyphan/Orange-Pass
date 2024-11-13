@@ -76,7 +76,7 @@
     }
   },
   "homeScreen": {
-    "title": "Orange⁺",
+    "title": "Orange⁺ Wallet",
     "searchPlaceholder": "Search",
     "noItemFound": "Nothing found, please try again.",
     "edit": "Edit card",
@@ -139,6 +139,10 @@
   "settingsScreen": {
     "title": "Settings",
     "language": "Language",
+    "about": "About Orange⁺",
+    "editProfile": "Edit profile",
+    "changePassword": "Change password",
+    "changeEmail": "Change email address",
     "languageTitle": "Select Language",
     "appTheme": "Appearance",
     "cancel": "Cancel",
@@ -159,7 +163,7 @@
     "title": "Appearance",
     "light": "Light mode",
     "dark": "Dark mode",
-    "system": "Follow system",
+    "system": "Follow system settings",
     "successMessage": "Please restart the app to see the changes."
   }
 }

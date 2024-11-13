@@ -109,9 +109,9 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
           <ThemedView style={[styles.itemContainer, { backgroundColor }]}>
             <View style={styles.headerContainer}>
               <View style={styles.headerLeft}>
-                {/* <View style={styles.dragIconContainer}>
-                  <Ionicons name="menu" size={16} color="white" />
-                </View> */}
+                <View style={styles.dragIconContainer}>
+                  <Ionicons name="menu" size={18} color="white" />
+                </View>
                 <View style={styles.leftHeaderContainer}>
                   <View style={styles.iconContainer}>
                     <Image source={iconPath} style={styles.icon} resizeMode="contain" />
@@ -131,7 +131,7 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
                   onPress={onMoreButtonPress}
                   hitSlop={{ bottom: 40, left: 30, right: 30, top: 30 }}
                 >
-                  <Ionicons name="ellipsis-vertical" size={20} color="white" />
+                  <Ionicons name="ellipsis-vertical" size={18} color="white" />
                 </Pressable>
               )}
             </View>
@@ -173,6 +173,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingTop: 10,
     paddingHorizontal: 15,
+    pointerEvents: 'box-none',
   },
   headerLeft: {
     flexDirection: 'row',
@@ -188,7 +189,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   iconContainer: {
-    width: 40,
+    width: 35,
     aspectRatio: 1,
     borderRadius: 50,
     justifyContent: 'center',
@@ -201,6 +202,7 @@ const styles = StyleSheet.create({
   },
   labelContainer: {
     flexDirection: 'column',
+    pointerEvents: 'none',
   },
   companyName: {
     fontSize: 14,
@@ -217,6 +219,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 15,
     alignItems: 'flex-end',
+    pointerEvents: 'none',
   },
   qr: {
     backgroundColor: 'white',
@@ -228,6 +231,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 15,
     paddingVertical: 5,
+    pointerEvents: 'none',
   },
   footerText: {
     fontSize: 13,
