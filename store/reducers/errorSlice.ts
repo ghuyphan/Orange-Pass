@@ -15,8 +15,11 @@ const errorSlice = createSlice({
         setErrorMessage: (state, action: PayloadAction<string>) => {
             state.message = action.payload;
         },
+        clearErrorMessage: (state) => {
+            state.message = null; // Clear the error message
+        },
     },
 });
 
-export const { setErrorMessage } = errorSlice.actions;
+export const { setErrorMessage, clearErrorMessage } = errorSlice.actions;
 export default errorSlice.reducer;

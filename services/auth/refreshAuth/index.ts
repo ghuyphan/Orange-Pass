@@ -44,7 +44,7 @@ const checkInitialAuth = async (): Promise<boolean> => {
 
         if (authToken && userID) {
             const localUserData = await getUserById(userID);
-            console.log(localUserData);
+            // console.log(localUserData);
             if (localUserData) {
                 store.dispatch(setAuthData({ token: authToken, user: localUserData }));
 

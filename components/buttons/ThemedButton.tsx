@@ -87,9 +87,10 @@ export function ThemedButton({
                 {loading ? (
                     <>
                         <ActivityIndicator size="small" color={color} />
-                        <ThemedText style={[styles.label, { color }]} type='defaultSemiBold'>
+                        {loadingLabel && <ThemedText style={[styles.label, { color }]} type='defaultSemiBold'>{loadingLabel}</ThemedText>}
+                        {/* <ThemedText style={[styles.label, { color }]} type='defaultSemiBold'>
                             {loadingLabel}
-                        </ThemedText>
+                        </ThemedText> */}
                     </>
                 ) : (
                     <>

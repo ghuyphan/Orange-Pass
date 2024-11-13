@@ -15,7 +15,7 @@ import { MAX_ZOOM_FACTOR } from '@/constants/Constants';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { debounce } from 'lodash';
 import { storage } from '@/utils/storage';
- 
+
 import { ScannerFrame, FocusIndicator, ZoomControl } from '@/components/camera';
 import { ThemedView } from '@/components/ThemedView';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
@@ -195,22 +195,22 @@ export default function ScanScreen() {
     onCodeScanned: (codes: Code[], frame: CodeScannerFrame) => {
       frameCounterRef.current++;
       if (isConnecting) return; // Stop scanning if already connecting
-  
+
       // Process every 4th frame (adjust frame skip logic here as needed)
       if (frameCounterRef.current % 4 === 0) {
         setScanFrame(frame);
-  
+
         // Clear previous timeout to prevent stale highlights
         if (timeoutRef.current) {
           clearTimeout(timeoutRef.current);
         }
-  
+
         if (codes.length > 0) {
           const firstCode = codes[0];
-  
+
           // Update metadata and code information
           setCodeMetadata(firstCode.value ?? '');
-  
+
           if (showIndicator) {
             // Set highlights based on scanned code frame
             setCodeScannerHighlights([{
@@ -219,7 +219,7 @@ export default function ScanScreen() {
               x: firstCode.frame?.x ?? 0,
               y: firstCode.frame?.y ?? 0,
             }]);
-  
+
             // Reset highlights after timeout when showIndicator is true
             timeoutRef.current = setTimeout(() => {
               setCodeScannerHighlights([]);
@@ -228,10 +228,10 @@ export default function ScanScreen() {
             // Immediately reset highlights if showIndicator is false
             setCodeScannerHighlights([]);
           }
-  
+
           // Only call handleCodeScanned if not already connecting
           handleCodeScanned(firstCode.value ?? '');
-  
+
         } else {
           // No codes found, reset all states
           if (timeoutRef.current) {
@@ -250,46 +250,54 @@ export default function ScanScreen() {
 
   const onOpenGallery = useCallback(async () => {
     try {
+      // Force a re-render to ensure the UI updates immediately
       const result = await ImagePicker.openPicker({
         width: 300,
         height: 400,
         includeBase64: true,
       });
+
+      setIsDecoding(true);
+      await new Promise(resolve => setTimeout(resolve, 0)); // Allow React to process the state update
+  
+  
       if (result && 'data' in result && result.data) {
-        setIsDecoding(true);
-        const base64Data = result.data;
-        decodeQRCode(base64Data);
+        if (result.mime === 'image/jpeg' || result.mime === 'image/png') {
+          await decodeQRCode(result.data);
+        } else {
+          showToast('Please select a JPEG or PNG image');
+        }
+      } else {
+        showToast('Invalid image selection');
       }
     } catch (error) {
       console.log('Error opening image picker:', error);
+    } finally {
+      setIsDecoding(false);
     }
   }, []);
-
+  
   const decodeQRCode = async (base64Image: string) => {
     try {
-    
-      setIsToastVisible(true);
-      setToastMessage('Decoding image')
-      // Detect QR code from the base64 image
-      const { values } = await RNQRGenerator.detect({
-        base64: base64Image
-      });
-
-      if (values && values.length > 0) {
+      const { values } = await RNQRGenerator.detect({ base64: base64Image });
+  
+      if (values?.length > 0) {
         console.log('QR code data:', values[0]);
       } else {
-        setToastMessage('No QR code found');
-        console.log('No QR code found in image');
+        showToast('No QR code found');
       }
     } catch (error) {
       console.error('Error decoding QR code:', error);
-    } finally {
-      setTimeout(() => {
-        setIsDecoding(false);
-        setIsToastVisible(false);
-      },1000)
-
     }
+  };
+  
+  // Utility function for showing toast messages
+  const showToast = (message: string) => {
+    setToastMessage(message);
+    setIsToastVisible(true);
+    setTimeout(() => {
+      setIsToastVisible(false);
+    }, 2000);
   };
 
   useEffect(() => {
@@ -298,16 +306,16 @@ export default function ScanScreen() {
     };
   }, []);
 
-
   const opacity = useSharedValue(0);
   const animatedStyle = useAnimatedStyle(() => {
     return {
-        opacity: opacity.value,
+      opacity: opacity.value,
     };
-});
+  });
+
   useEffect(() => {
     if (codeMetadata.length > 0) {
-  
+
       opacity.value = withTiming(1, { duration: 300 });
 
     } else {
@@ -379,7 +387,7 @@ export default function ScanScreen() {
           <FocusIndicator focusPoint={focusPoint} animatedFocusStyle={animatedFocusStyle} />
           <ScannerFrame highlight={codeScannerHighlights[0]} layout={layout} scanFrame={scanFrame} />
           {codeMetadata && quickScan === false ? (
-            <Animated.View style={[styles.qrResult, animatedStyle]}> 
+            <Animated.View style={[styles.qrResult, animatedStyle]}>
               <TouchableWithoutFeedback
                 onPress={() => onResultTap(codeMetadata, codeType)}
               >
@@ -428,7 +436,6 @@ export default function ScanScreen() {
         <ThemedButton underlayColor='#fff' iconColor={torch === 'on' ? '#FFCC00' : '#fff'} style={styles.headerButton} onPress={toggleFlash} iconName={torch === 'on' ? 'flash' : 'flash-off'} />
       </View>
       <ThemedStatusToast
-        isSyncing={true}
         isVisible={isToastVisible}
         message={toastMessage}
         onDismiss={() => setIsToastVisible(false)}
@@ -545,5 +552,5 @@ const styles = StyleSheet.create({
     bottom: 15,
     left: 15,
     right: 15,
-},
+  },
 });

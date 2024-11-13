@@ -36,6 +36,7 @@ import { useMMKVBoolean } from 'react-native-mmkv';
 import { useLocale } from '@/context/LocaleContext';
 import { useMMKVString } from 'react-native-mmkv';
 import { ActivityIndicator } from 'react-native-paper';
+import { clearErrorMessage } from '@/store/reducers/errorSlice';
 
 import {
     AvatarConfig
@@ -48,28 +49,31 @@ function SettingsScreen() {
     const [avatarConfig, setAvatarConfig] = useState<AvatarConfig | null>(null);
 
     useEffect(() => {
+        if (!avatarConfigString) {
+            setAvatarConfig(null);
+            return;
+        }
+    
         let parsedConfig: AvatarConfig | null = null;
-
-        if (typeof avatarConfigString === 'object') {
-            // Online format (already a JSON object)
-            parsedConfig = avatarConfigString as AvatarConfig;
-        } else if (typeof avatarConfigString === 'string') {
-            // Offline format (string with key=value pairs)
-            if (avatarConfigString.startsWith('{') && avatarConfigString.includes('=')) {
-                parsedConfig = parseAvatarString(avatarConfigString);
-            } else {
-                try {
-                    // Attempt to parse as JSON string
+    
+        try {
+            if (typeof avatarConfigString === 'object') {
+                parsedConfig = avatarConfigString as AvatarConfig;
+            } else if (typeof avatarConfigString === 'string') {
+                if (avatarConfigString.startsWith('{')) {
                     parsedConfig = JSON.parse(avatarConfigString) as AvatarConfig;
-                } catch (error) {
-                    console.error("Error parsing avatar config:", error);
+                } else if (avatarConfigString.includes('=')) {
+                    parsedConfig = parseAvatarString(avatarConfigString);
                 }
             }
+        } catch (error) {
+            console.error("Error parsing avatar config:", error);
+            parsedConfig = null;
         }
-
+    
         setAvatarConfig(parsedConfig);
     }, [avatarConfigString]);
-
+    
     // Function to parse the offline string format
     const parseAvatarString = (str: string): AvatarConfig => {
         const cleanStr = str.replace(/[{}]/g, '').trim();
@@ -130,20 +134,21 @@ function SettingsScreen() {
 
     const logout = async () => {
         try {
-            setIsModalVisible(false);
-            setIsLoading(true);
-            await SecureStore.deleteItemAsync('authToken');
-            pb.authStore.clear();
+          setIsModalVisible(false);
+          setIsLoading(true);
+          await SecureStore.deleteItemAsync('authToken');
+          pb.authStore.clear();
         } catch (error) {
-            console.log(error);
+          console.log(error);
         } finally {
-            setTimeout(() => {
-                setIsLoading(false);
-                dispatch(clearAuthData());
-                router.replace('/login');
-            }, 1000);
+          setTimeout(() => {
+            setIsLoading(false);
+            dispatch(clearAuthData());
+            dispatch(clearErrorMessage()); // Clear error on logout
+            router.replace('/login');
+          }, 1000);
         }
-    }
+      };
 
     const onLogout = useCallback(() => {
         setIsModalVisible(true);
