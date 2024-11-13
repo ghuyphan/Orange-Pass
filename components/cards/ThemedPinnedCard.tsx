@@ -191,15 +191,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   infoContainerWithMarginTop: {
-    marginTop: 15,
+    marginTop: 10,
   },
   accountName: {
-    fontSize: 20,
+    fontSize: 18,
     textAlign: 'center',
     color: 'white',
   },
   accountNumber: {
-    fontSize: 18,
+    fontSize: 16,
     textAlign: 'center',
     color: 'white',
   },

@@ -1,332 +1,332 @@
 {
     "ABB": {
         "color": {
-            "light": "#52AAAE",
-            "dark": "#3F7F82"
+            "light": "#5BB2B5",
+            "dark": "#487A7E"
         },
         "accent_color": {
-            "light": "#7FBCBD",
-            "dark": "#418E91"
+            "light": "#88C8C9",
+            "dark": "#49969A"
         }
     },
     "ACB": {
         "color": {
-            "light": "#3B579D",
-            "dark": "#2C3F7A"
+            "light": "#3F63A5",
+            "dark": "#2E477F"
         },
         "accent_color": {
-            "light": "#6FAEE8",
-            "dark": "#4B8DC3"
+            "light": "#78B3E8",
+            "dark": "#4C8DC3"
         }
     },
     "VBA": {
         "color": {
-            "light": "#9B4A50",
-            "dark": "#7B3A3F"
+            "light": "#A05258",
+            "dark": "#854245"
         },
         "accent_color": {
-            "light": "#b56b70",
-            "dark": "#8A4A4F"
+            "light": "#C6757A",
+            "dark": "#9B4D52"
         }
     },
     "BAB": {
         "color": {
-            "light": "#D4B471",
-            "dark": "#8F7444"
+            "light": "#DFC27B",
+            "dark": "#9D7848"
         },
         "accent_color": {
-            "light": "#E0C38A",
-            "dark": "#A6894E"
+            "light": "#ECD09A",
+            "dark": "#B88D54"
         }
     },
     "BKB": {
         "color": {
-            "light": "#7D8DA5",
-            "dark": "#8B7066"
+            "light": "#8796B0",
+            "dark": "#7D685E"
         },
         "accent_color": {
-            "light": "#99AABD",
+            "light": "#A3B4C5",
             "dark": "#968880"
         }
     },
     "BOC": {
         "color": {
-            "light": "#B88A8A",
-            "dark": "#9B6565"
+            "light": "#C09595",
+            "dark": "#9F6C6C"
         },
         "accent_color": {
-            "light": "#C99E9F",
-            "dark": "#B08889"
+            "light": "#DCA6A7",
+            "dark": "#B38E8F"
         }
     },
     "BVB": {
         "color": {
-            "light": "#3477BB",
-            "dark": "#2A5B8F"
+            "light": "#3F84C5",
+            "dark": "#2D5E92"
         },
         "accent_color": {
-            "light": "#4F8AB8",
-            "dark": "#2F6B9F"
+            "light": "#599CC8",
+            "dark": "#3A6B9F"
         }
     },
     "BIC": {
         "color": {
-            "light": "#7F8A9B",
-            "dark": "#8B7066"
+            "light": "#8895A5",
+            "dark": "#7C6A60"
         },
         "accent_color": {
-            "light": "#99AABD",
+            "light": "#A3B0C0",
             "dark": "#968880"
         }
     },
     "BIDV": {
         "color": {
-            "light": "#4A7D7B",
-            "dark": "#336664"
+            "light": "#558E8C",
+            "dark": "#3F6967"
         },
         "accent_color": {
-            "light": "#5C9B98",
-            "dark": "#406F6D"
+            "light": "#6FAAA8",
+            "dark": "#467F7D"
         }
     },
     "CAKE": {
         "color": {
-            "light": "#372975",
-            "dark": "#2B2160"
+            "light": "#423080",
+            "dark": "#2F235D"
         },
         "accent_color": {
-            "light": "#D96D98",
-            "dark": "#B4567B"
+            "light": "#E078A4",
+            "dark": "#B7597B"
         }
     },
     "CAT": {
         "color": {
-            "light": "#90B598",
-            "dark": "#898E7B"
+            "light": "#99BEA1",
+            "dark": "#8F9278"
         },
         "accent_color": {
-            "light": "#A4C5B5",
-            "dark": "#A0B2A2"
+            "light": "#B0D1BF",
+            "dark": "#A6B0A6"
         }
     },
     "CBB": {
         "color": {
-            "light": "#2559A9",
-            "dark": "#183D73"
+            "light": "#2A63B0",
+            "dark": "#1D437A"
         },
         "accent_color": {
-            "light": "#4A79C1",
-            "dark": "#1E4A8C"
+            "light": "#5082C8",
+            "dark": "#2B5198"
         }
     },
     "CHS": {
         "color": {
-            "light": "#7F8AA5",
-            "dark": "#8B7066"
+            "light": "#8994B0",
+            "dark": "#8B7168"
         },
         "accent_color": {
-            "light": "#99AABD",
+            "light": "#A2B2C7",
             "dark": "#968880"
         }
     },
     "CIMB": {
         "color": {
-            "light": "#8C1A18",
-            "dark": "#6E1311"
+            "light": "#982220",
+            "dark": "#741414"
         },
         "accent_color": {
-            "light": "#D8A3A5",
-            "dark": "#C59A9D"
+            "light": "#E3ABAD",
+            "dark": "#C69C9E"
         }
     },
     "CITIBANK": {
         "color": {
-            "light": "#2F6A99",
-            "dark": "#2A5578"
+            "light": "#35729F",
+            "dark": "#2C5578"
         },
         "accent_color": {
-            "light": "#D14641",
-            "dark": "#B13A36"
+            "light": "#DA4C47",
+            "dark": "#B23D39"
         }
     },
     "CBA": {
         "color": {
-            "light": "#D3BB78",
-            "dark": "#BF8C53"
+            "light": "#DAC282",
+            "dark": "#A37F50"
         },
         "accent_color": {
-            "light": "#E0C790",
-            "dark": "#C69A73"
+            "light": "#E7D59C",
+            "dark": "#C39D76"
         }
     },
     "DBK": {
         "color": {
-            "light": "#7D82A5",
-            "dark": "#8B7066"
+            "light": "#8992B5",
+            "dark": "#8A6E64"
         },
         "accent_color": {
-            "light": "#98A3BF",
+            "light": "#A5B2CC",
             "dark": "#968880"
         }
     },
     "DAB": {
         "color": {
-            "light": "#2F659F",
-            "dark": "#244D7A"
+            "light": "#3470AF",
+            "dark": "#264E7B"
         },
         "accent_color": {
-            "light": "#E89840",
-            "dark": "#B87430"
+            "light": "#ED9A45",
+            "dark": "#BB7830"
         }
     },
     "DSB": {
         "color": {
-            "light": "#D27878",
-            "dark": "#8F6060"
+            "light": "#DD8282",
+            "dark": "#936060"
         },
         "accent_color": {
-            "light": "#DB9395",
-            "dark": "#A47A7C"
+            "light": "#E39F9F",
+            "dark": "#B08081"
         }
     },
     "EIB": {
         "color": {
-            "light": "#265C93",
-            "dark": "#1E4874"
+            "light": "#2C699F",
+            "dark": "#214A74"
         },
         "accent_color": {
-            "light": "#4395DE",
+            "light": "#4B9FDE",
             "dark": "#3576B0"
         }
     },
     "GPB": {
         "color": {
-            "light": "#2E5E8E",
-            "dark": "#244975"
+            "light": "#33668F",
+            "dark": "#2A507A"
         },
         "accent_color": {
-            "light": "#E4B944",
-            "dark": "#C39D36"
+            "light": "#EDC455",
+            "dark": "#CFA240"
         }
     },
     "HDB": {
         "color": {
-            "light": "#B94A4F",
-            "dark": "#922C30"
+            "light": "#C15358",
+            "dark": "#9A2F34"
         },
         "accent_color": {
-            "light": "#E2C04A",
-            "dark": "#B89A3C"
+            "light": "#E8C857",
+            "dark": "#BE9F42"
         }
     },
     "HLBVN": {
         "color": {
-            "light": "#234774",
-            "dark": "#1A3458"
+            "light": "#28537F",
+            "dark": "#1F3C62"
         },
         "accent_color": {
-            "light": "#B24234",
-            "dark": "#8E3327"
+            "light": "#C04A3E",
+            "dark": "#9A372C"
         }
     },
     "HSBC": {
         "color": {
-            "light": "#C2333C",
-            "dark": "#8F2B28"
+            "light": "#CD3A42",
+            "dark": "#A32F2B"
         },
         "accent_color": {
-            "light": "#D97B72",
-            "dark": "#A94E44"
+            "light": "#E2857D",
+            "dark": "#B95850"
         }
     },
     "BOK": {
         "color": {
-            "light": "#7E8CA5",
-            "dark": "#8B7066"
+            "light": "#8A98B2",
+            "dark": "#917564"
         },
         "accent_color": {
-            "light": "#95A6C0",
-            "dark": "#968880"
+            "light": "#A4B3CA",
+            "dark": "#9C8E85"
         }
     },
     "IVB": {
         "color": {
-            "light": "#D9C855",
-            "dark": "#B3A945"
+            "light": "#E0D15F",
+            "dark": "#BFAF4E"
         },
         "accent_color": {
-            "light": "#3973B5",
-            "dark": "#2E5A8C"
+            "light": "#4380C8",
+            "dark": "#33639D"
         }
     },
     "KBHN": {
         "color": {
-            "light": "#797268",
-            "dark": "#5F574F"
+            "light": "#8A8070",
+            "dark": "#675C52"
         },
         "accent_color": {
-            "light": "#EEB33E",
-            "dark": "#C49531"
+            "light": "#F6BD49",
+            "dark": "#CF9D3A"
         }
     },
     "KEBHANAHCM": {
         "color": {
-            "light": "#4F9A9D",
-            "dark": "#3D7577"
+            "light": "#57A2A5",
+            "dark": "#426F71"
         },
         "accent_color": {
-            "light": "#B5505A",
-            "dark": "#8A3C45"
+            "light": "#C05963",
+            "dark": "#9E444B"
         }
     },
     "KLB": {
         "color": {
-            "light": "#2E365F",
-            "dark": "#202846"
+            "light": "#374074",
+            "dark": "#252D52"
         },
         "accent_color": {
-            "light": "#D48A5E",
-            "dark": "#A66D48"
+            "light": "#DD946B",
+            "dark": "#B87850"
         }
     },
     "LVB": {
         "color": {
-            "light": "#D2787B",
-            "dark": "#8F6060"
+            "light": "#DD8287",
+            "dark": "#9A6868"
         },
         "accent_color": {
-            "light": "#DFA2A0",
-            "dark": "#A57C7C"
+            "light": "#E5ADA8",
+            "dark": "#B68686"
         }
     },
     "MAY": {
         "color": {
-            "light": "#D9B27A",
-            "dark": "#A67D4A"
+            "light": "#E1BC84",
+            "dark": "#B08451"
         },
         "accent_color": {
-            "light": "#E6C69E",
-            "dark": "#B8966A"
+            "light": "#F0D2AA",
+            "dark": "#C6A378"
         }
     },
     "MB": {
         "color": {
-            "light": "#2E0EA8",
-            "dark": "#250988"
+            "light": "#431FBF",
+            "dark": "#301096"
         },
         "accent_color": {
-            "light": "#C8505D",
-            "dark": "#9F3E49"
+            "light": "#DA5C74",
+            "dark": "#B84A5C"
         }
     },
     "MGB": {
         "color": {
-            "light": "#8293B7",
-            "dark": "#8B7066"
+            "light": "#8EA1C2",
+            "dark": "#9B7464"
         },
         "accent_color": {
-            "light": "#98ADCA",
-            "dark": "#968880"
+            "light": "#A7B7D3",
+            "dark": "#A28F82"
         }
     },
     "MZH": {
@@ -631,12 +631,12 @@
     },
     "CIR": {
         "color": {
-            "light": "#D83933",
-            "dark": "#A82B27"
+            "light": "#E0423D",
+            "dark": "#B22F2B"
         },
         "accent_color": {
-            "light": "#F77B3E",
-            "dark": "#C9642F"
+            "light": "#FA8A48",
+            "dark": "#D16A37"
         }
     },
     "COO": {
@@ -691,12 +691,12 @@
     },
     "LOT": {
         "color": {
-            "light": "#C44A4A",
-            "dark": "#A03E3E"
+            "light": "#CD5252",
+            "dark": "#B04444"
         },
         "accent_color": {
-            "light": "#e87979",
-            "dark": "#C06464"
+            "light": "#F08A8A",
+            "dark": "#CC6E6E"
         }
     },
     "MMM": {

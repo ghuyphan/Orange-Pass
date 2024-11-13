@@ -550,12 +550,12 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     flexDirection: 'column',
-    gap: 15,
+    gap: 20,
   },
   headerContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-end',
     paddingHorizontal: 15,
     pointerEvents: 'box-none',
   },
@@ -591,7 +591,7 @@ const styles = StyleSheet.create({
   },
   toastContainer: {
     position: 'absolute',
-    bottom: 10,
+    bottom: 15,
     left: 15,
     right: 15,
   },

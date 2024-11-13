@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect, useState } from 'react';
-import { StyleSheet, View, StyleProp, ViewStyle, TouchableHighlight, ActivityIndicator, TouchableWithoutFeedback, Pressable } from 'react-native';
+import { StyleSheet, View, StyleProp, ViewStyle, ActivityIndicator, Pressable } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Portal } from 'react-native-paper';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
@@ -16,10 +16,10 @@ export type ThemedStatusToastProps = {
     onDismiss?: () => void;
     message: string;
     isVisible?: boolean;
-    isSyncing?: boolean; // New prop for syncing state
+    isSyncing?: boolean;
     style?: StyleProp<ViewStyle>;
-    duration?: number; // New prop to auto-hide after a duration
-    onVisibilityToggle?: (isVisible: boolean) => void; // Callback to track visibility
+    duration?: number;
+    onVisibilityToggle?: (isVisible: boolean) => void;
 };
 
 export function ThemedStatusToast({
@@ -30,9 +30,9 @@ export function ThemedStatusToast({
     onDismiss,
     message,
     isVisible = false,
-    isSyncing = false, // Default value for syncing state
+    isSyncing = false,
     style = {},
-    duration = 4000, // Default duration for auto-hide
+    duration = 4000,
     onVisibilityToggle,
 }: ThemedStatusToastProps) {
     const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
@@ -51,17 +51,14 @@ export function ThemedStatusToast({
     const opacity = useSharedValue(0);
     const translateY = useSharedValue(50);
 
-    const animatedStyle = useAnimatedStyle(() => {
-        return {
-            opacity: opacity.value,
-            transform: [{ translateY: translateY.value }],
-        };
-    });
+    const animatedStyle = useAnimatedStyle(() => ({
+        opacity: opacity.value,
+        transform: [{ translateY: translateY.value }],
+    }));
 
     // Handle visibility and animation
     useEffect(() => {
         if (isVisible) {
-            // Show toast with animation
             opacity.value = withTiming(1, { duration: 300 });
             translateY.value = withTiming(0, { duration: 300 });
 
@@ -73,7 +70,6 @@ export function ThemedStatusToast({
 
             return () => clearTimeout(timer);
         } else {
-            // Hide toast with animation
             setIsAnimationComplete(true);
             opacity.value = withTiming(0, { duration: 300 });
             translateY.value = withTiming(50, { duration: 300 });
@@ -83,7 +79,6 @@ export function ThemedStatusToast({
         }
     }, [isVisible, duration, onVisibilityToggle, opacity, translateY]);
 
-    // Don't render the toast if it's not visible and the animation is complete
     if (!isVisible && !isAnimationComplete) {
         return null;
     }
@@ -91,37 +86,33 @@ export function ThemedStatusToast({
     return (
         <Portal>
             <Animated.View style={[toastStyle, animatedStyle]}>
-                <View style={styles.toastTitle}>
-                    {isSyncing ? (
-                        <ActivityIndicator size="small" color={color} />
-                    ) : (
-                        <Ionicons
-                            name={iconName || 'information-circle'}
-                            size={20}
-                            color={color}
-                        />
-
-                    )}
-                    <ThemedText style={styles.toastText} numberOfLines={2} type='defaultSemiBold'>
-                        {message}
-                    </ThemedText>
-                </View>
-                {!isSyncing ? (
-                    <View style={styles.rightSection}>
-                        <Pressable
-                            hitSlop={30}
-                            onPress={onDismiss}
-                        >
-                            <View style={styles.iconTouchable}>
-                                <Ionicons
-                                    name={dismissIconName || 'close'}
-                                    size={20}
-                                    color={color}
-                                />
-                            </View>
-                        </Pressable>
+                <View style={styles.toastContent}>
+                    <View style={styles.toastTitle}>
+                        {isSyncing ? (
+                            <ActivityIndicator size="small" color={color} />
+                        ) : (
+                            <Ionicons
+                                name={iconName || 'information-circle'}
+                                size={20}
+                                color={color}
+                            />
+                        )}
+                        <View style={styles.messageContainer}>
+                            <ThemedText style={styles.toastText} numberOfLines={2} ellipsizeMode="tail" type="defaultSemiBold">
+                                {message}
+                            </ThemedText>
+                        </View>
                     </View>
-                ) : null}
+                    {!isSyncing && (
+                        <Pressable onPress={onDismiss} hitSlop={30} style={styles.iconTouchable}>
+                            <Ionicons
+                                name={dismissIconName || 'close'}
+                                size={20}
+                                color={color}
+                            />
+                        </Pressable>
+                    )}
+                </View>
             </Animated.View>
         </Portal>
     );
@@ -133,25 +124,30 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         paddingHorizontal: 15,
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
+    },
+    toastContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flex: 1,
     },
     toastTitle: {
         flexDirection: 'row',
         alignItems: 'center',
+        flex: 1,
         gap: 10,
+    },
+    messageContainer: {
+        flex: 1,
+        marginRight: 10, // Ensures space for the close button
     },
     toastText: {
         fontSize: 14,
-        width: '80%',
         overflow: 'hidden',
-        
-    },
-    rightSection: {
-        flexDirection: 'row',
-        alignItems: 'center',
     },
     iconTouchable: {
         borderRadius: 50,
-    }
+        padding: 5,
+    },
 });

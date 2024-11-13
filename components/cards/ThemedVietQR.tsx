@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
     iconContainer: {
         width: 35,
         aspectRatio: 1,
-        borderRadius: 25,
+        borderRadius: 50,
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: 'white',
@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         // marginVertical: -10, 
         // marginBottom: -30, 
-        marginVertical: 15,
+        // marginVertical: 10,
         paddingRight: 10,
         backgroundColor: '#fff',
         borderRadius: 10,
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
         color: 'white',
     },
     accountNumber: {
-        fontSize: 18,
+        fontSize: 16,
         textAlign: 'center',
         color: 'white',
     }

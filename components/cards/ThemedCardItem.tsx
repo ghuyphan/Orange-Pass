@@ -1,5 +1,5 @@
 import React, { memo, useMemo, useEffect, useCallback } from 'react';
-import { Image, StyleSheet, View, TouchableWithoutFeedback, Dimensions, Pressable } from 'react-native';
+import { Image, StyleSheet, View, Dimensions, Pressable } from 'react-native';
 import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -49,17 +49,13 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
   const colorScheme = useColorScheme();
   const colors = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
 
-  // Memoize item data to prevent unnecessary recalculations
   const { full_name, name, color, accent_color } = useMemo(() => returnItemData(code, type), [code, type]);
 
-  // Fallback colors
   const backgroundColor = colorScheme === 'light' ? color?.light || '#ffffff' : color?.dark || '#000000';
   const footerBackgroundColor = colorScheme === 'light' ? accent_color?.light || '#f0f0f0' : accent_color?.dark || '#303030';
 
-  // Memoize icon path
   const iconPath = useMemo(() => getIconPath(code), [code]);
 
-  // Memoize account display name
   const accountDisplayName = useMemo(() => {
     if (type === 'bank') {
       const length = accountNumber?.length ?? 0;
@@ -70,14 +66,12 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
     }
   }, [type, accountNumber, full_name]);
 
-  // Memoize press handlers
   const handleItemPress = useCallback(() => {
     if (!isActive) {
       onItemPress();
     }
   }, [isActive, onItemPress]);
 
-  // Animated values
   const scale = useSharedValue(1);
   const shadowOpacity = useSharedValue(0);
   const elevation = useSharedValue(0);
@@ -105,14 +99,19 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
 
   return (
     <Animated.View style={animatedStyle}>
-      <Pressable onPress={handleItemPress} onLongPress={onDrag} delayLongPress={150} android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}>
+      <Pressable
+        onPress={handleItemPress}
+        onLongPress={onDrag}
+        delayLongPress={150}
+        android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
+      >
         <View style={[styles.touchableHighlight, style]}>
           <ThemedView style={[styles.itemContainer, { backgroundColor }]}>
             <View style={styles.headerContainer}>
               <View style={styles.headerLeft}>
-                <View style={styles.dragIconContainer}>
+                {/* <View style={styles.dragIconContainer}>
                   <Ionicons name="menu" size={16} color="white" />
-                </View>
+                </View> */}
                 <View style={styles.leftHeaderContainer}>
                   <View style={styles.iconContainer}>
                     <Image source={iconPath} style={styles.icon} resizeMode="contain" />
@@ -130,14 +129,13 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
               {onMoreButtonPress && (
                 <Pressable
                   onPress={onMoreButtonPress}
-                  style={styles.moreButtonContainer}
                   hitSlop={{ bottom: 40, left: 30, right: 30, top: 30 }}
-                  pointerEvents='auto'
                 >
-                  <Ionicons name="ellipsis-vertical" size={16} color="white" />
+                  <Ionicons name="ellipsis-vertical" size={20} color="white" />
                 </Pressable>
               )}
             </View>
+
             <View style={styles.qrContainer}>
               <View style={styles.qr}>
                 {metadata_type === 'qr' ? (
@@ -147,6 +145,7 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
                 )}
               </View>
             </View>
+
             <View style={[styles.footerContainer, { backgroundColor: footerBackgroundColor }]}>
               <ThemedText style={styles.footerText} numberOfLines={1} ellipsizeMode="tail">
                 {accountName || ' '}
@@ -178,11 +177,10 @@ const styles = StyleSheet.create({
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    pointerEvents: 'none',
     gap: 10,
   },
   dragIconContainer: {
-    pointerEvents: 'none'
+    pointerEvents: 'none',
   },
   leftHeaderContainer: {
     flexDirection: 'row',
@@ -190,19 +188,19 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   iconContainer: {
-    width: 38,
+    width: 40,
     aspectRatio: 1,
     borderRadius: 50,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'white',
   },
+  icon: {
+    width: '60%',
+    height: '60%',
+  },
   labelContainer: {
     flexDirection: 'column',
-  },
-  icon: {
-    width: '65%',
-    height: '65%',
   },
   companyName: {
     fontSize: 14,
@@ -215,16 +213,10 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     color: 'white',
   },
-  moreButtonContainer: {
-    borderRadius: 50,
-    overflow: 'hidden',
-  },
   qrContainer: {
-    paddingVertical: 15,
+    paddingVertical: 10,
     paddingHorizontal: 15,
     alignItems: 'flex-end',
-    pointerEvents: 'none',
-
   },
   qr: {
     backgroundColor: 'white',
@@ -234,15 +226,10 @@ const styles = StyleSheet.create({
   footerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    bottom: 0,
     paddingHorizontal: 15,
     paddingVertical: 5,
-    gap: 10,
-    pointerEvents: 'none',
   },
   footerText: {
-    maxWidth: '100%',
-    overflow: 'hidden',
     fontSize: 13,
     color: 'white',
   },

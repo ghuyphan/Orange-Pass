@@ -4,10 +4,10 @@ const tintColorDark = '#FFA726';  // Brighter to stand out in dark mode
 export const Colors = {
   light: {
     text: '#212121', // Dark gray-black for readability
-    background: '#FFFFFF', // Pure white for background
+    background: '#FAFAFA', // Pure white for background
     tint: tintColorLight,
     icon: '#FFB74D', // Soft orange for icons
-    inputBackground: '#F9F2EC', // Light beige for input background
+    inputBackground: '#F3E9E1', // Light beige for input background
     placeHolder: '#9E9E9E', // Gray for placeholders
     tabIconDefault: '#BDBDBD', // Light gray for unselected tab icons
     tabIconSelected: tintColorLight,
@@ -15,13 +15,13 @@ export const Colors = {
     toastBackground: '#D3B8A3', // Light orange for toast notifications
     buttonBackground: '#D3B8A3', // Soft orange for button backgrounds
     buttonHighlight: '#FFECB3', // Brighter to highlight on hover
-    cardBackground: '#F9F2EC', // Light beige for card background
+    cardBackground: '#F3E9E1', // Light beige for card background
     cardFooter: '#E1D5C9', // Bright orange for card footer
     logoIcon: '#FF8A65', // Dark orange for logos
   },
   dark: {
     text: '#FFFFFF', // Light gray for text on dark background
-    background: '#1A1A1A', // Very dark background for dark mode
+    background: '#121212', // Very dark background for dark mode
     tint: tintColorDark,
     icon: '#FFB74D', // Bright orange for icons
     inputBackground: '#322C28', // Dark gray for input background
