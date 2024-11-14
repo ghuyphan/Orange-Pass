@@ -70,7 +70,7 @@ const ThemeScreen: React.FC = () => {
             setIsToastVisible(true);
             setTimeout(() => {
                 setIsToastVisible(false);
-            }, 1500)
+            }, 2000)
         }
     }, [setDarkMode, useSystemTheme]);
 
@@ -164,7 +164,7 @@ const ThemeScreen: React.FC = () => {
                     message={t('themeScreen.successMessage')}
                     isVisible={isToastVisible}
                     duration={1000}
-                    style={{ position: 'absolute', bottom: 10, left: 15, right: 15 }}
+                    style={{ position: 'absolute', bottom: 30, left: 15, right: 15 }}
                     onDismiss={() => setIsToastVisible(false)}
                 />
             </Animated.ScrollView>

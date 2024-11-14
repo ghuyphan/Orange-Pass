@@ -220,6 +220,17 @@ function HomeScreen() {
     }
   }, [isEmpty]);
 
+  const searchContainerStyle = useAnimatedStyle(() => {
+    return {
+      height: isSearching ? withTiming(40, { duration: 250, easing: Easing.out(Easing.ease) }) : withTiming(0, { duration: 250, easing: Easing.out(Easing.ease) }),
+      opacity: withTiming(isSearching ? 1 : 0, { duration: 250, easing: Easing.out(Easing.ease) }),
+      transform: [{ translateY: withTiming(isSearching ? 0 : -20, { duration: 250 , easing: Easing.out(Easing.quad)}) }],
+      overflow: 'hidden',
+      pointerEvents: isSearching ? 'auto' : 'none',
+    };
+  }, [isSearching]);
+
+
   const animateEmptyCard = () => {
     emptyCardOffset.value = withSpring(0, {
       damping: 30,
@@ -232,8 +243,8 @@ function HomeScreen() {
     const opacity = scrollY.value > 120 ? 0 : 1;
     const translateY = interpolate(
       scrollY.value,
-      [0, 40],
-      [0, -40],
+      [0, 30],
+      [0, -30],
       Extrapolation.CLAMP
     );
     const zIndex = scrollY.value > 50 || isActive ? 0 : 1;
@@ -252,14 +263,14 @@ function HomeScreen() {
 
   const scrollContainerStyle = useAnimatedStyle(() => {
     return {
-      opacity: scrollY.value > 60 ? withTiming(1, {duration: 150}) : withTiming(0, {duration: 150}),
+      opacity: scrollY.value > 60 ? withTiming(1, { duration: 150, easing: Easing.out(Easing.ease) }) : withTiming(0, { duration: 150, easing: Easing.out(Easing.ease) }),
       pointerEvents: scrollY.value > 50 ? 'auto' : 'none',
     };
   });
 
   const listHeaderStyle = useAnimatedStyle(() => {
     return {
-      opacity: scrollY.value > 40 ? withTiming(0, {duration: 150}) : withTiming(1, {duration: 150}),
+      opacity: scrollY.value > 40 ? withTiming(0, { duration: 150, easing: Easing.out(Easing.ease) }) : withTiming(1, { duration: 150, easing: Easing.out(Easing.ease) }),
       pointerEvents: scrollY.value > 40 ? 'none' : 'auto',
     }
   })
@@ -467,16 +478,16 @@ function HomeScreen() {
           ref={flatListRef}
           ListHeaderComponent={
             <Animated.View style={[listHeaderStyle, { gap: 15, marginBottom: 15 }]}>
-              {isSearching && (
+              <Animated.View style={[searchContainerStyle]}>
                 <ThemedIconInput
-                style={styles.searchInput}
+                  style={styles.searchInput}
                   placeholder={t('homeScreen.searchPlaceholder')}
                   iconName="search"
                   value={searchQuery}
                   onChangeText={setSearchQuery}
-                // pointerEvents={isLoading && qrData.length > 0 ? 'none' : 'auto'}
                 />
-              )}
+              </Animated.View>
+
 
               {isLoading ? (
                 <ThemedFilterSkeleton show={true} />
@@ -595,7 +606,7 @@ const styles = StyleSheet.create({
   emptyCard: {
     marginHorizontal: 15,
   },
-  searchInput:{
+  searchInput: {
     paddingVertical: 0
   },
   listContainer: {

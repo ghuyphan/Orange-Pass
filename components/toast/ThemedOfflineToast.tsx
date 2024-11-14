@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
     },
     messageContainer: {
         flex: 1,
-        marginRight: 10, // Ensures space for the close button
+        marginRight: 5, // Ensures space for the close button
     },
     toastText: {
         fontSize: 14,

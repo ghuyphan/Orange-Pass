@@ -63,7 +63,7 @@ export function ThemedIconInput({
         <ThemedView style={inputContainerStyle}>
             <View style={styles.inputRow}>
                 <View style={styles.leftContainer}>
-                    <Ionicons name={iconName} size={20} color={color} />
+                    <Ionicons name={iconName} size={20} color={color || colorScheme === 'light' ? Colors.light.placeHolder : Colors.dark.placeHolder} />
                     <TextInput
                         style={[styles.input, { color }]}
                         value={localValue}

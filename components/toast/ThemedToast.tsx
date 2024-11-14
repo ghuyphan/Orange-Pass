@@ -89,7 +89,7 @@ export function ThemedToast({
                     <View style={styles.toastTitle}>
                         <Ionicons
                             name={iconName || 'information-circle-outline'}
-                            size={25}
+                            size={20}
                             color={color}
                         />
                         <View style={styles.messageContainer}>
@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
     },
     messageContainer: {
         flex: 1,
-        marginRight: 10, // Space to prevent overlap with close button
+        marginRight: 5, // Space to prevent overlap with close button
     },
     toastText: {
         fontSize: 14,
