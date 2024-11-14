@@ -15,6 +15,7 @@ import { forgot } from '@/services/auth';
 import { ThemedText } from '@/components/ThemedText';
 import { width, height } from '@/constants/Constants';
 import { useLocale } from '@/context/LocaleContext';
+import LOGO from '@/assets/svgs/orange-logo.svg';
 
 export default function ForgotPasswordScreen() {
   const colorScheme = useColorScheme();
@@ -73,7 +74,8 @@ export default function ForgotPasswordScreen() {
           scrollEnabled={isKeyboardVisible}
         >
           <ThemedView style={styles.logoContainer}>
-            <Image source={require('@/assets/images/orange-icon.png')} style={styles.orangeLogo} />
+          <LOGO width={width * 0.25} height={width * 0.25} style={styles.orangeLogo} />
+            {/* <Image source={require('@/assets/images/orange-icon.png')} style={styles.orangeLogo} /> */}
           </ThemedView>
           <ThemedText style={styles.title} type='defaultSemiBold'>{t('forgotPasswordScreen.forgotPassword')}</ThemedText>
           <ThemedInput
@@ -114,7 +116,7 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     alignItems: 'center',
-    marginTop: 90,
+    marginTop: 105,
     marginBottom: 10,
   },
   orangeLogo: {

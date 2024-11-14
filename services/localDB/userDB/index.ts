@@ -36,7 +36,6 @@ export async function createTable() {
                 avatar TEXT
             );
         `);        
-        console.log('Table was created successfully');
     } catch (error) {
         console.error('Error creating table:', error);
         throw error;

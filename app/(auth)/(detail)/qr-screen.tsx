@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     headerWrapper: {
-        paddingTop: STATUSBAR_HEIGHT + 25,
+        paddingTop: STATUSBAR_HEIGHT + 45,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',

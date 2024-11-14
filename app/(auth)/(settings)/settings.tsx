@@ -165,7 +165,7 @@ function SettingsScreen() {
                 <View style={styles.headerContainer}>
                     <View style={styles.titleButtonContainer}>
                         <ThemedButton
-                            iconName="chevron-back"
+                            iconName="chevron-back-outline"
                             style={styles.titleButton}
                             onPress={onNavigateBack}
                         />

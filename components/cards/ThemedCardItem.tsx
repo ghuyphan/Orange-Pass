@@ -207,6 +207,7 @@ const styles = StyleSheet.create({
   companyName: {
     fontSize: 14,
     color: 'white',
+    marginBottom: -2,
   },
   companyFullName: {
     fontSize: 14,

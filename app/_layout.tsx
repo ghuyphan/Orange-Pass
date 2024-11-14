@@ -13,6 +13,7 @@ import { checkOfflineStatus } from '@/services/network';
 import { LocaleProvider } from '@/context/LocaleContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { storage } from '@/utils/storage';
+import LOGO from '@/assets/svgs/orange-logo.svg';
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -88,11 +89,12 @@ export default function RootLayout() {
     if (!isAppReady || isAuthenticated === null || hasSeenOnboarding === null) {
         return (
             <View style={styles.loadingContainer} onLayout={onLayoutRootView}>
-                <Image
+            <LOGO width={width * 0.23} height={width * 0.23} style={styles.orangeLogo} />
+                {/* <Image
                     resizeMode='contain'
                     source={require('@/assets/images/orange-icon.png')}
                     style={styles.orangeLogo}
-                />
+                /> */}
                 <ActivityIndicator
                     style={styles.activityIndicator}
                     size="small"

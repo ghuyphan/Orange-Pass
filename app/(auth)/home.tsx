@@ -229,11 +229,11 @@ function HomeScreen() {
 
   // Combine animations for opacity and translateY based on scrollY in useDerivedValue
   const headerAnimation = useDerivedValue(() => {
-    const opacity = scrollY.value > 60 ? 0 : 1;
+    const opacity = scrollY.value > 120 ? 0 : 1;
     const translateY = interpolate(
       scrollY.value,
-      [0, 35],
-      [0, -35],
+      [0, 40],
+      [0, -40],
       Extrapolation.CLAMP
     );
     const zIndex = scrollY.value > 50 || isActive ? 0 : 1;
@@ -244,7 +244,7 @@ function HomeScreen() {
   const titleContainerStyle = useAnimatedStyle(() => {
     const { opacity, translateY, zIndex } = headerAnimation.value;
     return {
-      opacity: withTiming(opacity, { duration: 180, easing: Easing.out(Easing.ease) }),
+      opacity: withTiming(opacity, { duration: 150, easing: Easing.out(Easing.ease) }),
       transform: [{ translateY }],
       zIndex,
     };
@@ -252,10 +252,17 @@ function HomeScreen() {
 
   const scrollContainerStyle = useAnimatedStyle(() => {
     return {
-      opacity: scrollY.value > 60 ? withTiming(1) : withTiming(0),
+      opacity: scrollY.value > 60 ? withTiming(1, {duration: 150}) : withTiming(0, {duration: 150}),
       pointerEvents: scrollY.value > 50 ? 'auto' : 'none',
     };
   });
+
+  const listHeaderStyle = useAnimatedStyle(() => {
+    return {
+      opacity: scrollY.value > 40 ? withTiming(0, {duration: 150}) : withTiming(1, {duration: 150}),
+      pointerEvents: scrollY.value > 40 ? 'none' : 'auto',
+    }
+  })
 
   const emptyCardStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: emptyCardOffset.value }],
@@ -458,9 +465,8 @@ function HomeScreen() {
       ) : (
         <DraggableFlatList
           ref={flatListRef}
-          ListHeaderComponentStyle={{ gap: 15, marginBottom: 15 }}
           ListHeaderComponent={
-            <>
+            <Animated.View style={[listHeaderStyle, { gap: 15, marginBottom: 15 }]}>
               {isSearching && (
                 <ThemedIconInput
                 style={styles.searchInput}
@@ -480,7 +486,7 @@ function HomeScreen() {
                   onFilterChange={setFilter}
                 />
               )}
-            </>}
+            </Animated.View>}
           ListEmptyComponent={
             <View style={styles.emptyItem}>
               <Ionicons color={color} name="search-outline" size={40} />

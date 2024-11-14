@@ -15,8 +15,9 @@ import { t } from '@/i18n';
 import { registrationSchema } from '@/utils/validationSchemas';
 import { register } from '@/services/auth';
 import { width, height } from '@/constants/Constants';
-import {useLocale} from "@/context/LocaleContext";
+import { useLocale } from "@/context/LocaleContext";
 import { genConfig } from '@zamplyy/react-native-nice-avatar';
+import LOGO from '@/assets/svgs/orange-logo.svg';
 
 export default function RegisterScreen() {
     const colorScheme = useColorScheme();
@@ -82,7 +83,8 @@ export default function RegisterScreen() {
                     enableOnAndroid
                 >
                     <ThemedView style={styles.logoContainer}>
-                        <Image source={require('@/assets/images/orange-icon.png')} style={styles.orangeLogo} />
+                        <LOGO width={width * 0.25} height={width * 0.25} style={styles.orangeLogo} />
+                        {/* <Image source={require('@/assets/images/orange-icon.png')} style={styles.orangeLogo} /> */}
                     </ThemedView>
                     <ThemedText style={styles.title} type='defaultSemiBold'>{t('registerScreen.registerNewAccount')}</ThemedText>
                     <ThemedInput
@@ -153,17 +155,17 @@ const styles = StyleSheet.create({
     },
     logoContainer: {
         alignItems: 'center',
-        marginTop: 90,
+        marginTop: 105,
         marginBottom: 10,
-      },
-      orangeLogo: {
+    },
+    orangeLogo: {
         width: width * 0.3,
         height: height * 0.13,
         left: 0,
         right: 0,
         resizeMode: 'cover',
         marginBottom: 20,
-      },
+    },
     title: {
         marginBottom: 20,
         fontSize: 22,

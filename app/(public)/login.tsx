@@ -19,6 +19,7 @@ import { loginSchema } from '@/utils/validationSchemas';
 import { login } from '@/services/auth';
 import { width, height } from '@/constants/Constants';
 import { useLocale } from '@/context/LocaleContext';
+import LOGO from '@/assets/svgs/orange-logo.svg';
 
 export default function LoginScreen() {
   const { locale } = useLocale();
@@ -93,7 +94,8 @@ export default function LoginScreen() {
           scrollEnabled={isKeyboardVisible}
         >
           <ThemedView style={styles.logoContainer}>
-            <Image source={require('@/assets/images/orange-icon.png')} style={styles.orangeLogo} />
+            <LOGO width={width * 0.25} height={width * 0.25} style={styles.orangeLogo} />
+            {/* <Image source={require('@/assets/images/orange-icon.png')} style={styles.orangeLogo} /> */}
           </ThemedView>
           <ThemedInput
             label={t('loginScreen.email')}
@@ -159,7 +161,7 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     alignItems: 'center',
-    marginTop: 90,
+    marginTop: 105,
     marginBottom: 10,
   },
   orangeLogo: {
