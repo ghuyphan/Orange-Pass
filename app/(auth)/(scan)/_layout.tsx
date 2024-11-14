@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     position: 'absolute',
-    top: STATUSBAR_HEIGHT + 25,
+    top: STATUSBAR_HEIGHT + 45,
     left: 15,
     zIndex: 10,
   },

@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useState, useMemo } from 'react';
-import { TextInput, StyleSheet, TouchableHighlight, View, TouchableWithoutFeedback } from 'react-native';
+import { TextInput, StyleSheet, TouchableHighlight, View, TouchableWithoutFeedback, Pressable } from 'react-native';
 import { ThemedView } from '../ThemedView';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -80,24 +80,23 @@ export function ThemedIconInput({
                 </View>
                 <View style={styles.rightContainer}>
                     {localValue.length > 0 && (
-                        <TouchableWithoutFeedback
+                        <Pressable
                             onPress={onClearValue}
-                            
+                            hitSlop={40}
                         >
                             <View style={styles.iconTouchable}>
                             <Ionicons
-                                name={'close-circle-sharp'}
+                                name={'close-circle'}
                                 size={20}
                                 color={color}
                             />
                             </View>
-                        </TouchableWithoutFeedback>
+                        </Pressable>
                     )}
                     {rightIconName && (
-                        <TouchableWithoutFeedback
+                        <Pressable
                             onPress={onRightIconPress}
-                            // activeOpacity={0.6}
-                            // underlayColor="#FFF5E1"
+                            hitSlop={40}
                         >
                             <View style={styles.iconTouchable}>
                             <Ionicons
@@ -106,7 +105,7 @@ export function ThemedIconInput({
                                 color={color}
                             />
                             </View>
-                        </TouchableWithoutFeedback>
+                        </Pressable>
                     )}
                 </View>
             </View>

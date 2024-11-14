@@ -143,6 +143,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         paddingHorizontal: 15,
+        // paddingTop: 45,
     },
     iconContainer: {
         justifyContent: 'center',
@@ -161,7 +162,7 @@ const styles = StyleSheet.create({
         fontSize: 18,
     },
     bottomContainer: {
-        paddingBottom: 60,
+        paddingBottom: 40,
         paddingHorizontal: 15,
         gap: 15,
     },

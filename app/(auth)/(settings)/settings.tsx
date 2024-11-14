@@ -53,9 +53,9 @@ function SettingsScreen() {
             setAvatarConfig(null);
             return;
         }
-    
+
         let parsedConfig: AvatarConfig | null = null;
-    
+
         try {
             if (typeof avatarConfigString === 'object') {
                 parsedConfig = avatarConfigString as AvatarConfig;
@@ -70,10 +70,10 @@ function SettingsScreen() {
             console.error("Error parsing avatar config:", error);
             parsedConfig = null;
         }
-    
+
         setAvatarConfig(parsedConfig);
     }, [avatarConfigString]);
-    
+
     // Function to parse the offline string format
     const parseAvatarString = (str: string): AvatarConfig => {
         const cleanStr = str.replace(/[{}]/g, '').trim();
@@ -134,21 +134,21 @@ function SettingsScreen() {
 
     const logout = async () => {
         try {
-          setIsModalVisible(false);
-          setIsLoading(true);
-          await SecureStore.deleteItemAsync('authToken');
-          pb.authStore.clear();
+            setIsModalVisible(false);
+            setIsLoading(true);
+            await SecureStore.deleteItemAsync('authToken');
+            pb.authStore.clear();
         } catch (error) {
-          console.log(error);
+            console.log(error);
         } finally {
-          setTimeout(() => {
-            setIsLoading(false);
-            dispatch(clearAuthData());
-            dispatch(clearErrorMessage()); // Clear error on logout
-            router.replace('/login');
-          }, 1000);
+            setTimeout(() => {
+                setIsLoading(false);
+                dispatch(clearAuthData());
+                dispatch(clearErrorMessage()); // Clear error on logout
+                router.replace('/login');
+            }, 1000);
         }
-      };
+    };
 
     const onLogout = useCallback(() => {
         setIsModalVisible(true);
@@ -197,18 +197,18 @@ function SettingsScreen() {
 
                 <View style={[styles.sectionContainer, { backgroundColor: colorScheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground }]}>
                     <ThemedSettingsCardItem
-                        leftIcon='person'
+                        leftIcon='person-outline'
                         settingsTitle={t('settingsScreen.editProfile')}
                     // onPress={() => router.push('/settings/language')}
                     />
                     <ThemedSettingsCardItem
                         settingsTitle={t('settingsScreen.changePassword')}
-                        leftIcon='lock-closed'
+                        leftIcon='lock-closed-outline'
                     // onPress={() => router.push('/settings/language')}
                     />
                     <ThemedSettingsCardItem
                         settingsTitle={t('settingsScreen.changeEmail')}
-                        leftIcon='mail'
+                        leftIcon='mail-outline'
                     // onPress={() => router.push('/settings/language')}
                     />
                 </View>
@@ -216,22 +216,22 @@ function SettingsScreen() {
                 <View style={[styles.sectionContainer, { backgroundColor: colorScheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground }]}>
                     <ThemedSettingsCardItem
                         settingsTitle={t('settingsScreen.about')}
-                        leftIcon='information-circle'
+                        leftIcon='information-circle-outline'
                     // onPress={() => router.push('/settings/language')}
                     />
                     <ThemedSettingsCardItem
                         settingsTitle={t('settingsScreen.language')}
-                        leftIcon='language'
+                        leftIcon='language-outline'
                         onPress={() => router.push('/language')}
                     />
                     <ThemedSettingsCardItem
                         settingsTitle={t('settingsScreen.appTheme')}
-                        leftIcon='contrast'
+                        leftIcon='contrast-outline'
                         onPress={() => router.push('/theme')}
                     />
                 </View>
                 <ThemedButton
-                    iconName="log-out"
+                    iconName="log-out-outline"
                     label={t('settingsScreen.logout')}
                     loadingLabel='Logging out...'
                     loading={isLoading}
@@ -240,6 +240,7 @@ function SettingsScreen() {
                 />
             </Animated.ScrollView>
             <ThemedModal
+                onDismiss={() => setIsModalVisible(false)}
                 dismissable={true}
                 primaryActionText={t('settingsScreen.logout')}
                 onPrimaryAction={logout}
@@ -248,7 +249,7 @@ function SettingsScreen() {
                 title={t('settingsScreen.confirmLogoutTitle')}
                 message={t('settingsScreen.confirmLogoutMessage')}
                 isVisible={isModalVisible}
-                iconName="log-out"
+                iconName="log-out-outline"
             />
         </ThemedView>
     );
@@ -262,7 +263,7 @@ const styles = StyleSheet.create({
     },
     titleContainer: {
         position: 'absolute',
-        top: STATUSBAR_HEIGHT + 25,
+        top: STATUSBAR_HEIGHT + 45,
         left: 0,
         right: 0,
     },

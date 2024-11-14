@@ -88,7 +88,7 @@ export function ThemedToast({
                 <View style={styles.toastContent}>
                     <View style={styles.toastTitle}>
                         <Ionicons
-                            name={iconName || 'information-circle'}
+                            name={iconName || 'information-circle-outline'}
                             size={25}
                             color={color}
                         />
@@ -104,7 +104,7 @@ export function ThemedToast({
                         hitSlop={30}
                     >
                         <Ionicons
-                            name={dismissIconName || 'close'}
+                            name={dismissIconName || 'close-outline'}
                             size={20}
                             color={color}
                         />

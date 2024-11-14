@@ -51,7 +51,7 @@ export function ThemedButton({
     loadingLabel,
     iconName,
     iconColor,
-    iconSize = 18,
+    iconSize = 16,
     underlayColor,
     onPress,
     style = {},
@@ -104,7 +104,7 @@ export function ThemedButton({
 
 const styles = StyleSheet.create({
     touchable: {
-        padding: 10,
+        padding: 8,
         borderRadius: 50,
         alignItems: 'center',
         justifyContent: 'center',

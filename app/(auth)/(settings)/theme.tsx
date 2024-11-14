@@ -115,11 +115,11 @@ const ThemeScreen: React.FC = () => {
                                     styles.iconContainer,
                                     useColorScheme() === 'dark' ? { backgroundColor: Colors.dark.buttonBackground } : { backgroundColor: Colors.light.buttonBackground }
                                 ]}>
-                                    <Ionicons name="sunny" size={20} color={colors} />
+                                    <Ionicons name="sunny-outline" size={20} color={colors} />
                                 </View>
                                 <ThemedText>{t('themeScreen.light')}</ThemedText>
                             </View>
-                            {isDarkMode === false && <Ionicons name="checkmark" size={20} color={Colors.light.text} />}
+                            {isDarkMode === false && <Ionicons name="checkmark-outline" size={20} color={Colors.light.text} />}
                         </View>
                     </Pressable>
 
@@ -133,7 +133,7 @@ const ThemeScreen: React.FC = () => {
                                     styles.iconContainer,
                                     useColorScheme() === 'dark' ? { backgroundColor: Colors.dark.buttonBackground } : { backgroundColor: Colors.light.buttonBackground }
                                 ]}>
-                                    <Ionicons name="moon" size={20} color={colors} />
+                                    <Ionicons name="moon-outline" size={20} color={colors} />
                                 </View>
                                 <ThemedText>{t('themeScreen.dark')}</ThemedText>
                             </View>
@@ -151,11 +151,11 @@ const ThemeScreen: React.FC = () => {
                                     styles.iconContainer,
                                     useColorScheme() === 'dark' ? { backgroundColor: Colors.dark.buttonBackground } : { backgroundColor: Colors.light.buttonBackground }
                                 ]}>
-                                    <Ionicons name="cog" size={20} color={colors} />
+                                    <Ionicons name="cog-outline" size={20} color={colors} />
                                 </View>
                                 <ThemedText>{t('themeScreen.system')}</ThemedText>
                             </View>
-                            {isDarkMode === undefined && <Ionicons name="checkmark" size={20} color={colors} />}
+                            {isDarkMode === undefined && <Ionicons name="checkmark-outline" size={20} color={colors} />}
                         </View>
                     </Pressable>
                 </ThemedView>
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
     },
     titleContainer: {
         position: 'absolute',
-        top: STATUSBAR_HEIGHT + 25,
+        top: STATUSBAR_HEIGHT + 45,
         left: 0,
         right: 0,
     },

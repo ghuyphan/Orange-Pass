@@ -36,6 +36,7 @@ export async function createTable() {
                 avatar TEXT
             );
         `);        
+        console.log('Table was created successfully');
     } catch (error) {
         console.error('Error creating table:', error);
         throw error;
@@ -49,7 +50,7 @@ export async function insertUser(userData: {
     email: string;
     verified: boolean;
     name?: string;
-    avatar?: string;
+    avatar?: object; // Changed from string to object
 }) {
     const db = await openDatabase();
     if (!db) {
@@ -63,33 +64,35 @@ export async function insertUser(userData: {
         // Convert boolean to integer
         const verifiedValue = userData.verified ? 1 : 0;
 
+        // Convert avatar object to JSON string
+        const avatarString = userData.avatar ? JSON.stringify(userData.avatar) : null;
+
         if (existingUser) {
-            // Optionally, update the existing user's data if needed
+            // Update the existing user's data
             await db.runAsync(
                 'UPDATE users SET username = ?, email = ?, verified = ?, name = ?, avatar = ? WHERE id = ?',
                 [
                     userData.username,
                     userData.email,
-                    verifiedValue, // Use integer value
-                    userData.name ?? '',
-                    userData.avatar ?? '',
+                    verifiedValue,
+                    userData.name ?? null,
+                    avatarString,
                     userData.id,
                 ]
             );
         } else {
-            // Insert the new user if they don't already exist
+            // Insert the new user
             const result = await db.runAsync(
                 'INSERT INTO users (id, username, email, verified, name, avatar) VALUES (?, ?, ?, ?, ?, ?)',
                 [
                     userData.id,
                     userData.username,
                     userData.email,
-                    verifiedValue, // Use integer value
-                    userData.name ?? '',
-                    userData.avatar ?? '',
+                    verifiedValue,
+                    userData.name ?? null,
+                    avatarString,
                 ]
             );
-            console.log('New user inserted, last insert row id:', result.lastInsertRowId);
         }
     } catch (error) {
         console.error('Error inserting/updating user:', error);

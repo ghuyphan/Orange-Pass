@@ -4,7 +4,7 @@ const tintColorDark = '#FFA726';  // Brighter to stand out in dark mode
 export const Colors = {
   light: {
     text: '#212121', // Dark gray-black for readability
-    background: '#FAFAFA', // Pure white for background
+    background: '#F2F2F7', // Pure white for background
     tint: tintColorLight,
     icon: '#FFB74D', // Soft orange for icons
     inputBackground: '#F3E9E1', // Light beige for input background

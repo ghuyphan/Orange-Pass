@@ -15,7 +15,7 @@ export default function AddLayout() {
           animation: 'ios'
         }}
       >
-        <Stack.Screen options={{ presentation: 'modal' }} name="add-new" />
+        <Stack.Screen name="add-new" />
       </Stack>
       <View style={[styles.headerContainer, Platform.OS == 'android' ? { top: 60 } : { top: 20 }]}>
         <ThemedButton

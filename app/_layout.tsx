@@ -88,15 +88,15 @@ export default function RootLayout() {
     if (!isAppReady || isAuthenticated === null || hasSeenOnboarding === null) {
         return (
             <View style={styles.loadingContainer} onLayout={onLayoutRootView}>
-                <Image 
-                    resizeMode='contain' 
-                    source={require('@/assets/images/orange-icon.png')} 
-                    style={styles.orangeLogo} 
+                <Image
+                    resizeMode='contain'
+                    source={require('@/assets/images/orange-icon.png')}
+                    style={styles.orangeLogo}
                 />
-                <ActivityIndicator 
-                    style={styles.activityIndicator} 
-                    size="small" 
-                    color='#6FC2B4' 
+                <ActivityIndicator
+                    style={styles.activityIndicator}
+                    size="small"
+                    color='#6FC2B4'
                 />
             </View>
         );
@@ -111,32 +111,21 @@ export default function RootLayout() {
                             <Stack
                                 screenOptions={{
                                     headerShown: false,
-                                    animation: 'none',
+                                    animation: 'ios',
                                 }}
                             >
-                                <Stack.Screen 
+                                <Stack.Screen
                                     name="(public)"
-                                    options={{
-                                        contentStyle: { backgroundColor: '#FFF5E1' }
-                                    }}
                                 />
-                                <Stack.Screen 
+                                <Stack.Screen
                                     name="(auth)"
-                                    options={{
-                                        contentStyle: { backgroundColor: '#FFF5E1' }
-                                    }}
+                                    options={{ animation: 'none' }}
                                 />
-                                <Stack.Screen 
+                                <Stack.Screen
                                     name="+not-found"
-                                    options={{
-                                        contentStyle: { backgroundColor: '#FFF5E1' }
-                                    }}
                                 />
-                                <Stack.Screen 
+                                <Stack.Screen
                                     name="onboard"
-                                    options={{
-                                        contentStyle: { backgroundColor: '#FFF5E1' }
-                                    }}
                                 />
                             </Stack>
                         </ThemeProvider>

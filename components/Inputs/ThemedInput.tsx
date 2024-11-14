@@ -115,7 +115,7 @@ export function ThemedInput({
 
                         >
                             <Ionicons
-                                name={secureTextEntry ? (isSecure ? 'eye-sharp' : 'eye-off-sharp') : 'close-circle-sharp'}
+                                name={secureTextEntry ? (isSecure ? 'eye' : 'eye-off') : 'close-circle-sharp'}
                                 size={18}
                                 color={color}
                             />

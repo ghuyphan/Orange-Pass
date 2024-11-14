@@ -101,7 +101,7 @@ const LanguageScreen: React.FC = () => {
                                 <ThemedText>{t('languageScreen.vietnamese')}</ThemedText>
                             </View>
                             {locale === 'vi' && (
-                                <Ionicons name="checkmark" size={20} color={colors} />
+                                <Ionicons name="checkmark-outline" size={20} color={colors} />
                             )}
                         </View>
                     </Pressable>
@@ -118,7 +118,7 @@ const LanguageScreen: React.FC = () => {
                                 <ThemedText>{t('languageScreen.russian')}</ThemedText>
                             </View>
                             {locale === 'ru' && (
-                                <Ionicons name="checkmark" size={20} color={colors} />
+                                <Ionicons name="checkmark-outline" size={20} color={colors} />
                             )}
                         </View>
                     </Pressable>
@@ -135,7 +135,7 @@ const LanguageScreen: React.FC = () => {
                                 <ThemedText>{t('languageScreen.english')}</ThemedText>
                             </View>
                             {locale === 'en' && (
-                                <Ionicons name="checkmark" size={20} color={colors} />
+                                <Ionicons name="checkmark-outline" size={20} color={colors} />
                             )}
                         </View>
                     </Pressable>
@@ -150,12 +150,12 @@ const LanguageScreen: React.FC = () => {
                                     styles.iconContainer,
                                     colorScheme === 'dark' ? { backgroundColor: Colors.dark.buttonBackground } : { backgroundColor: Colors.light.buttonBackground }
                                 ]}>
-                                    <Ionicons name="cog" size={20} color={colors} />
+                                    <Ionicons name="cog-outline" size={20} color={colors} />
                                 </View>
                                 <ThemedText>{t('languageScreen.system')}</ThemedText>
                             </View>
                             {locale == undefined && (
-                                <Ionicons name="checkmark" size={20} color={colors} />
+                                <Ionicons name="checkmark-outline" size={20} color={colors} />
                             )}
                         </View>
                     </Pressable>
@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
     },
     titleContainer: {
         position: 'absolute',
-        top: STATUSBAR_HEIGHT + 25,
+        top: STATUSBAR_HEIGHT + 45,
         left: 0,
         right: 0,
     },

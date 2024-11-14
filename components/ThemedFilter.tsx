@@ -37,7 +37,6 @@ const ThemedFilter = React.memo(({ selectedFilter, onFilterChange, style }: Them
                 >
                     <View>
                         <ThemedText
-                            type={'defaultSemiBold'}
                             style={[
                                 styles.baseTextStyle,
                                 selectedFilter === filter.key && (isDarkMode ? styles.selectedFilterTextDarkMode : styles.selectedFilterTextLightMode)

@@ -83,7 +83,7 @@ const ThemedBottomSheet = React.memo(forwardRef<BottomSheet, ThemedBottomSheetPr
                                 style={styles.buttonContainer}
                                 android_ripple={{color: rippleColor, foreground: true, borderless: false }}
                             >
-                                    <Ionicons name="create" size={18} color={iconColor} />
+                                    <Ionicons name="create-outline" size={18} color={iconColor} />
                                     <ThemedText style={styles.buttonText}>{editText}</ThemedText>
                             </Pressable>
                             <Pressable
@@ -93,7 +93,7 @@ const ThemedBottomSheet = React.memo(forwardRef<BottomSheet, ThemedBottomSheetPr
                                 android_ripple={{ color: rippleColor, foreground: true, borderless: false }}
                             >
 
-                                    <Ionicons name="trash" size={18} color={iconColor} />
+                                    <Ionicons name="trash-outline" size={18} color={iconColor} />
                                     <ThemedText style={styles.buttonText}>{deleteText}</ThemedText>
                             </Pressable>
                         </View>

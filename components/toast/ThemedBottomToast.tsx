@@ -98,7 +98,7 @@ export function ThemedBottomToast({
                         <ActivityIndicator size={15} color={color} />
                     ) : (
                         <Ionicons
-                            name={iconName || 'information-circle'}
+                            name={iconName || 'information-circle-outline'}
                             size={15}
                             color={color}
                         />

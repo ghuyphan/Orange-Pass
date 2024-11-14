@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { StyleSheet, TouchableWithoutFeedback, View, Image } from 'react-native';
+import { StyleSheet, TouchableWithoutFeedback, View, Image, Pressable } from 'react-native';
 import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
 import { ThemedButton } from '../buttons/ThemedButton';
@@ -27,6 +27,7 @@ export type ThemedEmptyCard = {
     style?: object;
     /** Custom styles for the card footer */
     footerStyle?: object
+    paddingTop?: number
 };
 
 /**
@@ -47,6 +48,7 @@ export function ThemedEmptyCard({
     buttonOnPress,
     style,
     footerStyle,
+    paddingTop,
 }: ThemedEmptyCard) {
     const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
     const colorScheme = useColorScheme();
@@ -64,10 +66,10 @@ export function ThemedEmptyCard({
     }), [colorScheme]);
 
     return (
-            <TouchableWithoutFeedback style={cardContainerStyle} onPress={cardOnPress}>
+            <Pressable style={cardContainerStyle} onPress={cardOnPress}>
                 <ThemedView style={cardContainerStyle}>
                     <View style={styles.cardHeaderContainer}>
-                        <ThemedText style={[styles.label, { color }]} type='title'>
+                        <ThemedText style={[styles.label, { color, paddingTop }]} type='title'>
                             {headerLabel}
                         </ThemedText>
                     </View>
@@ -83,7 +85,7 @@ export function ThemedEmptyCard({
                         <ThemedButton label={footButtonLabel} onPress={buttonOnPress} style={styles.cardFooterButton} />
                     </View>
                 </ThemedView>
-            </TouchableWithoutFeedback>
+            </Pressable>
     );
 }
 
@@ -111,7 +113,9 @@ const styles = StyleSheet.create({
     cardFooterContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 15,
+        paddingVertical: 10,
+        paddingHorizontal: 15,
+        // padding: 15,
         justifyContent: 'space-between',
         backgroundColor: '#6A524E',
         borderBottomLeftRadius: 10,

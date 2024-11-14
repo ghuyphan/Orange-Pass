@@ -92,7 +92,7 @@ export function ThemedStatusToast({
                             <ActivityIndicator size="small" color={color} />
                         ) : (
                             <Ionicons
-                                name={iconName || 'information-circle'}
+                                name={iconName || 'information-circle-outline'}
                                 size={20}
                                 color={color}
                             />
@@ -106,7 +106,7 @@ export function ThemedStatusToast({
                     {!isSyncing && (
                         <Pressable onPress={onDismiss} hitSlop={30} style={styles.iconTouchable}>
                             <Ionicons
-                                name={dismissIconName || 'close'}
+                                name={dismissIconName || 'close-outline'}
                                 size={20}
                                 color={color}
                             />

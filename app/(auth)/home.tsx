@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { StyleSheet, View, Platform, FlatList } from 'react-native';
+import { StyleSheet, View, Platform, FlatList, Dimensions } from 'react-native';
 import { useSelector } from 'react-redux';
 import Animated, {
   useAnimatedStyle,
@@ -67,6 +67,7 @@ function HomeScreen() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [isActive, setIsActive] = useState(false);
   const [filter, setFilter] = useState('all');
+  const [isSearching, setIsSearching] = useState(false);
 
   const isEmptyShared = useSharedValue(isEmpty ? 1 : 0);
   // const isActiveShared = useSharedValue(isActive ? 1 : 0);
@@ -210,7 +211,7 @@ function HomeScreen() {
       filterQrCodes(userId, debouncedSearchQuery, filter).then(setQrData);
     }
   }, [userId, debouncedSearchQuery, filter]);
-  
+
   // Animate empty card when isEmpty changes
   useEffect(() => {
     isEmptyShared.value = isEmpty ? 1 : 0;
@@ -228,14 +229,14 @@ function HomeScreen() {
 
   // Combine animations for opacity and translateY based on scrollY in useDerivedValue
   const headerAnimation = useDerivedValue(() => {
-    const opacity = scrollY.value > 75 ? 0 : 1;
+    const opacity = scrollY.value > 60 ? 0 : 1;
     const translateY = interpolate(
       scrollY.value,
-      [0, 100],
-      [0, -25],
+      [0, 35],
+      [0, -35],
       Extrapolation.CLAMP
     );
-    const zIndex = scrollY.value > 70 || isActive ? 0 : 1;
+    const zIndex = scrollY.value > 50 || isActive ? 0 : 1;
     return { opacity, translateY, zIndex };
   }, [scrollY, isActive]);
 
@@ -248,7 +249,6 @@ function HomeScreen() {
       zIndex,
     };
   }, [headerAnimation]); // Track changes to derived value
-
 
   const scrollContainerStyle = useAnimatedStyle(() => {
     return {
@@ -417,38 +417,21 @@ function HomeScreen() {
           <ThemedText style={styles.titleText} type="title">{t('homeScreen.title')}</ThemedText>
           <View style={styles.titleButtonContainer}>
             <ThemedButton
-              iconName="scan"
+              iconName="search-outline"
+              style={styles.titleButton}
+              onPress={() => setIsSearching(!isSearching)}
+            />
+            <ThemedButton
+              iconName="scan-outline"
               style={styles.titleButton}
               onPress={onNavigateToScanScreen}
             />
             <ThemedButton
-              iconName="settings"
+              iconName="settings-outline"
               style={styles.titleButton}
               onPress={onNavigateToSettingsScreen} />
           </View>
         </View>
-        {(!isEmpty || isLoading) && (
-          <>
-            <ThemedIconInput
-              placeholder={t('homeScreen.searchPlaceholder')}
-              iconName="search"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              // pointerEvents={isLoading && qrData.length > 0 ? 'none' : 'auto'}
-              style={{ marginHorizontal: 15 }}
-            />
-            {isLoading ? (
-              <ThemedFilterSkeleton show={true} />
-            ) : (
-              <ThemedFilter
-                selectedFilter={filter}
-                onFilterChange={setFilter}
-                style={{ paddingHorizontal: 15 }}
-              />
-            )}
-          </>
-        )}
-
       </Animated.View>
       {isLoading ? (
         <View style={styles.loadingContainer}>
@@ -475,9 +458,32 @@ function HomeScreen() {
       ) : (
         <DraggableFlatList
           ref={flatListRef}
+          ListHeaderComponentStyle={{ gap: 15, marginBottom: 15 }}
+          ListHeaderComponent={
+            <>
+              {isSearching && (
+                <ThemedIconInput
+                style={styles.searchInput}
+                  placeholder={t('homeScreen.searchPlaceholder')}
+                  iconName="search"
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                // pointerEvents={isLoading && qrData.length > 0 ? 'none' : 'auto'}
+                />
+              )}
+
+              {isLoading ? (
+                <ThemedFilterSkeleton show={true} />
+              ) : (
+                <ThemedFilter
+                  selectedFilter={filter}
+                  onFilterChange={setFilter}
+                />
+              )}
+            </>}
           ListEmptyComponent={
             <View style={styles.emptyItem}>
-              <Ionicons color={color} name="search" size={40} />
+              <Ionicons color={color} name="search-outline" size={40} />
               <ThemedText style={{ textAlign: 'center' }}>
                 {t('homeScreen.noItemFound')}
               </ThemedText>
@@ -529,6 +535,8 @@ function HomeScreen() {
       <ThemedModal
         primaryActionText={t('homeScreen.moveToTrash')}
         onPrimaryAction={onDeletePress}
+        onDismiss={() => setIsModalVisible(false)}
+        dismissable={true}
         onSecondaryAction={() => setIsModalVisible(false)}
         secondaryActionText={t('homeScreen.cancel')}
         title={t('homeScreen.confirmDeleteTitle')}
@@ -540,6 +548,8 @@ function HomeScreen() {
   );
 }
 
+const screenHeight = Dimensions.get('window').height;
+
 export default React.memo(HomeScreen);
 
 const styles = StyleSheet.create({
@@ -548,7 +558,7 @@ const styles = StyleSheet.create({
   },
   titleContainer: {
     position: 'absolute',
-    top: STATUSBAR_HEIGHT + 25,
+    top: STATUSBAR_HEIGHT + 45,
     left: 0,
     right: 0,
     flexDirection: 'column',
@@ -579,11 +589,14 @@ const styles = StyleSheet.create({
   emptyCard: {
     marginHorizontal: 15,
   },
+  searchInput:{
+    paddingVertical: 0
+  },
   listContainer: {
-    paddingTop: STATUSBAR_HEIGHT + 230,
+    paddingTop: STATUSBAR_HEIGHT + 105,
     paddingHorizontal: 15,
     flexGrow: 1,
-    paddingBottom: 20,
+    paddingBottom: screenHeight / 5,
   },
   emptyItem: {
     flex: 1,

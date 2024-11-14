@@ -208,7 +208,7 @@ export default function DetailScreen() {
                         style={styles.actionButton}
                     >
                         {/* <View style={styles.actionButton}> */}
-                        <Ionicons name="location" size={18} color={iconColor} />
+                        <Ionicons name="location-outline" size={18} color={iconColor} />
                         <ThemedText style={styles.labelText}>
                             {t('detailsScreen.nearbyLocation')}
                         </ThemedText>
@@ -222,12 +222,12 @@ export default function DetailScreen() {
                                 android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
                             >
                                 <View style={styles.actionButton}>
-                                    <Ionicons color={iconColor} name="qr-code" size={18} color={iconColor} />
+                                    <Ionicons color={iconColor} name="qr-code-outline" size={18} color={iconColor} />
                                     <ThemedText style={styles.labelText}>
                                         {t('detailsScreen.createQrCode')}
                                     </ThemedText>
                                     {isOffline && (
-                                        <Ionicons name="cloud-offline" size={18} color={iconColor} />
+                                        <Ionicons name="cloud-offline-outline" size={18} color={iconColor} />
                                     )}
                                 </View>
                             </Pressable>
@@ -243,7 +243,7 @@ export default function DetailScreen() {
                                         onChangeText={(text) => setAmount(formatAmount(text))}
                                     />
                                     <Pressable hitSlop={{ bottom: 40, left: 30, right: 30, top: 30 }} onPress={transferAmount} style={[styles.transferButton, { opacity: amount ? 1 : 0.3 }]}>
-                                        {amount ? <Ionicons name="chevron-forward" size={18} color={iconColor} /> : 
+                                        {amount ? <Ionicons name="chevron-forward-outline" size={18} color={iconColor} /> : 
                                         <Ionicons name="chevron-forward-outline" size={18} color={iconColor} />}
                                     </Pressable>
                                 </View>
@@ -290,7 +290,7 @@ const styles = StyleSheet.create({
     mainContainer: {
     },
     headerWrapper: {
-        paddingTop: STATUSBAR_HEIGHT + 25,
+        paddingTop: STATUSBAR_HEIGHT + 45,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',

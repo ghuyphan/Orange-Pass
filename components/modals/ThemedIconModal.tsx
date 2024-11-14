@@ -74,7 +74,7 @@ export function ThemedModal({
                 <Animated.View style={[modalStyle, animatedStyle]}>
                     {/* Icon */}
                     <Ionicons
-                        name={iconName || 'information-circle'}
+                        name={iconName || 'information-circle-outline'}
                         size={25}
                         color={color}
                         style={styles.icon}

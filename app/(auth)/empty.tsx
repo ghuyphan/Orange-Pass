@@ -28,8 +28,9 @@ export default function EmptyScreen() {
                     footButtonLabel={t('homeScreen.emptyCard.footerButton')}
                     cardOnPress={() => {}}
                     buttonOnPress={onNavigateToScanScreen}
-                    style={{paddingTop: 110}}
+                    style={{paddingTop: 55}}
                     footerStyle={{ borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }}
+                    paddingTop={30}
                 />
                 <ThemedText style={styles.content} type="default">{t('homeScreen.emptyCard.content')}</ThemedText>
             </ThemedView>
@@ -54,13 +55,13 @@ const styles = StyleSheet.create({
     },
     content: {
         paddingHorizontal: 15,
-        fontSize: 18,
+        fontSize: 16,
         marginTop: 30,
-        lineHeight: 22
+        lineHeight: 25
     },
     headerContainer: {
         position: 'absolute',
-        top: STATUSBAR_HEIGHT + 25,
+        top: STATUSBAR_HEIGHT + 45,
         left: 15,
         zIndex: 10,
     },
