@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
-import { StyleSheet, View, TouchableWithoutFeedback, useColorScheme, Linking, Keyboard, FlatList, TouchableOpacity, TextInput, Pressable, InteractionManager } from 'react-native';
+import { StyleSheet, View, useColorScheme, Linking, Keyboard, FlatList, TouchableOpacity, TextInput, Pressable, InteractionManager } from 'react-native';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store/rootReducer';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
@@ -97,8 +97,8 @@ export default function DetailScreen() {
     const transferHeight = useSharedValue(0);
 
     const transferStyle = useAnimatedStyle(() => ({
-        height: withTiming(transferHeight.value, { duration: 300, easing: Easing.out(Easing.ease) }),
-        opacity: withTiming(transferHeight.value > 0 ? 1 : 0, { duration: 300, easing: Easing.out(Easing.ease) }),
+        height: withTiming(transferHeight.value, { duration: 250, easing: Easing.out(Easing.ease) }),
+        opacity: withTiming(transferHeight.value > 0 ? 1 : 0, { duration: 250, easing: Easing.out(Easing.ease) }),
         overflow: 'hidden', // Giữ nội dung trong phạm vi chiều cao
         pointerEvents: transferHeight.value > 0 ? 'auto' : 'none', // Tắt sự kiện khi ẩn
     }));

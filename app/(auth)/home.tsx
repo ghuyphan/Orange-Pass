@@ -222,6 +222,7 @@ function HomeScreen() {
 
   const searchContainerStyle = useAnimatedStyle(() => {
     return {
+      paddingHorizontal: 15,
       height: isSearching ? withTiming(40, { duration: 250, easing: Easing.out(Easing.ease) }) : withTiming(0, { duration: 250, easing: Easing.out(Easing.ease) }),
       opacity: withTiming(isSearching ? 1 : 0, { duration: 250, easing: Easing.out(Easing.ease) }),
       transform: [{ translateY: withTiming(isSearching ? 0 : -20, { duration: 250 , easing: Easing.out(Easing.quad)}) }],
@@ -488,7 +489,6 @@ function HomeScreen() {
                 />
               </Animated.View>
 
-
               {isLoading ? (
                 <ThemedFilterSkeleton show={true} />
               ) : (
@@ -611,7 +611,7 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     paddingTop: STATUSBAR_HEIGHT + 105,
-    paddingHorizontal: 15,
+    // paddingHorizontal: 15,
     flexGrow: 1,
     paddingBottom: screenHeight / 5,
   },

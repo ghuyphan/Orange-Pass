@@ -34,6 +34,7 @@ export type ThemedButtonProps = {
     disabled?: boolean;
     /** Whether the button is in a loading state */
     loading?: boolean;
+    loadingColor?: string;
 };
 
 /**
@@ -57,6 +58,7 @@ export function ThemedButton({
     style = {},
     disabled = false,
     loading = false,
+    loadingColor,
 }: ThemedButtonProps): JSX.Element {
     const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
     const icon = useThemeColor({ light: Colors.light.text, dark: Colors.dark.text }, 'icon');
@@ -86,7 +88,7 @@ export function ThemedButton({
         >
                 {loading ? (
                     <>
-                        <ActivityIndicator size="small" color={color} />
+                        <ActivityIndicator size={iconSize} color={loadingColor? loadingColor : color} />
                         {loadingLabel && <ThemedText style={[styles.label, { color }]} type='defaultSemiBold'>{loadingLabel}</ThemedText>}
                         {/* <ThemedText style={[styles.label, { color }]} type='defaultSemiBold'>
                             {loadingLabel}

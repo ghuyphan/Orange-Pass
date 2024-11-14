@@ -260,7 +260,6 @@ export default function ScanScreen() {
       setIsDecoding(true);
       await new Promise(resolve => setTimeout(resolve, 0)); // Allow React to process the state update
   
-  
       if (result && 'data' in result && result.data) {
         if (result.mime === 'image/jpeg' || result.mime === 'image/png') {
           await decodeQRCode(result.data);
@@ -297,7 +296,7 @@ export default function ScanScreen() {
     setIsToastVisible(true);
     setTimeout(() => {
       setIsToastVisible(false);
-    }, 2000);
+    }, 2500);
   };
 
   useEffect(() => {
@@ -420,6 +419,7 @@ export default function ScanScreen() {
             onPress={onOpenGallery}
             style={styles.bottomButton}
             loading={isDecoding}
+            loadingColor='#fff'
           />
           <ThemedButton
             iconName="settings-outline"
@@ -533,7 +533,7 @@ const styles = StyleSheet.create({
   },
   bottomButtonsContainer: {
     position: 'absolute',
-    bottom: 90, // Adjust if necessary
+    bottom: 95, // Adjust if necessary
     left: 0,
     right: 0,
     flexDirection: 'row',
@@ -549,7 +549,7 @@ const styles = StyleSheet.create({
   },
   toastContainer: {
     position: 'absolute',
-    bottom: 15,
+    bottom: 35,
     left: 15,
     right: 15,
   },

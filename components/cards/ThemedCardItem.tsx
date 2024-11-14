@@ -162,6 +162,7 @@ const styles = StyleSheet.create({
   touchableHighlight: {
     borderRadius: 10,
     overflow: 'hidden',
+    marginHorizontal: 15,
   },
   itemContainer: {
     borderRadius: 10,

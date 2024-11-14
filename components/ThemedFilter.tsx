@@ -56,6 +56,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         gap: 10,
         marginBottom: 10,
+        paddingHorizontal: 15,
     },
     filterButton: {
         paddingVertical: 5,
