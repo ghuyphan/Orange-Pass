@@ -13,5 +13,5 @@ export const STATUSBAR_HEIGHT = Platform.OS === 'ios'
         return 20; // iPhones with no notch or older devices
       }
     })()
-  : (StatusBar.currentHeight ? StatusBar.currentHeight + 0 : 0); // Android
+  : (StatusBar.currentHeight ? StatusBar.currentHeight : 0); // Android
 

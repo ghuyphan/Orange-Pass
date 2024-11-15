@@ -89,6 +89,7 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
   }, [isActive]);
 
   const animatedStyle = useAnimatedStyle(() => ({
+    marginHorizontal: 15,
     transform: [{ scale: scale.value }],
     shadowOpacity: shadowOpacity.value,
     elevation: elevation.value,
@@ -102,7 +103,7 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
       <Pressable
         onPress={handleItemPress}
         onLongPress={onDrag}
-        delayLongPress={150}
+        delayLongPress={200}
         android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
       >
         <View style={[styles.touchableHighlight, style]}>
@@ -162,7 +163,6 @@ const styles = StyleSheet.create({
   touchableHighlight: {
     borderRadius: 10,
     overflow: 'hidden',
-    marginHorizontal: 15,
   },
   itemContainer: {
     borderRadius: 10,

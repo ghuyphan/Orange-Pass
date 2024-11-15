@@ -120,7 +120,7 @@ export default function DetailScreen() {
         setIsToastVisible(true);
 
         const itemName = returnItemData(item.code, item.type);
-        setToastMessage('Generating QR code...');
+        setToastMessage(t('detailsScreen.generatingQRCode'));
 
         try {
             const response = await getVietQRData(
@@ -164,8 +164,8 @@ export default function DetailScreen() {
                 {
                     backgroundColor:
                         colorScheme === 'light'
-                            ? Colors.light.buttonBackground
-                            : Colors.dark.buttonBackground,
+                            ? Colors.light.cardFooter
+                            : Colors.dark.cardFooter,
                     overflow: 'hidden',
                     borderRadius: 10,
                 },

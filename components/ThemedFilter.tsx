@@ -1,8 +1,10 @@
-import { ScrollView, StyleProp, ViewStyle, StyleSheet, View, TouchableWithoutFeedback, Pressable } from 'react-native';
+import { ScrollView, StyleProp, ViewStyle, StyleSheet, View, Pressable } from 'react-native';
 import React from 'react';
 import { t } from '@/i18n';
 import { useColorScheme } from 'react-native';
 import { ThemedText } from './ThemedText';
+import { useLocale } from '@/context/LocaleContext';
+import { useCallback } from 'react';
 
 type ThemedFilterProps = {
     selectedFilter: string;
@@ -21,13 +23,16 @@ const ThemedFilter = React.memo(({ selectedFilter, onFilterChange, style }: Them
     const colorScheme = useColorScheme();
     const isDarkMode = colorScheme === 'dark';
 
+    const handlePress = useCallback((filterKey: string) => {
+        onFilterChange(filterKey);
+    }, [onFilterChange]);
+
     return (
         <ScrollView showsHorizontalScrollIndicator={false} horizontal contentContainerStyle={[styles.filterContainer, style]}>
             {filters.map((filter) => (
                 <Pressable
                     key={filter.key}
-
-                    onPress={() => onFilterChange(filter.key)}
+                    onPress={() => handlePress(filter.key)}
                     style={[
                         styles.filterButton,
                         isDarkMode ? styles.darkModeButton : styles.lightModeButton,
@@ -67,7 +72,7 @@ const styles = StyleSheet.create({
     selectedFilterLightMode: {
         backgroundColor: '#5A4639', // example color for light mode
     },
-    baseTextStyle:{
+    baseTextStyle: {
         fontSize: 14,
     },
     selectedFilterTextLightMode: {
@@ -79,13 +84,13 @@ const styles = StyleSheet.create({
         fontSize: 14,
     },
     selectedFilterDarkMode: {
-        backgroundColor: '#FFF5E1', // example color for dark mod
+        backgroundColor: '#FFF5E1', // example color for dark mode
     },
     darkModeButton: {
-        backgroundColor: '#6B5A4E',
+        backgroundColor: '#4E3B32',
     },
     lightModeButton: {
-        backgroundColor: '#D3B8A3',
+        backgroundColor: '#E1D5C9',
     },
     filterText: {
         // color: '#E7C9B3', // Default text color

@@ -150,7 +150,8 @@
     "moveToTrash": "Переместить в корзину",
     "nearbyLocation": "Ближайшее местоположение",
     "createQrCode": "Создать QR-код с суммой",
-    "receivePlaceholder": "Введите сумму для получения"
+    "receivePlaceholder": "Введите сумму для получения",
+    "generatingQRCode": "Создание QR-кода..."
   },
   "languageScreen": {
     "title": "Язык",

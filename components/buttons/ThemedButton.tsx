@@ -83,6 +83,7 @@ export function ThemedButton({
             accessibilityHint={`Press to ${label}`}
             android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
             style={[buttonStyle, style]}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
 
         // underlayColor={underlayColor || (colorScheme === 'light' ? Colors.light.buttonHighlight : Colors.dark.buttonHighlight)}
         >

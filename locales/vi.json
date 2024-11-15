@@ -135,7 +135,8 @@
     "moveToTrash": "Chuyển vào thùng rác",
     "nearbyLocation": "Vị trí lân cận",
     "createQrCode": "Tạo mã QR nhận khoản tiền",
-    "receivePlaceholder": "Nhập số tiền cần nhận"
+    "receivePlaceholder": "Nhập số tiền cần nhận",
+    "generatingQRCode": "Đang tạo mã QR..."
   },
   "settingsScreen": {
     "title": "Cài đặt",

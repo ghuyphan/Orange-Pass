@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { StyleSheet, View, Platform, FlatList, Dimensions } from 'react-native';
+import { StyleSheet, View, Platform, FlatList, Dimensions, useColorScheme } from 'react-native';
 import { useSelector } from 'react-redux';
 import Animated, {
   useAnimatedStyle,
@@ -8,12 +8,12 @@ import Animated, {
   withTiming,
   useAnimatedScrollHandler,
   Easing,
-  useDerivedValue,
   interpolate,
   Extrapolation
 } from 'react-native-reanimated';
 import { router } from 'expo-router';
-import { BlurView } from 'expo-blur';
+// import { BlurView } from 'expo-blur';
+import { BlurView } from "@react-native-community/blur";
 import DraggableFlatList, { ScaleDecorator } from 'react-native-draggable-flatlist';
 import { debounce, throttle } from 'lodash';
 
@@ -55,6 +55,7 @@ import { ThemedBottomToast } from '@/components/toast/ThemedBottomToast';
 
 function HomeScreen() {
   const { updateLocale } = useLocale();
+  const colorScheme = useColorScheme();
   const [locale, setLocale] = useMMKVString('locale', storage);
   const color = useThemeColor({ light: '#5A4639', dark: '#FFF5E1' }, 'text');
   const [isEmpty, setIsEmpty] = useState(false);
@@ -239,42 +240,40 @@ function HomeScreen() {
     });
   };
 
-  // Combine animations for opacity and translateY based on scrollY in useDerivedValue
-  const headerAnimation = useDerivedValue(() => {
-    const opacity = scrollY.value > 120 ? 0 : 1;
-    const translateY = interpolate(
+  const titleContainerStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(
       scrollY.value,
-      [0, 30],
-      [0, -30],
+      [140, 170],
+      [1, 0],
       Extrapolation.CLAMP
     );
-    const zIndex = scrollY.value > 50 || isActive ? 0 : 1;
-    return { opacity, translateY, zIndex };
-  }, [scrollY, isActive]);
-
-  // Apply animation style in useAnimatedStyle
-  const titleContainerStyle = useAnimatedStyle(() => {
-    const { opacity, translateY, zIndex } = headerAnimation.value;
+  
+    const translateY = interpolate(
+      scrollY.value,
+      [0, 150],
+      [0, -35],
+      Extrapolation.CLAMP
+    );
+  
     return {
-      opacity: withTiming(opacity, { duration: 150, easing: Easing.out(Easing.ease) }),
+      opacity,
       transform: [{ translateY }],
-      zIndex,
-    };
-  }, [headerAnimation]); // Track changes to derived value
-
-  const scrollContainerStyle = useAnimatedStyle(() => {
-    return {
-      opacity: scrollY.value > 60 ? withTiming(1, { duration: 150, easing: Easing.out(Easing.ease) }) : withTiming(0, { duration: 150, easing: Easing.out(Easing.ease) }),
-      pointerEvents: scrollY.value > 50 ? 'auto' : 'none',
+      zIndex: scrollY.value > 100 || isActive ? 0 : 1,
     };
   });
-
-  const listHeaderStyle = useAnimatedStyle(() => {
-    return {
-      opacity: scrollY.value > 40 ? withTiming(0, { duration: 150, easing: Easing.out(Easing.ease) }) : withTiming(1, { duration: 150, easing: Easing.out(Easing.ease) }),
-      pointerEvents: scrollY.value > 40 ? 'none' : 'auto',
-    }
-  })
+  
+  const scrollContainerStyle = useAnimatedStyle(() => ({
+    opacity: withTiming(scrollY.value > 50 ? 1 : 0, {
+      easing: Easing.out(Easing.ease),
+      duration: 300, // You can adjust the duration here for how quickly the opacity changes
+    }),
+    pointerEvents: scrollY.value > 50 ? 'auto' : 'none',
+  }));
+  const listHeaderStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(scrollY.value, [0, 50], [1, 0], Extrapolation.CLAMP),
+    pointerEvents: scrollY.value > 40 ? 'none' : 'auto',
+  }));
+  
 
   const emptyCardStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: emptyCardOffset.value }],
@@ -426,11 +425,12 @@ function HomeScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      {Platform.OS === 'android' ? (
-        <ThemedView style={styles.blurContainer} />
-      ) : (
-        <BlurView intensity={10} style={styles.blurContainer} />
-      )}
+       <BlurView
+        style={styles.blurContainer}
+        blurType={colorScheme === 'dark' ? 'dark' : 'light'}
+        blurAmount={32}
+        reducedTransparencyFallbackColor="white"
+      />
       <Animated.View style={[styles.titleContainer, titleContainerStyle]} pointerEvents="auto">
         <View style={styles.headerContainer}>
           <ThemedText style={styles.titleText} type="title">{t('homeScreen.title')}</ThemedText>
@@ -523,6 +523,10 @@ function HomeScreen() {
             scrollY.value = offset;
           }}
           decelerationRate={'fast'}
+          onLayout={(event) => {
+            const { height } = event.nativeEvent.layout;
+            console.log('List height:', height);
+          }}
         />
       )}
       <Animated.View style={scrollContainerStyle}>

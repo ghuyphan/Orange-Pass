@@ -121,12 +121,26 @@ function SettingsScreen() {
     });
 
     const titleContainerStyle = useAnimatedStyle(() => {
+        const opacity = interpolate(
+          scrollY.value,
+          [40, 70],
+          [1, 0],
+          Extrapolation.CLAMP
+        );
+      
+        const translateY = interpolate(
+          scrollY.value,
+          [0, 150],
+          [0, -35],
+          Extrapolation.CLAMP
+        );
+      
         return {
-            opacity: opacity.value,
-            transform: [{ translateY: translateY.value }],
-            zIndex: (scrollY.value > 50) ? 0 : 20,
+          opacity,
+          transform: [{ translateY }],
+          zIndex: scrollY.value > 40 ? 0 : 1,
         };
-    });
+      });
 
     const onNavigateBack = useCallback(() => {
         router.back();
