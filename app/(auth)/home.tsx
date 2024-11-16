@@ -12,8 +12,7 @@ import Animated, {
   Extrapolation
 } from 'react-native-reanimated';
 import { router } from 'expo-router';
-// import { BlurView } from 'expo-blur';
-import { BlurView } from "@react-native-community/blur";
+import { BlurView } from 'expo-blur';
 import DraggableFlatList, { ScaleDecorator } from 'react-native-draggable-flatlist';
 import { debounce, throttle } from 'lodash';
 
@@ -50,7 +49,6 @@ import {
   updateQrIndexes,
   filterQrCodes,
 } from '@/services/localDB/qrDB';
-import { Colors } from '@/constants/Colors';
 import { ThemedBottomToast } from '@/components/toast/ThemedBottomToast';
 
 function HomeScreen() {
@@ -221,17 +219,6 @@ function HomeScreen() {
     }
   }, [isEmpty]);
 
-  const searchContainerStyle = useAnimatedStyle(() => {
-    return {
-      paddingHorizontal: 15,
-      height: isSearching ? withTiming(40, { duration: 250, easing: Easing.out(Easing.ease) }) : withTiming(0, { duration: 250, easing: Easing.out(Easing.ease) }),
-      opacity: withTiming(isSearching ? 1 : 0, { duration: 250, easing: Easing.out(Easing.ease) }),
-      transform: [{ translateY: withTiming(isSearching ? 0 : -20, { duration: 250 , easing: Easing.out(Easing.quad)}) }],
-      overflow: 'hidden',
-      pointerEvents: isSearching ? 'auto' : 'none',
-    };
-  }, [isSearching]);
-
 
   const animateEmptyCard = () => {
     emptyCardOffset.value = withSpring(0, {
@@ -240,6 +227,17 @@ function HomeScreen() {
     });
   };
 
+  const searchContainerStyle = useAnimatedStyle(() => {
+    return {
+      paddingHorizontal: 15,
+      height: isSearching ? withTiming(40, { duration: 250, easing: Easing.out(Easing.ease) }) : withTiming(0, { duration: 250, easing: Easing.out(Easing.ease) }),
+      opacity: withTiming(isSearching ? 1 : 0, { duration: 250, easing: Easing.out(Easing.ease) }),
+      transform: [{ translateY: withTiming(isSearching ? 0 : -20, { duration: 250, easing: Easing.out(Easing.quad) }) }],
+      overflow: 'hidden',
+      pointerEvents: isSearching ? 'auto' : 'none',
+    };
+  }, [isSearching]);
+
   const titleContainerStyle = useAnimatedStyle(() => {
     const opacity = interpolate(
       scrollY.value,
@@ -247,21 +245,21 @@ function HomeScreen() {
       [1, 0],
       Extrapolation.CLAMP
     );
-  
+
     const translateY = interpolate(
       scrollY.value,
       [0, 150],
       [0, -35],
       Extrapolation.CLAMP
     );
-  
+
     return {
       opacity,
       transform: [{ translateY }],
       zIndex: scrollY.value > 100 || isActive ? 0 : 1,
     };
   });
-  
+
   const scrollContainerStyle = useAnimatedStyle(() => ({
     opacity: withTiming(scrollY.value > 50 ? 1 : 0, {
       easing: Easing.out(Easing.ease),
@@ -269,11 +267,12 @@ function HomeScreen() {
     }),
     pointerEvents: scrollY.value > 50 ? 'auto' : 'none',
   }));
+
   const listHeaderStyle = useAnimatedStyle(() => ({
     opacity: interpolate(scrollY.value, [0, 50], [1, 0], Extrapolation.CLAMP),
     pointerEvents: scrollY.value > 40 ? 'none' : 'auto',
   }));
-  
+
 
   const emptyCardStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: emptyCardOffset.value }],
@@ -425,21 +424,25 @@ function HomeScreen() {
 
   return (
     <ThemedView style={styles.container}>
-       <BlurView
-        style={styles.blurContainer}
-        blurType={colorScheme === 'dark' ? 'dark' : 'light'}
-        blurAmount={32}
-        reducedTransparencyFallbackColor="white"
-      />
+      {Platform.OS === 'android' ? (
+        <ThemedView style={styles.blurContainer} />
+      ) : (
+        <BlurView style={styles.blurContainer} />
+      )}
+
       <Animated.View style={[styles.titleContainer, titleContainerStyle]} pointerEvents="auto">
         <View style={styles.headerContainer}>
           <ThemedText style={styles.titleText} type="title">{t('homeScreen.title')}</ThemedText>
           <View style={styles.titleButtonContainer}>
-            <ThemedButton
-              iconName="search-outline"
-              style={styles.titleButton}
-              onPress={() => setIsSearching(!isSearching)}
-            />
+            {!isEmpty && (
+              <ThemedButton
+                iconName="search-outline"
+                style={styles.titleButton}
+                onPress={() => setIsSearching(!isSearching)}
+              />
+
+            )}
+
             <ThemedButton
               iconName="scan-outline"
               style={styles.titleButton}
@@ -478,7 +481,7 @@ function HomeScreen() {
         <DraggableFlatList
           ref={flatListRef}
           ListHeaderComponent={
-            <Animated.View style={[listHeaderStyle, { gap: 15, marginBottom: 15 }]}>
+            <Animated.View style={[listHeaderStyle, { gap: 15, marginBottom: 25 }]}>
               <Animated.View style={[searchContainerStyle]}>
                 <ThemedIconInput
                   style={styles.searchInput}

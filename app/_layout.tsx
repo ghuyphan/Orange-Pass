@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Image, StyleSheet, UIManager, Platform, Dimensions, ActivityIndicator, View } from 'react-native';
+import { StyleSheet, UIManager, Platform, Dimensions, ActivityIndicator, View } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
@@ -20,8 +20,14 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
     const [fontsLoaded] = useFonts({
-        SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+        // 'SFProDisplay-Regular': require('../assets/fonts/SFProDisplay-Regular.ttf'),
+        // 'SFProDisplay-Bold': require('../assets/fonts/SFProDisplay-Bold.ttf'),
+        // 'SFProDisplay-SemiBold': require('../assets/fonts/SFProDisplay-Semibold.ttf'),
+        // 'SFProDisplay-Medium': require('../assets/fonts/SFProDisplay-Medium.ttf'),
+        // 'HelveticaNeue-Regular': require('../assets/fonts/HelveticaNeueRoman.ttf'),
+        'HelveticaNeue-Bold': require('../assets/fonts/HelveticaNeueBold.ttf'),
     });
+
     const [isAppReady, setIsAppReady] = useState(false);
     const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
     const [hasSeenOnboarding, setHasSeenOnboarding] = useState<boolean | null>(null);
@@ -121,7 +127,6 @@ export default function RootLayout() {
                                 />
                                 <Stack.Screen
                                     name="(auth)"
-                                    options={{ animation: 'none' }}
                                 />
                                 <Stack.Screen
                                     name="+not-found"

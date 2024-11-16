@@ -38,24 +38,29 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
     fontWeight: '500',
+    // fontFamily: 'HelveticaNeue-Regular',
   },
   defaultSemiBold: {
     fontSize: 16,
     lineHeight: 24,
     fontWeight: '600',
+    // fontFamily: 'SFProDisplay-SemiBold'
   },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
     lineHeight: 32,
+    // fontFamily: 'HelveticaNeue-Bold',
   },
   subtitle: {
     fontSize: 20,
     fontWeight: 'bold',
+    // fontFamily: 'SFProDisplay-Regular',
   },
   link: {
     lineHeight: 30,
     fontSize: 16,
     color: '#0a7ea4',
+    // fontFamily: 'SFProDisplay-Regular',
   },
 });

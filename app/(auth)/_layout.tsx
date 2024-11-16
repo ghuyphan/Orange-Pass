@@ -1,7 +1,7 @@
 import { Stack, useSegments } from 'expo-router';
 import React from 'react';
 import { useRouter } from 'expo-router';
-import { StyleSheet, View, Text } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { ThemedView } from '@/components/ThemedView';
 
 export default function HomeLayout() {
@@ -15,13 +15,10 @@ export default function HomeLayout() {
       <Stack
         screenOptions={{
           headerShown: false,
-          headerLeft: () => <Text>hello</Text>,
-          // animation: 'default',
           animation: 'ios',
-          animationTypeForReplace: 'push',
         }}
       >
-        <Stack.Screen name="home" options={{ animation: 'none'}}/>
+        <Stack.Screen name="home"/>
         <Stack.Screen name="explore" />
         <Stack.Screen name="(add)" />
         <Stack.Screen name="(detail)" />
