@@ -254,22 +254,28 @@ export default function ScanScreen() {
       const result = await ImagePicker.openPicker({
         width: 300,
         height: 400,
-        includeBase64: true,
+        // includeBase64: true,
         mediaType: 'photo',
       });
 
       setIsDecoding(true);
       await new Promise(resolve => setTimeout(resolve, 0)); // Allow React to process the state update
   
-      if (result && 'data' in result && result.data) {
-        if (result.mime === 'image/jpeg' || result.mime === 'image/png') {
-          await decodeQRCode(result.data);
-        } else {
-          showToast('Please select a JPEG or PNG image');
-        }
-      } else {
-        showToast('Invalid image selection');
-      }
+      if (!result.path) {
+        return;
+      } 
+
+      decodeQRCode(result.path);
+
+      // if (result && 'data' in result && result.data) {
+      //   if (result.mime === 'image/jpeg' || result.mime === 'image/png') {
+      //     await decodeQRCode(result.data);
+      //   } else {
+      //     showToast('Please select a JPEG or PNG image');
+      //   }
+      // } else {
+      //   showToast('Invalid image selection');
+      // }
     } catch (error) {
       console.log('Error opening image picker:', error);
     } finally {
@@ -277,9 +283,10 @@ export default function ScanScreen() {
     }
   }, []);
   
-  const decodeQRCode = async (base64Image: string) => {
+  const decodeQRCode = async (uri: string) => {
     try {
-      const { values } = await RNQRGenerator.detect({ base64: base64Image });
+      const { values, type } = await RNQRGenerator.detect({ uri: uri });
+      console.log('QR code type:', type);
   
       if (values?.length > 0) {
         console.log('QR code data:', values[0]);

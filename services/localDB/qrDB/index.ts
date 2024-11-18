@@ -116,12 +116,14 @@ export async function syncQrCodes(userId: string) {
   try {
     // Get all unsynced local QR codes
     const unsyncedQrCodes = await getUnsyncedQrCodes(userId);
-    if (unsyncedQrCodes.length === 0) return;
+    if (unsyncedQrCodes.length === 0) return; // No unsynced QR codes, exit early
 
     // Construct the filter expression using logical OR
-    const filterExpression = unsyncedQrCodes.map(qr => `id='${qr.id}'`).join(' || ');
+    const filterExpression = unsyncedQrCodes
+      .map(qr => `id='${qr.id}'`)
+      .join(' || ');
 
-    // Fetch existing records from the server in bulk, only getting the 'id' and 'updated' fields
+    // Fetch existing records from the server in bulk, only getting 'id' and 'updated' fields
     const serverRecords = await pb.collection('qr').getFullList({
       filter: filterExpression,
       fields: 'id,updated',
@@ -132,29 +134,39 @@ export async function syncQrCodes(userId: string) {
     const recordsToCreate = [];
     const recordsToUpdate = [];
 
+    // Determine which records need to be created or updated
     for (const qrCode of unsyncedQrCodes) {
       const serverUpdated = serverRecordMap.get(qrCode.id);
 
       if (serverUpdated) {
+        // If server record exists, update if local is more recent
         if (new Date(qrCode.updated) > new Date(serverUpdated)) {
           recordsToUpdate.push({ id: qrCode.id, data: qrCode });
         }
       } else {
+        // If no server record, create new
         recordsToCreate.push(qrCode);
       }
     }
 
-    // Batch create new records
+    // Perform batch create and update operations
+    const createPromises = [];
+    const updatePromises = [];
+
     if (recordsToCreate.length > 0) {
-      await pb.collection('qr').create(recordsToCreate);
+      createPromises.push(pb.collection('qr').create(recordsToCreate));
     }
 
-    // Batch update existing records using Promise.all for parallel updates
     if (recordsToUpdate.length > 0) {
-      await Promise.all(
-        recordsToUpdate.map(({ id, data }) => pb.collection('qr').update(id, data))
+      updatePromises.push(
+        ...recordsToUpdate.map(({ id, data }) =>
+          pb.collection('qr').update(id, data)
+        )
       );
     }
+
+    // Wait for all create and update operations to finish
+    await Promise.all([...createPromises, ...updatePromises]);
 
     // Mark all QR codes as synced in the local database
     const idsToUpdate = unsyncedQrCodes.map(qr => qr.id);

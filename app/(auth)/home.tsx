@@ -89,29 +89,27 @@ function HomeScreen() {
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
 
   const syncWithServer = useCallback(async (userId: string) => {
-    if (isOffline) {
-      console.log('Cannot sync while offline');
+    if (isOffline || isSyncing) {
+      console.log('Cannot sync while offline or another sync is in progress');
       return;
     }
-
+  
     try {
       setIsSyncing(true);
       setBottomToastMessage(t('homeScreen.syncing'));
       setIsBottomToastVisible(true);
-
+  
       // Sync local changes (new, updated, deleted) to the server
       await syncQrCodes(userId);
     } catch (error) {
       console.error('Error syncing QR codes:', error);
-      // setToastMessage(t('homeScreen.syncError'));
+      setToastMessage(t('homeScreen.syncError'));
       setIsToastVisible(true);
     } finally {
       setIsBottomToastVisible(false);
-      setTimeout(() => {
-        setIsSyncing(false);
-      }, 300);
+      setTimeout(() => setIsSyncing(false), 300);
     }
-  }, []); // Removed isOffline from dependencies
+  }, [isOffline, isSyncing]);
 
   const fetchServerData = async (userId: string) => {
     try {
