@@ -501,12 +501,12 @@
     },
     "TPB": {
         "color": {
-            "light": "#9774ab",
-            "dark": "#7D6299"
+            "light": "#824799",
+            "dark": "#4A2D60"
         },
         "accent_color": {
-            "light": "#B096B7",
-            "dark": "#A081B0"
+            "light": "#D1A5E7",
+            "dark": "#754C8A"
         }
     },
     "TYM": {

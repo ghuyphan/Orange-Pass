@@ -7,7 +7,7 @@ export const Colors = {
     background: '#FAFAFA', // Pure white for background
     tint: tintColorLight,
     icon: '#FFB74D', // Soft orange for icons
-    inputBackground: '#F3E9E1', // Light beige for input background
+    inputBackground: '#F5EFE4', // Light beige for input background
     placeHolder: '#9E9E9E', // Gray for placeholders
     tabIconDefault: '#BDBDBD', // Light gray for unselected tab icons
     tabIconSelected: tintColorLight,
@@ -15,8 +15,8 @@ export const Colors = {
     toastBackground: '#D3B8A3', // Light orange for toast notifications
     buttonBackground: '#D3B8A3', // Soft orange for button backgrounds
     buttonHighlight: '#FFECB3', // Brighter to highlight on hover
-    cardBackground: '#F3E9E1', // Light beige for card background
-    cardFooter: '#E1D5C9', // Bright orange for card footer
+    cardBackground: '#F5EFE4', // Light beige for card background
+    cardFooter: '#EADFD7', // Bright orange for card footer
     logoIcon: '#FF8A65', // Dark orange for logos
   },
   dark: {

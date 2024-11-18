@@ -51,6 +51,8 @@ import {
 } from '@/services/localDB/qrDB';
 import { ThemedBottomToast } from '@/components/toast/ThemedBottomToast';
 
+const screenHeight = Dimensions.get('window').height;
+
 function HomeScreen() {
   const { updateLocale } = useLocale();
   const colorScheme = useColorScheme();
@@ -235,13 +237,16 @@ function HomeScreen() {
       transform: [{ translateY: withTiming(isSearching ? 0 : -20, { duration: 250, easing: Easing.out(Easing.quad) }) }],
       overflow: 'hidden',
       pointerEvents: isSearching ? 'auto' : 'none',
+      marginBottom: isSearching ? withTiming(15, { duration: 250, easing: Easing.out(Easing.ease) }) : withTiming(0, { duration: 250, easing: Easing.out(Easing.ease) }),
     };
   }, [isSearching]);
 
   const titleContainerStyle = useAnimatedStyle(() => {
+    const scrollThreshold = isSearching === true ? 140 + 40 : 140; 
+
     const opacity = interpolate(
       scrollY.value,
-      [140, 170],
+      [scrollThreshold, scrollThreshold + 30],
       [1, 0],
       Extrapolation.CLAMP
     );
@@ -260,19 +265,19 @@ function HomeScreen() {
     };
   });
 
-  const scrollContainerStyle = useAnimatedStyle(() => ({
+  const listHeaderStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(scrollY.value, [0, 50], [1, 0], Extrapolation.CLAMP),
+    pointerEvents: scrollY.value > 40 ? 'none' : 'auto',
+  }));
+
+
+    const scrollContainerStyle = useAnimatedStyle(() => ({
     opacity: withTiming(scrollY.value > 50 ? 1 : 0, {
       easing: Easing.out(Easing.ease),
       duration: 300, // You can adjust the duration here for how quickly the opacity changes
     }),
     pointerEvents: scrollY.value > 50 ? 'auto' : 'none',
   }));
-
-  const listHeaderStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(scrollY.value, [0, 50], [1, 0], Extrapolation.CLAMP),
-    pointerEvents: scrollY.value > 40 ? 'none' : 'auto',
-  }));
-
 
   const emptyCardStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: emptyCardOffset.value }],
@@ -436,7 +441,7 @@ function HomeScreen() {
           <View style={styles.titleButtonContainer}>
             {!isEmpty && (
               <ThemedButton
-                iconName="search-outline"
+                iconName="search"
                 style={styles.titleButton}
                 onPress={() => setIsSearching(!isSearching)}
               />
@@ -444,12 +449,12 @@ function HomeScreen() {
             )}
 
             <ThemedButton
-              iconName="scan-outline"
+              iconName="scan"
               style={styles.titleButton}
               onPress={onNavigateToScanScreen}
             />
             <ThemedButton
-              iconName="settings-outline"
+              iconName="settings"
               style={styles.titleButton}
               onPress={onNavigateToSettingsScreen} />
           </View>
@@ -481,7 +486,7 @@ function HomeScreen() {
         <DraggableFlatList
           ref={flatListRef}
           ListHeaderComponent={
-            <Animated.View style={[listHeaderStyle, { gap: 15, marginBottom: 25 }]}>
+            <Animated.View style={[listHeaderStyle, { marginBottom: 25 }]}>
               <Animated.View style={[searchContainerStyle]}>
                 <ThemedIconInput
                   style={styles.searchInput}
@@ -515,7 +520,7 @@ function HomeScreen() {
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
           containerStyle={{ flex: 1 }}
-          contentContainerStyle={[styles.listContainer]}
+          contentContainerStyle={[styles.listContainer, qrData.length > 0 && { paddingBottom: screenHeight * 0.2 }]}
           scrollEventThrottle={32}
           showsVerticalScrollIndicator={false}
           onDragBegin={onDragBegin}
@@ -572,7 +577,6 @@ function HomeScreen() {
   );
 }
 
-const screenHeight = Dimensions.get('window').height;
 
 export default React.memo(HomeScreen);
 
@@ -614,13 +618,14 @@ const styles = StyleSheet.create({
     marginHorizontal: 15,
   },
   searchInput: {
-    paddingVertical: 0
+    paddingVertical: 0,
+    borderRadius: 50,
   },
   listContainer: {
     paddingTop: STATUSBAR_HEIGHT + 105,
     // paddingHorizontal: 15,
     flexGrow: 1,
-    paddingBottom: screenHeight / 5,
+    // paddingBottom: screenHeight / 5,
   },
   emptyItem: {
     flex: 1,

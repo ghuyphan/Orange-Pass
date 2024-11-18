@@ -6,7 +6,9 @@ import QRCode from 'react-native-qrcode-svg';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { getIconPath } from '@/utils/returnIcon';
 import { returnItemData } from '@/utils/returnItemData';
-import { useThemeColor } from '@/hooks/useThemeColor';
+// import { useThemeColor } from '@/hooks/useThemeColor';
+
+import { LinearGradient } from 'expo-linear-gradient';
 
 export type ThemedVietQRProps = {
     lightColor?: string;
@@ -63,7 +65,17 @@ export const ThemedVietQRCard = memo(function ThemedVietQRCard({
     );
     
     return (
-            <ThemedView style={[styles.itemContainer, backgroundColorStyle]}>
+            // <ThemedView style={[styles.itemContainer, backgroundColorStyle]}>
+            <LinearGradient
+            colors={
+              colorScheme === 'light'
+                ? [color?.light || '#ffffff', accent_color?.light || '#f0f0f0']
+                : [color?.dark || '#000000', accent_color?.dark || '#303030']
+            }
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
+            style={styles.itemContainer}
+          >
                 <View style={styles.headerContainer}>
                     <View style={styles.leftHeaderContainer}>
                         <View style={styles.iconContainer}>
@@ -108,7 +120,8 @@ export const ThemedVietQRCard = memo(function ThemedVietQRCard({
 
                     </View>
                 </View>
-            </ThemedView>
+            {/* </ThemedView> */}
+            </LinearGradient>
     );
 });
 

@@ -179,7 +179,7 @@ function SettingsScreen() {
                 <View style={styles.headerContainer}>
                     <View style={styles.titleButtonContainer}>
                         <ThemedButton
-                            iconName="chevron-back-outline"
+                            iconName="chevron-back"
                             style={styles.titleButton}
                             onPress={onNavigateBack}
                         />
@@ -245,7 +245,7 @@ function SettingsScreen() {
                     />
                 </View>
                 <ThemedButton
-                    iconName="log-out-outline"
+                    iconName="log-out"
                     label={t('settingsScreen.logout')}
                     loadingLabel='Logging out...'
                     loading={isLoading}

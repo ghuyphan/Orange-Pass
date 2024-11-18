@@ -255,6 +255,7 @@ export default function ScanScreen() {
         width: 300,
         height: 400,
         includeBase64: true,
+        mediaType: 'photo',
       });
 
       setIsDecoding(true);
@@ -413,7 +414,7 @@ export default function ScanScreen() {
         <View style={styles.bottomButtonsContainer}>
 
           <ThemedButton
-            iconName="images-outline"
+            iconName="images"
             iconColor="white"
             underlayColor='#fff'
             onPress={onOpenGallery}
@@ -422,7 +423,7 @@ export default function ScanScreen() {
             loadingColor='#fff'
           />
           <ThemedButton
-            iconName="settings-outline"
+            iconName="settings"
             iconColor="white"
             underlayColor='#fff'
             onPress={handleExpandPress}
@@ -432,8 +433,8 @@ export default function ScanScreen() {
       </View>
 
       <View style={styles.headerContainer}>
-        <ThemedButton iconColor='#fff' style={styles.headerButton} onPress={() => router.back()} iconName="chevron-back-outline" />
-        <ThemedButton underlayColor='#fff' iconColor={torch === 'on' ? '#FFCC00' : '#fff'} style={styles.headerButton} onPress={toggleFlash} iconName={torch === 'on' ? 'flash-outline' : 'flash-off-outline'} />
+        <ThemedButton iconColor='#fff' style={styles.headerButton} onPress={() => router.back()} iconName="chevron-back" />
+        <ThemedButton underlayColor='#fff' iconColor={torch === 'on' ? '#FFCC00' : '#fff'} style={styles.headerButton} onPress={toggleFlash} iconName={torch === 'on' ? 'flash' : 'flash-off'} />
       </View>
       <ThemedStatusToast
         isVisible={isToastVisible}

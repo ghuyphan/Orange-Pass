@@ -69,9 +69,6 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         overflow: 'hidden',
     },
-    selectedFilterLightMode: {
-        backgroundColor: '#5A4639', // example color for light mode
-    },
     baseTextStyle: {
         fontSize: 14,
     },
@@ -83,6 +80,9 @@ const styles = StyleSheet.create({
         color: '#5A4639',
         fontSize: 14,
     },
+    selectedFilterLightMode: {
+        backgroundColor: '#5A4639', // example color for light mode
+    },
     selectedFilterDarkMode: {
         backgroundColor: '#FFF5E1', // example color for dark mode
     },
@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#4E3B32',
     },
     lightModeButton: {
-        backgroundColor: '#E1D5C9',
+        backgroundColor: '#EADFD7',
     },
     filterText: {
         // color: '#E7C9B3', // Default text color

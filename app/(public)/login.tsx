@@ -123,7 +123,7 @@ export default function LoginScreen() {
             />
           </View>
           <ThemedButton
-            iconName='log-in-outline'
+            iconName='log-in'
             label={t('loginScreen.login')}
             style={styles.loginButton}
             onPress={handleSubmit}

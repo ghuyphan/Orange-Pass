@@ -10,6 +10,7 @@ import QRCode from 'react-native-qrcode-svg';
 import Barcode from 'react-native-barcode-svg';
 import { getIconPath } from '@/utils/returnIcon';
 import { returnItemData } from '@/utils/returnItemData';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export type ThemedCardItemProps = {
   lightColor?: string;
@@ -107,7 +108,18 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
         android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
       >
         <View style={[styles.touchableHighlight, style]}>
-          <ThemedView style={[styles.itemContainer, { backgroundColor }]}>
+          {/* Apply Linear Gradient to Card Background */}
+          <LinearGradient
+            colors={
+              colorScheme === 'light'
+                ? [color?.light || '#ffffff', accent_color?.light || '#f0f0f0']
+                : [color?.dark || '#000000', accent_color?.dark || '#303030']
+            }
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}            
+            style={styles.itemContainer}
+          >
+
             <View style={styles.headerContainer}>
               <View style={styles.headerLeft}>
                 <View style={styles.dragIconContainer}>
@@ -147,15 +159,18 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
               </View>
             </View>
 
-            <View style={[styles.footerContainer, { backgroundColor: footerBackgroundColor }]}>
-              <ThemedText style={styles.footerText} numberOfLines={1} ellipsizeMode="tail">
-                {accountName || ' '}
-              </ThemedText>
+            {/* Consistent Footer Area */}
+            <View style={styles.footerContainer}>
+                <ThemedText style={styles.footerText} numberOfLines={1} ellipsizeMode="tail">
+                  {accountNumber? accountName : metadata}
+                </ThemedText>
             </View>
-          </ThemedView>
+
+          </LinearGradient>
         </View>
       </Pressable>
     </Animated.View>
+
   );
 });
 
@@ -208,7 +223,6 @@ const styles = StyleSheet.create({
   companyName: {
     fontSize: 14,
     color: 'white',
-    marginBottom: -2,
   },
   companyFullName: {
     fontSize: 14,
@@ -218,7 +232,7 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   qrContainer: {
-    paddingVertical: 10,
+    marginVertical: 10,
     paddingHorizontal: 15,
     alignItems: 'flex-end',
     pointerEvents: 'none',
@@ -232,7 +246,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 15,
-    paddingVertical: 5,
+    paddingBottom: 10,
     pointerEvents: 'none',
   },
   footerText: {

@@ -242,6 +242,7 @@ export default function DetailScreen() {
                                         placeholderTextColor={colorScheme === 'light' ? Colors.light.placeHolder : Colors.dark.placeHolder}
                                         onChangeText={(text) => setAmount(formatAmount(text))}
                                     />
+                                    <ThemedText>đ</ThemedText>
                                     <Pressable hitSlop={{ bottom: 40, left: 30, right: 30, top: 30 }} onPress={transferAmount} style={[styles.transferButton, { opacity: amount ? 1 : 0.3 }]}>
                                         {amount ? <Ionicons name="chevron-forward-outline" size={18} color={iconColor} /> : 
                                         <Ionicons name="chevron-forward-outline" size={18} color={iconColor} />}
@@ -348,6 +349,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 15,
+        // gap: 10
     },
     inputField: {
         height: 50,
@@ -356,6 +358,7 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
     },
     transferButton: {
+        paddingLeft: 5,
     },
     suggestionList: {
 

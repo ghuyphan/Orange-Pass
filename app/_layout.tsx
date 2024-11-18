@@ -41,8 +41,8 @@ export default function RootLayout() {
     const onLayoutRootView = useCallback(async () => {
         if (isAppReady) {
             try {
-                // Add a small delay to ensure the new screen is ready
-                await new Promise(resolve => setTimeout(resolve, 50));
+                // Increased delay for smoother transition
+                await new Promise(resolve => setTimeout(resolve, 200)); 
                 await SplashScreen.hideAsync();
             } catch (error) {
                 console.error("Error hiding splash screen:", error);
