@@ -7,6 +7,7 @@ import Barcode from 'react-native-barcode-svg';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { getIconPath } from '@/utils/returnIcon';
 import { returnItemData } from '@/utils/returnItemData';
+import { returnMidpointColor } from '@/utils/returnMidpointColor';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -40,9 +41,9 @@ export const ThemedPinnedCard = memo(function ThemedPinnedCard({
   const { width } = useWindowDimensions();
 
   // Calculate sizes based on screen width
-  const qrSize = useMemo(() => width * 0.45, [width]); // Adjust QR code size to 50% of screen width
-  const barcodeHeight = useMemo(() => width * 0.3, [width]); // Adjust Barcode height to 20% of screen width
-  const barcodeWidth = useMemo(() => width * 0.7, [width]); // Adjust Barcode max width to 80% of screen width
+  const qrSize = useMemo(() => width * 0.4, [width]); // Adjust QR code size to 50% of screen width
+  const barcodeHeight = useMemo(() => width * 0.25, [width]); // Adjust Barcode height to 20% of screen width
+  const barcodeWidth = useMemo(() => width * 0.6, [width]); // Adjust Barcode max width to 80% of screen width
 
   // Memoize the result of returnItemData to avoid unnecessary computations
   const { full_name, name, color, accent_color } = useMemo(() => returnItemData(code, type), [code, type]);
@@ -82,16 +83,16 @@ export const ThemedPinnedCard = memo(function ThemedPinnedCard({
       underlayColor={underlayColor}
     >
       {/* <ThemedView style={[styles.itemContainer, backgroundColorStyle]}> */}
-      <LinearGradient
-        colors={
-          colorScheme === 'light'
-            ? [color?.light || '#ffffff', accent_color?.light || '#f0f0f0']
-            : [color?.dark || '#000000', accent_color?.dark || '#303030']
-        }
-        start={{ x: 0, y: 0.5 }}
-        end={{ x: 1, y: 0.5 }}
-        style={styles.itemContainer}
-      >
+          <LinearGradient
+            colors={
+              colorScheme === 'light'
+                ? [color?.light || '#ffffff', returnMidpointColor(color.light, accent_color.light) || '#cccccc', accent_color?.light || '#f0f0f0']
+                : [color?.dark || '#000000', returnMidpointColor(color.dark, accent_color.dark) || '#505050', accent_color?.dark || '#303030']
+            }
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.itemContainer}
+          >
         <View style={styles.headerContainer}>
           <View style={styles.leftHeaderContainer}>
             <View style={styles.iconContainer}>
@@ -126,7 +127,7 @@ export const ThemedPinnedCard = memo(function ThemedPinnedCard({
           )}
           {type === 'bank' ? (
             <View style={[styles.infoContainer, styles.infoContainerWithMarginTop]}>
-              <ThemedText style={styles.accountName} numberOfLines={1}>
+              <ThemedText type='defaultSemiBold' style={styles.accountName} numberOfLines={1}>
                 {accountName}
               </ThemedText>
               <ThemedText style={styles.accountNumber} numberOfLines={1}>
@@ -171,7 +172,7 @@ const styles = StyleSheet.create({
   iconContainer: {
     width: 40,
     aspectRatio: 1,
-    borderRadius: 25,
+    borderRadius: 50,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'white',
@@ -203,7 +204,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   infoContainerWithMarginTop: {
-    marginTop: 10,
+    marginTop: 15,
   },
   accountName: {
     fontSize: 16,

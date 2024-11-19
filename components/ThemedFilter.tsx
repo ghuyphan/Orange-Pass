@@ -65,8 +65,8 @@ const styles = StyleSheet.create({
     },
     filterButton: {
         paddingVertical: 5,
-        paddingHorizontal: 10,
-        borderRadius: 10,
+        paddingHorizontal: 15,
+        borderRadius: 50,
         overflow: 'hidden',
     },
     baseTextStyle: {

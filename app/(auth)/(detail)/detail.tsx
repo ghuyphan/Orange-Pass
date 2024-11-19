@@ -167,7 +167,7 @@ export default function DetailScreen() {
                             ? Colors.light.cardFooter
                             : Colors.dark.cardFooter,
                     overflow: 'hidden',
-                    borderRadius: 10,
+                    borderRadius: 25,
                 },
             ]}
         >
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
     },
     cardWrapper: {
         padding: 15,
-        borderRadius: 12,
+        borderRadius: 10,
     },
     storeDetails: {
         flexDirection: 'row',

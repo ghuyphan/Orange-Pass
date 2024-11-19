@@ -311,12 +311,12 @@
     },
     "MB": {
         "color": {
-            "light": "#431FBF",
-            "dark": "#301096"
+            "light": "#6757C9",
+            "dark": "#4B2FB2"
         },
         "accent_color": {
-            "light": "#DA5C74",
-            "dark": "#B84A5C"
+            "light": "#D87385",
+            "dark": "#C05A6D"
         }
     },
     "MGB": {
@@ -501,12 +501,12 @@
     },
     "TPB": {
         "color": {
-            "light": "#824799",
-            "dark": "#4A2D60"
+            "light": "#CC7DBA",
+            "dark": "#8F527F"
         },
         "accent_color": {
-            "light": "#D1A5E7",
-            "dark": "#754C8A"
+            "light": "#3333A7",
+            "dark": "#24246B"
         }
     },
     "TYM": {
@@ -725,8 +725,8 @@
             "dark": "#007B42"
         },
         "accent_color": {
-            "light": "#66D19E",
-            "dark": "#4DA87B"
+            "light": "#80D9B6",
+            "dark": "#2A634E"
         }
     },
     "TOP": {

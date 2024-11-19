@@ -18,6 +18,7 @@
     "@expo/vector-icons": "^14.0.2",
     "@gorhom/bottom-sheet": "^4",
     "@react-native-community/netinfo": "^11.3.1",
+    "@react-native-ml-kit/barcode-scanning": "^1.4.1",
     "@reduxjs/toolkit": "^2.2.7",
     "@reeq/react-native-device-brightness": "^1.0.6",
     "@zamplyy/react-native-nice-avatar": "^1.1.2",

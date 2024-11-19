@@ -10,6 +10,7 @@ import QRCode from 'react-native-qrcode-svg';
 import Barcode from 'react-native-barcode-svg';
 import { getIconPath } from '@/utils/returnIcon';
 import { returnItemData } from '@/utils/returnItemData';
+import { returnMidpointColor } from "@/utils/returnMidpointColor"
 import { LinearGradient } from 'expo-linear-gradient';
 
 export type ThemedCardItemProps = {
@@ -112,14 +113,13 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
           <LinearGradient
             colors={
               colorScheme === 'light'
-                ? [color?.light || '#ffffff', accent_color?.light || '#f0f0f0']
-                : [color?.dark || '#000000', accent_color?.dark || '#303030']
+                ? [color?.light || '#ffffff', returnMidpointColor(color.light, accent_color.light) || '#cccccc', accent_color?.light || '#f0f0f0']
+                : [color?.dark || '#000000', returnMidpointColor(color.dark, accent_color.dark) || '#505050', accent_color?.dark || '#303030']
             }
-            start={{ x: 0, y: 0.5 }}
-            end={{ x: 1, y: 0.5 }}            
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
             style={styles.itemContainer}
           >
-
             <View style={styles.headerContainer}>
               <View style={styles.headerLeft}>
                 <View style={styles.dragIconContainer}>
@@ -161,9 +161,9 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
 
             {/* Consistent Footer Area */}
             <View style={styles.footerContainer}>
-                <ThemedText style={styles.footerText} numberOfLines={1} ellipsizeMode="tail">
-                  {accountNumber? accountName : metadata}
-                </ThemedText>
+              <ThemedText style={styles.footerText} numberOfLines={1} ellipsizeMode="tail">
+                {accountNumber ? accountName : metadata}
+              </ThemedText>
             </View>
 
           </LinearGradient>

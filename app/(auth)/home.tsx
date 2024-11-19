@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { StyleSheet, View, Platform, FlatList, Dimensions, useColorScheme } from 'react-native';
 import { useSelector } from 'react-redux';
 import Animated, {
@@ -219,7 +219,6 @@ function HomeScreen() {
     }
   }, [isEmpty]);
 
-
   const animateEmptyCard = () => {
     emptyCardOffset.value = withSpring(0, {
       damping: 30,
@@ -425,12 +424,27 @@ function HomeScreen() {
     [onNavigateToDetailScreen, handleExpandPress]
   );
 
+  const listContainerPadding = useMemo(() => {
+    if (qrData.length === 0) {
+      return 0;
+    } else {
+      switch (qrData.length) {
+        case 1:
+          return screenHeight * 0.65;
+        case 2:
+          return screenHeight * 0.4;
+        case 3:
+          return screenHeight * 0.2;
+      }
+    }
+  }, [qrData.length, screenHeight]);
+
   return (
     <ThemedView style={styles.container}>
       {Platform.OS === 'android' ? (
         <ThemedView style={styles.blurContainer} />
       ) : (
-        <BlurView style={styles.blurContainer} />
+        <BlurView intensity={100} style={styles.blurContainer} />
       )}
 
       <Animated.View style={[styles.titleContainer, titleContainerStyle]} pointerEvents="auto">
@@ -518,7 +532,7 @@ function HomeScreen() {
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
           containerStyle={{ flex: 1 }}
-          contentContainerStyle={[styles.listContainer, qrData.length > 0 && { paddingBottom: screenHeight * 0.2 }]}
+          contentContainerStyle={[styles.listContainer, qrData.length > 0 && { paddingBottom: listContainerPadding }]}
           scrollEventThrottle={32}
           showsVerticalScrollIndicator={false}
           onDragBegin={onDragBegin}
@@ -529,10 +543,6 @@ function HomeScreen() {
             scrollY.value = offset;
           }}
           decelerationRate={'fast'}
-          onLayout={(event) => {
-            const { height } = event.nativeEvent.layout;
-            console.log('List height:', height);
-          }}
         />
       )}
       <Animated.View style={scrollContainerStyle}>
@@ -609,7 +619,7 @@ const styles = StyleSheet.create({
   titleButton: {
   },
   scrollContainer: {
-    paddingTop: STATUSBAR_HEIGHT + 105,
+    paddingTop: STATUSBAR_HEIGHT + 100,
     flex: 1,
   },
   emptyCard: {
@@ -620,7 +630,7 @@ const styles = StyleSheet.create({
     borderRadius: 50,
   },
   listContainer: {
-    paddingTop: STATUSBAR_HEIGHT + 105,
+    paddingTop: STATUSBAR_HEIGHT + 100,
     // paddingHorizontal: 15,
     flexGrow: 1,
     // paddingBottom: screenHeight / 5,

@@ -6,6 +6,7 @@ import QRCode from 'react-native-qrcode-svg';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { getIconPath } from '@/utils/returnIcon';
 import { returnItemData } from '@/utils/returnItemData';
+import { returnMidpointColor } from '@/utils/returnMidpointColor';
 // import { useThemeColor } from '@/hooks/useThemeColor';
 
 import { LinearGradient } from 'expo-linear-gradient';
@@ -69,11 +70,11 @@ export const ThemedVietQRCard = memo(function ThemedVietQRCard({
             <LinearGradient
             colors={
               colorScheme === 'light'
-                ? [color?.light || '#ffffff', accent_color?.light || '#f0f0f0']
-                : [color?.dark || '#000000', accent_color?.dark || '#303030']
+                ? [color?.light || '#ffffff', returnMidpointColor(color.light, accent_color.light) || '#cccccc', accent_color?.light || '#f0f0f0']
+                : [color?.dark || '#000000', returnMidpointColor(color.dark, accent_color.dark) || '#505050', accent_color?.dark || '#303030']
             }
-            start={{ x: 0, y: 0.5 }}
-            end={{ x: 1, y: 0.5 }}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
             style={styles.itemContainer}
           >
                 <View style={styles.headerContainer}>
@@ -147,7 +148,7 @@ const styles = StyleSheet.create({
         gap: 10,
     },
     iconContainer: {
-        width: 35,
+        width: 40,
         aspectRatio: 1,
         borderRadius: 50,
         justifyContent: 'center',
@@ -169,15 +170,13 @@ const styles = StyleSheet.create({
         flexDirection: 'column',
         alignItems: 'center',
         overflow: 'hidden',
-        paddingTop: 20,
+        paddingTop: 15,
     },
     logoContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        // marginVertical: -10, 
-        // marginBottom: -30, 
-        marginVertical: 10,
+        marginVertical: 15,
         paddingRight: 10,
         backgroundColor: '#fff',
         borderRadius: 10,
@@ -189,10 +188,10 @@ const styles = StyleSheet.create({
         height: 40,
     },
     divider: {
-        width: 1,
-        height: '40%',
+        width: 1.5,
+        height: '50%',
         backgroundColor: '#535f78',
-        marginHorizontal: 10,
+        marginHorizontal: 20,
     },
     napasIcon: {
         width: '22%',
@@ -204,11 +203,10 @@ const styles = StyleSheet.create({
         padding: 10,
         borderRadius: 10,
         backgroundColor: 'white',
-        marginBottom: 10,
     },
     infoContainer: {
         justifyContent: 'center',
-        gap: 5, // Increased padding
+        // gap: 5, // Increased padding
     },
     accountName: {
         fontSize: 18,
