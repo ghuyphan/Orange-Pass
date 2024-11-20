@@ -37,110 +37,108 @@ export default function RootLayout() {
     if (Platform.OS === 'android') {
         UIManager.setLayoutAnimationEnabledExperimental?.(true);
     }
-
-    const onLayoutRootView = useCallback(async () => {
+    const onLayoutRootView = useCallback(() => {
         if (isAppReady) {
-            try {
-                // Increased delay for smoother transition
-                await new Promise(resolve => setTimeout(resolve, 200)); 
-                await SplashScreen.hideAsync();
-            } catch (error) {
-                console.error("Error hiding splash screen:", error);
-            }
+          // This tells the splash screen to hide immediately! If we call this after
+          // `setAppIsReady`, then we may see a blank screen while the app is
+          // loading its initial state and rendering its first pixels. So instead,
+          // we hide the splash screen once we know the root view has already
+          // performed layout.
+          SplashScreen.hideAsync();
         }
-    }, [isAppReady]);
+      }, [isAppReady]);
 
-    useEffect(() => {
-        const prepareApp = async () => {
-            try {
-                await createTable();
+useEffect(() => {
+    const prepareApp = async () => {
+        try {
+            await createTable();
 
-                const onboardingStatus = storage.getBoolean('hasSeenOnboarding') ?? false;
-                setHasSeenOnboarding(onboardingStatus);
+            const onboardingStatus = storage.getBoolean('hasSeenOnboarding') ?? false;
+            setHasSeenOnboarding(onboardingStatus);
 
-                if (onboardingStatus) {
-                    const authStatus = await checkInitialAuth();
-                    setIsAuthenticated(authStatus);
-                } else {
-                    setIsAuthenticated(false);
-                }
-
-                if (fontsLoaded) {
-                    setIsAppReady(true);
-                }
-            } catch (error) {
-                console.error("Error during app initialization:", error);
-            }
-        };
-
-        prepareApp();
-
-        const unsubscribe = checkOfflineStatus();
-        return () => unsubscribe();
-    }, [fontsLoaded]);
-
-    useEffect(() => {
-        if (isAppReady && hasSeenOnboarding !== null && isAuthenticated !== null) {
-            // Navigate to the appropriate screen
-            if (!hasSeenOnboarding) {
-                router.replace('/onboard');
-            } else if (isAuthenticated) {
-                router.replace('/home');
+            if (onboardingStatus) {
+                const authStatus = await checkInitialAuth();
+                setIsAuthenticated(authStatus);
             } else {
-                router.replace('/login');
+                setIsAuthenticated(false);
             }
-        }
-    }, [isAppReady, hasSeenOnboarding, isAuthenticated]);
 
-    if (!isAppReady || isAuthenticated === null || hasSeenOnboarding === null) {
-        return (
-            <View style={styles.loadingContainer} onLayout={onLayoutRootView}>
+            if (fontsLoaded) {
+                setIsAppReady(true);
+            }
+        } catch (error) {
+            console.error("Error during app initialization:", error);
+        }
+    };
+
+    prepareApp();
+
+    const unsubscribe = checkOfflineStatus();
+    return () => unsubscribe();
+}, [fontsLoaded]);
+
+useEffect(() => {
+    if (isAppReady && hasSeenOnboarding !== null && isAuthenticated !== null) {
+        // Navigate to the appropriate screen
+        if (!hasSeenOnboarding) {
+            router.replace('/onboard');
+        } else if (isAuthenticated) {
+            router.replace('/home');
+        } else {
+            router.replace('/login');
+        }
+    }
+}, [isAppReady, hasSeenOnboarding, isAuthenticated]);
+
+if (!isAppReady || isAuthenticated === null || hasSeenOnboarding === null) {
+    return (
+        <View style={styles.loadingContainer} onLayout={onLayoutRootView}>
             <LOGO width={width * 0.23} height={width * 0.23} style={styles.orangeLogo} />
-                {/* <Image
+            {/* <Image
                     resizeMode='contain'
                     source={require('@/assets/images/orange-icon.png')}
                     style={styles.orangeLogo}
                 /> */}
-                <ActivityIndicator
-                    style={styles.activityIndicator}
-                    size="small"
-                    color='#6FC2B4'
-                />
-            </View>
-        );
-    }
-
-    return (
-        <Provider store={store}>
-            <GestureHandlerRootView onLayout={onLayoutRootView}>
-                <PaperProvider>
-                    <LocaleProvider>
-                        <ThemeProvider>
-                            <Stack
-                                screenOptions={{
-                                    headerShown: false,
-                                    animation: 'ios',
-                                }}
-                            >
-                                <Stack.Screen
-                                    name="(public)"
-                                />
-                                <Stack.Screen
-                                    name="(auth)"
-                                />
-                                <Stack.Screen
-                                    name="+not-found"
-                                />
-                                <Stack.Screen
-                                    name="onboard"
-                                />
-                            </Stack>
-                        </ThemeProvider>
-                    </LocaleProvider>
-                </PaperProvider>
-            </GestureHandlerRootView>
-        </Provider>
+            <ActivityIndicator
+                style={styles.activityIndicator}
+                size="small"
+                color='#6FC2B4'
+            />
+        </View>
     );
+}
+
+return (
+    <Provider store={store}>
+        <GestureHandlerRootView onLayout={onLayoutRootView}>
+            <PaperProvider>
+                <LocaleProvider>
+                    <ThemeProvider>
+                        <Stack
+                            screenOptions={{
+                                headerShown: false,
+                                animation: 'ios',
+                            }}
+                        >
+                            <Stack.Screen
+                                name="(public)"
+                            />
+                            <Stack.Screen
+                                name="(auth)"
+                            />
+                            <Stack.Screen
+                                name="+not-found"
+                            />
+                            <Stack.Screen
+                                name="onboard"
+                            />
+                        </Stack>
+                    </ThemeProvider>
+                </LocaleProvider>
+            </PaperProvider>
+        </GestureHandlerRootView>
+    </Provider>
+);
 }
 
 const { width, height } = Dimensions.get('window');

@@ -27,6 +27,7 @@ import useHandleCodeScanned from '@/hooks/useHandleCodeScanned'; // Import the c
 import Animated from 'react-native-reanimated';
 import RNQRGenerator from 'rn-qr-generator';
 import { useLocale } from '@/context/LocaleContext';
+// import BarcodeScanning from '@react-native-ml-kit/barcode-scanning';
 
 const ReanimatedCamera = Reanimated.createAnimatedComponent(Camera);
 Reanimated.addWhitelistedNativeProps({ zoom: true });
@@ -251,7 +252,7 @@ export default function ScanScreen() {
   const onOpenGallery = useCallback(async () => {
     try {
       // Force a re-render to ensure the UI updates immediately
-      const result = await ImagePicker.openPicker({
+      const image = await ImagePicker.openPicker({
         width: 300,
         height: 400,
         // includeBase64: true,
@@ -261,11 +262,26 @@ export default function ScanScreen() {
       setIsDecoding(true);
       await new Promise(resolve => setTimeout(resolve, 0)); // Allow React to process the state update
   
-      if (!result.path) {
+      if (!image.path) {
         return;
       } 
 
-      decodeQRCode(result.path);
+      // decodeQRCode(result.path);
+      
+      // try {
+      //   const barcodes = await BarcodeScanning.scan(result.path);
+      //   if (barcodes.length > 0) {
+      //     const firstBarcode = barcodes[0];
+      //     console.log(firstBarcode.value, firstBarcode.format);
+      //   } else {
+      //     console.log('No barcodes found');
+      //   }
+      // } catch (error) {
+      //   console.error('Error scanning QR code:', error);
+      // }
+// for (let barcode of barcodes) {
+//   console.log(barcode.value, barcode.format);
+// }
 
       // if (result && 'data' in result && result.data) {
       //   if (result.mime === 'image/jpeg' || result.mime === 'image/png') {

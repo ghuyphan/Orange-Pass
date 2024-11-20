@@ -19,7 +19,6 @@ export default function HomeLayout() {
         }}
       >
         <Stack.Screen name="home"/>
-        <Stack.Screen name="explore" />
         <Stack.Screen name="(add)" />
         <Stack.Screen name="(detail)" />
         <Stack.Screen name="(scan)"/>

@@ -430,7 +430,7 @@ function HomeScreen() {
     } else {
       switch (qrData.length) {
         case 1:
-          return screenHeight * 0.65;
+          return screenHeight * 0.68;
         case 2:
           return screenHeight * 0.4;
         case 3:
