@@ -5,10 +5,6 @@ import { StyleSheet } from 'react-native';
 import { ThemedView } from '@/components/ThemedView';
 
 export default function HomeLayout() {
-  const segments = useSegments();
-  const router = useRouter();
-
-  const disableAnimation = segments.length === 1 && segments[0] === 'home';
 
   return (
     <ThemedView style={styles.container}>

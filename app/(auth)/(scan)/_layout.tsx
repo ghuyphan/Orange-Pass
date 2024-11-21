@@ -2,16 +2,24 @@ import { Stack, useSegments } from 'expo-router';
 import React from 'react';
 import { StyleSheet, View, Platform } from 'react-native';
 import { ThemedButton } from '@/components/buttons/ThemedButton';
-import { useRouter } from 'expo-router';
+import { useRouter, Redirect } from 'expo-router';
 import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
 import { ThemedView } from '@/components/ThemedView';
+import { useCameraPermission } from 'react-native-vision-camera';
 
 export default function ScanLayout() {
   const segments = useSegments().toString();
-
   const showHeader = segments.includes('permission');
-
   const onNavigateBack = useRouter().back;
+  const { hasPermission } = useCameraPermission(); // Add permission check
+
+  if (!hasPermission && !showHeader) {
+      return (
+        <ThemedView style={styles.container}>
+           <Redirect href="/(auth)/(scan)/permission" />
+        </ThemedView>
+      )
+  }
 
   return (
     <ThemedView style={styles.container}>
@@ -21,20 +29,21 @@ export default function ScanLayout() {
           animation: 'ios'
         }}
       >
-        <Stack.Screen name="scan-main"/>
-        <Stack.Screen name="permission"/>
+        <Stack.Screen name="scan-main" />
+        <Stack.Screen name="permission" />
       </Stack>
       {showHeader &&
         <View style={styles.headerContainer}>
           <ThemedButton
             onPress={onNavigateBack}
-            iconName="chevron-back"
+            iconName="chevron-left"
           />
-        </View>}
-
+        </View>
+      }
     </ThemedView>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,

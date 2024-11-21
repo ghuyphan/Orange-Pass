@@ -1,6 +1,5 @@
 import React, { useCallback, useMemo, useEffect, useState } from 'react';
 import { StyleSheet, View, Platform, useColorScheme, Pressable, Appearance } from 'react-native';
-import { BlurView } from 'expo-blur';
 import Animated, {
     useAnimatedStyle,
     useSharedValue,
@@ -76,15 +75,12 @@ const ThemeScreen: React.FC = () => {
 
     return (
         <ThemedView style={styles.container}>
-            {Platform.OS === 'android' ? (
-                <ThemedView style={styles.blurContainer} />
-            ) : (
-                <BlurView intensity={10} style={styles.blurContainer} />
-            )}
+            <ThemedView style={styles.blurContainer} />
+
             <Animated.View style={[styles.titleContainer, titleContainerStyle]}>
                 <View style={styles.headerContainer}>
                     <ThemedButton
-                        iconName="chevron-back"
+                        iconName="chevron-left"
                         style={styles.titleButton}
                         onPress={onNavigateBack}
                     />

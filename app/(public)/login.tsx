@@ -123,7 +123,7 @@ export default function LoginScreen() {
             />
           </View>
           <ThemedButton
-            iconName='log-in'
+            iconName='login'
             label={t('loginScreen.login')}
             style={styles.loginButton}
             onPress={handleSubmit}

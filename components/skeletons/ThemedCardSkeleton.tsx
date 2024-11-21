@@ -5,7 +5,7 @@ import { Skeleton } from 'moti/skeleton';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
-export default function ThemedCardSkeleton({ show = true, index = 0 }) {
+export function ThemedCardSkeleton({ show = true, index = 0 }) {
   const colorScheme = useColorScheme();
   const colorsArray = colorScheme === 'dark'
   ? ['#6B5A4E', '#5D4D42', '#4F4036', '#41332A', '#33261E']

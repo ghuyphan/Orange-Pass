@@ -1,6 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useState, useMemo } from 'react';
-import { TextInput, StyleSheet, TouchableHighlight, View, TouchableWithoutFeedback, Pressable } from 'react-native';
+import { TextInput, StyleSheet, View, Pressable } from 'react-native';
 import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
 import { useThemeColor } from '@/hooks/useThemeColor';
@@ -114,8 +115,8 @@ export function ThemedInput({
                             android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', borderless: false, radius: 10 }}
 
                         >
-                            <Ionicons
-                                name={secureTextEntry ? (isSecure ? 'eye' : 'eye-off') : 'close-circle-sharp'}
+                            <MaterialIcons
+                                name={secureTextEntry ? (isSecure ? 'visibility' : 'visibility-off') : 'cancel'}
                                 size={18}
                                 color={color}
                             />
@@ -126,7 +127,7 @@ export function ThemedInput({
             </ThemedView >
             {isError && errorMessage.length > 0 && (
                 <View style={styles.errorLabelContainer}>
-                    <Ionicons name="alert-circle" size={14} color={errorLabelStyle.color} />
+                    <MaterialIcons name="error" size={14} color={errorLabelStyle.color} />
                     <ThemedText style={[styles.errorLabel, errorLabelStyle]}>
                         {errorMessage}
                     </ThemedText>

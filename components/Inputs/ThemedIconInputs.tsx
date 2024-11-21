@@ -1,6 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useState, useMemo } from 'react';
-import { TextInput, StyleSheet, TouchableHighlight, View, TouchableWithoutFeedback, Pressable } from 'react-native';
+import { TextInput, StyleSheet, View, Pressable } from 'react-native';
 import { ThemedView } from '../ThemedView';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -9,7 +10,7 @@ import { Colors } from '@/constants/Colors';
 export type ThemedIconInput = {
     lightColor?: string;
     darkColor?: string;
-    iconName: keyof typeof Ionicons.glyphMap;
+    iconName: keyof typeof MaterialIcons.glyphMap;
     value?: string;
     placeholder?: string;
     style?: object;
@@ -17,7 +18,7 @@ export type ThemedIconInput = {
     onChangeText?: (text: string) => void;
     onBlur?: () => void;
     onFocus?: () => void;
-    rightIconName?: keyof typeof Ionicons.glyphMap;
+    rightIconName?: keyof typeof MaterialIcons.glyphMap;
     onRightIconPress?: () => void;
     onSubmitEditing ?: () => void
 };
@@ -63,7 +64,7 @@ export function ThemedIconInput({
         <ThemedView style={inputContainerStyle}>
             <View style={styles.inputRow}>
                 <View style={styles.leftContainer}>
-                    <Ionicons name={iconName} size={20} color={color || colorScheme === 'light' ? Colors.light.placeHolder : Colors.dark.placeHolder} />
+                    <MaterialIcons name={iconName} size={20} color={color || colorScheme === 'light' ? Colors.light.placeHolder : Colors.dark.placeHolder} />
                     <TextInput
                         style={[styles.input, { color }]}
                         value={localValue}
@@ -99,7 +100,7 @@ export function ThemedIconInput({
                             hitSlop={40}
                         >
                             <View style={styles.iconTouchable}>
-                            <Ionicons
+                            <MaterialIcons
                                 name={rightIconName}
                                 size={20}
                                 color={color}
@@ -120,6 +121,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 15,
         borderRadius: 10,
         flexDirection: 'column',
+        alignItems: 'center',
     },
     leftContainer: {
         flexDirection: 'row',

@@ -4,10 +4,8 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useUnmountBrightness } from '@reeq/react-native-device-brightness';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedButton } from '@/components/buttons/ThemedButton';
-import { ThemedPinnedCard } from '@/components/cards';
 import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
 import QRRecord from '@/types/qrType';
-import { t } from '@/i18n';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedVietQRCard } from '@/components/cards/ThemedVietQR';
 
@@ -43,11 +41,10 @@ export default function CreateQRScreen() {
     return (
             <ThemedView style={styles.mainContainer}>
                 <View style={styles.headerWrapper}>
-                    <ThemedButton onPress={router.back} iconName="chevron-back" />
+                    <ThemedButton onPress={router.back} iconName="chevron-left" />
                 </View>
                 <ThemedVietQRCard
                     style={styles.pinnedCardWrapper}
-                    metadata_type={item.metadata_type}
                     code={item.code}
                     type={item.type}
                     metadata={metadata.toString()}

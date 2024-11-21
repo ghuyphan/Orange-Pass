@@ -5,8 +5,7 @@ import { ThemedText } from '../ThemedText';
 import { useColorScheme } from 'react-native';
 import { Colors } from '@/constants/Colors';
 import { Portal } from 'react-native-paper';
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
+import { MaterialIcons } from '@expo/vector-icons';
 
 interface ThemedBottomSheetProps {
     ref?: React.Ref<BottomSheet>;
@@ -83,7 +82,7 @@ const ThemedBottomSheet = React.memo(forwardRef<BottomSheet, ThemedBottomSheetPr
                                 style={styles.buttonContainer}
                                 android_ripple={{color: rippleColor, foreground: true, borderless: false }}
                             >
-                                    <Ionicons name="create-outline" size={18} color={iconColor} />
+                                    <MaterialIcons name="edit" size={18} color={iconColor} />
                                     <ThemedText style={styles.buttonText}>{editText}</ThemedText>
                             </Pressable>
                             <Pressable
@@ -93,7 +92,7 @@ const ThemedBottomSheet = React.memo(forwardRef<BottomSheet, ThemedBottomSheetPr
                                 android_ripple={{ color: rippleColor, foreground: true, borderless: false }}
                             >
 
-                                    <Ionicons name="trash-outline" size={18} color={iconColor} />
+                                    <MaterialIcons name="delete" size={18} color={iconColor} />
                                     <ThemedText style={styles.buttonText}>{deleteText}</ThemedText>
                             </Pressable>
                         </View>

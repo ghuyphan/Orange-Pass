@@ -1,6 +1,5 @@
 import React, { useCallback, useMemo } from 'react';
 import { StyleSheet, View, Platform, useColorScheme, Pressable } from 'react-native';
-import { BlurView } from 'expo-blur';
 import Animated, {
     useAnimatedStyle,
     useSharedValue,
@@ -22,7 +21,7 @@ import GB from '@/assets/svgs/GB.svg';
 import VN from '@/assets/svgs/VN.svg';
 import RU from '@/assets/svgs/RU.svg';
 import { useLocale } from '@/context/LocaleContext';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useMMKVString } from 'react-native-mmkv';
 
 const LanguageScreen: React.FC = () => {
@@ -70,16 +69,12 @@ const LanguageScreen: React.FC = () => {
     
     return (
         <ThemedView style={styles.container}>
-            {Platform.OS === 'android' ? (
                 <ThemedView style={styles.blurContainer} />
-            ) : (
-                <BlurView intensity={10} style={styles.blurContainer} />
-            )}
             <Animated.View style={[styles.titleContainer, titleContainerStyle]} pointerEvents="auto">
                 <View style={styles.headerContainer}>
                     <View style={styles.titleButtonContainer}>
                         <ThemedButton
-                            iconName="chevron-back"
+                            iconName="chevron-left"
                             style={styles.titleButton}
                             onPress={onNavigateBack}
                         />
@@ -101,7 +96,7 @@ const LanguageScreen: React.FC = () => {
                                 <ThemedText>{t('languageScreen.vietnamese')}</ThemedText>
                             </View>
                             {locale === 'vi' && (
-                                <Ionicons name="checkmark-outline" size={20} color={colors} />
+                                <MaterialIcons name="check" size={20} color={colors} />
                             )}
                         </View>
                     </Pressable>
@@ -118,7 +113,7 @@ const LanguageScreen: React.FC = () => {
                                 <ThemedText>{t('languageScreen.russian')}</ThemedText>
                             </View>
                             {locale === 'ru' && (
-                                <Ionicons name="checkmark-outline" size={20} color={colors} />
+                                <MaterialIcons name="check" size={20} color={colors} />
                             )}
                         </View>
                     </Pressable>
@@ -135,7 +130,7 @@ const LanguageScreen: React.FC = () => {
                                 <ThemedText>{t('languageScreen.english')}</ThemedText>
                             </View>
                             {locale === 'en' && (
-                                <Ionicons name="checkmark-outline" size={20} color={colors} />
+                                <MaterialIcons name="check" size={20} color={colors} />
                             )}
                         </View>
                     </Pressable>
@@ -150,12 +145,12 @@ const LanguageScreen: React.FC = () => {
                                     styles.iconContainer,
                                     colorScheme === 'dark' ? { backgroundColor: Colors.dark.buttonBackground } : { backgroundColor: Colors.light.buttonBackground }
                                 ]}>
-                                    <Ionicons name="cog-outline" size={20} color={colors} />
+                                    <MaterialIcons name="settings" size={20} color={colors} />
                                 </View>
                                 <ThemedText>{t('languageScreen.system')}</ThemedText>
                             </View>
                             {locale == undefined && (
-                                <Ionicons name="checkmark-outline" size={20} color={colors} />
+                                <MaterialIcons name="check" size={20} color={colors} />
                             )}
                         </View>
                     </Pressable>

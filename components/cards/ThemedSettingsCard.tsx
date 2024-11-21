@@ -1,16 +1,16 @@
 import React, { memo } from 'react';
-import { StyleSheet, View, TouchableWithoutFeedback, Dimensions, Pressable } from 'react-native';
+import { StyleSheet, View, Pressable } from 'react-native';
 import { ThemedText } from '../ThemedText';
-import { useColorScheme } from '@/hooks/useColorScheme';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { Colors } from '@/constants/Colors';
 export type ThemedSettingsCardItemProps = {
     settingsTitle: string;
     settingsText?: string;
     onPress: () => void;
-    leftIcon?: keyof typeof Ionicons.glyphMap;
-    rightIcon?: keyof typeof Ionicons.glyphMap;
+    leftIcon?: keyof typeof MaterialIcons.glyphMap;
+    rightIcon?: keyof typeof MaterialIcons.glyphMap;
     iconColor?: string;
     iconSize?: number;
 };
@@ -21,8 +21,8 @@ export const ThemedSettingsCardItem = memo(function ThemedSettingsCardItem(props
         settingsTitle,
         settingsText,
         onPress,
-        leftIcon = "chevron-back",
-        rightIcon = "chevron-forward",
+        leftIcon = "chevron-left",
+        rightIcon = "chevron-right",
         iconColor,
         iconSize = 18,
     } = props;
@@ -34,12 +34,12 @@ export const ThemedSettingsCardItem = memo(function ThemedSettingsCardItem(props
         <Pressable onPress={onPress} android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}>
             <View style={styles.settingsCardContainer}>
                 <View style={styles.leftContainer}>
-                    <Ionicons name={leftIcon} size={iconSize} color={iconColor || colors} />
+                    <MaterialIcons name={leftIcon} size={iconSize} color={iconColor || colors} />
                     <ThemedText style={styles.sectionTitle}>{settingsTitle}</ThemedText>
                 </View>
                 <View style={styles.rightContainer}>
                     <ThemedText style={styles.settingsText}>{settingsText}</ThemedText>
-                    <Ionicons style={{ opacity: 0.5 }} name={rightIcon} size={iconSize} color={iconColor || colors} />
+                    <MaterialIcons style={{ opacity: 0.5 }} name={rightIcon} size={iconSize} color={iconColor || colors} />
                 </View>
             </View>
         </Pressable>

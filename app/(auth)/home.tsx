@@ -12,7 +12,6 @@ import Animated, {
   Extrapolation
 } from 'react-native-reanimated';
 import { router } from 'expo-router';
-import { BlurView } from 'expo-blur';
 import DraggableFlatList, { ScaleDecorator } from 'react-native-draggable-flatlist';
 import { debounce, throttle } from 'lodash';
 
@@ -26,8 +25,7 @@ import { ThemedIconInput } from '@/components/Inputs';
 import { ThemedButton } from '@/components/buttons/ThemedButton';
 import ThemedBottomSheet from '@/components/bottomsheet/ThemedBottomSheet';
 import { ThemedEmptyCard, ThemedCardItem } from '@/components/cards';
-import ThemedFilterSkeleton from '@/components/skeletons/ThemedFilterSkeleton';
-import ThemedCardSkeleton from '@/components/skeletons/ThemedCardSkeleton';
+import { ThemedFilterSkeleton, ThemedCardSkeleton } from '@/components/skeletons';;
 import { ThemedStatusToast } from '@/components/toast/ThemedOfflineToast';
 import { ThemedModal } from '@/components/modals/ThemedIconModal';
 import { fetchQrData } from '@/services/auth/fetchQrData';
@@ -93,12 +91,12 @@ function HomeScreen() {
       console.log('Cannot sync while offline or another sync is in progress');
       return;
     }
-  
+
     try {
       setIsSyncing(true);
       setBottomToastMessage(t('homeScreen.syncing'));
       setIsBottomToastVisible(true);
-  
+
       // Sync local changes (new, updated, deleted) to the server
       await syncQrCodes(userId);
     } catch (error) {
@@ -239,7 +237,7 @@ function HomeScreen() {
   }, [isSearching]);
 
   const titleContainerStyle = useAnimatedStyle(() => {
-    const scrollThreshold = isSearching === true ? 140 + 40 : 140; 
+    const scrollThreshold = isSearching === true ? 140 + 40 : 140;
 
     const opacity = interpolate(
       scrollY.value,
@@ -268,7 +266,7 @@ function HomeScreen() {
   }));
 
 
-    const scrollContainerStyle = useAnimatedStyle(() => ({
+  const scrollContainerStyle = useAnimatedStyle(() => ({
     opacity: withTiming(scrollY.value > 50 ? 1 : 0, {
       easing: Easing.out(Easing.ease),
       duration: 300, // You can adjust the duration here for how quickly the opacity changes
@@ -441,12 +439,7 @@ function HomeScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      {Platform.OS === 'android' ? (
-        <ThemedView style={styles.blurContainer} />
-      ) : (
-        <BlurView intensity={100} style={styles.blurContainer} />
-      )}
-
+      <ThemedView style={styles.blurContainer} />
       <Animated.View style={[styles.titleContainer, titleContainerStyle]} pointerEvents="auto">
         <View style={styles.headerContainer}>
           <ThemedText style={styles.titleText} type="title">{t('homeScreen.title')}</ThemedText>
@@ -461,7 +454,7 @@ function HomeScreen() {
             )}
 
             <ThemedButton
-              iconName="scan"
+              iconName="qr-code-scanner"
               style={styles.titleButton}
               onPress={onNavigateToScanScreen}
             />
@@ -546,7 +539,7 @@ function HomeScreen() {
         />
       )}
       <Animated.View style={scrollContainerStyle}>
-        <ThemedButton iconName="chevron-up" style={styles.scrollButton} onPress={scrollToTop} />
+        <ThemedButton iconName="expand-less" style={styles.scrollButton} onPress={scrollToTop} />
       </Animated.View>
       <ThemedStatusToast
         isVisible={isToastVisible}
@@ -619,7 +612,7 @@ const styles = StyleSheet.create({
   titleButton: {
   },
   scrollContainer: {
-    paddingTop: STATUSBAR_HEIGHT + 100,
+    paddingTop: STATUSBAR_HEIGHT + 105,
     flex: 1,
   },
   emptyCard: {
@@ -630,7 +623,7 @@ const styles = StyleSheet.create({
     borderRadius: 50,
   },
   listContainer: {
-    paddingTop: STATUSBAR_HEIGHT + 100,
+    paddingTop: STATUSBAR_HEIGHT + 105,
     // paddingHorizontal: 15,
     flexGrow: 1,
     // paddingBottom: screenHeight / 5,

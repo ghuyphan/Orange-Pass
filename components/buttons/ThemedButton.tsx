@@ -1,4 +1,4 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
+import { MaterialIcons } from '@expo/vector-icons';
 import React, { useMemo } from 'react';
 import { StyleSheet, Platform, StyleProp, ViewStyle, ActivityIndicator, TouchableWithoutFeedback, Pressable } from 'react-native';
 import { ThemedText } from '../ThemedText';
@@ -19,7 +19,7 @@ export type ThemedButtonProps = {
     /** Label to display while the button is in a loading state */
     loadingLabel?: string;
     /** Name of the icon to display in the button */
-    iconName?: keyof typeof Ionicons.glyphMap;
+    iconName?: keyof typeof MaterialIcons.glyphMap;
     /** Color of the icon to display in the button */
     iconColor?: string;
     /** Size of the icon to display in the button */
@@ -52,7 +52,7 @@ export function ThemedButton({
     loadingLabel,
     iconName,
     iconColor,
-    iconSize = 16,
+    iconSize = 18,
     underlayColor,
     onPress,
     style = {},
@@ -97,7 +97,7 @@ export function ThemedButton({
                     </>
                 ) : (
                     <>
-                        {iconName && <Ionicons name={iconName} size={iconSize} color= {iconColor? iconColor : icon}/>}
+                        {iconName && <MaterialIcons name={iconName} size={iconSize} color= {iconColor? iconColor : icon}/>}
                         {label && <ThemedText style={[styles.label, { color }]} type='defaultSemiBold'>{label}</ThemedText>}
                     </>
                 )}

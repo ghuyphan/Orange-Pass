@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { StyleSheet, View, StyleProp, ViewStyle } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Modal, Portal } from 'react-native-paper';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
@@ -12,7 +13,7 @@ import { ThemedTextButton } from '../buttons/ThemedTextButton';
 export type ThemedModalProps = {
     lightColor?: string;
     darkColor?: string;
-    iconName?: keyof typeof Ionicons.glyphMap;
+    iconName?: keyof typeof MaterialIcons.glyphMap;
     title: string;
     message: string;
     isVisible: boolean;
@@ -73,8 +74,8 @@ export function ThemedModal({
             <Modal dismissable = {dismissable} visible={isVisible} onDismiss={onDismiss} contentContainerStyle={styles.overlay}>
                 <Animated.View style={[modalStyle, animatedStyle]}>
                     {/* Icon */}
-                    <Ionicons
-                        name={iconName || 'information-circle-outline'}
+                    <MaterialIcons
+                        name={iconName || 'info'}
                         size={25}
                         color={color}
                         style={styles.icon}

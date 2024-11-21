@@ -20,11 +20,6 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
     const [fontsLoaded] = useFonts({
-        // 'SFProDisplay-Regular': require('../assets/fonts/SFProDisplay-Regular.ttf'),
-        // 'SFProDisplay-Bold': require('../assets/fonts/SFProDisplay-Bold.ttf'),
-        // 'SFProDisplay-SemiBold': require('../assets/fonts/SFProDisplay-Semibold.ttf'),
-        // 'SFProDisplay-Medium': require('../assets/fonts/SFProDisplay-Medium.ttf'),
-        // 'HelveticaNeue-Regular': require('../assets/fonts/HelveticaNeueRoman.ttf'),
         'HelveticaNeue-Bold': require('../assets/fonts/HelveticaNeueBold.ttf'),
     });
 
@@ -91,21 +86,7 @@ useEffect(() => {
 }, [isAppReady, hasSeenOnboarding, isAuthenticated]);
 
 if (!isAppReady || isAuthenticated === null || hasSeenOnboarding === null) {
-    return (
-        <View style={styles.loadingContainer} onLayout={onLayoutRootView}>
-            <LOGO width={width * 0.23} height={width * 0.23} style={styles.orangeLogo} />
-            {/* <Image
-                    resizeMode='contain'
-                    source={require('@/assets/images/orange-icon.png')}
-                    style={styles.orangeLogo}
-                /> */}
-            <ActivityIndicator
-                style={styles.activityIndicator}
-                size="small"
-                color='#6FC2B4'
-            />
-        </View>
-    );
+    return null;
 }
 
 return (
@@ -125,6 +106,9 @@ return (
                             />
                             <Stack.Screen
                                 name="(auth)"
+                                options={{
+                                  animation: 'none',
+                                }}
                             />
                             <Stack.Screen
                                 name="+not-found"

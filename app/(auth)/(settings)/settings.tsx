@@ -3,7 +3,6 @@ import { StyleSheet, View, Platform, useColorScheme } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import * as SecureStore from 'expo-secure-store';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
 
 import Animated, {
     useAnimatedStyle,
@@ -122,25 +121,25 @@ function SettingsScreen() {
 
     const titleContainerStyle = useAnimatedStyle(() => {
         const opacity = interpolate(
-          scrollY.value,
-          [40, 70],
-          [1, 0],
-          Extrapolation.CLAMP
+            scrollY.value,
+            [40, 70],
+            [1, 0],
+            Extrapolation.CLAMP
         );
-      
+
         const translateY = interpolate(
-          scrollY.value,
-          [0, 150],
-          [0, -35],
-          Extrapolation.CLAMP
+            scrollY.value,
+            [0, 150],
+            [0, -35],
+            Extrapolation.CLAMP
         );
-      
+
         return {
-          opacity,
-          transform: [{ translateY }],
-          zIndex: scrollY.value > 40 ? 0 : 1,
+            opacity,
+            transform: [{ translateY }],
+            zIndex: scrollY.value > 40 ? 0 : 1,
         };
-      });
+    });
 
     const onNavigateBack = useCallback(() => {
         router.back();
@@ -170,16 +169,12 @@ function SettingsScreen() {
 
     return (
         <ThemedView style={styles.container}>
-            {Platform.OS === 'android' ? (
-                <ThemedView style={styles.blurContainer} />
-            ) : (
-                <BlurView intensity={10} style={styles.blurContainer} />
-            )}
+            <ThemedView style={styles.blurContainer} />
             <Animated.View style={[styles.titleContainer, titleContainerStyle]} pointerEvents="auto">
                 <View style={styles.headerContainer}>
                     <View style={styles.titleButtonContainer}>
                         <ThemedButton
-                            iconName="chevron-back"
+                            iconName="chevron-left"
                             style={styles.titleButton}
                             onPress={onNavigateBack}
                         />
@@ -217,7 +212,7 @@ function SettingsScreen() {
                     />
                     <ThemedSettingsCardItem
                         settingsTitle={t('settingsScreen.changePassword')}
-                        leftIcon='lock-closed-outline'
+                        leftIcon='lock-outline'
                     // onPress={() => router.push('/settings/language')}
                     />
                     <ThemedSettingsCardItem
@@ -230,22 +225,22 @@ function SettingsScreen() {
                 <View style={[styles.sectionContainer, { backgroundColor: colorScheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground }]}>
                     <ThemedSettingsCardItem
                         settingsTitle={t('settingsScreen.about')}
-                        leftIcon='information-circle-outline'
+                        leftIcon='info-outline'
                     // onPress={() => router.push('/settings/language')}
                     />
                     <ThemedSettingsCardItem
                         settingsTitle={t('settingsScreen.language')}
-                        leftIcon='language-outline'
+                        leftIcon='translate'
                         onPress={() => router.push('/language')}
                     />
                     <ThemedSettingsCardItem
                         settingsTitle={t('settingsScreen.appTheme')}
-                        leftIcon='contrast-outline'
+                        leftIcon='contrast'
                         onPress={() => router.push('/theme')}
                     />
                 </View>
                 <ThemedButton
-                    iconName="log-out"
+                    iconName="logout"
                     label={t('settingsScreen.logout')}
                     loadingLabel='Logging out...'
                     loading={isLoading}
@@ -263,7 +258,7 @@ function SettingsScreen() {
                 title={t('settingsScreen.confirmLogoutTitle')}
                 message={t('settingsScreen.confirmLogoutMessage')}
                 isVisible={isModalVisible}
-                iconName="log-out-outline"
+                iconName="logout"
             />
         </ThemedView>
     );

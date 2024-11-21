@@ -28,7 +28,7 @@ export default function ScanLayout() {
         <View style={styles.headerContainer}>
           <ThemedButton
             onPress={onNavigateBack}
-            iconName="chevron-back"
+            iconName="chevron-left"
           />
         </View>}
 

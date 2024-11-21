@@ -3,7 +3,7 @@ import { Image, StyleSheet, View, Dimensions, Pressable } from 'react-native';
 import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import Ionicons from '@expo/vector-icons/Ionicons';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import QRCode from 'react-native-qrcode-svg';
@@ -123,7 +123,7 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
             <View style={styles.headerContainer}>
               <View style={styles.headerLeft}>
                 <View style={styles.dragIconContainer}>
-                  <Ionicons name="menu" size={18} color="white" />
+                  <MaterialIcons name="menu" size={18} color="white" />
                 </View>
                 <View style={styles.leftHeaderContainer}>
                   <View style={styles.iconContainer}>
@@ -144,7 +144,7 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
                   onPress={onMoreButtonPress}
                   hitSlop={{ bottom: 40, left: 30, right: 30, top: 30 }}
                 >
-                  <Ionicons name="ellipsis-vertical" size={18} color="white" />
+                  <MaterialIcons name="more-vert" size={18} color="white" />
                 </Pressable>
               )}
             </View>

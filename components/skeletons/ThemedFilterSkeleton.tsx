@@ -4,7 +4,7 @@ import { MotiView } from 'moti';
 import { Skeleton } from 'moti/skeleton';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
-export default function ThemedFilterSkeleton({ show = true }) {
+export function ThemedFilterSkeleton({ show = true }) {
   const colorScheme = useColorScheme();
   const colorsArray = colorScheme === 'dark'
   ? ['#6B5A4E', '#5D4D42', '#4F4036', '#41332A', '#33261E']
