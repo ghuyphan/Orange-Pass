@@ -1,7 +1,6 @@
 import enDatas from '@/assets/enDatas.json';
 import viDatas from '@/assets/viDatas.json';
 import colorConfig from '@/assets/color-config.json';
-import { getLocales } from 'expo-localization';
 
 // Define types
 type ColorConfigType = {
@@ -17,7 +16,7 @@ type ItemType = {
     full_name: string;
     normalized_name: string;
     normalized_full_name: string;
-    number_code?: string; // Add number_code as an optional field
+    number_code?: string; 
     color: { light: string; dark: string };
     accent_color: { light: string; dark: string };
 };
@@ -39,16 +38,14 @@ let cachedDataByCode: { [type: string]: { [code: string]: ItemType } } = {};
 let searchIndex: { [type: string]: { [normalizedTerm: string]: Set<string> } } = {};
 
 // Initialize data and build indices
-function initializeData() {
-    const languageCode = getLocales()[0]?.languageCode;
-    
-    if (languageCode !== cachedLanguageCode) {
-        cachedLanguageCode = languageCode;
-        const data: { [key: string]: any[] } = languageCode === 'en' ? enDatas : viDatas;
+function initializeData(locale: string | null = null) {
+    if (locale !== cachedLanguageCode) {
+        cachedLanguageCode = locale;
+        const data: { [key: string]: any[] } = locale === 'en' ? enDatas : viDatas;
 
         cachedDataByCode = {};
         searchIndex = {};
-        const types = ['bank', 'store']; // Add 'ewallet' if needed
+        const types = ['bank', 'store']; 
 
         types.forEach((type) => {
             if (data[type]) {
@@ -66,15 +63,13 @@ function initializeData() {
                         ...item,
                         normalized_name,
                         normalized_full_name,
-                        number_code: item.number_code, // Include number_code if available
+                        number_code: item.number_code, 
                         color: colorData.color,
                         accent_color: colorData.accent_color,
                     };
 
-                    // Store item by code for O(1) access
                     itemsByCode[code] = processedItem;
 
-                    // Build search index
                     const terms = new Set<string>([normalized_name, normalized_full_name]);
                     terms.forEach((term) => {
                         if (!typeSearchIndex[term]) {
@@ -94,13 +89,10 @@ function initializeData() {
     }
 }
 
-// Initialize data once
-initializeData();
-
 // Function to return item data, including number_code
-export function returnItemData(code: string, type: 'bank' | 'store' | 'ewallet') {
-    if (!cachedDataByCode[type]) {
-        initializeData();
+export function returnItemData(code: string, type: 'bank' | 'store' | 'ewallet', locale: string | null = null) {
+    if (!cachedDataByCode[type] || locale !== cachedLanguageCode) {
+        initializeData(locale);
     }
 
     const item = cachedDataByCode[type][code];
@@ -109,7 +101,7 @@ export function returnItemData(code: string, type: 'bank' | 'store' | 'ewallet')
         return {
             name: item.name,
             full_name: item.full_name,
-            number_code: item.number_code || '', // Return number_code if available
+            number_code: item.number_code || '', 
             color: item.color,
             accent_color: item.accent_color,
         };
@@ -125,12 +117,12 @@ export function returnItemData(code: string, type: 'bank' | 'store' | 'ewallet')
 }
 
 // Function to return matching codes for a search term
-export function returnItemCode(searchTerm: string, type?: 'bank' | 'store' | 'ewallet'): string[] {
-    if (!searchIndex) {
-        initializeData();
+export function returnItemCode(searchTerm: string, type?: 'bank' | 'store' | 'ewallet', locale: string | null = null): string[] {
+    if (!searchIndex || locale !== cachedLanguageCode) {
+        initializeData(locale);
     }
 
-    const types = type ? [type] : ['bank', 'store']; // Add 'ewallet' if needed
+    const types = type ? [type] : ['bank', 'store']; 
     const normalizedSearchTerm = normalizeText(searchTerm);
     const matchingCodesSet = new Set<string>();
 
@@ -139,7 +131,6 @@ export function returnItemCode(searchTerm: string, type?: 'bank' | 'store' | 'ew
         if (typeSearchIndex[normalizedSearchTerm]) {
             typeSearchIndex[normalizedSearchTerm].forEach((code) => matchingCodesSet.add(code));
         } else {
-            // Partial matching (if full term not found)
             for (const term in typeSearchIndex) {
                 if (term.includes(normalizedSearchTerm)) {
                     typeSearchIndex[term].forEach((code) => matchingCodesSet.add(code));

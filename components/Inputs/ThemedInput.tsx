@@ -1,11 +1,8 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, forwardRef } from 'react'; 
 import { TextInput, StyleSheet, View, Pressable } from 'react-native';
 import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
-import { useThemeColor } from '@/hooks/useThemeColor';
-import { useColorScheme } from '@/hooks/useColorScheme';
 import { useTheme } from '@/context/ThemeContext';
 import { Colors } from '@/constants/Colors';
 
@@ -28,7 +25,8 @@ export type ThemedInputProps = {
     errorMessage?: string;
     /** Whether the input should be secure */
     secureTextEntry?: boolean;
-    keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad'
+    /** Keyboard type for the input */
+    keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad';
     /** Function to call when the input value changes */
     onChangeText?: (text: string) => void;
     /** Function to call when the input loses focus */
@@ -36,10 +34,10 @@ export type ThemedInputProps = {
     /** Function to call when the input gains focus */
     onFocus?: () => void;
     /** Function to call when the clear button is pressed */
-    onSubmitEditing?: () => void
+    onSubmitEditing?: () => void;
 };
 
-export function ThemedInput({
+export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(({
     lightColor,
     darkColor,
     label,
@@ -54,9 +52,8 @@ export function ThemedInput({
     onBlur = () => { },
     onFocus = () => { },
     onSubmitEditing = () => { }
-}: ThemedInputProps) {
+}, ref) => { 
     const { currentTheme } = useTheme(); 
-    // const color = currentTheme({ light: lightColor, dark: darkColor }, 'text');
     const color = currentTheme === 'light' ? Colors.light.text : Colors.dark.text;
     const [localValue, setLocalValue] = useState(value);
     const [isSecure, setIsSecure] = useState(secureTextEntry);
@@ -95,6 +92,7 @@ export function ThemedInput({
                 </ThemedText>
                 <View style={styles.inputRow}>
                     <TextInput
+                        ref={ref}
                         onSubmitEditing={onSubmitEditing}
                         style={[styles.input, { color }]}
                         secureTextEntry={isSecure}
@@ -109,13 +107,11 @@ export function ThemedInput({
                         keyboardType={keyboardType}
                     />
                     {localValue.length > 0 && (
-
                         <Pressable
                             onPress={secureTextEntry ? onToggleSecureValue : onClearValue}
                             style={[styles.iconTouchable]}
                             hitSlop={{ top: 15, bottom: 10, left: 10, right: 10 }}
                             android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', borderless: false, radius: 10 }}
-
                         >
                             <MaterialIcons
                                 name={secureTextEntry ? (isSecure ? 'visibility' : 'visibility-off') : 'cancel'}
@@ -123,7 +119,6 @@ export function ThemedInput({
                                 color={color}
                             />
                         </Pressable>
-
                     )}
                 </View>
             </ThemedView >
@@ -134,11 +129,10 @@ export function ThemedInput({
                         {errorMessage}
                     </ThemedText>
                 </View>
-            )
-            }
+            )}
         </View >
     );
-}
+});
 
 const styles = StyleSheet.create({
     container: {

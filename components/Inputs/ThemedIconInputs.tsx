@@ -1,14 +1,12 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, forwardRef } from 'react';
 import { TextInput, StyleSheet, View, Pressable } from 'react-native';
 import { ThemedView } from '../ThemedView';
-import { useThemeColor } from '@/hooks/useThemeColor';
-import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { useTheme } from '@/context/ThemeContext';
 
-export type ThemedIconInput = {
+export type ThemedIconInputProps = {
     lightColor?: string;
     darkColor?: string;
     iconName: keyof typeof MaterialIcons.glyphMap;
@@ -21,10 +19,10 @@ export type ThemedIconInput = {
     onFocus?: () => void;
     rightIconName?: keyof typeof MaterialIcons.glyphMap;
     onRightIconPress?: () => void;
-    onSubmitEditing ?: () => void
+    onSubmitEditing?: () => void;
 };
 
-export function ThemedIconInput({
+export const ThemedIconInput = forwardRef<TextInput, ThemedIconInputProps>(({
     lightColor,
     darkColor,
     iconName,
@@ -38,9 +36,7 @@ export function ThemedIconInput({
     rightIconName,
     onRightIconPress,
     onSubmitEditing
-}: ThemedIconInput) {
-    // const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
-    // const colorScheme = useColorScheme();
+}, ref) => {
     const { currentTheme } = useTheme();
     const color = currentTheme === 'light' ? Colors.light.text : Colors.dark.text;
     const [localValue, setLocalValue] = useState(value);
@@ -69,6 +65,7 @@ export function ThemedIconInput({
                 <View style={styles.leftContainer}>
                     <MaterialIcons name={iconName} size={20} color={color || currentTheme === 'light' ? Colors.light.placeHolder : Colors.dark.placeHolder} />
                     <TextInput
+                        ref={ref} // The ref is attached to the TextInput
                         style={[styles.input, { color }]}
                         value={localValue}
                         onChangeText={handleChangeText}
@@ -89,11 +86,11 @@ export function ThemedIconInput({
                             hitSlop={40}
                         >
                             <View style={styles.iconTouchable}>
-                            <Ionicons
-                                name={'close-circle'}
-                                size={20}
-                                color={color}
-                            />
+                                <Ionicons
+                                    name={'close-circle'}
+                                    size={20}
+                                    color={color}
+                                />
                             </View>
                         </Pressable>
                     )}
@@ -103,11 +100,11 @@ export function ThemedIconInput({
                             hitSlop={40}
                         >
                             <View style={styles.iconTouchable}>
-                            <MaterialIcons
-                                name={rightIconName}
-                                size={20}
-                                color={color}
-                            />
+                                <MaterialIcons
+                                    name={rightIconName}
+                                    size={20}
+                                    color={color}
+                                />
                             </View>
                         </Pressable>
                     )}
@@ -115,7 +112,7 @@ export function ThemedIconInput({
             </View>
         </ThemedView>
     );
-}
+});
 
 const styles = StyleSheet.create({
     inputContainer: {
@@ -129,7 +126,7 @@ const styles = StyleSheet.create({
     leftContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        flex: 1,  // Allow this container to take the available space
+        flex: 1,
         gap: 10,
     },
     rightContainer: {
@@ -147,7 +144,7 @@ const styles = StyleSheet.create({
     input: {
         fontSize: 16,
         height: 30,
-        flex: 1,  // Allow TextInput to take up the remaining space within leftContainer
+        flex: 1,
     },
     iconTouchable: {
         padding: 5,

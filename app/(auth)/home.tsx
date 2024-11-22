@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
-import { StyleSheet, View, Platform, FlatList, Dimensions, useColorScheme } from 'react-native';
+import { StyleSheet, View, TextInput, FlatList, Dimensions, useColorScheme } from 'react-native';
 import { useSelector } from 'react-redux';
 import Animated, {
   useAnimatedStyle,
@@ -67,6 +67,7 @@ function HomeScreen() {
   const [isActive, setIsActive] = useState(false);
   const [filter, setFilter] = useState('all');
   const [isSearching, setIsSearching] = useState(false);
+  const inputRef = useRef<TextInput>(null);
 
   const isEmptyShared = useSharedValue(isEmpty ? 1 : 0);
   // const isActiveShared = useSharedValue(isActive ? 1 : 0);
@@ -446,7 +447,9 @@ function HomeScreen() {
               <ThemedButton
                 iconName="search"
                 style={styles.titleButton}
-                onPress={() => setIsSearching(!isSearching)}
+                onPress={() => {
+                  setIsSearching(!isSearching);
+                }}
               />
 
             )}
@@ -493,20 +496,22 @@ function HomeScreen() {
           ref={flatListRef}
           ListHeaderComponent={
             <Animated.View style={[listHeaderStyle, { marginBottom: 25 }]}>
-              <Animated.View style={[searchContainerStyle]}>
+              <Animated.View style={[searchContainerStyle]} 
+              onLayout={() => {isSearching && inputRef.current?.focus()}}
+              >
                 <ThemedIconInput
                   style={styles.searchInput}
                   placeholder={t('homeScreen.searchPlaceholder')}
                   iconName="search"
                   value={searchQuery}
                   onChangeText={setSearchQuery}
+                  ref={inputRef}
                 />
               </Animated.View>
               <ThemedFilter
                 selectedFilter={filter}
                 onFilterChange={setFilter}
               />
-              {/* <ThemedFilterSkeleton show={true} /> */}
             </Animated.View>}
           ListEmptyComponent={
             <View style={styles.emptyItem}>

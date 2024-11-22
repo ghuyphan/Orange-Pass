@@ -1,5 +1,5 @@
 import { ScrollView, StyleProp, ViewStyle, StyleSheet, View, Pressable } from 'react-native';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { t } from '@/i18n';
 import { ThemedText } from './ThemedText';
 import { useLocale } from '@/context/LocaleContext';
@@ -13,12 +13,15 @@ type ThemedFilterProps = {
 };
 
 const ThemedFilter = React.memo(({ selectedFilter, onFilterChange, style }: ThemedFilterProps) => {
-    const filters = [
+    const { locale } = useLocale(); // Get the locale
+
+    const filters = useMemo(() => [ // Use useMemo to recalculate filters when locale changes
         { key: 'all', label: t('homeScreen.filters.all') },
         { key: 'bank', label: t('homeScreen.filters.bank') },
         { key: 'ewallet', label: t('homeScreen.filters.ewallet') },
-        { key: 'store', label: t('homeScreen.filters.store') }
-    ];
+        { key: 'store', label: t('homeScreen.filters.store', ) }
+    ], [locale, t]); // Add locale to the dependency array
+
 
     // Get currentTheme from useTheme
     const { currentTheme } = useTheme(); 

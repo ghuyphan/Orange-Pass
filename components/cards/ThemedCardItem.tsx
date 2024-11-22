@@ -6,11 +6,12 @@ import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-na
 import QRCode from 'react-native-qrcode-svg';
 import Barcode from 'react-native-barcode-svg';
 import { getIconPath } from '@/utils/returnIcon';
-import { returnItemData } from '@/utils/returnItemData';
+import { returnItemData } from '@/utils/returnItemData'; 
 import { returnMidpointColor } from "@/utils/returnMidpointColor"
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/context/ThemeContext';
 import { Colors } from '@/constants/Colors';
+import { useLocale } from '@/context/LocaleContext'; 
 
 export type ThemedCardItemProps = {
   lightColor?: string;
@@ -47,15 +48,11 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
     isActive,
   } = props;
 
-  // const colorScheme = useColorScheme();
   const { currentTheme } = useTheme();
-  // const colors = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
+  const { locale } = useLocale();
   const colors = currentTheme === 'light' ? Colors.light.text : Colors.dark.text;
 
-  const { full_name, name, color, accent_color } = useMemo(() => returnItemData(code, type), [code, type]);
-
-  // const backgroundColor = colorScheme === 'light' ? color?.light || '#ffffff' : color?.dark || '#000000';
-  // const footerBackgroundColor = colorScheme === 'light' ? accent_color?.light || '#f0f0f0' : accent_color?.dark || '#303030';
+  const { full_name, name, color, accent_color } = useMemo(() => returnItemData(code, type, locale), [code, type, locale]);
 
   const iconPath = useMemo(() => getIconPath(code), [code]);
 
@@ -110,7 +107,6 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
         android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
       >
         <View style={[styles.touchableHighlight, style]}>
-          {/* Apply Linear Gradient to Card Background */}
           <LinearGradient
             colors={
               currentTheme === 'light'
@@ -160,7 +156,6 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
               </View>
             </View>
 
-            {/* Consistent Footer Area */}
             <View style={styles.footerContainer}>
               <ThemedText style={styles.footerText} numberOfLines={1} ellipsizeMode="tail">
                 {accountNumber ? accountName : metadata}
