@@ -3,7 +3,8 @@ import { StyleSheet, View, Pressable } from 'react-native';
 import { ThemedText } from '../ThemedText';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useThemeColor } from '@/hooks/useThemeColor';
+// import { useThemeColor } from '@/hooks/useThemeColor';
+import { useTheme } from '@/context/ThemeContext';
 import { Colors } from '@/constants/Colors';
 export type ThemedSettingsCardItemProps = {
     settingsTitle: string;
@@ -27,8 +28,12 @@ export const ThemedSettingsCardItem = memo(function ThemedSettingsCardItem(props
         iconSize = 18,
     } = props;
 
-    const colors = useThemeColor({ light: Colors.light.text, dark: Colors.dark.text }, 'text');
-    const iconsColor = useThemeColor({ light: Colors.light.logoIcon, dark: Colors.dark.buttonBackground }, 'icon');
+    const { currentTheme } = useTheme();
+    const colors = currentTheme === 'light' ? Colors.light.text : Colors.dark.text;
+    const iconsColor = currentTheme === 'light' ? Colors.light.logoIcon : Colors.dark.buttonBackground;
+
+    // const colors = useThemeColor({ light: Colors.light.text, dark: Colors.dark.text }, 'text');
+    // const iconsColor = useThemeColor({ light: Colors.light.logoIcon, dark: Colors.dark.buttonBackground }, 'icon');
 
     return (
         <Pressable onPress={onPress} android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}>

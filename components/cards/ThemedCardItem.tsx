@@ -1,10 +1,7 @@
 import React, { memo, useMemo, useEffect, useCallback } from 'react';
 import { Image, StyleSheet, View, Dimensions, Pressable } from 'react-native';
 import { ThemedText } from '../ThemedText';
-import { ThemedView } from '../ThemedView';
-import { useColorScheme } from '@/hooks/useColorScheme';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useThemeColor } from '@/hooks/useThemeColor';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import QRCode from 'react-native-qrcode-svg';
 import Barcode from 'react-native-barcode-svg';
@@ -12,6 +9,8 @@ import { getIconPath } from '@/utils/returnIcon';
 import { returnItemData } from '@/utils/returnItemData';
 import { returnMidpointColor } from "@/utils/returnMidpointColor"
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTheme } from '@/context/ThemeContext';
+import { Colors } from '@/constants/Colors';
 
 export type ThemedCardItemProps = {
   lightColor?: string;
@@ -48,13 +47,15 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
     isActive,
   } = props;
 
-  const colorScheme = useColorScheme();
-  const colors = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
+  // const colorScheme = useColorScheme();
+  const { currentTheme } = useTheme();
+  // const colors = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
+  const colors = currentTheme === 'light' ? Colors.light.text : Colors.dark.text;
 
   const { full_name, name, color, accent_color } = useMemo(() => returnItemData(code, type), [code, type]);
 
-  const backgroundColor = colorScheme === 'light' ? color?.light || '#ffffff' : color?.dark || '#000000';
-  const footerBackgroundColor = colorScheme === 'light' ? accent_color?.light || '#f0f0f0' : accent_color?.dark || '#303030';
+  // const backgroundColor = colorScheme === 'light' ? color?.light || '#ffffff' : color?.dark || '#000000';
+  // const footerBackgroundColor = colorScheme === 'light' ? accent_color?.light || '#f0f0f0' : accent_color?.dark || '#303030';
 
   const iconPath = useMemo(() => getIconPath(code), [code]);
 
@@ -112,7 +113,7 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
           {/* Apply Linear Gradient to Card Background */}
           <LinearGradient
             colors={
-              colorScheme === 'light'
+              currentTheme === 'light'
                 ? [color?.light || '#ffffff', returnMidpointColor(color.light, accent_color.light) || '#cccccc', accent_color?.light || '#f0f0f0']
                 : [color?.dark || '#000000', returnMidpointColor(color.dark, accent_color.dark) || '#505050', accent_color?.dark || '#303030']
             }

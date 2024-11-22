@@ -133,7 +133,7 @@
     "delete": "Delete",
     "moveToTrash": "Move to trash",
     "nearbyLocation": "Nearby location",
-    "createQrCode": "Generate QR code with amount",
+    "createQrCode": "Create payment QR code",
     "receivePlaceholder": "Enter amount to receive",
     "generatingQRCode": "Generating QR code..."
   },

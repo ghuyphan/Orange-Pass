@@ -1,5 +1,5 @@
-import React, { useCallback, useMemo, useEffect, useState } from 'react';
-import { StyleSheet, View, Platform, useColorScheme, Pressable, Appearance } from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import { StyleSheet, View, Pressable } from 'react-native';
 import Animated, {
     useAnimatedStyle,
     useSharedValue,
@@ -15,20 +15,22 @@ import { ThemedView } from '@/components/ThemedView';
 import { ThemedButton } from '@/components/buttons/ThemedButton';
 import { t } from '@/i18n';
 import { Colors } from '@/constants/Colors';
-import { useThemeColor } from '@/hooks/useThemeColor';
 import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
 
 import { useLocale } from '@/context/LocaleContext';
 import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DARK from '@/assets/svgs/dark.svg';
 import LIGHT from '@/assets/svgs/light.svg';
-import { useTheme } from '@/context/ThemeContext';
 import { throttle } from 'lodash';
-import { ThemedToast } from '@/components/toast/ThemedToast';
+import { useTheme } from '@/context/ThemeContext';
 
 const ThemeScreen: React.FC = () => {
-    const colors = useThemeColor({ light: Colors.light.text, dark: Colors.dark.text }, 'text');
-    const sectionsColors = useThemeColor({ light: Colors.light.cardBackground, dark: Colors.dark.cardBackground }, 'cardBackground');
+    const { currentTheme } = useTheme();
+    // const colors = useThemeColor({ light: Colors.light.text, dark: Colors.dark.text }, 'text');
+    const colors = useMemo(() => (currentTheme === 'light' ? Colors.light.text : Colors.dark.text), [currentTheme]);
+    // const sectionsColors = useThemeColor({ light: Colors.light.cardBackground, dark: Colors.dark.cardBackground }, 'cardBackground');
+    const sectionsColors = useMemo(() => (currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground), [currentTheme]);
     const { setDarkMode, useSystemTheme, isDarkMode } = useTheme();
     const { updateLocale } = useLocale();
     const [isToastVisible, setIsToastVisible] = useState(false);
@@ -66,10 +68,6 @@ const ThemeScreen: React.FC = () => {
                 setDarkMode(false);
             } else {
                 useSystemTheme();
-                setIsToastVisible(true);
-                setTimeout(() => {
-                    setIsToastVisible(false);
-                }, 2000);
             }
         }, 300), // Adjust the delay (in milliseconds) as needed
         [setDarkMode, useSystemTheme]
@@ -111,9 +109,9 @@ const ThemeScreen: React.FC = () => {
                             <View style={styles.leftSectionContainer}>
                                 <View style={[
                                     styles.iconContainer,
-                                    useColorScheme() === 'dark' ? { backgroundColor: Colors.dark.buttonBackground } : { backgroundColor: Colors.light.buttonBackground }
+                                    currentTheme === 'dark' ? { backgroundColor: Colors.dark.buttonBackground } : { backgroundColor: Colors.light.buttonBackground }
                                 ]}>
-                                    <Ionicons name="sunny-outline" size={20} color={colors} />
+                                    <MaterialCommunityIcons name="weather-sunny" size={20} color={colors} />
                                 </View>
                                 <ThemedText>{t('themeScreen.light')}</ThemedText>
                             </View>
@@ -129,9 +127,9 @@ const ThemeScreen: React.FC = () => {
                             <View style={styles.leftSectionContainer}>
                                 <View style={[
                                     styles.iconContainer,
-                                    useColorScheme() === 'dark' ? { backgroundColor: Colors.dark.buttonBackground } : { backgroundColor: Colors.light.buttonBackground }
+                                    currentTheme === 'dark' ? { backgroundColor: Colors.dark.buttonBackground } : { backgroundColor: Colors.light.buttonBackground }
                                 ]}>
-                                    <Ionicons name="moon-outline" size={20} color={colors} />
+                                    <MaterialCommunityIcons name="weather-night" size={20} color={colors} />
                                 </View>
                                 <ThemedText>{t('themeScreen.dark')}</ThemedText>
                             </View>
@@ -147,9 +145,9 @@ const ThemeScreen: React.FC = () => {
                             <View style={styles.leftSectionContainer}>
                                 <View style={[
                                     styles.iconContainer,
-                                    useColorScheme() === 'dark' ? { backgroundColor: Colors.dark.buttonBackground } : { backgroundColor: Colors.light.buttonBackground }
+                                    currentTheme === 'dark' ? { backgroundColor: Colors.dark.buttonBackground } : { backgroundColor: Colors.light.buttonBackground }
                                 ]}>
-                                    <Ionicons name="cog-outline" size={20} color={colors} />
+                                    <MaterialCommunityIcons name="cog-outline" size={20} color={colors} />
                                 </View>
                                 <ThemedText>{t('themeScreen.system')}</ThemedText>
                             </View>
@@ -157,14 +155,6 @@ const ThemeScreen: React.FC = () => {
                         </View>
                     </Pressable>
                 </ThemedView>
-                <ThemedToast
-                    iconName='checkmark-circle'
-                    message={t('themeScreen.successMessage')}
-                    isVisible={isToastVisible}
-                    duration={1000}
-                    style={{ position: 'absolute', bottom: 30, left: 15, right: 15 }}
-                    onDismiss={() => setIsToastVisible(false)}
-                />
             </Animated.ScrollView>
         </ThemedView>
     );

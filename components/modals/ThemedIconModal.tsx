@@ -1,14 +1,12 @@
 import React, { useEffect } from 'react';
 import { StyleSheet, View, StyleProp, ViewStyle } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { Modal, Portal } from 'react-native-paper';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { ThemedText } from '../ThemedText';
-import { useThemeColor } from '@/hooks/useThemeColor';
-import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { ThemedTextButton } from '../buttons/ThemedTextButton';
+import { useTheme } from '@/context/ThemeContext';
 
 export type ThemedModalProps = {
     lightColor?: string;
@@ -41,13 +39,14 @@ export function ThemedModal({
     style = {},
     dismissable = false
 }: ThemedModalProps) {
-    const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
-    const colorScheme = useColorScheme();
+    // const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
+    const { currentTheme } = useTheme();
+    const color = currentTheme === 'light' ? Colors.light.text : Colors.dark.text;
 
     const modalStyle = [
         styles.modalContainer,
         {
-            backgroundColor: colorScheme === 'light' ? Colors.light.background : Colors.dark.background,
+            backgroundColor: currentTheme === 'light' ? Colors.light.background : Colors.dark.background,
         },
         style,
     ];

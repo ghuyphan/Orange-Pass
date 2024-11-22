@@ -1,18 +1,17 @@
 import React, { useMemo, useEffect, useState } from 'react';
 import { StyleSheet, View, StyleProp, ViewStyle, Pressable } from 'react-native';
-import Ionicons from '@expo/vector-icons/Ionicons';
+import { MaterialIcons } from '@expo/vector-icons';
 import { Portal } from 'react-native-paper';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { ThemedText } from '../ThemedText';
-import { useThemeColor } from '@/hooks/useThemeColor';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useTheme } from '@/context/ThemeContext';
 import { Colors } from '@/constants/Colors';
 
 export type ThemedToastProps = {
     lightColor?: string;
     darkColor?: string;
-    iconName?: keyof typeof Ionicons.glyphMap;
-    dismissIconName?: keyof typeof Ionicons.glyphMap;
+    iconName?: keyof typeof MaterialIcons.glyphMap;
+    dismissIconName?: keyof typeof MaterialIcons.glyphMap;
     onDismiss?: () => void;
     message: string;
     duration?: number;
@@ -33,17 +32,18 @@ export function ThemedToast({
     style = {},
     onVisibilityToggle,
 }: ThemedToastProps) {
-    const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
-    const colorScheme = useColorScheme();
+    const { currentTheme } = useTheme();
+    // const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
+    const color = currentTheme === 'light' ? Colors.light.text : Colors.dark.text;
     const [isAnimationComplete, setIsAnimationComplete] = useState(false);
 
     const toastStyle = useMemo(() => ([
         styles.toastContainer,
         {
-            backgroundColor: colorScheme === 'light' ? Colors.light.toastBackground : Colors.dark.toastBackground
+            backgroundColor: currentTheme === 'light' ? Colors.light.toastBackground : Colors.dark.toastBackground
         },
         style
-    ]), [colorScheme, style]);
+    ]), [currentTheme, style]);
 
     // Reanimated values
     const opacity = useSharedValue(0);
@@ -87,8 +87,8 @@ export function ThemedToast({
             <Animated.View style={[toastStyle, animatedStyle]}>
                 <View style={styles.toastContent}>
                     <View style={styles.toastTitle}>
-                        <Ionicons
-                            name={iconName || 'information-circle-outline'}
+                        <MaterialIcons
+                            name={iconName || 'info'}
                             size={20}
                             color={color}
                         />
@@ -103,8 +103,8 @@ export function ThemedToast({
                         style={styles.iconTouchable}
                         hitSlop={30}
                     >
-                        <Ionicons
-                            name={dismissIconName || 'close-outline'}
+                        <MaterialIcons
+                            name={dismissIconName || 'close'}
                             size={20}
                             color={color}
                         />

@@ -16,9 +16,11 @@ import { ThemedText } from '@/components/ThemedText';
 import { width, height } from '@/constants/Constants';
 import { useLocale } from '@/context/LocaleContext';
 import LOGO from '@/assets/svgs/orange-logo.svg';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function ForgotPasswordScreen() {
-  const colorScheme = useColorScheme();
+  // const colorScheme = useColorScheme();
+  const { currentTheme } = useTheme();
   const [isToastVisible, setIsToastVisible] = useState(false);
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -65,7 +67,7 @@ export default function ForgotPasswordScreen() {
       {({ handleChange, handleBlur, handleSubmit, values, errors, touched, isSubmitting }) => (
         <KeyboardAwareScrollView
           keyboardShouldPersistTaps="handled"
-          style={[{ backgroundColor: colorScheme === 'light' ? Colors.light.background : Colors.dark.background }]}
+          style={[{ backgroundColor: currentTheme === 'light' ? Colors.light.background : Colors.dark.background }]}
           contentContainerStyle={styles.container}
           extraScrollHeight={70}
           extraHeight={100}
@@ -74,7 +76,7 @@ export default function ForgotPasswordScreen() {
           scrollEnabled={isKeyboardVisible}
         >
           <ThemedView style={styles.logoContainer}>
-          <LOGO width={width * 0.25} height={width * 0.25} style={styles.orangeLogo} />
+            <LOGO width={width * 0.25} height={width * 0.25} style={styles.orangeLogo} />
             {/* <Image source={require('@/assets/images/orange-icon.png')} style={styles.orangeLogo} /> */}
           </ThemedView>
           <ThemedText style={styles.title} type='defaultSemiBold'>{t('forgotPasswordScreen.forgotPassword')}</ThemedText>
@@ -100,7 +102,7 @@ export default function ForgotPasswordScreen() {
             style={styles.toastContainer}
             onDismiss={onDismissToast}
             onVisibilityToggle={setIsToastVisible}
-            iconName='information-circle'
+            iconName='info'
           />
         </KeyboardAwareScrollView>
       )}

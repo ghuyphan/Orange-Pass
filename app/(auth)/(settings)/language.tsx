@@ -22,19 +22,25 @@ import VN from '@/assets/svgs/VN.svg';
 import RU from '@/assets/svgs/RU.svg';
 import { useLocale } from '@/context/LocaleContext';
 import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useMMKVString } from 'react-native-mmkv';
+import { useTheme } from '@/context/ThemeContext';
 
 const LanguageScreen: React.FC = () => {
-    const colors = useThemeColor({ light: Colors.light.text, dark: Colors.dark.text }, 'text');
+    // const colors = useThemeColor({ light: Colors.light.text, dark: Colors.dark.text }, 'text');
+    
     const colorScheme = useColorScheme();
     const { updateLocale } = useLocale();
     const [locale, setLocale] = useMMKVString('locale');
     const scrollY = useSharedValue(0);
 
     // Màu nền chỉ được tính toán lại khi `colorScheme` thay đổi
+    const { currentTheme: theme } = useTheme();
+    // const colors = theme === 'light' ? Colors.light.text : Colors.dark.text;
+    const colors = useMemo(() => (theme === 'light' ? Colors.light.text : Colors.dark.text), [theme]);
     const sectionsColors = useMemo(() => (
-        colorScheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground
-    ), [colorScheme]);
+        theme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground
+    ), [theme]);
 
     const scrollHandler = useAnimatedScrollHandler({
         onScroll: (event) => {
@@ -143,9 +149,9 @@ const LanguageScreen: React.FC = () => {
                             <View style={styles.leftSectionContainer}>
                                 <View style={[
                                     styles.iconContainer,
-                                    colorScheme === 'dark' ? { backgroundColor: Colors.dark.buttonBackground } : { backgroundColor: Colors.light.buttonBackground }
+                                    theme === 'dark' ? { backgroundColor: Colors.dark.buttonBackground } : { backgroundColor: Colors.light.buttonBackground }
                                 ]}>
-                                    <MaterialIcons name="settings" size={20} color={colors} />
+                                    <MaterialCommunityIcons name="cog-outline" size={20} color={colors} />
                                 </View>
                                 <ThemedText>{t('languageScreen.system')}</ThemedText>
                             </View>

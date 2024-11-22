@@ -3,10 +3,12 @@ import { Appearance, StatusBar } from 'react-native';
 import { useMMKVBoolean } from 'react-native-mmkv';
 import { storage } from '@/utils/storage';
 
+// Updated ThemeContextType to include currentTheme
 type ThemeContextType = {
     isDarkMode: boolean | undefined;
-    setDarkMode: (value: boolean | undefined) => void; 
+    setDarkMode: (value: boolean | undefined) => void;
     useSystemTheme: () => void;
+    currentTheme: 'light' | 'dark';
 };
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -23,10 +25,9 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     const [isDarkMode, setIsDarkMode] = useMMKVBoolean('dark-mode', storage);
     const [systemTheme, setSystemTheme] = useState<'light' | 'dark'>(Appearance.getColorScheme() || 'light');
 
-    // useCallback for getCurrentTheme to prevent unnecessary re-creation
     const getCurrentTheme = useCallback((): 'light' | 'dark' => {
         if (isDarkMode === undefined) {
-            return systemTheme;
+            return systemTheme; // Use system theme if isDarkMode is undefined
         }
         return isDarkMode ? 'dark' : 'light';
     }, [isDarkMode, systemTheme]);
@@ -43,37 +44,33 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
         return () => listener.remove();
     }, []);
 
-    // useCallback for the effect callback to prevent unnecessary re-creation
     const updateThemeEffect = useCallback(() => {
         const newTheme = getCurrentTheme();
         setCurrentTheme(newTheme);
 
+        // This will only save the preference, not change the system appearance
         if (isDarkMode !== undefined) {
             storage.set('dark-mode', isDarkMode);
-            Appearance.setColorScheme(newTheme);
         }
     }, [getCurrentTheme, isDarkMode]);
 
-    useEffect(updateThemeEffect, [updateThemeEffect]); 
+    useEffect(updateThemeEffect, [updateThemeEffect]);
 
-    useEffect(() => {
-        StatusBar.setBarStyle(currentTheme === 'dark' ? 'light-content' : 'dark-content');
-    }, [currentTheme]);
-
-    // Function to explicitly set dark mode and update storage
-    const setDarkMode = (value: boolean | undefined) => { 
+    const setDarkMode = (value: boolean | undefined) => {
         setIsDarkMode(value);
-        storage.set('dark-mode', value);
+        if (value !== undefined) {
+            storage.set('dark-mode', value);
+        }
     };
 
-    // Function to switch to system theme and clear storage
     const useSystemTheme = () => {
-        setIsDarkMode(undefined); 
+        setIsDarkMode(undefined);
         storage.delete('dark-mode');
     };
 
     return (
-        <ThemeContext.Provider value={{ isDarkMode, setDarkMode, useSystemTheme }}>
+        <ThemeContext.Provider value={{ isDarkMode, setDarkMode, useSystemTheme, currentTheme }}>
+            <StatusBar barStyle={currentTheme === 'dark' ? 'light-content' : 'dark-content'} />
             {children}
         </ThemeContext.Provider>
     );

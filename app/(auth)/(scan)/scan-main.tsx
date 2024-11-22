@@ -12,10 +12,10 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { ThemedButton } from '@/components/buttons/ThemedButton';
 import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
 import { MAX_ZOOM_FACTOR } from '@/constants/Constants';
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { MaterialIcons } from '@expo/vector-icons';
 import { debounce } from 'lodash';
 import { storage } from '@/utils/storage';
+import { throttle } from 'lodash';
 
 import { ScannerFrame, FocusIndicator, ZoomControl } from '@/components/camera';
 import { ThemedView } from '@/components/ThemedView';
@@ -26,9 +26,9 @@ import { useMMKVBoolean } from 'react-native-mmkv';
 import { triggerLightHapticFeedback } from '@/utils/haptic';
 import useHandleCodeScanned from '@/hooks/useHandleCodeScanned'; // Import the custom hook
 import Animated from 'react-native-reanimated';
-import RNQRGenerator from 'rn-qr-generator';
 import { useLocale } from '@/context/LocaleContext';
-// import BarcodeScanning from '@react-native-ml-kit/barcode-scanning';
+import BarcodeScanning from '@react-native-ml-kit/barcode-scanning';
+import { decodeQR } from '@/utils/decodeQR';
 
 const ReanimatedCamera = Reanimated.createAnimatedComponent(Camera);
 Reanimated.addWhitelistedNativeProps({ zoom: true });
@@ -195,126 +195,90 @@ export default function ScanScreen() {
   const codeScanner = useCodeScanner({
     codeTypes: ['qr', 'code-128', 'code-39', 'ean-13', 'ean-8', 'upc-a', 'upc-e', 'data-matrix'],
     onCodeScanned: (codes: Code[], frame: CodeScannerFrame) => {
-      frameCounterRef.current++;
-      if (isConnecting) return; // Stop scanning if already connecting
+      if (isConnecting || frameCounterRef.current++ % 4 !== 0) return;
 
-      // Process every 4th frame (adjust frame skip logic here as needed)
-      if (frameCounterRef.current % 4 === 0) {
-        setScanFrame(frame);
+      setScanFrame(frame);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
 
-        // Clear previous timeout to prevent stale highlights
-        if (timeoutRef.current) {
-          clearTimeout(timeoutRef.current);
-        }
+      if (codes.length > 0) {
+        const firstCode = codes[0];
+        const { value, frame: codeFrame } = firstCode;
 
-        if (codes.length > 0) {
-          const firstCode = codes[0];
+        setCodeMetadata(value ?? '');
 
-          // Update metadata and code information
-          setCodeMetadata(firstCode.value ?? '');
+        if (showIndicator) {
+          setCodeScannerHighlights([{
+            height: codeFrame?.height ?? 0,
+            width: codeFrame?.width ?? 0,
+            x: codeFrame?.x ?? 0,
+            y: codeFrame?.y ?? 0,
+          }]);
 
-          if (showIndicator) {
-            // Set highlights based on scanned code frame
-            setCodeScannerHighlights([{
-              height: firstCode.frame?.height ?? 0,
-              width: firstCode.frame?.width ?? 0,
-              x: firstCode.frame?.x ?? 0,
-              y: firstCode.frame?.y ?? 0,
-            }]);
-
-            // Reset highlights after timeout when showIndicator is true
-            timeoutRef.current = setTimeout(() => {
-              setCodeScannerHighlights([]);
-            }, 2000);
-          } else {
-            // Immediately reset highlights if showIndicator is false
+          timeoutRef.current = setTimeout(() => {
             setCodeScannerHighlights([]);
-          }
-
-          // Only call handleCodeScanned if not already connecting
-          handleCodeScanned(firstCode.value ?? '');
-
+          }, 2000);
         } else {
-          // No codes found, reset all states
-          if (timeoutRef.current) {
-            clearTimeout(timeoutRef.current);
-          }
-          console.log('No codes found');
-          setIsConnecting(false); // Reset the connection flag
-          setCodeType('');
-          setCodeValue('');
           setCodeScannerHighlights([]);
-          setCodeMetadata('');
         }
+
+        handleCodeScanned(value ?? '');
+      } else {
+        console.log('No codes found');
+        setIsConnecting(false);
+        setCodeType('');
+        setCodeValue('');
+        setCodeScannerHighlights([]);
+        setCodeMetadata('');
       }
     },
   });
 
   const onOpenGallery = useCallback(async () => {
     try {
-      // Force a re-render to ensure the UI updates immediately
       const image = await ImagePicker.openPicker({
         width: 300,
         height: 400,
-        // includeBase64: true,
+        includeBase64: true,
         mediaType: 'photo',
       });
 
-      setIsDecoding(true);
-      await new Promise(resolve => setTimeout(resolve, 0)); // Allow React to process the state update
-  
       if (!image.path) {
         return;
-      } 
+      }
 
-      // decodeQRCode(result.path);
-      
-      // try {
-      //   const barcodes = await BarcodeScanning.scan(result.path);
-      //   if (barcodes.length > 0) {
-      //     const firstBarcode = barcodes[0];
-      //     console.log(firstBarcode.value, firstBarcode.format);
-      //   } else {
-      //     console.log('No barcodes found');
-      //   }
-      // } catch (error) {
-      //   console.error('Error scanning QR code:', error);
-      // }
-// for (let barcode of barcodes) {
-//   console.log(barcode.value, barcode.format);
-// }
+      // decodeQRCode(image.path);
+      const result = await decodeQR(image.path);
 
-      // if (result && 'data' in result && result.data) {
-      //   if (result.mime === 'image/jpeg' || result.mime === 'image/png') {
-      //     await decodeQRCode(result.data);
-      //   } else {
-      //     showToast('Please select a JPEG or PNG image');
-      //   }
-      // } else {
-      //   showToast('Invalid image selection');
-      // }
+      if (result) {
+        console.log('Decoded QR code:', result.format, result.value);
+        onNavigateToAddScreen(result.format, result.value);
+        // router.push('/(auth)/(add)/add-new');
+      } else {
+        console.log('Failed to decode QR code');
+      }
+
     } catch (error) {
       console.log('Error opening image picker:', error);
     } finally {
-      setIsDecoding(false);
+
     }
   }, []);
-  
-  const decodeQRCode = async (uri: string) => {
-    try {
-      const { values, type } = await RNQRGenerator.detect({ uri: uri });
-      console.log('QR code type:', type);
-  
-      if (values?.length > 0) {
-        console.log('QR code data:', values[0]);
-      } else {
-        showToast('No QR code found');
-      }
-    } catch (error) {
-      console.error('Error decoding QR code:', error);
-    }
-  };
-  
+
+  const onNavigateToAddScreen = useCallback(
+    throttle((codeType: number, codeValue: string) => {
+      router.push({
+        pathname: `/(auth)/(add)/add-new`,
+        params: {
+          codeType: codeType,
+          codeValue: codeValue
+        },
+      });
+    }, 1000),
+    []
+  );
+
   // Utility function for showing toast messages
   const showToast = (message: string) => {
     setToastMessage(message);
@@ -491,7 +455,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'black',
   },
   cameraContainer: {
-    marginTop: STATUSBAR_HEIGHT + 5,
+    marginTop: STATUSBAR_HEIGHT + 10,
     flex: 2.5,
     backgroundColor: 'black',
     borderRadius: 10,
@@ -509,7 +473,7 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     position: 'absolute',
-    top: STATUSBAR_HEIGHT + 25,
+    top: STATUSBAR_HEIGHT + 45,
     width: '100%',
     flexDirection: 'row',
     justifyContent: 'space-between',

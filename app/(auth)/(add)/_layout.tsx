@@ -3,6 +3,7 @@ import React from 'react';
 import { StyleSheet, View, Platform } from 'react-native';
 import { ThemedButton } from '@/components/buttons/ThemedButton';
 import { useRouter } from 'expo-router';
+import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
 
 export default function AddLayout() {
   const onNavigateBack = useRouter().back;
@@ -17,10 +18,10 @@ export default function AddLayout() {
       >
         <Stack.Screen name="add-new" />
       </Stack>
-      <View style={[styles.headerContainer, Platform.OS == 'android' ? { top: 60 } : { top: 20 }]}>
+      <View style={[styles.headerContainer]}>
         <ThemedButton
           onPress={onNavigateBack}
-           iconName="chevron-back"
+           iconName="chevron-left"
         />
       </View>
     </View>
@@ -35,7 +36,8 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     position: 'absolute',
-    top: 20,
+    top: STATUSBAR_HEIGHT + 45,
     left: 15,
+    zIndex: 10,
   },
 });

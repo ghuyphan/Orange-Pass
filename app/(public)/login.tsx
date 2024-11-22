@@ -20,10 +20,12 @@ import { login } from '@/services/auth';
 import { width, height } from '@/constants/Constants';
 import { useLocale } from '@/context/LocaleContext';
 import LOGO from '@/assets/svgs/orange-logo.svg';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function LoginScreen() {
   const { locale } = useLocale();
-  const colorScheme = useColorScheme();
+  // const colorScheme = useColorScheme();
+  const {currentTheme} = useTheme();
   const authRefreshError = useSelector((state: RootState) => state.error.message)
   const [isToastVisible, setIsToastVisible] = useState(false);
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
@@ -85,7 +87,7 @@ export default function LoginScreen() {
       {({ handleChange, handleBlur, handleSubmit, values, errors, touched, isSubmitting }) => (
         <KeyboardAwareScrollView
           keyboardShouldPersistTaps="handled"
-          style={[{ backgroundColor: colorScheme === 'light' ? Colors.light.background : Colors.dark.background }]}
+          style={[{ backgroundColor: currentTheme === 'light' ? Colors.light.background : Colors.dark.background }]}
           contentContainerStyle={styles.container}
           extraScrollHeight={70}
           extraHeight={200}
@@ -144,7 +146,7 @@ export default function LoginScreen() {
             style={styles.toastContainer}
             onDismiss={onDismissToast}
             onVisibilityToggle={setIsToastVisible}
-            iconName='alert-circle'
+            iconName='error'
           />
         </KeyboardAwareScrollView>
       )}

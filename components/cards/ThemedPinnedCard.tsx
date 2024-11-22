@@ -1,15 +1,14 @@
 import React, { memo, useMemo, useState, useEffect } from 'react';
 import { Image, StyleSheet, View, TouchableHighlight, InteractionManager, useWindowDimensions } from 'react-native';
 import { ThemedText } from '../ThemedText';
-import { ThemedView } from '../ThemedView';
 import QRCode from 'react-native-qrcode-svg';
 import Barcode from 'react-native-barcode-svg';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useTheme } from '@/context/ThemeContext';
 import { getIconPath } from '@/utils/returnIcon';
 import { returnItemData } from '@/utils/returnItemData';
 import { returnMidpointColor } from '@/utils/returnMidpointColor';
-import { useThemeColor } from '@/hooks/useThemeColor';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Colors } from '@/constants/Colors';
 
 export type ThemedPinnedCardProps = {
   lightColor?: string;
@@ -36,8 +35,10 @@ export const ThemedPinnedCard = memo(function ThemedPinnedCard({
   onItemLongPress,
   style,
 }: ThemedPinnedCardProps): JSX.Element {
-  const colorScheme = useColorScheme();
-  const colors = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
+  // const colorScheme = useColorScheme();
+  const {currentTheme} = useTheme();
+  // const colors = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
+  const colors = currentTheme === 'light' ? Colors.light.text : Colors.dark.text;
   const { width } = useWindowDimensions();
 
   // Calculate sizes based on screen width
@@ -63,15 +64,15 @@ export const ThemedPinnedCard = memo(function ThemedPinnedCard({
   }, []);
 
   // Memoize styles to avoid inline style objects causing re-renders
-  const backgroundColorStyle = useMemo(
-    () => ({
-      backgroundColor: colorScheme === 'light' ? color.light : color.dark,
-    }),
-    [colorScheme, color.light, color.dark]
-  );
+  // const backgroundColorStyle = useMemo(
+  //   () => ({
+  //     backgroundColor: currentTheme === 'light' ? color.light : color.dark,
+  //   }),
+  //   [currentTheme, color.light, color.dark]
+  // );
 
-  const underlayColor = useMemo(() => (colorScheme === 'light' ? color.dark : color.light), [
-    colorScheme,
+  const underlayColor = useMemo(() => (currentTheme === 'light' ? color.dark : color.light), [
+    currentTheme,
     color.light,
     color.dark,
   ]);
@@ -85,7 +86,7 @@ export const ThemedPinnedCard = memo(function ThemedPinnedCard({
       {/* <ThemedView style={[styles.itemContainer, backgroundColorStyle]}> */}
           <LinearGradient
             colors={
-              colorScheme === 'light'
+              currentTheme === 'light'
                 ? [color?.light || '#ffffff', returnMidpointColor(color.light, accent_color.light) || '#cccccc', accent_color?.light || '#f0f0f0']
                 : [color?.dark || '#000000', returnMidpointColor(color.dark, accent_color.dark) || '#505050', accent_color?.dark || '#303030']
             }

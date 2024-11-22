@@ -16,13 +16,14 @@ import { ThemedText } from '@/components/ThemedText';
 import ThemedBottomSheet from '@/components/bottomsheet/ThemedBottomSheet';
 import BottomSheet from '@gorhom/bottom-sheet';
 // import Ionicons from '@expo/vector-icons/Ionicons';
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { returnItemData } from '@/utils/returnItemData';
 import { getVietQRData } from '@/utils/vietQR';
 import { ThemedStatusToast } from '@/components/toast/ThemedOfflineToast';
 import { throttle } from 'lodash';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
 import { useLocale } from '@/context/LocaleContext';
+import { useTheme } from '@/context/ThemeContext';
 
 // Utility function to format the amount
 const formatAmount = (amount: string) => {
@@ -36,7 +37,8 @@ export default function DetailScreen() {
     
     const bottomSheetRef = useRef<BottomSheet>(null);
     const router = useRouter();
-    const colorScheme = useColorScheme();
+    const {currentTheme} = useTheme();
+    // const colorScheme = useColorScheme();
     const [amount, setAmount] = useState(''); // State to hold the amount of money
     const [isKeyboardVisible, setKeyboardVisible] = useState(false);
     const [isToastVisible, setIsToastVisible] = useState(false);
@@ -44,7 +46,7 @@ export default function DetailScreen() {
     const [isSyncing, setIsSyncing] = useState(false);
     const isOffline = useSelector((state: RootState) => state.network.isOffline);
 
-    const iconColor = useColorScheme() === 'light' ? Colors.light.text : Colors.dark.text;
+    const iconColor = currentTheme === 'light' ? Colors.light.text : Colors.dark.text;
 
     useUnmountBrightness(0.8, false);
 
@@ -155,7 +157,7 @@ export default function DetailScreen() {
             </ThemedView>
         );
     }
-    const SuggestionItem = React.memo(({ item, onPress, colorScheme }) => (
+    const SuggestionItem = React.memo(({ item, onPress: onPress }: { item: string; onPress: (item: string) => void }) => (
         <Pressable
             onPress={() => onPress(item)}
             android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
@@ -163,7 +165,7 @@ export default function DetailScreen() {
                 styles.suggestionItem,
                 {
                     backgroundColor:
-                        colorScheme === 'light'
+                        currentTheme === 'light'
                             ? Colors.light.cardFooter
                             : Colors.dark.cardFooter,
                     overflow: 'hidden',
@@ -182,7 +184,7 @@ export default function DetailScreen() {
             extraScrollHeight={50}
             showsVerticalScrollIndicator={false}
             scrollEnabled={isKeyboardVisible}
-            style={{ backgroundColor: colorScheme === 'light' ? Colors.light.background : Colors.dark.background }}
+            style={{ backgroundColor: currentTheme === 'light' ? Colors.light.background : Colors.dark.background }}
         >
             <ThemedView style={styles.mainContainer}>
                 <View style={styles.headerWrapper}>
@@ -200,7 +202,7 @@ export default function DetailScreen() {
                 />
 
                 <View style={[styles.infoWrapper, {
-                    backgroundColor: colorScheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground,
+                    backgroundColor: currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground,
                 }]}>
                     <Pressable
                         onPress={openMap}
@@ -208,7 +210,7 @@ export default function DetailScreen() {
                         style={styles.actionButton}
                     >
                         {/* <View style={styles.actionButton}> */}
-                        <MaterialIcons name="place" size={18} color={iconColor} />
+                        <MaterialCommunityIcons name="map-marker-outline" size={18} color={iconColor} />
                         <ThemedText style={styles.labelText}>
                             {t('detailsScreen.nearbyLocation')}
                         </ThemedText>
@@ -231,15 +233,14 @@ export default function DetailScreen() {
                                     )}
                                 </View>
                             </Pressable>
-                            {/* {isTransfer && ( */}
                             <Animated.View style={[styles.transferSection, transferStyle]}>
                                 <View style={styles.inputWrapper}>
                                     <TextInput
-                                        style={[styles.inputField, { color: colorScheme === 'light' ? Colors.light.text : Colors.dark.text }]}
+                                        style={[styles.inputField, { color: currentTheme === 'light' ? Colors.light.text : Colors.dark.text }]}
                                         placeholder={t('detailsScreen.receivePlaceholder')}
                                         keyboardType="numeric"
                                         value={amount}
-                                        placeholderTextColor={colorScheme === 'light' ? Colors.light.placeHolder : Colors.dark.placeHolder}
+                                        placeholderTextColor={currentTheme === 'light' ? Colors.light.placeHolder : Colors.dark.placeHolder}
                                         onChangeText={(text) => setAmount(formatAmount(text))}
                                     />
                                     <ThemedText>đ</ThemedText>
@@ -256,7 +257,7 @@ export default function DetailScreen() {
                                     keyExtractor={(item) => item}
                                     contentContainerStyle={styles.suggestionListContent}
                                     renderItem={({ item }) => (
-                                        <SuggestionItem item={item} onPress={setAmount} colorScheme={colorScheme} />
+                                        <SuggestionItem item={item} onPress={setAmount} colorScheme={currentTheme} />
                                     )}
                                 />
 
@@ -274,7 +275,7 @@ export default function DetailScreen() {
                     isSyncing={isSyncing}
                     isVisible={isToastVisible}
                     message={toastMessage}
-                    iconName="cloud-offline"
+                    iconName="wifi-off"
                     onDismiss={() => setIsToastVisible(false)}
                     style={styles.toastContainer}
                 />

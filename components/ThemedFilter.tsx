@@ -1,10 +1,10 @@
 import { ScrollView, StyleProp, ViewStyle, StyleSheet, View, Pressable } from 'react-native';
 import React from 'react';
 import { t } from '@/i18n';
-import { useColorScheme } from 'react-native';
 import { ThemedText } from './ThemedText';
 import { useLocale } from '@/context/LocaleContext';
 import { useCallback } from 'react';
+import { useTheme } from '@/context/ThemeContext'; // Import useTheme
 
 type ThemedFilterProps = {
     selectedFilter: string;
@@ -20,8 +20,9 @@ const ThemedFilter = React.memo(({ selectedFilter, onFilterChange, style }: Them
         { key: 'store', label: t('homeScreen.filters.store') }
     ];
 
-    const colorScheme = useColorScheme();
-    const isDarkMode = colorScheme === 'dark';
+    // Get currentTheme from useTheme
+    const { currentTheme } = useTheme(); 
+    const isDarkMode = currentTheme === 'dark';
 
     const handlePress = useCallback((filterKey: string) => {
         onFilterChange(filterKey);

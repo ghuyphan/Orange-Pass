@@ -3,7 +3,8 @@ import { Image, StyleSheet, View, TouchableHighlight, InteractionManager, useWin
 import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
 import QRCode from 'react-native-qrcode-svg';
-import { useColorScheme } from '@/hooks/useColorScheme';
+// import { useColorScheme } from '@/hooks/useColorScheme';
+import { useTheme } from '@/context/ThemeContext';
 import { getIconPath } from '@/utils/returnIcon';
 import { returnItemData } from '@/utils/returnItemData';
 import { returnMidpointColor } from '@/utils/returnMidpointColor';
@@ -34,7 +35,8 @@ export const ThemedVietQRCard = memo(function ThemedVietQRCard({
     amount,
     style,
 }: ThemedVietQRProps): JSX.Element {
-    const colorScheme = useColorScheme();
+    // const colorScheme = useColorScheme();
+    const { currentTheme } = useTheme();
     const { width } = useWindowDimensions();
 
     // Calculate sizes based on screen width
@@ -58,18 +60,18 @@ export const ThemedVietQRCard = memo(function ThemedVietQRCard({
     }, []);
 
     // Memoize styles to avoid inline style objects causing re-renders
-    const backgroundColorStyle = useMemo(
-        () => ({
-            backgroundColor: colorScheme === 'light' ? color.light : color.dark,
-        }),
-        [colorScheme, color.light, color.dark]
-    );
+    // const backgroundColorStyle = useMemo(
+    //     () => ({
+    //         backgroundColor: currentTheme === 'light' ? color.light : color.dark,
+    //     }),
+    //     [currentTheme, color.light, color.dark]
+    // );
     
     return (
             // <ThemedView style={[styles.itemContainer, backgroundColorStyle]}>
             <LinearGradient
             colors={
-              colorScheme === 'light'
+                currentTheme === 'light'
                 ? [color?.light || '#ffffff', returnMidpointColor(color.light, accent_color.light) || '#cccccc', accent_color?.light || '#f0f0f0']
                 : [color?.dark || '#000000', returnMidpointColor(color.dark, accent_color.dark) || '#505050', accent_color?.dark || '#303030']
             }

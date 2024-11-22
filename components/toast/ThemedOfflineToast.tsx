@@ -1,18 +1,17 @@
 import React, { useMemo, useEffect, useState } from 'react';
 import { StyleSheet, View, StyleProp, ViewStyle, ActivityIndicator, Pressable } from 'react-native';
-import Ionicons from '@expo/vector-icons/Ionicons';
+import { MaterialIcons } from '@expo/vector-icons';
 import { Portal } from 'react-native-paper';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { ThemedText } from '../ThemedText';
-import { useThemeColor } from '@/hooks/useThemeColor';
-import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
+import { useTheme } from '@/context/ThemeContext';
 
 export type ThemedStatusToastProps = {
     lightColor?: string;
     darkColor?: string;
-    iconName?: keyof typeof Ionicons.glyphMap;
-    dismissIconName?: keyof typeof Ionicons.glyphMap;
+    iconName?: keyof typeof MaterialIcons.glyphMap;
+    dismissIconName?: keyof typeof MaterialIcons.glyphMap;
     onDismiss?: () => void;
     message: string;
     isVisible?: boolean;
@@ -35,17 +34,18 @@ export function ThemedStatusToast({
     duration = 4000,
     onVisibilityToggle,
 }: ThemedStatusToastProps) {
-    const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
-    const colorScheme = useColorScheme();
+    const { currentTheme } = useTheme();
+    const color = currentTheme === 'light' ? Colors.light.text : Colors.dark.text;
+    // const colorScheme = useColorScheme();
     const [isAnimationComplete, setIsAnimationComplete] = useState(false);
 
     const toastStyle = useMemo(() => ([
         styles.toastContainer,
         {
-            backgroundColor: colorScheme === 'light' ? Colors.light.toastBackground : Colors.dark.toastBackground
+            backgroundColor: currentTheme === 'light' ? Colors.light.toastBackground : Colors.dark.toastBackground
         },
         style
-    ]), [colorScheme, style]);
+    ]), [currentTheme, style]);
 
     // Reanimated values for animation
     const opacity = useSharedValue(0);
@@ -91,8 +91,8 @@ export function ThemedStatusToast({
                         {isSyncing ? (
                             <ActivityIndicator size="small" color={color} />
                         ) : (
-                            <Ionicons
-                                name={iconName || 'information-circle-outline'}
+                            <MaterialIcons
+                                name={iconName || 'info'}
                                 size={20}
                                 color={color}
                             />
@@ -105,8 +105,8 @@ export function ThemedStatusToast({
                     </View>
                     {!isSyncing && (
                         <Pressable onPress={onDismiss} hitSlop={30} style={styles.iconTouchable}>
-                            <Ionicons
-                                name={dismissIconName || 'close-outline'}
+                            <MaterialIcons
+                                name={dismissIconName || 'close'}
                                 size={20}
                                 color={color}
                             />

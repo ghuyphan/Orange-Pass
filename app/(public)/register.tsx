@@ -9,7 +9,6 @@ import { ThemedView } from '@/components/ThemedView';
 import { ThemedInput } from '@/components/Inputs/ThemedInput';
 import { ThemedButton } from '@/components/buttons/ThemedButton';
 import { ThemedToast } from '@/components/toast/ThemedToast';
-import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { t } from '@/i18n';
 import { registrationSchema } from '@/utils/validationSchemas';
@@ -18,9 +17,11 @@ import { width, height } from '@/constants/Constants';
 import { useLocale } from "@/context/LocaleContext";
 import { genConfig } from '@zamplyy/react-native-nice-avatar';
 import LOGO from '@/assets/svgs/orange-logo.svg';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function RegisterScreen() {
-    const colorScheme = useColorScheme();
+    // const colorScheme = useColorScheme();
+    const { currentTheme } = useTheme();
     const { locale } = useLocale();
     const [isToastVisible, setIsToastVisible] = useState(false);
     const [isKeyboardVisible, setKeyboardVisible] = useState(false);
@@ -75,7 +76,7 @@ export default function RegisterScreen() {
             {({ handleChange, handleBlur, handleSubmit, values, errors, touched, isSubmitting }) => (
                 <KeyboardAwareScrollView
                     keyboardShouldPersistTaps="handled"
-                    style={[{ backgroundColor: colorScheme === 'light' ? Colors.light.background : Colors.dark.background }]}
+                    style={[{ backgroundColor: currentTheme === 'light' ? Colors.light.background : Colors.dark.background }]}
                     contentContainerStyle={styles.container}
                     extraScrollHeight={200}
                     scrollEnabled={isKeyboardVisible}
@@ -138,7 +139,7 @@ export default function RegisterScreen() {
                         style={styles.toastContainer}
                         onDismiss={onDismissToast}
                         onVisibilityToggle={setIsToastVisible}
-                        iconName='alert-circle'
+                        iconName='error'
                     />
                 </KeyboardAwareScrollView>
             )}

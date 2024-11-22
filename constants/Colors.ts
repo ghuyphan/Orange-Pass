@@ -3,7 +3,7 @@ const tintColorDark = '#FFA726';  // Brighter to stand out in dark mode
 
 export const Colors = {
   light: {
-    text: '#212121', // Dark gray-black for readability
+    text: '#3A2E24', // Dark gray-black for readability
     background: '#FAFAFA', // Pure white for background
     tint: tintColorLight,
     icon: '#FFB74D', // Soft orange for icons
@@ -12,7 +12,7 @@ export const Colors = {
     tabIconDefault: '#BDBDBD', // Light gray for unselected tab icons
     tabIconSelected: tintColorLight,
     error: '#E53935', // Bright red for clear error notifications
-    toastBackground: '#D3B8A3', // Light orange for toast notifications
+    toastBackground: '#EADFD7', // Light orange for toast notifications
     buttonBackground: '#D3B8A3', // Soft orange for button backgrounds
     buttonHighlight: '#FFECB3', // Brighter to highlight on hover
     cardBackground: '#F5EFE4', // Light beige for card background
@@ -20,8 +20,8 @@ export const Colors = {
     logoIcon: '#FF8A65', // Dark orange for logos
   },
   dark: {
-    text: '#FFFFFF', // Light gray for text on dark background
-    background: '#121212', // Very dark background for dark mode
+    text: '#FFF5E1', // Light gray for text on dark background
+    background: '#181818', // Very dark background for dark mode
     tint: tintColorDark,
     icon: '#FFB74D', // Bright orange for icons
     inputBackground: '#322C28', // Dark gray for input background
@@ -29,7 +29,7 @@ export const Colors = {
     tabIconDefault: '#757575', // Gray for unselected tab icons
     tabIconSelected: tintColorDark,
     error: '#EF5350', // Bright red for error notifications
-    toastBackground: '#6B5A4E', // Dark brown for toast notifications
+    toastBackground: '#322C28', // Dark brown for toast notifications
     buttonBackground: '#6B5A4E', // Dark brown for button backgrounds
     buttonHighlight: '#8D6E63', // Brighter for hover effect
     cardBackground: '#322C28', // Dark gray for card background

@@ -149,7 +149,7 @@
     "delete": "Удалить",
     "moveToTrash": "Переместить в корзину",
     "nearbyLocation": "Ближайшее местоположение",
-    "createQrCode": "Создать QR-код с суммой",
+    "createQrCode": "QR-код для оплаты",
     "receivePlaceholder": "Введите сумму для получения",
     "generatingQRCode": "Создание QR-кода..."
   },

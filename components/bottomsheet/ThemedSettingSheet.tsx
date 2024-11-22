@@ -2,7 +2,8 @@ import React, { forwardRef, useImperativeHandle, useRef, useMemo, useCallback } 
 import { View, StyleSheet, Switch } from 'react-native';
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView, BottomSheetBackdropProps, BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { ThemedText } from '../ThemedText';
-import { useColorScheme } from 'react-native';
+// import { useColorScheme } from 'react-native';
+import { useTheme } from '@/context/ThemeContext';
 import { Colors } from '@/constants/Colors';
 import { Portal } from 'react-native-paper';
 
@@ -43,7 +44,8 @@ const ThemedSettingSheet = React.memo(forwardRef<BottomSheetModal, ThemedSetting
         setting3Value,
         onSetting3Press
     }, ref) => {
-        const colorScheme = useColorScheme();
+        // const colorScheme = useColorScheme();
+        const { currentTheme: colorScheme } = useTheme();
         const color = useMemo(() => (colorScheme === 'light' ? Colors.light.background : Colors.dark.background), [colorScheme]);
         const switchColor = useMemo(() => (colorScheme === 'light' ? Colors.light.buttonBackground : Colors.dark.buttonBackground), [colorScheme]);
 

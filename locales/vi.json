@@ -134,7 +134,7 @@
     "delete": "Xóa",
     "moveToTrash": "Chuyển vào thùng rác",
     "nearbyLocation": "Vị trí lân cận",
-    "createQrCode": "Tạo mã QR nhận khoản tiền",
+    "createQrCode": "Tạo mã QR nhận tiền",
     "receivePlaceholder": "Nhập số tiền cần nhận",
     "generatingQRCode": "Đang tạo mã QR..."
   },

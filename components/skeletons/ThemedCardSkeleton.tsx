@@ -3,14 +3,14 @@ import { StyleSheet, View } from 'react-native';
 import { MotiView } from 'moti';
 import { Skeleton } from 'moti/skeleton';
 import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+// import { useColorScheme } from '@/hooks/useColorScheme';
+import { useTheme } from '@/context/ThemeContext';
 
 export function ThemedCardSkeleton({ show = true, index = 0 }) {
-  const colorScheme = useColorScheme();
+  const { currentTheme: colorScheme } = useTheme();
   const colorsArray = colorScheme === 'dark'
-  ? ['#6B5A4E', '#5D4D42', '#4F4036', '#41332A', '#33261E']
-  : ['#D3B8A3', '#DCCCBD', '#E5D0C7', '#EED4D1', '#F7E8DB'];
-
+  ? ['#4E3B32', '#49362D', '#443128', '#3F2C23', '#3A271E'] 
+  : ['#EADFD7', '#E8E0CF', '#E5D1C7', '#E2C2BD', '#DFB3B3'];
   const qrWidth = index % 2 === 0 ? 170 : 90;
 
   return (

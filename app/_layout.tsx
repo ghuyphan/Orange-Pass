@@ -13,6 +13,7 @@ import { checkOfflineStatus } from '@/services/network';
 import { LocaleProvider } from '@/context/LocaleContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { storage } from '@/utils/storage';
+import { StatusBar } from 'expo-status-bar';
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -49,9 +50,9 @@ export default function RootLayout() {
                 // Check authentication status *after* onboarding status is known
                 if (onboardingStatus) {
                     const authStatus = await checkInitialAuth();
-                    setIsAuthenticated(authStatus); 
+                    setIsAuthenticated(authStatus);
                 } else {
-                    setIsAuthenticated(false); 
+                    setIsAuthenticated(false);
                 }
 
                 if (fontsLoaded) {
@@ -70,7 +71,7 @@ export default function RootLayout() {
 
     useEffect(() => {
         // This effect now runs only once when all states are ready
-        if (isAppReady && hasSeenOnboarding !== null && isAuthenticated !== null) { 
+        if (isAppReady && hasSeenOnboarding !== null && isAuthenticated !== null) {
             if (!hasSeenOnboarding) {
                 router.replace('/onboard');
             } else if (isAuthenticated) {
@@ -82,15 +83,15 @@ export default function RootLayout() {
     }, [isAppReady, hasSeenOnboarding, isAuthenticated, router]); // Add router to dependency array
 
     if (!isAppReady || isAuthenticated === null || hasSeenOnboarding === null) {
-        return null; 
+        return null;
     }
 
     return (
-        <Provider store={store}>
-            <GestureHandlerRootView>
-                <PaperProvider>
-                    <LocaleProvider>
-                        <ThemeProvider>
+        <ThemeProvider>
+            <Provider store={store}>
+                <GestureHandlerRootView>
+                    <PaperProvider>
+                        <LocaleProvider>
                             <View style={styles.root} onLayout={onLayoutRootView}>
                                 <Stack
                                     screenOptions={{
@@ -115,11 +116,11 @@ export default function RootLayout() {
                                     />
                                 </Stack>
                             </View>
-                        </ThemeProvider>
-                    </LocaleProvider>
-                </PaperProvider>
-            </GestureHandlerRootView>
-        </Provider>
+                        </LocaleProvider>
+                    </PaperProvider>
+                </GestureHandlerRootView>
+            </Provider>
+        </ThemeProvider>
     );
 }
 

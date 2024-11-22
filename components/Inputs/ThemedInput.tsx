@@ -6,6 +6,7 @@ import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { useTheme } from '@/context/ThemeContext';
 import { Colors } from '@/constants/Colors';
 
 export type ThemedInputProps = {
@@ -54,8 +55,9 @@ export function ThemedInput({
     onFocus = () => { },
     onSubmitEditing = () => { }
 }: ThemedInputProps) {
-    const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
-    const colorScheme = useColorScheme();
+    const { currentTheme } = useTheme(); 
+    // const color = currentTheme({ light: lightColor, dark: darkColor }, 'text');
+    const color = currentTheme === 'light' ? Colors.light.text : Colors.dark.text;
     const [localValue, setLocalValue] = useState(value);
     const [isSecure, setIsSecure] = useState(secureTextEntry);
 
@@ -74,16 +76,16 @@ export function ThemedInput({
     const inputContainerStyle = useMemo(() => ([
         styles.inputContainer,
         {
-            backgroundColor: colorScheme === 'light' ? Colors.light.inputBackground : Colors.dark.inputBackground,
-            borderBottomColor: colorScheme === 'light' ? Colors.light.error : Colors.dark.error,
+            backgroundColor: currentTheme === 'light' ? Colors.light.inputBackground : Colors.dark.inputBackground,
+            borderBottomColor: currentTheme === 'light' ? Colors.light.error : Colors.dark.error,
             borderBottomWidth: isError && errorMessage.length > 0 ? 2 : 0
         },
         style,
-    ]), [colorScheme, isError, errorMessage, style]);
+    ]), [currentTheme, isError, errorMessage, style]);
 
     const errorLabelStyle = useMemo(() => ({
-        color: colorScheme === 'light' ? Colors.light.error : Colors.dark.error
-    }), [colorScheme]);
+        color: currentTheme === 'light' ? Colors.light.error : Colors.dark.error
+    }), [currentTheme]);
 
     return (
         <View style={[styles.container, { marginBottom: isError ? 0 : 20 }]}>
@@ -101,7 +103,7 @@ export function ThemedInput({
                         onBlur={onBlur}
                         onFocus={onFocus}
                         placeholder={placeholder}
-                        placeholderTextColor={colorScheme === 'light' ? Colors.light.placeHolder : Colors.dark.placeHolder}
+                        placeholderTextColor={currentTheme === 'light' ? Colors.light.placeHolder : Colors.dark.placeHolder}
                         accessible
                         aria-label={label}
                         keyboardType={keyboardType}

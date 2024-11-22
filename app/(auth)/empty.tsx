@@ -37,7 +37,7 @@ export default function EmptyScreen() {
             <View style={styles.headerContainer}>
                 <ThemedButton
                     onPress={router.back}
-                    iconName="chevron-back"
+                    iconName="chevron-left"
                 />
             </View>
         </View>

@@ -6,6 +6,7 @@ import { ThemedView } from '../ThemedView';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
+import { useTheme } from '@/context/ThemeContext';
 
 export type ThemedIconInput = {
     lightColor?: string;
@@ -38,8 +39,10 @@ export function ThemedIconInput({
     onRightIconPress,
     onSubmitEditing
 }: ThemedIconInput) {
-    const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
-    const colorScheme = useColorScheme();
+    // const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
+    // const colorScheme = useColorScheme();
+    const { currentTheme } = useTheme();
+    const color = currentTheme === 'light' ? Colors.light.text : Colors.dark.text;
     const [localValue, setLocalValue] = useState(value);
 
     const onClearValue = () => {
@@ -55,16 +58,16 @@ export function ThemedIconInput({
     const inputContainerStyle = useMemo(() => ([
         styles.inputContainer,
         {
-            backgroundColor: colorScheme === 'light' ? Colors.light.inputBackground : Colors.dark.inputBackground,
+            backgroundColor: currentTheme === 'light' ? Colors.light.inputBackground : Colors.dark.inputBackground,
         },
         style,
-    ]), [colorScheme, style]);
+    ]), [currentTheme, style]);
 
     return (
         <ThemedView style={inputContainerStyle}>
             <View style={styles.inputRow}>
                 <View style={styles.leftContainer}>
-                    <MaterialIcons name={iconName} size={20} color={color || colorScheme === 'light' ? Colors.light.placeHolder : Colors.dark.placeHolder} />
+                    <MaterialIcons name={iconName} size={20} color={color || currentTheme === 'light' ? Colors.light.placeHolder : Colors.dark.placeHolder} />
                     <TextInput
                         style={[styles.input, { color }]}
                         value={localValue}
@@ -72,7 +75,7 @@ export function ThemedIconInput({
                         onBlur={onBlur}
                         onFocus={onFocus}
                         placeholder={placeholder}
-                        placeholderTextColor={colorScheme === 'light' ? Colors.light.placeHolder : Colors.dark.placeHolder}
+                        placeholderTextColor={currentTheme === 'light' ? Colors.light.placeHolder : Colors.dark.placeHolder}
                         accessible
                         aria-label={placeholder}
                         onSubmitEditing={onSubmitEditing}

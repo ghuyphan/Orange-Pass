@@ -3,8 +3,9 @@ import { StyleSheet, TouchableWithoutFeedback, View, Image, Pressable } from 're
 import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
 import { ThemedButton } from '../buttons/ThemedButton';
-import { useThemeColor } from '@/hooks/useThemeColor';
-import { useColorScheme } from '@/hooks/useColorScheme';
+// import { useThemeColor } from '@/hooks/useThemeColor';
+// import { useColorScheme } from '@/hooks/useColorScheme';
+import { useTheme } from '@/context/ThemeContext';
 import { Colors } from '@/constants/Colors';
 import CARD from '@/assets/svgs/card.svg';
 
@@ -50,8 +51,10 @@ export function ThemedEmptyCard({
     footerStyle,
     paddingTop,
 }: ThemedEmptyCard) {
-    const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
-    const colorScheme = useColorScheme();
+    const { currentTheme: colorScheme } = useTheme();
+    // const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
+    const color = colorScheme === 'light' ? Colors.light.text : Colors.dark.text;
+    // const colorScheme = useColorScheme();
 
     const cardContainerStyle = useMemo(() => ([
         {

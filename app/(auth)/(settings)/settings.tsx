@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { StyleSheet, View, Platform, useColorScheme } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import * as SecureStore from 'expo-secure-store';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -31,11 +31,11 @@ import { Colors } from '@/constants/Colors';
 import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
 import { clearAuthData } from '@/store/reducers/authSlice';
 import pb from '@/services/pocketBase';
-import { useMMKVBoolean } from 'react-native-mmkv';
-import { useLocale } from '@/context/LocaleContext';
 import { useMMKVString } from 'react-native-mmkv';
+import { useLocale } from '@/context/LocaleContext';
 import { ActivityIndicator } from 'react-native-paper';
 import { clearErrorMessage } from '@/store/reducers/errorSlice';
+import { useTheme } from '@/context/ThemeContext'; // Import useTheme
 
 import {
     AvatarConfig
@@ -90,7 +90,10 @@ function SettingsScreen() {
     };
 
     // const [avatarConfig, setAvatarConfig] = useState<{ [key: string]: any } | null>(null);
-    const colorScheme = useColorScheme();
+    // Get currentTheme from useTheme
+    const { currentTheme } = useTheme();
+    const isDarkMode = currentTheme === 'dark';
+
     const [isLoading, setIsLoading] = useState(false);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const dispatch = useDispatch();
@@ -99,10 +102,10 @@ function SettingsScreen() {
     const email = useSelector((state: RootState) => state.auth.user?.email ?? '-');
     const name = useSelector((state: RootState) => state.auth.user?.name ?? '-');
 
-    const [darkMode, setDarkMode] = useMMKVBoolean('dark-mode', storage);
+    // const [darkMode, setDarkMode] = useMMKVBoolean('dark-mode', storage);
     // const [locale, setLocale] = useMMKVString('locale', storage);
 
-    const sectionsColors = colorScheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground
+    const sectionsColors = currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground
 
     const scrollHandler = useAnimatedScrollHandler((event) => {
         scrollY.value = event.contentOffset.y;
@@ -167,6 +170,7 @@ function SettingsScreen() {
         setIsModalVisible(true);
     }, [])
 
+
     return (
         <ThemedView style={styles.container}>
             <ThemedView style={styles.blurContainer} />
@@ -204,29 +208,25 @@ function SettingsScreen() {
                     </View>
                 </View>
 
-                <View style={[styles.sectionContainer, { backgroundColor: colorScheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground }]}>
+                <View style={[styles.sectionContainer, { backgroundColor: sectionsColors }]}>
                     <ThemedSettingsCardItem
                         leftIcon='person-outline'
                         settingsTitle={t('settingsScreen.editProfile')}
-                    // onPress={() => router.push('/settings/language')}
                     />
                     <ThemedSettingsCardItem
                         settingsTitle={t('settingsScreen.changePassword')}
                         leftIcon='lock-outline'
-                    // onPress={() => router.push('/settings/language')}
                     />
                     <ThemedSettingsCardItem
                         settingsTitle={t('settingsScreen.changeEmail')}
                         leftIcon='mail-outline'
-                    // onPress={() => router.push('/settings/language')}
                     />
                 </View>
 
-                <View style={[styles.sectionContainer, { backgroundColor: colorScheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground }]}>
+                <View style={[styles.sectionContainer, { backgroundColor: sectionsColors }]}>
                     <ThemedSettingsCardItem
                         settingsTitle={t('settingsScreen.about')}
                         leftIcon='info-outline'
-                    // onPress={() => router.push('/settings/language')}
                     />
                     <ThemedSettingsCardItem
                         settingsTitle={t('settingsScreen.language')}

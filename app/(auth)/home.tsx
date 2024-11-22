@@ -55,7 +55,7 @@ function HomeScreen() {
   const { updateLocale } = useLocale();
   const colorScheme = useColorScheme();
   const [locale, setLocale] = useMMKVString('locale', storage);
-  const color = useThemeColor({ light: '#5A4639', dark: '#FFF5E1' }, 'text');
+  const color = useThemeColor({ light: '#3A2E24', dark: '#FFF5E1' }, 'text');
   const [isEmpty, setIsEmpty] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [isToastVisible, setIsToastVisible] = useState(false);
@@ -85,7 +85,6 @@ function HomeScreen() {
   const bottomSheetRef = useRef<BottomSheet>(null);
 
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
-
   const syncWithServer = useCallback(async (userId: string) => {
     if (isOffline || isSyncing) {
       console.log('Cannot sync while offline or another sync is in progress');
@@ -97,17 +96,26 @@ function HomeScreen() {
       setBottomToastMessage(t('homeScreen.syncing'));
       setIsBottomToastVisible(true);
 
-      // Sync local changes (new, updated, deleted) to the server
       await syncQrCodes(userId);
+      const serverData = await fetchServerData(userId);
+
+      if (serverData.length > 0) {
+        await insertOrUpdateQrCodes(serverData);
+
+        // Update the UI with new data without triggering a full reload
+        const updatedLocalData = await getQrCodesByUserId(userId);
+        setQrData(updatedLocalData);
+        setIsEmpty(updatedLocalData.length === 0);
+      }
     } catch (error) {
       console.error('Error syncing QR codes:', error);
       setToastMessage(t('homeScreen.syncError'));
       setIsToastVisible(true);
     } finally {
       setIsBottomToastVisible(false);
-      setTimeout(() => setIsSyncing(false), 300);
+      // setIsSyncing(false);
     }
-  }, [isOffline, isSyncing]);
+  }, [isOffline, isSyncing, userId]);
 
   const fetchServerData = async (userId: string) => {
     try {
@@ -116,7 +124,6 @@ function HomeScreen() {
         getLocallyDeletedQrCodes(userId),
       ]);
 
-      // Lọc dữ liệu từ server dựa trên danh sách đã xóa cục bộ
       return serverData.items.filter(
         item => !locallyDeletedData.some(deletedItem => deletedItem.id === item.id)
       );
@@ -126,59 +133,50 @@ function HomeScreen() {
     }
   };
 
-  const fetchLocalData = async (userId: string) => {
-    const localData = await getQrCodesByUserId(userId);
-    setQrData(localData);
-    setIsEmpty(localData.length === 0);
-  };
+  const fetchLocalData = useCallback(async (userId: string) => {
+    try {
+      const localData = await getQrCodesByUserId(userId);
+      setQrData(localData);
+      setIsEmpty(localData.length === 0);
+    } catch (error) {
+      console.error('Error fetching local data:', error);
+      setToastMessage(t('homeScreen.loadError'));
+      setIsToastVisible(true);
+    }
+  }, []);
 
-  // Fetch dữ liệu local khi ứng dụng khởi động
+  // Fetch initial data
   useEffect(() => {
     const loadLocalData = async () => {
       try {
+        setIsLoading(true); // Set loading to true here
         await createTable();
         await fetchLocalData(userId);
-        setIsLoading(false);
       } catch (error) {
         console.error('Error loading local data:', error);
-        setToastMessage(t('homeScreen.loadError'));
-        setIsToastVisible(true);
+      } finally {
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 1000);
       }
     };
-    loadLocalData();
-  }, [userId]);
 
-  // Đồng bộ dữ liệu với server sau khi local data đã tải xong
+    if (userId) {
+      loadLocalData();
+    }
+  }, [userId, fetchLocalData]);
+
+
+  // useEffect for initial sync (with delay) - NO INFINITE LOOP HERE
   useEffect(() => {
     if (isOffline || !userId) return;
 
-    const syncAndFetchServerData = async () => {
-      try {
-        // setIsLoading(true);
-        setIsSyncing(true);
-        await syncWithServer(userId);
-        const serverData = await fetchServerData(userId);
+    const syncTimeout = setTimeout(() => {
+      syncWithServer(userId);
+    }, 2000);
 
-        // Cập nhật local database nếu có dữ liệu mới từ server
-        if (serverData.length > 0) {
-          await insertOrUpdateQrCodes(serverData);
-          await fetchLocalData(userId);
-        }
-      } catch (error) {
-        console.error('Error syncing with server:', error);
-        setToastMessage(t('homeScreen.syncError'));
-        setIsToastVisible(true);
-      } finally {
-        // setIsLoading(false);
-        setIsSyncing(false);
-      }
-    };
-
-    // Chỉ đồng bộ khi ứng dụng khởi động xong và đã tải dữ liệu local
-    const syncTimeout = setTimeout(syncAndFetchServerData, 2000); // Đợi 2 giây trước khi đồng bộ
     return () => clearTimeout(syncTimeout);
-  }, [isOffline, userId]);
-
+  }, [isOffline, userId]); // syncWithServer is a dependency
 
   useEffect(() => {
     setBottomToastMessage(t('homeScreen.offline'));
@@ -467,6 +465,9 @@ function HomeScreen() {
       </Animated.View>
       {isLoading ? (
         <View style={styles.loadingContainer}>
+          <View style={{ marginBottom: 25 }}>
+            <ThemedFilterSkeleton show={true} />
+          </View>
           {Array.from({ length: 3 }).map((_, index) => (
             <ThemedCardSkeleton key={index} index={index} />
           ))}
@@ -501,15 +502,11 @@ function HomeScreen() {
                   onChangeText={setSearchQuery}
                 />
               </Animated.View>
-
-              {isLoading ? (
-                <ThemedFilterSkeleton show={true} />
-              ) : (
-                <ThemedFilter
-                  selectedFilter={filter}
-                  onFilterChange={setFilter}
-                />
-              )}
+              <ThemedFilter
+                selectedFilter={filter}
+                onFilterChange={setFilter}
+              />
+              {/* <ThemedFilterSkeleton show={true} /> */}
             </Animated.View>}
           ListEmptyComponent={
             <View style={styles.emptyItem}>
@@ -572,7 +569,7 @@ function HomeScreen() {
         title={t('homeScreen.confirmDeleteTitle')}
         message={t('homeScreen.confirmDeleteMessage')}
         isVisible={isModalVisible}
-        iconName="trash"
+        iconName="delete"
       />
     </ThemedView>
   );
@@ -633,6 +630,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
+    opacity: 0.7,
   },
   toastContainer: {
     position: 'absolute',
@@ -661,7 +659,7 @@ const styles = StyleSheet.create({
     right: 15,
   },
   loadingContainer: {
-    paddingTop: STATUSBAR_HEIGHT + 230,
+    paddingTop: STATUSBAR_HEIGHT + 105,
     paddingHorizontal: 15,
     flex: 1,
   },

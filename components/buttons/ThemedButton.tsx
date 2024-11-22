@@ -1,9 +1,9 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useMemo } from 'react';
-import { StyleSheet, Platform, StyleProp, ViewStyle, ActivityIndicator, TouchableWithoutFeedback, Pressable } from 'react-native';
+import { StyleSheet, StyleProp, ViewStyle, ActivityIndicator, Pressable } from 'react-native';
 import { ThemedText } from '../ThemedText';
 import { useThemeColor } from '@/hooks/useThemeColor';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useTheme } from '@/context/ThemeContext'; // Import useTheme
 import { Colors } from '@/constants/Colors';
 
 /**
@@ -62,16 +62,19 @@ export function ThemedButton({
 }: ThemedButtonProps): JSX.Element {
     const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
     const icon = useThemeColor({ light: Colors.light.text, dark: Colors.dark.text }, 'icon');
-    const colorScheme = useColorScheme();
+
+    // Get the currentTheme from useTheme
+    const { currentTheme } = useTheme(); 
 
     const buttonStyle = useMemo(() => ([
         {
-            backgroundColor: colorScheme === 'light' ? Colors.light.buttonBackground : Colors.dark.buttonBackground,
+            // Use currentTheme to determine the background color
+            backgroundColor: currentTheme === 'light' ? Colors.light.buttonBackground : Colors.dark.buttonBackground, 
             opacity: disabled || loading ? 0.7 : 1,
             // borderRadius: Platform.OS === 'ios' ? 10 : 50,
         },
         styles.touchable,
-    ]), [colorScheme, disabled, loading, style]);
+    ]), [currentTheme, disabled, loading, style]); // Include currentTheme in the dependency array
 
     return (
         <Pressable
@@ -84,20 +87,15 @@ export function ThemedButton({
             android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
             style={[buttonStyle, style]}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-
-        // underlayColor={underlayColor || (colorScheme === 'light' ? Colors.light.buttonHighlight : Colors.dark.buttonHighlight)}
         >
                 {loading ? (
                     <>
-                        <ActivityIndicator size={iconSize} color={loadingColor? loadingColor : color} />
+                        <ActivityIndicator size={iconSize} color={loadingColor ? loadingColor : color} />
                         {loadingLabel && <ThemedText style={[styles.label, { color }]} type='defaultSemiBold'>{loadingLabel}</ThemedText>}
-                        {/* <ThemedText style={[styles.label, { color }]} type='defaultSemiBold'>
-                            {loadingLabel}
-                        </ThemedText> */}
                     </>
                 ) : (
                     <>
-                        {iconName && <MaterialIcons name={iconName} size={iconSize} color= {iconColor? iconColor : icon}/>}
+                        {iconName && <MaterialIcons name={iconName} size={iconSize} color={iconColor ? iconColor : icon} />}
                         {label && <ThemedText style={[styles.label, { color }]} type='defaultSemiBold'>{label}</ThemedText>}
                     </>
                 )}
@@ -118,7 +116,6 @@ const styles = StyleSheet.create({
     buttonContainer: {
         flexDirection: 'row',
         gap: 5,
-
     },
     label: {
         fontSize: 15,

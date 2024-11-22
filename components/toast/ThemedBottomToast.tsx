@@ -10,6 +10,7 @@ import { Colors } from '@/constants/Colors';
 import { storage } from '@/utils/storage';
 import { useMMKVString } from 'react-native-mmkv';
 import { useLocale } from '@/context/LocaleContext';
+import { useTheme } from '@/context/ThemeContext';
 
 export type ThemedBottomToastProps = {
     lightColor?: string;
@@ -34,20 +35,20 @@ export function ThemedBottomToast({
     duration = 4000, // Default duration for auto-hide
     onVisibilityToggle,
 }: ThemedBottomToastProps) {
-      const { updateLocale } = useLocale();
+    const { updateLocale } = useLocale();
     const [locale, setLocale] = useMMKVString('locale', storage);
-    const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
-    const colorScheme = useColorScheme();
+    const { currentTheme } = useTheme();
+    const color = currentTheme === 'light' ? Colors.light.text : Colors.dark.text;
     const [isAnimationComplete, setIsAnimationComplete] = useState(false);
 
     const toastStyle = useMemo(() => ([
         styles.toastContainer,
         {
             paddingBottom: Platform.OS === 'ios' ? 20 : 0,
-            backgroundColor: colorScheme === 'light' ? Colors.light.cardFooter : Colors.dark.cardFooter
+            backgroundColor: currentTheme === 'light' ? Colors.light.cardFooter : Colors.dark.cardFooter
         },
         style
-    ]), [colorScheme, style]);
+    ]), [currentTheme, style]);
 
     // Reanimated values for animation
     const opacity = useSharedValue(0);
@@ -128,6 +129,6 @@ const styles = StyleSheet.create({
     toastText: {
         fontSize: 12,
         overflow: 'hidden',
-        
+
     }
 });

@@ -43,18 +43,25 @@ const checkInitialAuth = async (): Promise<boolean> => {
         const userID = await SecureStore.getItemAsync('userID');
 
         if (authToken && userID) {
-            const localUserData = await getUserById(userID);
-            // console.log(localUserData);
-            if (localUserData) {
-                store.dispatch(setAuthData({ token: authToken, user: localUserData }));
+            const expirationDate = getTokenExpirationDate(authToken);
 
-                if (!isOffline) {
-                    const refreshSuccess = await refreshAuthToken(authToken);
-                    return refreshSuccess;
+            if (expirationDate && expirationDate > new Date()) {
+                const localUserData = await getUserById(userID);
+
+                if (localUserData) {
+                    store.dispatch(setAuthData({ token: authToken, user: localUserData }));
+
+                    // Only refresh if online
+                    if (!isOffline) { 
+                        // Refresh token in the background (no need to wait)
+                        refreshAuthToken(authToken); 
+                    }
+                    return true;
                 }
-                return true;
+            } else if (!isOffline) { // Only refresh if online
+                const refreshSuccess = await refreshAuthToken(authToken);
+                return refreshSuccess;
             }
-            return false;
         }
         return false;
     } catch {

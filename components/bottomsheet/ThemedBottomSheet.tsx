@@ -5,7 +5,8 @@ import { ThemedText } from '../ThemedText';
 import { useColorScheme } from 'react-native';
 import { Colors } from '@/constants/Colors';
 import { Portal } from 'react-native-paper';
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import { useTheme } from '@/context/ThemeContext';
 
 interface ThemedBottomSheetProps {
     ref?: React.Ref<BottomSheet>;
@@ -28,10 +29,11 @@ const ThemedBottomSheet = React.memo(forwardRef<BottomSheet, ThemedBottomSheetPr
     },
         ref
     ) => {
-        const colorScheme = useColorScheme();
-        const color = useMemo(() => (colorScheme === 'light' ? Colors.light.background : Colors.dark.background), [colorScheme]);
-        const iconColor = useMemo(() => (colorScheme === 'light' ? Colors.light.text : Colors.dark.text), [colorScheme]);
-        const rippleColor = useMemo(() => (colorScheme === 'light' ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.2)'), [colorScheme]);
+        // const colorScheme = useColorScheme();
+        const { currentTheme } = useTheme();
+        const color = useMemo(() => (currentTheme === 'light' ? Colors.light.background : Colors.dark.background), [currentTheme]);
+        const iconColor = useMemo(() => (currentTheme === 'light' ? Colors.light.text : Colors.dark.text), [currentTheme]);
+        const rippleColor = useMemo(() => (currentTheme === 'light' ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.2)'), [currentTheme]);
         // const color = useColorScheme() === 'light' ? Colors.light.background : Colors.dark.background;
         // const iconColor = useColorScheme() === 'light' ? Colors.light.text : Colors.dark.text;
         const bottomSheetRef = useRef<BottomSheet>(null);
@@ -82,7 +84,7 @@ const ThemedBottomSheet = React.memo(forwardRef<BottomSheet, ThemedBottomSheetPr
                                 style={styles.buttonContainer}
                                 android_ripple={{color: rippleColor, foreground: true, borderless: false }}
                             >
-                                    <MaterialIcons name="edit" size={18} color={iconColor} />
+                                    <MaterialCommunityIcons name="pencil-outline" size={18} color={iconColor} />
                                     <ThemedText style={styles.buttonText}>{editText}</ThemedText>
                             </Pressable>
                             <Pressable
@@ -92,7 +94,7 @@ const ThemedBottomSheet = React.memo(forwardRef<BottomSheet, ThemedBottomSheetPr
                                 android_ripple={{ color: rippleColor, foreground: true, borderless: false }}
                             >
 
-                                    <MaterialIcons name="delete" size={18} color={iconColor} />
+                                    <MaterialIcons name="delete-outline" size={18} color={iconColor} />
                                     <ThemedText style={styles.buttonText}>{deleteText}</ThemedText>
                             </Pressable>
                         </View>
