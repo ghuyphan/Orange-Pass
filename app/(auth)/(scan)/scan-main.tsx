@@ -13,6 +13,7 @@ import { ThemedButton } from '@/components/buttons/ThemedButton';
 import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
 import { MAX_ZOOM_FACTOR } from '@/constants/Constants';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { MaterialIcons } from '@expo/vector-icons';
 import { debounce } from 'lodash';
 import { storage } from '@/utils/storage';
 
@@ -162,7 +163,7 @@ export default function ScanScreen() {
   const [codeMetadata, setCodeMetadata] = useState('');
   const [codeValue, setCodeValue] = useState('');
   const [codeType, setCodeType] = useState('');
-  const [iconName, setIconName] = useState<keyof typeof Ionicons.glyphMap>('compass');
+  const [iconName, setIconName] = useState<keyof typeof MaterialIcons.glyphMap>('explore');
   const [isConnecting, setIsConnecting] = useState(false);
   const [isToastVisible, setIsToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
@@ -415,7 +416,7 @@ export default function ScanScreen() {
                 onPress={() => onResultTap(codeMetadata, codeType)}
               >
                 <View style={styles.qrResultContainer}>
-                  <Ionicons name={iconName} size={18} color="black" />
+                  <MaterialIcons name={iconName} size={18} color="black" />
                   <ThemedText type='defaultSemiBold' numberOfLines={1} style={styles.qrResultText}>{codeValue}</ThemedText>
                 </View>
               </TouchableWithoutFeedback>
@@ -437,7 +438,7 @@ export default function ScanScreen() {
         <View style={styles.bottomButtonsContainer}>
 
           <ThemedButton
-            iconName="images"
+            iconName="insert-photo"
             iconColor="white"
             underlayColor='#fff'
             onPress={onOpenGallery}
@@ -456,8 +457,8 @@ export default function ScanScreen() {
       </View>
 
       <View style={styles.headerContainer}>
-        <ThemedButton iconColor='#fff' style={styles.headerButton} onPress={() => router.back()} iconName="chevron-back" />
-        <ThemedButton underlayColor='#fff' iconColor={torch === 'on' ? '#FFCC00' : '#fff'} style={styles.headerButton} onPress={toggleFlash} iconName={torch === 'on' ? 'flash' : 'flash-off'} />
+        <ThemedButton iconColor='#fff' style={styles.headerButton} onPress={() => router.back()} iconName="chevron-left" />
+        <ThemedButton underlayColor='#fff' iconColor={torch === 'on' ? '#FFCC00' : '#fff'} style={styles.headerButton} onPress={toggleFlash} iconName={torch === 'on' ? 'flash-on' : 'flash-off'} />
       </View>
       <ThemedStatusToast
         isVisible={isToastVisible}

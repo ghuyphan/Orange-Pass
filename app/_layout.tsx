@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { StyleSheet, UIManager, Platform, Dimensions, ActivityIndicator, View } from 'react-native';
+import { StyleSheet, UIManager, Platform, Dimensions, View } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
@@ -13,7 +13,6 @@ import { checkOfflineStatus } from '@/services/network';
 import { LocaleProvider } from '@/context/LocaleContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { storage } from '@/utils/storage';
-import LOGO from '@/assets/svgs/orange-logo.svg';
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -32,97 +31,96 @@ export default function RootLayout() {
     if (Platform.OS === 'android') {
         UIManager.setLayoutAnimationEnabledExperimental?.(true);
     }
+
     const onLayoutRootView = useCallback(() => {
         if (isAppReady) {
-          // This tells the splash screen to hide immediately! If we call this after
-          // `setAppIsReady`, then we may see a blank screen while the app is
-          // loading its initial state and rendering its first pixels. So instead,
-          // we hide the splash screen once we know the root view has already
-          // performed layout.
-          SplashScreen.hideAsync();
+            SplashScreen.hideAsync();
         }
-      }, [isAppReady]);
+    }, [isAppReady]);
 
-useEffect(() => {
-    const prepareApp = async () => {
-        try {
-            await createTable();
+    useEffect(() => {
+        const prepareApp = async () => {
+            try {
+                await createTable();
 
-            const onboardingStatus = storage.getBoolean('hasSeenOnboarding') ?? false;
-            setHasSeenOnboarding(onboardingStatus);
+                const onboardingStatus = storage.getBoolean('hasSeenOnboarding') ?? false;
+                setHasSeenOnboarding(onboardingStatus);
 
-            if (onboardingStatus) {
-                const authStatus = await checkInitialAuth();
-                setIsAuthenticated(authStatus);
+                // Check authentication status *after* onboarding status is known
+                if (onboardingStatus) {
+                    const authStatus = await checkInitialAuth();
+                    setIsAuthenticated(authStatus); 
+                } else {
+                    setIsAuthenticated(false); 
+                }
+
+                if (fontsLoaded) {
+                    setIsAppReady(true);
+                }
+            } catch (error) {
+                console.error("Error during app initialization:", error);
+            }
+        };
+
+        prepareApp();
+
+        const unsubscribe = checkOfflineStatus();
+        return () => unsubscribe();
+    }, [fontsLoaded]);
+
+    useEffect(() => {
+        // This effect now runs only once when all states are ready
+        if (isAppReady && hasSeenOnboarding !== null && isAuthenticated !== null) { 
+            if (!hasSeenOnboarding) {
+                router.replace('/onboard');
+            } else if (isAuthenticated) {
+                router.replace('/home');
             } else {
-                setIsAuthenticated(false);
+                router.replace('/login');
             }
-
-            if (fontsLoaded) {
-                setIsAppReady(true);
-            }
-        } catch (error) {
-            console.error("Error during app initialization:", error);
         }
-    };
+    }, [isAppReady, hasSeenOnboarding, isAuthenticated, router]); // Add router to dependency array
 
-    prepareApp();
-
-    const unsubscribe = checkOfflineStatus();
-    return () => unsubscribe();
-}, [fontsLoaded]);
-
-useEffect(() => {
-    if (isAppReady && hasSeenOnboarding !== null && isAuthenticated !== null) {
-        // Navigate to the appropriate screen
-        if (!hasSeenOnboarding) {
-            router.replace('/onboard');
-        } else if (isAuthenticated) {
-            router.replace('/home');
-        } else {
-            router.replace('/login');
-        }
+    if (!isAppReady || isAuthenticated === null || hasSeenOnboarding === null) {
+        return null; 
     }
-}, [isAppReady, hasSeenOnboarding, isAuthenticated]);
 
-if (!isAppReady || isAuthenticated === null || hasSeenOnboarding === null) {
-    return null;
-}
-
-return (
-    <Provider store={store}>
-        <GestureHandlerRootView onLayout={onLayoutRootView}>
-            <PaperProvider>
-                <LocaleProvider>
-                    <ThemeProvider>
-                        <Stack
-                            screenOptions={{
-                                headerShown: false,
-                                animation: 'ios',
-                            }}
-                        >
-                            <Stack.Screen
-                                name="(public)"
-                            />
-                            <Stack.Screen
-                                name="(auth)"
-                                options={{
-                                  animation: 'none',
-                                }}
-                            />
-                            <Stack.Screen
-                                name="+not-found"
-                            />
-                            <Stack.Screen
-                                name="onboard"
-                            />
-                        </Stack>
-                    </ThemeProvider>
-                </LocaleProvider>
-            </PaperProvider>
-        </GestureHandlerRootView>
-    </Provider>
-);
+    return (
+        <Provider store={store}>
+            <GestureHandlerRootView>
+                <PaperProvider>
+                    <LocaleProvider>
+                        <ThemeProvider>
+                            <View style={styles.root} onLayout={onLayoutRootView}>
+                                <Stack
+                                    screenOptions={{
+                                        headerShown: false,
+                                        animation: 'ios',
+                                    }}
+                                >
+                                    <Stack.Screen
+                                        name="(public)"
+                                    />
+                                    <Stack.Screen
+                                        name="(auth)"
+                                        options={{
+                                            animation: 'none',
+                                        }}
+                                    />
+                                    <Stack.Screen
+                                        name="+not-found"
+                                    />
+                                    <Stack.Screen
+                                        name="onboard"
+                                    />
+                                </Stack>
+                            </View>
+                        </ThemeProvider>
+                    </LocaleProvider>
+                </PaperProvider>
+            </GestureHandlerRootView>
+        </Provider>
+    );
 }
 
 const { width, height } = Dimensions.get('window');
@@ -131,19 +129,5 @@ const styles = StyleSheet.create({
     root: {
         flex: 1,
         backgroundColor: '#FFF5E1',
-    },
-    loadingContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#FFF5E1',
-    },
-    orangeLogo: {
-        height: height * 0.15,
-        width: width * 0.28,
-    },
-    activityIndicator: {
-        position: 'absolute',
-        bottom: 85,
     },
 });

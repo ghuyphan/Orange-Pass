@@ -3,6 +3,7 @@ import { throttle } from 'lodash';
 import WifiManager from 'react-native-wifi-reborn';
 import { t } from '@/i18n';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { MaterialIcons } from '@expo/vector-icons';
 
 interface Pattern {
   pattern: RegExp;
@@ -10,13 +11,13 @@ interface Pattern {
 }
 
 // Define the type for Ionicons glyphs (icon names)
-type IoniconsIconName = keyof typeof Ionicons.glyphMap;
+type MaterialIconsIconName = keyof typeof MaterialIcons.glyphMap;
 
 interface UseHandleCodeScannedProps {
   isConnecting: boolean;
   quickScan?: boolean;
   setCodeType: (type: string) => void;
-  setIconName: (name: IoniconsIconName) => void;
+  setIconName: (name: MaterialIconsIconName) => void;
   setCodeValue: (value: string) => void;
   setIsConnecting: (connecting: boolean) => void;
 }
@@ -76,7 +77,7 @@ const useHandleCodeScanned = ({
           handler: () => {
             const url = codeMetadata.replace(/^https?:\/\//, '');
             setCodeType('URL');
-            setIconName('compass'); // Ionicons icon name
+            setIconName('explore'); // Ionicons icon name
             setCodeValue(`${t('scanScreen.goto')} "${url}"`);
           },
         },

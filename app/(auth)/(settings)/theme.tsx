@@ -23,7 +23,6 @@ import { Ionicons } from '@expo/vector-icons';
 import DARK from '@/assets/svgs/dark.svg';
 import LIGHT from '@/assets/svgs/light.svg';
 import { useTheme } from '@/context/ThemeContext';
-import { ThemedStatusToast } from '@/components/toast/ThemedOfflineToast';
 import { throttle } from 'lodash';
 import { ThemedToast } from '@/components/toast/ThemedToast';
 
@@ -59,19 +58,22 @@ const ThemeScreen: React.FC = () => {
         router.back();
     }, []);
 
-    const handleThemeChange = useCallback((theme: string) => {
-        if (theme === 'dark') {
-            setDarkMode(true);
-        } else if (theme === 'light') {
-            setDarkMode(false);
-        } else {
-            useSystemTheme();
-            setIsToastVisible(true);
-            setTimeout(() => {
-                setIsToastVisible(false);
-            }, 2000)
-        }
-    }, [setDarkMode, useSystemTheme]);
+    const handleThemeChange = useCallback(
+        throttle((theme: string) => {
+            if (theme === 'dark') {
+                setDarkMode(true);
+            } else if (theme === 'light') {
+                setDarkMode(false);
+            } else {
+                useSystemTheme();
+                setIsToastVisible(true);
+                setTimeout(() => {
+                    setIsToastVisible(false);
+                }, 2000);
+            }
+        }, 300), // Adjust the delay (in milliseconds) as needed
+        [setDarkMode, useSystemTheme]
+    );
 
     return (
         <ThemedView style={styles.container}>
