@@ -7,15 +7,15 @@ export const Colors = {
     background: '#FAFAFA', // Pure white for background
     tint: tintColorLight,
     icon: '#FFB74D', // Soft orange for icons
-    inputBackground: '#F5EFE4', // Light beige for input background
+    inputBackground: '#fcf3ed', // Light beige for input background
     placeHolder: '#9E9E9E', // Gray for placeholders
     tabIconDefault: '#BDBDBD', // Light gray for unselected tab icons
     tabIconSelected: tintColorLight,
     error: '#E53935', // Bright red for clear error notifications
     toastBackground: '#EADFD7', // Light orange for toast notifications
-    buttonBackground: '#D3B8A3', // Soft orange for button backgrounds
+    buttonBackground: '#e8dcd3', // Soft orange for button backgrounds
     buttonHighlight: '#FFECB3', // Brighter to highlight on hover
-    cardBackground: '#F5EFE4', // Light beige for card background
+    cardBackground: '#fcf3ed', // Light beige for card background
     cardFooter: '#EADFD7', // Bright orange for card footer
     logoIcon: '#FF8A65', // Dark orange for logos
   },
@@ -30,7 +30,7 @@ export const Colors = {
     tabIconSelected: tintColorDark,
     error: '#EF5350', // Bright red for error notifications
     toastBackground: '#322C28', // Dark brown for toast notifications
-    buttonBackground: '#6B5A4E', // Dark brown for button backgrounds
+    buttonBackground: '#4E3B32', // Dark brown for button backgrounds
     buttonHighlight: '#8D6E63', // Brighter for hover effect
     cardBackground: '#322C28', // Dark gray for card background
     cardFooter: '#4E3B32', // Soft brown for card footer

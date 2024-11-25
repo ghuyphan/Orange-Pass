@@ -36,7 +36,7 @@ export const ThemedPinnedCard = memo(function ThemedPinnedCard({
   style,
 }: ThemedPinnedCardProps): JSX.Element {
   // const colorScheme = useColorScheme();
-  const {currentTheme} = useTheme();
+  const { currentTheme } = useTheme();
   // const colors = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
   const colors = currentTheme === 'light' ? Colors.light.text : Colors.dark.text;
   const { width } = useWindowDimensions();
@@ -63,14 +63,6 @@ export const ThemedPinnedCard = memo(function ThemedPinnedCard({
     return () => task.cancel();
   }, []);
 
-  // Memoize styles to avoid inline style objects causing re-renders
-  // const backgroundColorStyle = useMemo(
-  //   () => ({
-  //     backgroundColor: currentTheme === 'light' ? color.light : color.dark,
-  //   }),
-  //   [currentTheme, color.light, color.dark]
-  // );
-
   const underlayColor = useMemo(() => (currentTheme === 'light' ? color.dark : color.light), [
     currentTheme,
     color.light,
@@ -78,81 +70,70 @@ export const ThemedPinnedCard = memo(function ThemedPinnedCard({
   ]);
 
   return (
-    <TouchableHighlight
-      onLongPress={onItemLongPress}
-      style={[styles.touchableHighlight, style]}
-      underlayColor={underlayColor}
+    <LinearGradient
+      colors={
+        currentTheme === 'light'
+          ? [color?.light || '#ffffff', returnMidpointColor(color.light, accent_color.light) || '#cccccc', accent_color?.light || '#f0f0f0']
+          : [color?.dark || '#000000', returnMidpointColor(color.dark, accent_color.dark) || '#505050', accent_color?.dark || '#303030']
+      }
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={[styles.itemContainer, style]}
     >
-      {/* <ThemedView style={[styles.itemContainer, backgroundColorStyle]}> */}
-          <LinearGradient
-            colors={
-              currentTheme === 'light'
-                ? [color?.light || '#ffffff', returnMidpointColor(color.light, accent_color.light) || '#cccccc', accent_color?.light || '#f0f0f0']
-                : [color?.dark || '#000000', returnMidpointColor(color.dark, accent_color.dark) || '#505050', accent_color?.dark || '#303030']
-            }
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.itemContainer}
-          >
-        <View style={styles.headerContainer}>
-          <View style={styles.leftHeaderContainer}>
-            <View style={styles.iconContainer}>
-              <Image source={iconPath} style={styles.icon} resizeMode="contain" />
-            </View>
-            <View style={styles.labelContainer}>
-              <ThemedText type="defaultSemiBold" style={styles.companyName}>
-                {name}
-              </ThemedText>
-            </View>
+      <View style={styles.headerContainer}>
+        <View style={styles.leftHeaderContainer}>
+          <View style={styles.iconContainer}>
+            <Image source={iconPath} style={styles.icon} resizeMode="contain" />
+          </View>
+          <View style={styles.labelContainer}>
+            <ThemedText type="defaultSemiBold" style={styles.companyName}>
+              {name}
+            </ThemedText>
           </View>
         </View>
+      </View>
 
-        <View style={styles.qrContainer}>
-          {shouldRenderCode && (
-            <View style={styles.qr}>
-              {metadata_type === 'qr' ? (
-                <QRCode
-                  value={metadata}
-                  size={qrSize}
-                  logo={iconPath}
-                  logoSize={qrSize * 0.2} // Adjust logo size relative to the QR code size
-                  logoBackgroundColor="white"
-                  logoBorderRadius={50}
-                  logoMargin={5}
-                  quietZone={3}
-                />
-              ) : (
-                <Barcode height={barcodeHeight} maxWidth={barcodeWidth} value={metadata} format="CODE128" />
-              )}
-            </View>
-          )}
-          {type === 'bank' ? (
-            <View style={[styles.infoContainer, styles.infoContainerWithMarginTop]}>
-              <ThemedText type='defaultSemiBold' style={styles.accountName} numberOfLines={1}>
-                {accountName}
-              </ThemedText>
-              <ThemedText style={styles.accountNumber} numberOfLines={1}>
-                {accountNumber}
-              </ThemedText>
-            </View>
-          ) :
-            <View style={[styles.infoContainer, styles.infoContainerWithMarginTop]}>
-              <ThemedText style={styles.memberID} numberOfLines={2}>
-                {metadata}
-              </ThemedText>
-            </View>
-          }
-        </View>
-        {/* </ThemedView> */}
-      </LinearGradient>
-    </TouchableHighlight>
+      <View style={styles.qrContainer}>
+        {shouldRenderCode && (
+          <View style={styles.qr}>
+            {metadata_type === 'qr' ? (
+              <QRCode
+                value={metadata}
+                size={qrSize}
+                logo={iconPath}
+                logoSize={qrSize * 0.2} // Adjust logo size relative to the QR code size
+                logoBackgroundColor="white"
+                logoBorderRadius={50}
+                logoMargin={5}
+                quietZone={3}
+              />
+            ) : (
+              <Barcode height={barcodeHeight} maxWidth={barcodeWidth} value={metadata} format="CODE128" />
+            )}
+          </View>
+        )}
+        {type === 'bank' ? (
+          <View style={[styles.infoContainer, styles.infoContainerWithMarginTop]}>
+            <ThemedText type='defaultSemiBold' style={styles.accountName} numberOfLines={1}>
+              {accountName}
+            </ThemedText>
+            <ThemedText style={styles.accountNumber} numberOfLines={1}>
+              {accountNumber}
+            </ThemedText>
+          </View>
+        ) :
+          <View style={[styles.infoContainer, styles.infoContainerWithMarginTop]}>
+            <ThemedText style={styles.memberID} numberOfLines={2}>
+              {metadata}
+            </ThemedText>
+          </View>
+        }
+      </View>
+    </LinearGradient>
   );
 });
 
 const styles = StyleSheet.create({
-  touchableHighlight: {
-    borderRadius: 15,
-  },
   itemContainer: {
     borderRadius: 10,
     paddingHorizontal: 15,

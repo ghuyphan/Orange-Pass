@@ -7,7 +7,6 @@ import { ThemedView } from '@/components/ThemedView';
 export default function HomeLayout() {
 
   return (
-    <ThemedView style={styles.container}>
       <Stack
         screenOptions={{
           headerShown: false,
@@ -20,7 +19,6 @@ export default function HomeLayout() {
         <Stack.Screen name="(scan)"/>
         <Stack.Screen name="empty"/>
       </Stack>
-    </ThemedView>
   );
 }
 

@@ -226,7 +226,7 @@ function HomeScreen() {
   const searchContainerStyle = useAnimatedStyle(() => {
     return {
       paddingHorizontal: 15,
-      height: isSearching ? withTiming(40, { duration: 250, easing: Easing.out(Easing.ease) }) : withTiming(0, { duration: 250, easing: Easing.out(Easing.ease) }),
+      height: isSearching ? withTiming(50, { duration: 250, easing: Easing.out(Easing.ease) }) : withTiming(0, { duration: 250, easing: Easing.out(Easing.ease) }),
       opacity: withTiming(isSearching ? 1 : 0, { duration: 250, easing: Easing.out(Easing.ease) }),
       transform: [{ translateY: withTiming(isSearching ? 0 : -20, { duration: 250, easing: Easing.out(Easing.quad) }) }],
       overflow: 'hidden',
@@ -448,7 +448,9 @@ function HomeScreen() {
                 iconName="search"
                 style={styles.titleButton}
                 onPress={() => {
+                  if (isLoading) return;
                   setIsSearching(!isSearching);
+                  scrollToTop();
                 }}
               />
 
@@ -496,8 +498,7 @@ function HomeScreen() {
           ref={flatListRef}
           ListHeaderComponent={
             <Animated.View style={[listHeaderStyle, { marginBottom: 25 }]}>
-              <Animated.View style={[searchContainerStyle]} 
-              onLayout={() => {isSearching && inputRef.current?.focus()}}
+              <Animated.View style={[searchContainerStyle]}
               >
                 <ThemedIconInput
                   style={styles.searchInput}
@@ -574,7 +575,7 @@ function HomeScreen() {
         title={t('homeScreen.confirmDeleteTitle')}
         message={t('homeScreen.confirmDeleteMessage')}
         isVisible={isModalVisible}
-        iconName="delete"
+        iconName="delete-outline"
       />
     </ThemedView>
   );
@@ -621,8 +622,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 15,
   },
   searchInput: {
-    paddingVertical: 0,
-    borderRadius: 50,
+    borderRadius: 15,
   },
   listContainer: {
     paddingTop: STATUSBAR_HEIGHT + 105,

@@ -20,6 +20,7 @@ export type ThemedIconInputProps = {
     rightIconName?: keyof typeof MaterialIcons.glyphMap;
     onRightIconPress?: () => void;
     onSubmitEditing?: () => void;
+    onLayout?: () => void;
 };
 
 export const ThemedIconInput = forwardRef<TextInput, ThemedIconInputProps>(({
@@ -35,7 +36,8 @@ export const ThemedIconInput = forwardRef<TextInput, ThemedIconInputProps>(({
     onFocus = () => { },
     rightIconName,
     onRightIconPress,
-    onSubmitEditing
+    onSubmitEditing,
+    onLayout,
 }, ref) => {
     const { currentTheme } = useTheme();
     const color = currentTheme === 'light' ? Colors.light.text : Colors.dark.text;
@@ -77,6 +79,7 @@ export const ThemedIconInput = forwardRef<TextInput, ThemedIconInputProps>(({
                         aria-label={placeholder}
                         onSubmitEditing={onSubmitEditing}
                         pointerEvents={pointerEvents}
+                        onLayout={onLayout}
                     />
                 </View>
                 <View style={styles.rightContainer}>

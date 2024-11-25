@@ -91,7 +91,7 @@
     "fetchError": "Đã xảy ra sự cố trong quá trình lấy dữ liệu.",
     "filters": {
       "all": "Tất cả",
-      "bank": "Tài khoản ngân hàng",
+      "bank": "Ngân hàng",
       "store": "Thẻ thành viên",
       "ewallet": "Ví điện tử"
     },

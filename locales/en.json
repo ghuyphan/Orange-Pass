@@ -90,9 +90,9 @@
     "moveToTrash": "Move to trash",
     "filters": {
       "all": "All",
-      "bank": "Bank Accounts",
-      "store": "Loyalty Cards",
-      "ewallet": "Digital Wallets"
+      "bank": "Bank",
+      "store": "Loyalty",
+      "ewallet": "Wallets"
     },
     "emptyCard": {
       "header": "Your QR Codes\nAll in one place",

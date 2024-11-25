@@ -22,7 +22,7 @@ export function ThemedFilterSkeleton({ show = true }) {
       <Skeleton.Group show={show}>
         {Array.from({ length: 4 }).map((_, index) => (
           <View key={index} style={styles.filterButton}>
-            <Skeleton colors={colorsArray} width={100} height={30} radius={50} />
+            <Skeleton colors={colorsArray} width={100} height={40} radius={15} />
           </View>
         ))}
       </Skeleton.Group>
