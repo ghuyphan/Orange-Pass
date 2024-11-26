@@ -1,11 +1,33 @@
-import { ScrollView, StyleProp, ViewStyle, StyleSheet, View, Pressable } from 'react-native';
-import React, { useMemo, useCallback } from 'react';
-import { t } from '@/i18n';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+    FlatList,
+    StyleProp,
+    ViewStyle,
+    StyleSheet,
+    View,
+    Pressable,
+    Platform,
+    UIManager,
+    LayoutAnimation,
+} from 'react-native';
+import { t } from '@/i18n'; // Translation function
 import { ThemedText } from './ThemedText';
 import { useLocale } from '@/context/LocaleContext';
 import { useTheme } from '@/context/ThemeContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
+import Animated, {
+    useAnimatedStyle,
+    withTiming,
+    Easing,
+} from 'react-native-reanimated';
+
+// Enable LayoutAnimation for Android
+if (
+    Platform.OS === "android" &&
+    UIManager.setLayoutAnimationEnabledExperimental
+) {
+    UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 type ThemedFilterProps = {
     selectedFilter: string;
@@ -13,84 +35,173 @@ type ThemedFilterProps = {
     style?: StyleProp<ViewStyle>;
 };
 
-const filters = [
-    { key: 'all', label: t('homeScreen.filters.all'), iconName: 'filter' },
-    { key: 'bank', label: t('homeScreen.filters.bank'), iconName: 'bank' },
-    { key: 'ewallet', label: t('homeScreen.filters.ewallet'), iconName: 'wallet' },
-    { key: 'store', label: t('homeScreen.filters.store'), iconName: 'store' },
-];
+interface FilterItemType {
+    key: string;
+    label: string;
+    iconName: string;
+}
 
-const ThemedFilter = React.memo(({ selectedFilter, onFilterChange, style }: ThemedFilterProps) => {
+const FilterItem = React.memo(
+    ({
+        item,
+        isSelected,
+        isDarkMode,
+        handlePress,
+    }: {
+        item: FilterItemType;
+        isSelected: boolean;
+        isDarkMode: boolean;
+        handlePress: (filterKey: string) => void;
+    }) => {
+        const animatedStyle = useAnimatedStyle(() => ({
+            opacity: withTiming(isSelected ? 1 : 0, {
+                duration: 100,
+                easing: Easing.out(Easing.ease),
+            }),
+            transform: [
+                {
+                    translateX: withTiming(isSelected ? 0 : -10, {
+                        duration: 100,
+                        easing: Easing.out(Easing.ease),
+                    }),
+                },
+            ],
+        }));
+
+        return (
+            <Pressable
+                onPress={() => {
+                    handlePress(item.key);
+                }}
+                style={({ pressed }) => [
+                    styles.filterButton,
+                    isDarkMode
+                        ? styles.darkModeButton
+                        : styles.lightModeButton,
+                    isSelected &&
+                    (isDarkMode
+                        ? styles.selectedFilterDarkMode
+                        : styles.selectedFilterLightMode),
+                    pressed && { opacity: 0.7 },
+                ]}
+                android_ripple={{
+                    color: 'rgba(255, 255, 255, 0.3)',
+                    borderless: false,
+                }}
+            >
+                <View style={[styles.animatedView, isSelected ? { gap: 5 } : { gap: 0 }]}>
+                    <MaterialCommunityIcons
+                        name={
+                            isSelected
+                                ? item.iconName
+                                : `${item.iconName}-outline`
+                        }
+                        size={18}
+                        color={
+                            isSelected
+                                ? isDarkMode
+                                    ? '#5A4639'
+                                    : '#FFFFFF'
+                                : isDarkMode
+                                    ? '#FFFFFF'
+                                    : '#5A4639'
+                        }
+                    />
+                    {isSelected && (
+                        <Animated.View style={animatedStyle}>
+                            <ThemedText
+                                style={[
+                                    styles.baseTextStyle,
+                                    isSelected &&
+                                    (isDarkMode
+                                        ? styles.selectedFilterTextDarkMode
+                                        : styles.selectedFilterTextLightMode),
+                                ]}
+                            >
+                                {item.label}
+                            </ThemedText>
+                        </Animated.View>
+                    )}
+                </View>
+            </Pressable>
+        );
+    },
+    (prevProps, nextProps) =>
+        prevProps.item.key === nextProps.item.key &&
+        prevProps.isSelected === nextProps.isSelected &&
+        prevProps.isDarkMode === nextProps.isDarkMode &&
+        prevProps.item.label === nextProps.item.label
+);
+
+const ThemedFilter = ({ selectedFilter, onFilterChange, style }: ThemedFilterProps) => {
     const { locale } = useLocale();
     const { currentTheme } = useTheme();
     const isDarkMode = currentTheme === 'dark';
 
-    const handlePress = useCallback((filterKey: string) => onFilterChange(filterKey), [onFilterChange]);
+    // State to force re-render and update translations
+    const [filterKey, setFilterKey] = useState(0);
+
+    // Add an effect to update filterKey when locale changes
+    useEffect(() => {
+        setFilterKey(prev => prev + 1);
+    }, [locale]);
+
+    // Generate filters with fresh translations each render
+    const filters: FilterItemType[] = [
+        { 
+            key: 'all', 
+            label: t('homeScreen.filters.all'), 
+            iconName: 'view-grid' 
+        },
+        { 
+            key: 'bank', 
+            label: t('homeScreen.filters.bank'), 
+            iconName: 'bank' 
+        },
+        { 
+            key: 'ewallet', 
+            label: t('homeScreen.filters.ewallet'), 
+            iconName: 'wallet' 
+        },
+        { 
+            key: 'store', 
+            label: t('homeScreen.filters.store'), 
+            iconName: 'store' 
+        }
+    ];
+
+    const handlePress = useCallback(
+        (filterKey: string) => {
+            LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+            onFilterChange(filterKey);
+        },
+        [onFilterChange]
+    );
+
+    const renderItem = ({ item }: { item: FilterItemType }) => (
+        <FilterItem
+            item={item}
+            key={`${locale}-${item.key}-${filterKey}`}
+            isSelected={selectedFilter === item.key}
+            isDarkMode={isDarkMode}
+            handlePress={handlePress}
+        />
+    );
 
     return (
-        <ScrollView
-            showsHorizontalScrollIndicator={false}
+        <FlatList
             horizontal
+            key={filterKey}
+            data={filters}
+            keyExtractor={(item) => `${locale}-${item.key}-${filterKey}`}
+            renderItem={renderItem}
+            extraData={[selectedFilter, locale, filterKey]}
             contentContainerStyle={[styles.filterContainer, style]}
-        >
-            {filters.map((filter) => {
-                const isSelected = selectedFilter === filter.key;
-
-                const textAnimatedStyle = useAnimatedStyle(() => ({
-                    opacity: withTiming(isSelected ? 1 : 0, { duration: 300 }),
-                    transform: [{ translateX: withTiming(isSelected ? 0 : -10, { duration: 300 }) }],
-                    marginLeft: withTiming(isSelected ? 5 : 0, { duration: 300 }),
-                }));
-
-                return (
-                    <View key={filter.key} style={styles.filterButtonContent}>
-                        <Pressable
-                            onPress={() => handlePress(filter.key)}
-                            style={({ pressed }) => [
-                                styles.filterButton,
-                                isDarkMode ? styles.darkModeButton : styles.lightModeButton,
-                                isSelected && (isDarkMode ? styles.selectedFilterDarkMode : styles.selectedFilterLightMode),
-                                pressed && { opacity: 0.7 },
-                            ]}
-                            android_ripple={{ color: 'rgba(255, 255, 255, 0.3)', borderless: false }}
-                        >
-                            <Animated.View style={styles.animatedView}>
-                                <MaterialCommunityIcons
-                                    name={isSelected ? filter.iconName : `${filter.iconName}-outline`}
-                                    size={18}
-                                    color={
-                                        isSelected
-                                            ? isDarkMode
-                                                ? '#5A4639'
-                                                : '#FFFFFF'
-                                            : isDarkMode
-                                            ? '#FFFFFF'
-                                            : '#5A4639'
-                                    }
-                                />
-                                <Animated.View style={textAnimatedStyle}>
-                                    {isSelected && (
-                                        <ThemedText
-                                            style={[
-                                                styles.baseTextStyle,
-                                                isSelected &&
-                                                    (isDarkMode
-                                                        ? styles.selectedFilterTextDarkMode
-                                                        : styles.selectedFilterTextLightMode),
-                                            ]}
-                                        >
-                                            {filter.label}
-                                        </ThemedText>
-                                    )}
-                                </Animated.View>
-                            </Animated.View>
-                        </Pressable>
-                    </View>
-                );
-            })}
-        </ScrollView>
+            showsHorizontalScrollIndicator={false}
+        />
     );
-});
+};
+
 const styles = StyleSheet.create({
     filterContainer: {
         flexDirection: 'row',
@@ -131,16 +242,16 @@ const styles = StyleSheet.create({
     filterButtonContent: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-around',
+        justifyContent: 'flex-start',
         overflow: 'hidden',
         borderRadius: 15,
+        flex: 1,
     },
- animatedView: {
+    animatedView: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        // Add padding to accommodate the text
-        paddingHorizontal: 10, 
+        paddingHorizontal: 10,
     },
 });
 

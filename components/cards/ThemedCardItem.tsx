@@ -130,9 +130,11 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
                     <ThemedText type="defaultSemiBold" style={styles.companyName}>
                       {name}
                     </ThemedText>
-                    <ThemedText style={styles.companyFullName} numberOfLines={1} ellipsizeMode="tail">
+                    {type === 'bank' && (
+                      <ThemedText style={styles.companyFullName} numberOfLines={1} ellipsizeMode="tail">
                       {accountDisplayName}
                     </ThemedText>
+                    )}
                   </View>
                 </View>
               </View>

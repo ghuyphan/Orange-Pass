@@ -226,7 +226,7 @@ function HomeScreen() {
   const searchContainerStyle = useAnimatedStyle(() => {
     return {
       paddingHorizontal: 15,
-      height: isSearching ? withTiming(50, { duration: 250, easing: Easing.out(Easing.ease) }) : withTiming(0, { duration: 250, easing: Easing.out(Easing.ease) }),
+      height: isSearching ? withTiming(40, { duration: 250, easing: Easing.out(Easing.ease) }) : withTiming(0, { duration: 250, easing: Easing.out(Easing.ease) }),
       opacity: withTiming(isSearching ? 1 : 0, { duration: 250, easing: Easing.out(Easing.ease) }),
       transform: [{ translateY: withTiming(isSearching ? 0 : -20, { duration: 250, easing: Easing.out(Easing.quad) }) }],
       overflow: 'hidden',
@@ -427,11 +427,11 @@ function HomeScreen() {
     } else {
       switch (qrData.length) {
         case 1:
-          return screenHeight * 0.68;
+          return screenHeight * 0.73;
         case 2:
-          return screenHeight * 0.4;
+          return screenHeight * 0.43;
         case 3:
-          return screenHeight * 0.2;
+          return screenHeight * 0.23;
       }
     }
   }, [qrData.length, screenHeight]);
@@ -539,6 +539,8 @@ function HomeScreen() {
             scrollY.value = offset;
           }}
           decelerationRate={'fast'}
+          onRefresh={() => console.log('refresh')}
+
         />
       )}
       <Animated.View style={scrollContainerStyle}>
@@ -576,6 +578,7 @@ function HomeScreen() {
         message={t('homeScreen.confirmDeleteMessage')}
         isVisible={isModalVisible}
         iconName="delete-outline"
+        
       />
     </ThemedView>
   );
@@ -623,6 +626,7 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     borderRadius: 15,
+    paddingVertical: 0,
   },
   listContainer: {
     paddingTop: STATUSBAR_HEIGHT + 105,

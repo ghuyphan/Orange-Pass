@@ -1,5 +1,4 @@
 import enDatas from '@/assets/enDatas.json';
-import viDatas from '@/assets/viDatas.json';
 import colorConfig from '@/assets/color-config.json';
 
 // Define types
@@ -16,7 +15,7 @@ type ItemType = {
     full_name: string;
     normalized_name: string;
     normalized_full_name: string;
-    number_code?: string; 
+    number_code?: string;
     color: { light: string; dark: string };
     accent_color: { light: string; dark: string };
 };
@@ -25,119 +24,88 @@ type ItemType = {
 const colorConfigTyped = colorConfig as ColorConfigType;
 
 // Helper function to normalize text
-function normalizeText(text: string): string {
-    return text
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .toLowerCase();
-}
+const normalizeText = (text: string): string => text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
 
-// Caches
-let cachedLanguageCode: string | null = null;
-let cachedDataByCode: { [type: string]: { [code: string]: ItemType } } = {};
-let searchIndex: { [type: string]: { [normalizedTerm: string]: Set<string> } } = {};
+// Create a map to store data by code and type
+const dataByCode: { [type: string]: { [code: string]: ItemType } } = {};
+
+// Create a map to store search indices by type
+const searchIndex: { [type: string]: Map<string, Set<string>> } = {};
 
 // Initialize data and build indices
-function initializeData(locale: string | null = null) {
-    if (locale !== cachedLanguageCode) {
-        cachedLanguageCode = locale;
-        const data: { [key: string]: any[] } = locale === 'en' ? enDatas : viDatas;
+const initializeData = () => {
+    for (const type of ['bank', 'store']) {
+        const items = enDatas[type];
+        if (!items) continue;
 
-        cachedDataByCode = {};
-        searchIndex = {};
-        const types = ['bank', 'store']; 
+        dataByCode[type] = {};
+        searchIndex[type] = new Map();
 
-        types.forEach((type) => {
-            if (data[type]) {
-                const itemsArray = data[type];
-                const itemsByCode: { [code: string]: ItemType } = {};
-                const typeSearchIndex: { [normalizedTerm: string]: Set<string> } = {};
+        for (const item of items) {
+            const { code, name, full_name } = item;
+            const normalizedName = normalizeText(name);
+            const normalizedFullName = normalizeText(full_name);
 
-                itemsArray.forEach((item: any) => {
-                    const code = item.code as string;
-                    const normalized_name = normalizeText(item.name);
-                    const normalized_full_name = normalizeText(item.full_name);
+            const colorData = colorConfigTyped[code] || { color: { light: '', dark: '' }, accent_color: { light: '', dark: '' } };
+            dataByCode[type][code] = {
+                ...item,
+                normalized_name: normalizedName,
+                normalized_full_name: normalizedFullName,
+                color: colorData.color,
+                accent_color: colorData.accent_color,
+            };
 
-                    const colorData = colorConfigTyped[code] || { color: { light: '', dark: '' }, accent_color: { light: '', dark: '' } };
-                    const processedItem: ItemType = {
-                        ...item,
-                        normalized_name,
-                        normalized_full_name,
-                        number_code: item.number_code, 
-                        color: colorData.color,
-                        accent_color: colorData.accent_color,
-                    };
-
-                    itemsByCode[code] = processedItem;
-
-                    const terms = new Set<string>([normalized_name, normalized_full_name]);
-                    terms.forEach((term) => {
-                        if (!typeSearchIndex[term]) {
-                            typeSearchIndex[term] = new Set();
-                        }
-                        typeSearchIndex[term].add(code);
-                    });
-                });
-
-                cachedDataByCode[type] = itemsByCode;
-                searchIndex[type] = typeSearchIndex;
-            } else {
-                cachedDataByCode[type] = {};
-                searchIndex[type] = {};
+            // Use a Map for efficient search indexing
+            const addTermToIndex = (term: string) => {
+                const codes = searchIndex[type].get(term) || new Set();
+                codes.add(code);
+                searchIndex[type].set(term, codes);
             }
-        });
+            addTermToIndex(normalizedName);
+            addTermToIndex(normalizedFullName);
+        }
     }
-}
+};
+
+// Initialize the data on load
+initializeData();
 
 // Function to return item data, including number_code
-export function returnItemData(code: string, type: 'bank' | 'store' | 'ewallet', locale: string | null = null) {
-    if (!cachedDataByCode[type] || locale !== cachedLanguageCode) {
-        initializeData(locale);
-    }
-
-    const item = cachedDataByCode[type][code];
-
-    if (item) {
-        return {
-            name: item.name,
-            full_name: item.full_name,
-            number_code: item.number_code || '', 
-            color: item.color,
-            accent_color: item.accent_color,
-        };
-    } else {
-        return {
-            name: '',
-            full_name: '',
-            number_code: '',
-            color: { light: '', dark: '' },
-            accent_color: { light: '', dark: '' },
-        };
-    }
-}
+export const returnItemData = (code: string, type: 'bank' | 'store' | 'ewallet'): ItemType => {
+    const item = dataByCode[type]?.[code];
+    return item || {
+        name: '',
+        full_name: '',
+        number_code: '',
+        color: { light: '', dark: '' },
+        accent_color: { light: '', dark: '' },
+    };
+};
 
 // Function to return matching codes for a search term
-export function returnItemCode(searchTerm: string, type?: 'bank' | 'store' | 'ewallet', locale: string | null = null): string[] {
-    if (!searchIndex || locale !== cachedLanguageCode) {
-        initializeData(locale);
-    }
-
-    const types = type ? [type] : ['bank', 'store']; 
+export const returnItemCode = (searchTerm: string, type?: 'bank' | 'store' | 'ewallet'): string[] => {
     const normalizedSearchTerm = normalizeText(searchTerm);
-    const matchingCodesSet = new Set<string>();
+    const matchingCodes = new Set<string>();
 
-    types.forEach((t) => {
+    for (const t of type ? [type] : ['bank', 'store']) {
         const typeSearchIndex = searchIndex[t];
-        if (typeSearchIndex[normalizedSearchTerm]) {
-            typeSearchIndex[normalizedSearchTerm].forEach((code) => matchingCodesSet.add(code));
+        if (!typeSearchIndex) continue;
+
+        // Directly check if the term exists in the index Map
+        if (typeSearchIndex.has(normalizedSearchTerm)) {
+            typeSearchIndex.get(normalizedSearchTerm)?.forEach(code => matchingCodes.add(code));
         } else {
-            for (const term in typeSearchIndex) {
+            // Iterate over the Map keys for partial matches
+            for (const term of typeSearchIndex.keys()) {
                 if (term.includes(normalizedSearchTerm)) {
-                    typeSearchIndex[term].forEach((code) => matchingCodesSet.add(code));
+                    typeSearchIndex.get(term)?.forEach(code => matchingCodes.add(code));
                 }
             }
         }
-    });
+    }
 
-    return Array.from(matchingCodesSet);
-}
+    return Array.from(matchingCodes);
+};
