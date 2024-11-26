@@ -70,7 +70,7 @@ const ThemedBottomSheet = React.memo(forwardRef<BottomSheet, ThemedBottomSheetPr
                             appearsOnIndex={0}
                             disappearsOnIndex={-1}
                             style={styles.backdrop}
-                            onPress={() => bottomSheetRef.current?.close()}
+                            onPress={() => bottomSheetRef.current?.snapToIndex(-1)}
                         />
                     )}
                 >

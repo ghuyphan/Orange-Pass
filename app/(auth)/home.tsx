@@ -216,6 +216,18 @@ function HomeScreen() {
     }
   }, [isEmpty]);
 
+  useEffect(() => {
+    if (isSearching) {
+      // Use a small timeout to ensure the input is rendered
+      const focusTimeout = setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100); // Small delay to allow rendering
+  
+      // Clean up the timeout
+      return () => clearTimeout(focusTimeout);
+    }
+  }, [isSearching]);
+
   const animateEmptyCard = () => {
     emptyCardOffset.value = withSpring(0, {
       damping: 30,
@@ -312,10 +324,10 @@ function HomeScreen() {
   }, []);
 
   const onDragEnd = useCallback(async ({ data }: { data: QRRecord[] }) => {
+    triggerHapticFeedback();
 
     try {
       // Check if the order has changed
-      triggerHapticFeedback();
       const isOrderChanged =
         data.length !== qrData.length ||
         data.some((item, index) => item.id !== qrData[index].id);
@@ -451,9 +463,9 @@ function HomeScreen() {
                   if (isLoading) return;
                   setIsSearching(!isSearching);
                   scrollToTop();
+                  
                 }}
               />
-
             )}
 
             <ThemedButton

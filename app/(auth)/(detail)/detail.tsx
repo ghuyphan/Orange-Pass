@@ -32,12 +32,12 @@ const formatAmount = (amount: string) => {
 
 export default function DetailScreen() {
     const { locale } = useLocale();
-    
+
     const { item: encodedItem } = useLocalSearchParams();
-    
+
     const bottomSheetRef = useRef<BottomSheet>(null);
     const router = useRouter();
-    const {currentTheme} = useTheme();
+    const { currentTheme } = useTheme();
     // const colorScheme = useColorScheme();
     const [amount, setAmount] = useState(''); // State to hold the amount of money
     const [isKeyboardVisible, setKeyboardVisible] = useState(false);
@@ -51,19 +51,17 @@ export default function DetailScreen() {
     useUnmountBrightness(0.8, false);
 
     useEffect(() => {
-        InteractionManager.runAfterInteractions(() => {
-            const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
-                setKeyboardVisible(true);
-            });
-            const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
-                setKeyboardVisible(false);
-            });
+        const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
+            setKeyboardVisible(true);
+        });
+        const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+            setKeyboardVisible(false);
+        });
 
-            return () => {
-                keyboardDidHideListener.remove();
-                keyboardDidShowListener.remove();
-            };
-        })
+        return () => {
+            keyboardDidHideListener.remove();
+            keyboardDidShowListener.remove();
+        };
     }, [isKeyboardVisible]);
 
     const item: QRRecord | null = useMemo(() => {
@@ -178,15 +176,18 @@ export default function DetailScreen() {
     ));
 
     return (
-        <KeyboardAwareScrollView
-            contentContainerStyle={styles.scrollViewContent}
-            enableOnAndroid={true}
-            extraScrollHeight={50}
-            showsVerticalScrollIndicator={false}
-            scrollEnabled={isKeyboardVisible}
-            style={{ backgroundColor: currentTheme === 'light' ? Colors.light.background : Colors.dark.background }}
-        >
-            <ThemedView style={styles.mainContainer}>
+        <>
+            <KeyboardAwareScrollView
+                keyboardShouldPersistTaps="handled"
+                style={[{ backgroundColor: currentTheme === 'light' ? Colors.light.background : Colors.dark.background }]}
+                contentContainerStyle={styles.container}
+                extraScrollHeight={80}
+                extraHeight={200}
+                enableOnAndroid={true}
+                showsVerticalScrollIndicator={false}
+                scrollEnabled={true}
+                // scrollEnabled={isKeyboardVisible}
+            >
                 <View style={styles.headerWrapper}>
                     <ThemedButton onPress={router.back} iconName="chevron-left" />
                     <ThemedButton onPress={handleExpandPress} iconName="more-vert" />
@@ -245,8 +246,8 @@ export default function DetailScreen() {
                                     />
                                     <ThemedText>đ</ThemedText>
                                     <Pressable hitSlop={{ bottom: 40, left: 30, right: 30, top: 30 }} onPress={transferAmount} style={[styles.transferButton, { opacity: amount ? 1 : 0.3 }]}>
-                                        {amount ? <MaterialIcons name="chevron-right" size={18} color={iconColor} /> : 
-                                        <MaterialIcons name="chevron-right" size={18} color={iconColor} />}
+                                        {amount ? <MaterialIcons name="chevron-right" size={18} color={iconColor} /> :
+                                            <MaterialIcons name="chevron-right" size={18} color={iconColor} />}
                                     </Pressable>
                                 </View>
                                 <FlatList
@@ -264,32 +265,34 @@ export default function DetailScreen() {
                             </Animated.View>
                         </View>
                     )}
+                    <ThemedStatusToast
+                        isSyncing={isSyncing}
+                        isVisible={isToastVisible}
+                        message={toastMessage}
+                        iconName="wifi-off"
+                        onDismiss={() => setIsToastVisible(false)}
+                        style={styles.toastContainer}
+                    />
                 </View>
-                <ThemedBottomSheet
-                    ref={bottomSheetRef}
-                    onEditPress={() => { }}
-                    editText={t('homeScreen.edit')}
-                    deleteText={t('homeScreen.delete')}
-                />
-                <ThemedStatusToast
-                    isSyncing={isSyncing}
-                    isVisible={isToastVisible}
-                    message={toastMessage}
-                    iconName="wifi-off"
-                    onDismiss={() => setIsToastVisible(false)}
-                    style={styles.toastContainer}
-                />
-            </ThemedView>
-        </KeyboardAwareScrollView>
+                {/* <ThemedBottomSheet
+                ref={bottomSheetRef}
+                onEditPress={() => { }}
+                editText={t('homeScreen.edit')}
+                deleteText={t('homeScreen.delete')}
+            /> */}
+            </KeyboardAwareScrollView>
+            
+        </>
     );
 }
 const styles = StyleSheet.create({
-    scrollViewContent: {
-        // flexGrow: 1,
-        paddingHorizontal: 15,
-        maxHeight: '130%',
+    container: {
+        flexGrow: 1,
+        marginHorizontal: 15,
+        maxHeight: '120%',
     },
     mainContainer: {
+        backgroundColor: 'red'
     },
     headerWrapper: {
         paddingTop: STATUSBAR_HEIGHT + 45,

@@ -14,6 +14,7 @@ import { LocaleProvider } from '@/context/LocaleContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { storage } from '@/utils/storage';
 import { StatusBar } from 'expo-status-bar';
+import { ThemedView } from '@/components/ThemedView';
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -92,7 +93,7 @@ export default function RootLayout() {
                 <GestureHandlerRootView>
                     <PaperProvider>
                         <LocaleProvider>
-                            <View style={styles.root} onLayout={onLayoutRootView}>
+                            <ThemedView style={styles.root} onLayout={onLayoutRootView}>
                                 <Stack
                                     screenOptions={{
                                         headerShown: false,
@@ -115,7 +116,7 @@ export default function RootLayout() {
                                         name="onboard"
                                     />
                                 </Stack>
-                            </View>
+                            </ThemedView>
                         </LocaleProvider>
                     </PaperProvider>
                 </GestureHandlerRootView>
@@ -129,6 +130,5 @@ const { width, height } = Dimensions.get('window');
 const styles = StyleSheet.create({
     root: {
         flex: 1,
-        backgroundColor: '#FFF5E1',
     },
 });

@@ -20,6 +20,7 @@ import Animated, {
     withTiming,
     Easing,
 } from 'react-native-reanimated';
+import { Colors } from '@/constants/Colors';
 
 // Enable LayoutAnimation for Android
 if (
@@ -84,10 +85,7 @@ const FilterItem = React.memo(
                         : styles.selectedFilterLightMode),
                     pressed && { opacity: 0.7 },
                 ]}
-                android_ripple={{
-                    color: 'rgba(255, 255, 255, 0.3)',
-                    borderless: false,
-                }}
+                android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
             >
                 <View style={[styles.animatedView, isSelected ? { gap: 5 } : { gap: 0 }]}>
                     <MaterialCommunityIcons
@@ -205,7 +203,7 @@ const ThemedFilter = ({ selectedFilter, onFilterChange, style }: ThemedFilterPro
 const styles = StyleSheet.create({
     filterContainer: {
         flexDirection: 'row',
-        gap: 5,
+        gap: 8,
         paddingHorizontal: 15,
     },
     filterButton: {
@@ -234,10 +232,10 @@ const styles = StyleSheet.create({
         backgroundColor: '#FFF5E1',
     },
     darkModeButton: {
-        backgroundColor: '#4E3B32',
+        backgroundColor: Colors.dark.buttonBackground
     },
     lightModeButton: {
-        backgroundColor: '#e8dcd3',
+        backgroundColor: Colors.light.buttonBackground
     },
     filterButtonContent: {
         flexDirection: 'row',
