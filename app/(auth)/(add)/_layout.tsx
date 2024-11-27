@@ -18,12 +18,12 @@ export default function AddLayout() {
       >
         <Stack.Screen name="add-new" />
       </Stack>
-      <View style={[styles.headerContainer]}>
+      {/* <View style={[styles.headerContainer]}>
         <ThemedButton
           onPress={onNavigateBack}
            iconName="chevron-left"
         />
-      </View>
+      </View> */}
     </View>
   );
 }

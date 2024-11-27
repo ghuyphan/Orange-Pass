@@ -1,111 +1,141 @@
 import enDatas from '@/assets/enDatas.json';
 import colorConfig from '@/assets/color-config.json';
 
-// Define types
-type ColorConfigType = {
-    [key: string]: {
-        color: { light: string; dark: string };
-        accent_color: { light: string; dark: string };
-    };
-};
+// Simplified type definitions with more precise typing
+interface ColorInfo {
+  color: { light: string; dark: string };
+  accent_color: { light: string; dark: string };
+}
 
-type ItemType = {
-    code: string;
-    name: string;
-    full_name: string;
-    normalized_name: string;
-    normalized_full_name: string;
-    number_code?: string;
-    color: { light: string; dark: string };
-    accent_color: { light: string; dark: string };
-};
+interface ItemType {
+  code: string;
+  name: string;
+  full_name: string;
+  normalized_name: string;
+  normalized_full_name: string;
+  number_code?: string;
+  color: { light: string; dark: string };
+  accent_color: { light: string; dark: string };
+}
 
-// Cast colorConfig to the defined type
-const colorConfigTyped = colorConfig as ColorConfigType;
+type DataType = 'bank' | 'store' | 'ewallet';
 
-// Helper function to normalize text
-const normalizeText = (text: string): string => text
+// Memoized text normalization to reduce repeated computations
+const normalizeTextCache = new Map<string, string>();
+function normalizeText(text: string): string {
+  if (normalizeTextCache.has(text)) {
+    return normalizeTextCache.get(text)!;
+  }
+  const normalized = text
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase();
+  normalizeTextCache.set(text, normalized);
+  return normalized;
+}
 
-// Create a map to store data by code and type
-const dataByCode: { [type: string]: { [code: string]: ItemType } } = {};
+// Single class to manage data and search indices
+class DataManager {
+  private dataByCode: Record<DataType, Record<string, ItemType>> = {
+    bank: {},
+    store: {},
+    ewallet: {}
+  };
+  private searchIndex: Record<DataType, Map<string, Set<string>>> = {
+    bank: new Map(),
+    store: new Map(),
+    ewallet: new Map()
+  };
 
-// Create a map to store search indices by type
-const searchIndex: { [type: string]: Map<string, Set<string>> } = {};
+  constructor() {
+    this.initializeData();
+  }
 
-// Initialize data and build indices
-const initializeData = () => {
-    for (const type of ['bank', 'store']) {
-        const items = enDatas[type];
-        if (!items) continue;
+  private initializeData(): void {
+    const dataTypes: DataType[] = ['bank', 'store', 'ewallet'];
 
-        dataByCode[type] = {};
-        searchIndex[type] = new Map();
+    for (const type of dataTypes) {
+      const items = enDatas[type];
+      if (!items) continue;
 
-        for (const item of items) {
-            const { code, name, full_name } = item;
-            const normalizedName = normalizeText(name);
-            const normalizedFullName = normalizeText(full_name);
+      for (const item of items) {
+        const { code, name, full_name } = item;
+        const normalizedName = normalizeText(name);
+        const normalizedFullName = normalizeText(full_name);
 
-            const colorData = colorConfigTyped[code] || { color: { light: '', dark: '' }, accent_color: { light: '', dark: '' } };
-            dataByCode[type][code] = {
-                ...item,
-                normalized_name: normalizedName,
-                normalized_full_name: normalizedFullName,
-                color: colorData.color,
-                accent_color: colorData.accent_color,
-            };
+        const colorData = (colorConfig as Record<string, ColorInfo>)[code] || {
+          color: { light: '', dark: '' },
+          accent_color: { light: '', dark: '' }
+        };
 
-            // Use a Map for efficient search indexing
-            const addTermToIndex = (term: string) => {
-                const codes = searchIndex[type].get(term) || new Set();
-                codes.add(code);
-                searchIndex[type].set(term, codes);
-            }
-            addTermToIndex(normalizedName);
-            addTermToIndex(normalizedFullName);
-        }
+        this.dataByCode[type][code] = {
+          ...item,
+          normalized_name: normalizedName,
+          normalized_full_name: normalizedFullName,
+          color: colorData.color,
+          accent_color: colorData.accent_color
+        };
+
+        this.addSearchTerms(type, code, normalizedName, normalizedFullName);
+      }
     }
-};
+  }
 
-// Initialize the data on load
-initializeData();
+  private addSearchTerms(type: DataType, code: string, ...terms: string[]): void {
+    for (const term of terms) {
+      const typeIndex = this.searchIndex[type];
+      const existingCodes = typeIndex.get(term) || new Set<string>();
+      existingCodes.add(code);
+      typeIndex.set(term, existingCodes);
+    }
+  }
 
-// Function to return item data, including number_code
-export const returnItemData = (code: string, type: 'bank' | 'store' | 'ewallet'): ItemType => {
-    const item = dataByCode[type]?.[code];
+  public getItemData(code: string, type: DataType): ItemType {
+    const item = this.dataByCode[type]?.[code];
     return item || {
-        name: '',
-        full_name: '',
-        number_code: '',
-        color: { light: '', dark: '' },
-        accent_color: { light: '', dark: '' },
+      code: '',
+      name: '',
+      full_name: '',
+      normalized_name: '',
+      normalized_full_name: '',
+      number_code: '',
+      color: { light: '', dark: '' },
+      accent_color: { light: '', dark: '' }
     };
-};
+  }
 
-// Function to return matching codes for a search term
-export const returnItemCode = (searchTerm: string, type?: 'bank' | 'store' | 'ewallet'): string[] => {
+  public searchItems(searchTerm: string, types?: DataType[]): string[] {
     const normalizedSearchTerm = normalizeText(searchTerm);
     const matchingCodes = new Set<string>();
+    const searchTypes = types || ['bank', 'store', 'ewallet'];
 
-    for (const t of type ? [type] : ['bank', 'store']) {
-        const typeSearchIndex = searchIndex[t];
-        if (!typeSearchIndex) continue;
+    for (const type of searchTypes) {
+      const typeSearchIndex = this.searchIndex[type];
+      if (!typeSearchIndex) continue;
 
-        // Directly check if the term exists in the index Map
-        if (typeSearchIndex.has(normalizedSearchTerm)) {
-            typeSearchIndex.get(normalizedSearchTerm)?.forEach(code => matchingCodes.add(code));
-        } else {
-            // Iterate over the Map keys for partial matches
-            for (const term of typeSearchIndex.keys()) {
-                if (term.includes(normalizedSearchTerm)) {
-                    typeSearchIndex.get(term)?.forEach(code => matchingCodes.add(code));
-                }
-            }
+      // Exact match
+      const exactMatch = typeSearchIndex.get(normalizedSearchTerm);
+      if (exactMatch) {
+        exactMatch.forEach(code => matchingCodes.add(code));
+      }
+
+      // Partial match with early break
+      for (const [term, codes] of typeSearchIndex.entries()) {
+        if (normalizedSearchTerm.length > 1 && term.includes(normalizedSearchTerm)) {
+          codes.forEach(code => matchingCodes.add(code));
         }
+      }
     }
 
     return Array.from(matchingCodes);
-};
+  }
+}
+
+// Singleton instance for global use
+const dataManager = new DataManager();
+
+export const returnItemData = (code: string, type: DataType) => 
+  dataManager.getItemData(code, type);
+
+export const returnItemCode = (searchTerm: string, type?: DataType) => 
+  dataManager.searchItems(searchTerm, type ? [type] : undefined);

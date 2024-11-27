@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
         gap: 10,
     },
     iconContainer: {
-        width: 40,
+        width: 35,
         aspectRatio: 1,
         borderRadius: 50,
         justifyContent: 'center',
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
         height: '60%',
     },
     companyName: {
-        fontSize: 18,
+        fontSize: 16,
         color: 'white',
     },
     qrContainer: {

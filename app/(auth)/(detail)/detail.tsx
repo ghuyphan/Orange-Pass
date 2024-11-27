@@ -16,7 +16,7 @@ import { ThemedText } from '@/components/ThemedText';
 import ThemedBottomSheet from '@/components/bottomsheet/ThemedBottomSheet';
 import BottomSheet from '@gorhom/bottom-sheet';
 // import Ionicons from '@expo/vector-icons/Ionicons';
-import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { returnItemData } from '@/utils/returnItemData';
 import { getVietQRData } from '@/utils/vietQR';
 import { ThemedStatusToast } from '@/components/toast/ThemedOfflineToast';
@@ -126,7 +126,7 @@ export default function DetailScreen() {
             const response = await getVietQRData(
                 item.account_number,
                 item.account_name,
-                itemName.number_code,
+                itemName.number_code as string,
                 parseInt(amount.replace(/,/g, '')),
                 'Hello'
             );
@@ -185,12 +185,11 @@ export default function DetailScreen() {
                 extraHeight={200}
                 enableOnAndroid={true}
                 showsVerticalScrollIndicator={false}
-                scrollEnabled={true}
-                // scrollEnabled={isKeyboardVisible}
+                scrollEnabled={isKeyboardVisible}
             >
                 <View style={styles.headerWrapper}>
                     <ThemedButton onPress={router.back} iconName="chevron-left" />
-                    <ThemedButton onPress={handleExpandPress} iconName="more-vert" />
+                    <ThemedButton onPress={handleExpandPress} iconName="dots-vertical" />
                 </View>
                 <ThemedPinnedCard
                     style={styles.pinnedCardWrapper}
@@ -225,12 +224,12 @@ export default function DetailScreen() {
                                 android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
                             >
                                 <View style={styles.actionButton}>
-                                    <MaterialIcons color={iconColor} name="qr-code" size={18} selectionColor={iconColor} />
+                                    <MaterialCommunityIcons color={iconColor} name="qrcode" size={18} selectionColor={iconColor} />
                                     <ThemedText style={styles.labelText}>
                                         {t('detailsScreen.createQrCode')}
                                     </ThemedText>
                                     {isOffline && (
-                                        <MaterialIcons name="wifi-off" size={18} color={iconColor} />
+                                        <MaterialCommunityIcons name="wifi-off" size={18} color={iconColor} />
                                     )}
                                 </View>
                             </Pressable>
@@ -246,8 +245,8 @@ export default function DetailScreen() {
                                     />
                                     <ThemedText>đ</ThemedText>
                                     <Pressable hitSlop={{ bottom: 40, left: 30, right: 30, top: 30 }} onPress={transferAmount} style={[styles.transferButton, { opacity: amount ? 1 : 0.3 }]}>
-                                        {amount ? <MaterialIcons name="chevron-right" size={18} color={iconColor} /> :
-                                            <MaterialIcons name="chevron-right" size={18} color={iconColor} />}
+                                        {amount ? <MaterialCommunityIcons name="chevron-right" size={18} color={iconColor} /> :
+                                            <MaterialCommunityIcons name="chevron-right" size={18} color={iconColor} />}
                                     </Pressable>
                                 </View>
                                 <FlatList
@@ -289,7 +288,7 @@ const styles = StyleSheet.create({
     container: {
         flexGrow: 1,
         marginHorizontal: 15,
-        maxHeight: '120%',
+        maxHeight: '130%',
     },
     mainContainer: {
         backgroundColor: 'red'

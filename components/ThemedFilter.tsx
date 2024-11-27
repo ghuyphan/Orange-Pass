@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import {
     FlatList,
     StyleProp,
@@ -146,31 +146,39 @@ const ThemedFilter = ({ selectedFilter, onFilterChange, style }: ThemedFilterPro
 
     // Generate filters with fresh translations each render
     const filters: FilterItemType[] = [
-        { 
-            key: 'all', 
-            label: t('homeScreen.filters.all'), 
-            iconName: 'view-grid' 
+        {
+            key: 'all',
+            label: t('homeScreen.filters.all'),
+            iconName: 'view-grid'
         },
-        { 
-            key: 'bank', 
-            label: t('homeScreen.filters.bank'), 
-            iconName: 'bank' 
+        {
+            key: 'bank',
+            label: t('homeScreen.filters.bank'),
+            iconName: 'bank'
         },
-        { 
-            key: 'ewallet', 
-            label: t('homeScreen.filters.ewallet'), 
-            iconName: 'wallet' 
+        {
+            key: 'ewallet',
+            label: t('homeScreen.filters.ewallet'),
+            iconName: 'wallet'
         },
-        { 
-            key: 'store', 
-            label: t('homeScreen.filters.store'), 
-            iconName: 'store' 
+        {
+            key: 'store',
+            label: t('homeScreen.filters.store'),
+            iconName: 'store'
         }
     ];
 
+    const customLayoutAnimation = useMemo(() =>
+        LayoutAnimation.create(
+            200, // Reduced duration
+            LayoutAnimation.Types.easeInEaseOut,
+            LayoutAnimation.Properties.opacity
+        ),
+        []);
+
     const handlePress = useCallback(
         (filterKey: string) => {
-            LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+            LayoutAnimation.configureNext(customLayoutAnimation);
             onFilterChange(filterKey);
         },
         [onFilterChange]
@@ -205,6 +213,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         gap: 8,
         paddingHorizontal: 15,
+        justifyContent: 'space-evenly',
+        // backgroundColor: 'red',
     },
     filterButton: {
         flexDirection: 'row',

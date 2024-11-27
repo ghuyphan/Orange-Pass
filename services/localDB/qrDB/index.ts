@@ -1,10 +1,8 @@
-import pb from "@/services/pocketBase"; // Assuming you have PocketBase setup
+import pb from "@/services/pocketBase";
 import { openDatabase } from '../userDB';
 import QRRecord from '@/types/qrType';
 import { returnItemCode } from '@/utils/returnItemData';
 
-
-// Function to create the "qrcodes" table with optimized indexing
 export async function createTable() {
     const db = await openDatabase();
     try {

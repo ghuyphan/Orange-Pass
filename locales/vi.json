@@ -78,7 +78,7 @@
   "homeScreen": {
     "title": "Orange⁺",
     "searchPlaceholder": "Tìm kiếm",
-    "noItemFound": "Rất tiếc, không tìm thấy kết quả nào. \nVui lòng thử lại.",
+    "noItemFound": "Không tìm thấy kết quả nào. \nVui lòng thử lại.",
     "edit": "Chỉnh sửa thẻ",
     "delete": "Chuyển vào thùng rác",
     "syncing": "Đang đồng bộ...",
@@ -92,8 +92,8 @@
     "filters": {
       "all": "Tất cả",
       "bank": "Ngân hàng",
-      "store": "Thẻ thành viên",
-      "ewallet": "Ví điện tử"
+      "store": "Thành viên",
+      "ewallet": "Ví tiền"
     },
     "emptyCard": {
       "header": "Mã QR của bạn\nTất cả tại một nơi",

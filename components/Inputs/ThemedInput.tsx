@@ -156,6 +156,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
         height: 30,
         flex: 1,  // Allows the input to take available space but not overlap the button
+        marginRight: 10,
     },
     iconTouchable: {
         borderRadius: 50,

@@ -1,7 +1,7 @@
 import React, { memo, useMemo, useEffect, useCallback } from 'react';
 import { Image, StyleSheet, View, Dimensions, Pressable } from 'react-native';
 import { ThemedText } from '../ThemedText';
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import QRCode from 'react-native-qrcode-svg';
 import Barcode from 'react-native-barcode-svg';
@@ -120,7 +120,7 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
             <View style={styles.headerContainer}>
               <View style={styles.headerLeft}>
                 <View style={styles.dragIconContainer}>
-                  <MaterialIcons name="menu" size={18} color="white" />
+                  <MaterialCommunityIcons name="menu" size={18} color="white" />
                 </View>
                 <View style={styles.leftHeaderContainer}>
                   <View style={styles.iconContainer}>
@@ -143,7 +143,7 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
                   onPress={onMoreButtonPress}
                   hitSlop={{ bottom: 40, left: 30, right: 30, top: 30 }}
                 >
-                  <MaterialIcons name="more-vert" size={18} color="white" />
+                  <MaterialCommunityIcons name="dots-vertical" size={18} color="white" />
                 </Pressable>
               )}
             </View>

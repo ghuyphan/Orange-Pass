@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
-import { StyleSheet, View, TextInput, FlatList, Dimensions, useColorScheme } from 'react-native';
+import { StyleSheet, View, TextInput, FlatList, Dimensions } from 'react-native';
+import { useTheme } from '@/context/ThemeContext';
 import { useSelector } from 'react-redux';
 import Animated, {
   useAnimatedStyle,
@@ -22,7 +23,7 @@ import ThemedFilter from '@/components/ThemedFilter';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedIconInput } from '@/components/Inputs';
-import { ThemedButton } from '@/components/buttons/ThemedButton';
+import { ThemedFAB, ThemedButton } from '@/components/buttons';
 import ThemedBottomSheet from '@/components/bottomsheet/ThemedBottomSheet';
 import { ThemedEmptyCard, ThemedCardItem } from '@/components/cards';
 import { ThemedFilterSkeleton, ThemedCardSkeleton } from '@/components/skeletons';;
@@ -32,7 +33,8 @@ import { fetchQrData } from '@/services/auth/fetchQrData';
 import { RootState } from '@/store/rootReducer';
 import { t } from '@/i18n';
 import BottomSheet from '@gorhom/bottom-sheet';
-import Ionicons from '@expo/vector-icons/Ionicons';
+// import Ionicons from '@expo/vector-icons/Ionicons';
+import { MaterialIcons } from '@expo/vector-icons';
 import { triggerHapticFeedback } from '@/utils/haptic';
 import { useLocale } from '@/context/LocaleContext';
 import { useMMKVString } from 'react-native-mmkv';
@@ -48,12 +50,13 @@ import {
   filterQrCodes,
 } from '@/services/localDB/qrDB';
 import { ThemedBottomToast } from '@/components/toast/ThemedBottomToast';
+import { FAB } from 'react-native-paper';
 
 const screenHeight = Dimensions.get('window').height;
 
 function HomeScreen() {
   const { updateLocale } = useLocale();
-  const colorScheme = useColorScheme();
+  const { currentTheme } = useTheme();
   const [locale, setLocale] = useMMKVString('locale', storage);
   const color = useThemeColor({ light: '#3A2E24', dark: '#FFF5E1' }, 'text');
   const [isEmpty, setIsEmpty] = useState(false);
@@ -221,8 +224,8 @@ function HomeScreen() {
       // Use a small timeout to ensure the input is rendered
       const focusTimeout = setTimeout(() => {
         inputRef.current?.focus();
-      }, 100); // Small delay to allow rendering
-  
+      }, 250); // Small delay to allow rendering
+
       // Clean up the timeout
       return () => clearTimeout(focusTimeout);
     }
@@ -277,13 +280,13 @@ function HomeScreen() {
   }));
 
 
-  const scrollContainerStyle = useAnimatedStyle(() => ({
-    opacity: withTiming(scrollY.value > 50 ? 1 : 0, {
-      easing: Easing.out(Easing.ease),
-      duration: 300, // You can adjust the duration here for how quickly the opacity changes
-    }),
-    pointerEvents: scrollY.value > 50 ? 'auto' : 'none',
-  }));
+  // const scrollContainerStyle = useAnimatedStyle(() => ({
+  //   opacity: withTiming(scrollY.value > 50 ? 1 : 0, {
+  //     easing: Easing.out(Easing.ease),
+  //     duration: 300, // You can adjust the duration here for how quickly the opacity changes
+  //   }),
+  //   pointerEvents: scrollY.value > 50 ? 'auto' : 'none',
+  // }));
 
   const emptyCardStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: emptyCardOffset.value }],
@@ -313,6 +316,9 @@ function HomeScreen() {
   const onNavigateToSettingsScreen = useCallback(() => {
     router.push('/settings');
   }, []);
+  const onNavigateToAddScreen = useCallback (() => {
+    router.push('/(add)/add-new');
+  },[])
 
   const scrollHandler = useAnimatedScrollHandler((event) => {
     scrollY.value = event.contentOffset.y;
@@ -457,24 +463,24 @@ function HomeScreen() {
           <View style={styles.titleButtonContainer}>
             {!isEmpty && (
               <ThemedButton
-                iconName="search"
+                iconName="magnify"
                 style={styles.titleButton}
                 onPress={() => {
                   if (isLoading) return;
                   setIsSearching(!isSearching);
                   scrollToTop();
-                  
+
                 }}
               />
             )}
 
             <ThemedButton
-              iconName="qr-code-scanner"
+              iconName="qrcode-scan"
               style={styles.titleButton}
               onPress={onNavigateToScanScreen}
             />
             <ThemedButton
-              iconName="settings"
+              iconName="cog"
               style={styles.titleButton}
               onPress={onNavigateToSettingsScreen} />
           </View>
@@ -528,8 +534,8 @@ function HomeScreen() {
             </Animated.View>}
           ListEmptyComponent={
             <View style={styles.emptyItem}>
-              <Ionicons color={color} name="search-outline" size={40} />
-              <ThemedText style={{ textAlign: 'center' }}>
+              <MaterialIcons color={color} name="search" size={50} />
+              <ThemedText style={{ textAlign: 'center', lineHeight: 30 }}>
                 {t('homeScreen.noItemFound')}
               </ThemedText>
             </View>
@@ -555,15 +561,14 @@ function HomeScreen() {
 
         />
       )}
-      <Animated.View style={scrollContainerStyle}>
-        <ThemedButton iconName="expand-less" style={styles.scrollButton} onPress={scrollToTop} />
-      </Animated.View>
+      {/* <ThemedButton iconName="add" style={styles.fab} onPress={onNavigateToScanScreen} /> */}
+      {!isLoading && <ThemedFAB style={styles.fab} onPress1={onNavigateToScanScreen} onPress2={onNavigateToAddScreen}/>}
+      
       <ThemedStatusToast
         isVisible={isToastVisible}
         message={toastMessage}
         onDismiss={() => setIsToastVisible(false)}
         style={styles.toastContainer}
-        isSyncing={isSyncing}
       />
       <ThemedBottomToast
         isSyncing={isSyncing}
@@ -590,7 +595,7 @@ function HomeScreen() {
         message={t('homeScreen.confirmDeleteMessage')}
         isVisible={isModalVisible}
         iconName="delete-outline"
-        
+
       />
     </ThemedView>
   );
@@ -637,7 +642,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 15,
   },
   searchInput: {
-    borderRadius: 15,
+    borderRadius: 50,
     paddingVertical: 0,
   },
   listContainer: {
@@ -674,10 +679,8 @@ const styles = StyleSheet.create({
     height: STATUSBAR_HEIGHT,
     zIndex: 10,
   },
-  scrollButton: {
-    position: 'absolute',
-    bottom: 60,
-    right: 15,
+  fab: {
+    marginBottom: 40,
   },
   loadingContainer: {
     paddingTop: STATUSBAR_HEIGHT + 105,

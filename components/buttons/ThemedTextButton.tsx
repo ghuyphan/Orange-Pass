@@ -1,10 +1,9 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import React, { useMemo } from 'react';
-import { StyleSheet, View, TouchableHighlight, StyleProp, ViewStyle, ActivityIndicator, TextStyle, TouchableWithoutFeedback, Pressable } from 'react-native';
+import { StyleSheet, StyleProp, ViewStyle, ActivityIndicator, TextStyle, Pressable } from 'react-native';
 import { ThemedText } from '../ThemedText';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { Colors } from '@/constants/Colors';
 
 /**
  * Props for ThemedTextButton component.

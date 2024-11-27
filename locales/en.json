@@ -101,6 +101,16 @@
       "content": "Keep your banks, wallet, membership QR codes, loyalty cards, and more all in one convenient place. Stay organized and access everything you need quickly and easily."
     }
   },
+  "addScreen": {
+    "title": "Add QR Code",
+    "type": "Type",
+    "bank": "Bank",
+    "store": "Store",
+    "ewallet": "E-Wallet",
+    "qr": "QR Code",
+    "barcode": "Barcode",
+    "image": "Image"
+  },
   "scanScreen": {
     "join": "Join",
     "join2": "Network",

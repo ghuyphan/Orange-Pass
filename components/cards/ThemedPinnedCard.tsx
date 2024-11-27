@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   iconContainer: {
-    width: 40,
+    width: 35,
     aspectRatio: 1,
     borderRadius: 50,
     justifyContent: 'center',

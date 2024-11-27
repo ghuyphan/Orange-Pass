@@ -402,7 +402,7 @@ export default function ScanScreen() {
         <View style={styles.bottomButtonsContainer}>
 
           <ThemedButton
-            iconName="insert-photo"
+            iconName="image"
             iconColor="white"
             underlayColor='#fff'
             onPress={onOpenGallery}
@@ -411,7 +411,7 @@ export default function ScanScreen() {
             loadingColor='#fff'
           />
           <ThemedButton
-            iconName="settings"
+            iconName="cog"
             iconColor="white"
             underlayColor='#fff'
             onPress={handleExpandPress}
