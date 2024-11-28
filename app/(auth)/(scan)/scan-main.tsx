@@ -332,7 +332,7 @@ export default function ScanScreen() {
     if (device) {
       const timeout = setTimeout(() => {
         cameraOpacity.value = 1;
-      }, 600);
+      }, 500);
       return () => clearTimeout(timeout);
     }
   }, [device]);

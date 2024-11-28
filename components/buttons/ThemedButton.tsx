@@ -5,10 +5,12 @@ import { ThemedText } from '../ThemedText';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { useTheme } from '@/context/ThemeContext'; // Import useTheme
 import { Colors } from '@/constants/Colors';
+import Animated from 'react-native-reanimated';
 
 /**
  * ThemedButtonProps defines the properties for the ThemedButton component.
  */
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 export type ThemedButtonProps = {
     /** Light color theme for the button text */
     lightColor?: string;
@@ -30,6 +32,8 @@ export type ThemedButtonProps = {
     onPress: () => void;
     /** Custom styles for the button */
     style?: StyleProp<ViewStyle>;
+    /** Animated styles for the button */
+    animatedStyle?: StyleProp<ViewStyle>;
     /** Whether the button is disabled */
     disabled?: boolean;
     /** Whether the button is in a loading state */
@@ -56,9 +60,9 @@ export function ThemedButton({
     iconName,
     iconColor,
     iconSize = 18,
-    underlayColor,
     onPress,
     style = {},
+    animatedStyle = {},
     disabled = false,
     loading = false,
     loadingColor,
@@ -81,7 +85,7 @@ export function ThemedButton({
     ]), [currentTheme, disabled, loading, style]); // Include currentTheme in the dependency array
 
     return (
-        <Pressable
+        <AnimatedPressable
             pointerEvents={pointerEvents}
             onPress={onPress}
             disabled={disabled || loading}
@@ -90,7 +94,7 @@ export function ThemedButton({
             accessibilityRole="button"
             accessibilityHint={`Press to ${label}`}
             android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
-            style={[buttonStyle, style]}
+            style={[buttonStyle, style, animatedStyle]}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
             {loading ? (
@@ -104,7 +108,7 @@ export function ThemedButton({
                     {label && <ThemedText style={[styles.label, { color }]} type='defaultSemiBold'>{label}</ThemedText>}
                 </>
             )}
-        </Pressable>
+        </AnimatedPressable>
     );
 }
 

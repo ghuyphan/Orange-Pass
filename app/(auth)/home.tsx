@@ -49,7 +49,6 @@ import {
   filterQrCodes,
 } from '@/services/localDB/qrDB';
 import { ThemedBottomToast } from '@/components/toast/ThemedBottomToast';
-import { FAB } from 'react-native-paper';
 
 const screenHeight = Dimensions.get('window').height;
 
@@ -249,7 +248,7 @@ function HomeScreen() {
   }, [isSearching]);
 
   const titleContainerStyle = useAnimatedStyle(() => {
-    const scrollThreshold = isSearching === true ? 140 + 40 : 140;
+    const scrollThreshold = isSearching === true ? 140 + 40 : 120;
 
     const opacity = interpolate(
       scrollY.value,
@@ -284,10 +283,9 @@ function HomeScreen() {
       [20, 60], // 40 is the original margin, 60 is the toast height (adjust if needed)
       Extrapolation.CLAMP
     );
-    const zIndex = isActive ? 0 : 1;
     return {
       marginBottom,
-      zIndex,
+      zIndex: isActive ? 10 : 0, 
     };
   });
 
@@ -340,23 +338,22 @@ function HomeScreen() {
   const onDragEnd = useCallback(async ({ data }: { data: QRRecord[] }) => {
     try {
       // Check if the order has changed
-      triggerHapticFeedback();
       const isOrderChanged =
         data.length !== qrData.length ||
         data.some((item, index) => item.id !== qrData[index].id);
-
+  
       // Proceed only if the order has changed
       if (isOrderChanged) {
         // Update the component state with the new order
-        setQrData(data);
-
+        setQrData(data); // This will re-render DraggableFlatList
+  
         // Update qr_index values and timestamps
         const updatedData = data.map((item, index) => ({
           ...item,
           qr_index: index,
           updated: new Date().toISOString(),
         }));
-
+  
         // Update the indexes and timestamps in the local database
         await updateQrIndexes(updatedData);
         // console.log('QR indexes and timestamps updated in the database');
@@ -368,7 +365,7 @@ function HomeScreen() {
     } finally {
       setIsActive(false);
     }
-  }, [qrData]);
+  }, [qrData]); // Include qrData in the dependency array
 
   const scrollToTop = useCallback(() => {
     flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
@@ -446,21 +443,12 @@ function HomeScreen() {
     [onNavigateToDetailScreen, handleExpandPress]
   );
 
-  const listContainerPadding = useMemo(() => {
-    if (qrData.length === 0) {
-      return 0;
-    } else {
-      switch (qrData.length) {
-        case 1:
-          return screenHeight * 0.73;
-        case 2:
-          return screenHeight * 0.43;
-        case 3:
-          return screenHeight * 0.23;
-      }
-    }
-  }, [qrData.length, screenHeight]);
+  const paddingValues = [0, screenHeight * 0.73, screenHeight * 0.43, screenHeight * 0.23];
 
+  const listContainerPadding = useMemo(() => {
+    return paddingValues[qrData.length] || 0; // Default to 0 if length is beyond the array
+  }, [qrData.length, screenHeight]);
+  
   return (
     <ThemedView style={styles.container}>
       <ThemedView style={styles.blurContainer} />
@@ -554,9 +542,9 @@ function HomeScreen() {
           }
           automaticallyAdjustKeyboardInsets
           keyboardDismissMode="on-drag"
-          data={qrData}
+          data={[...qrData]}
           renderItem={renderItem}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item, index) => `draggable-item-${item.id}`}
           containerStyle={{ flex: 1 }}
           contentContainerStyle={[styles.listContainer, qrData.length > 0 && { paddingBottom: listContainerPadding }]}
           scrollEventThrottle={32}
@@ -578,7 +566,10 @@ function HomeScreen() {
           setOpen={setFabOpen}
           animatedStyle={[fabStyle, styles.fab]}
           onPress1={onNavigateToScanScreen}
-          onPress2={onNavigateToAddScreen} />
+          onPress2={onNavigateToAddScreen} 
+          text1='Add'
+          text2='Scan'
+          />
       }
       <ThemedStatusToast
         isVisible={isToastVisible}
