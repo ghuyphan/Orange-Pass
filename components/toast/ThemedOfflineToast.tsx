@@ -120,7 +120,7 @@ export function ThemedStatusToast({
 
 const styles = StyleSheet.create({
     toastContainer: {
-        borderRadius: 10,
+        borderRadius: 15,
         paddingVertical: 10,
         paddingHorizontal: 15,
         flexDirection: 'row',

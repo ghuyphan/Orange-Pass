@@ -22,6 +22,7 @@ export type ThemedBottomToastProps = {
     style?: StyleProp<ViewStyle>;
     duration?: number; // New prop to auto-hide after a duration
     onVisibilityToggle?: (isVisible: boolean) => void; // Callback to track visibility
+    onLayout?: () => void;
 };
 
 export function ThemedBottomToast({
@@ -34,6 +35,7 @@ export function ThemedBottomToast({
     style = {},
     duration = 4000, // Default duration for auto-hide
     onVisibilityToggle,
+    onLayout,
 }: ThemedBottomToastProps) {
     const { updateLocale } = useLocale();
     const [locale, setLocale] = useMMKVString('locale', storage);
@@ -92,8 +94,7 @@ export function ThemedBottomToast({
     }
 
     return (
-        <Portal>
-            <Animated.View style={[toastStyle, animatedStyle]}>
+            <Animated.View style={[toastStyle, animatedStyle]} onLayout={onLayout}>
                 <View style={styles.toastTitle}>
                     {isSyncing ? (
                         <ActivityIndicator size={15} color={color} />
@@ -110,7 +111,6 @@ export function ThemedBottomToast({
                     </ThemedText>
                 </View>
             </Animated.View>
-        </Portal>
     );
 }
 

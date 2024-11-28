@@ -94,7 +94,7 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
     shadowOpacity: shadowOpacity.value,
     elevation: elevation.value,
     marginBottom: 25,
-    borderRadius: 10,
+    borderRadius: 15,
     overflow: 'hidden'
   }));
 
@@ -103,7 +103,7 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
       <Pressable
         onPress={handleItemPress}
         onLongPress={onDrag}
-        delayLongPress={200}
+        delayLongPress={150}
         android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
       >
         <View style={[styles.touchableHighlight, style]}>
@@ -174,11 +174,11 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
 
 const styles = StyleSheet.create({
   touchableHighlight: {
-    borderRadius: 10,
+    borderRadius: 15,
     overflow: 'hidden',
   },
   itemContainer: {
-    borderRadius: 10,
+    borderRadius: 15,
     overflow: 'hidden',
   },
   headerContainer: {
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
   qr: {
     backgroundColor: 'white',
     padding: 10,
-    borderRadius: 10,
+    borderRadius: 15,
   },
   footerContainer: {
     flexDirection: 'row',

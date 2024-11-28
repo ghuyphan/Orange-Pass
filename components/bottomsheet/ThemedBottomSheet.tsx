@@ -131,11 +131,11 @@ const styles = StyleSheet.create({
     contentContainer: {
         flexDirection: 'column',
         marginBottom: 15,
-        borderRadius: 10,
+        borderRadius: 15,
         gap: 5,
     },
     touchableHighlight: {
-        borderRadius: 10, // Ensures the highlight covers the entire button, including rounded corners
+        borderRadius: 15, // Ensures the highlight covers the entire button, including rounded corners
     },
     buttonContainer: {
         flexDirection: 'row',

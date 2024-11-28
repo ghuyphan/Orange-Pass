@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { StyleSheet, View, TextInput, FlatList, Dimensions } from 'react-native';
-import { useTheme } from '@/context/ThemeContext';
 import { useSelector } from 'react-redux';
 import Animated, {
   useAnimatedStyle,
@@ -10,7 +9,7 @@ import Animated, {
   useAnimatedScrollHandler,
   Easing,
   interpolate,
-  Extrapolation
+  Extrapolation,
 } from 'react-native-reanimated';
 import { router } from 'expo-router';
 import DraggableFlatList, { ScaleDecorator } from 'react-native-draggable-flatlist';
@@ -56,7 +55,6 @@ const screenHeight = Dimensions.get('window').height;
 
 function HomeScreen() {
   const { updateLocale } = useLocale();
-  const { currentTheme } = useTheme();
   const [locale, setLocale] = useMMKVString('locale', storage);
   const color = useThemeColor({ light: '#3A2E24', dark: '#FFF5E1' }, 'text');
   const [isEmpty, setIsEmpty] = useState(false);
@@ -87,6 +85,8 @@ function HomeScreen() {
   const scrollY = useSharedValue(0);
 
   const bottomSheetRef = useRef<BottomSheet>(null);
+
+  const [fabOpen, setFabOpen] = useState(false);
 
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const syncWithServer = useCallback(async (userId: string) => {
@@ -170,8 +170,6 @@ function HomeScreen() {
     }
   }, [userId, fetchLocalData]);
 
-
-  // useEffect for initial sync (with delay) - NO INFINITE LOOP HERE
   useEffect(() => {
     if (isOffline || !userId) return;
 
@@ -279,14 +277,19 @@ function HomeScreen() {
     pointerEvents: scrollY.value > 40 ? 'none' : 'auto',
   }));
 
-
-  // const scrollContainerStyle = useAnimatedStyle(() => ({
-  //   opacity: withTiming(scrollY.value > 50 ? 1 : 0, {
-  //     easing: Easing.out(Easing.ease),
-  //     duration: 300, // You can adjust the duration here for how quickly the opacity changes
-  //   }),
-  //   pointerEvents: scrollY.value > 50 ? 'auto' : 'none',
-  // }));
+  const fabStyle = useAnimatedStyle(() => {
+    const marginBottom = interpolate(
+      isBottomToastVisible ? 1 : 0,
+      [-0.5, 1.5],
+      [20, 60], // 40 is the original margin, 60 is the toast height (adjust if needed)
+      Extrapolation.CLAMP
+    );
+    const zIndex = isActive ? 0 : 1;
+    return {
+      marginBottom,
+      zIndex,
+    };
+  });
 
   const emptyCardStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: emptyCardOffset.value }],
@@ -316,12 +319,17 @@ function HomeScreen() {
   const onNavigateToSettingsScreen = useCallback(() => {
     router.push('/settings');
   }, []);
-  const onNavigateToAddScreen = useCallback (() => {
+  const onNavigateToAddScreen = useCallback(() => {
     router.push('/(add)/add-new');
-  },[])
+  }, [])
 
   const scrollHandler = useAnimatedScrollHandler((event) => {
     scrollY.value = event.contentOffset.y;
+    if (event.contentOffset.y > 50 && fabOpen) {
+      setFabOpen(false);
+    } else if (event.contentOffset.y <= 50 && !fabOpen) {
+      setFabOpen(true);
+    }
   });
 
   const onDragBegin = useCallback(() => {
@@ -330,10 +338,9 @@ function HomeScreen() {
   }, []);
 
   const onDragEnd = useCallback(async ({ data }: { data: QRRecord[] }) => {
-    triggerHapticFeedback();
-
     try {
       // Check if the order has changed
+      triggerHapticFeedback();
       const isOrderChanged =
         data.length !== qrData.length ||
         data.some((item, index) => item.id !== qrData[index].id);
@@ -457,8 +464,8 @@ function HomeScreen() {
   return (
     <ThemedView style={styles.container}>
       <ThemedView style={styles.blurContainer} />
-      <Animated.View style={[styles.titleContainer, titleContainerStyle]} pointerEvents="auto">
-        <View style={styles.headerContainer}>
+      <Animated.View style={[styles.titleContainer, titleContainerStyle]} pointerEvents="box-none">
+        <View style={styles.headerContainer} pointerEvents='box-none'>
           <ThemedText style={styles.titleText} type="title">{t('homeScreen.title')}</ThemedText>
           <View style={styles.titleButtonContainer}>
             {!isEmpty && (
@@ -515,8 +522,12 @@ function HomeScreen() {
         <DraggableFlatList
           ref={flatListRef}
           ListHeaderComponent={
-            <Animated.View style={[listHeaderStyle, { marginBottom: 25 }]}>
-              <Animated.View style={[searchContainerStyle]}
+            <Animated.View
+              style={[listHeaderStyle, { marginBottom: 25 }]}
+            >
+              <Animated.View
+                style={[searchContainerStyle]}
+
               >
                 <ThemedIconInput
                   style={styles.searchInput}
@@ -531,7 +542,8 @@ function HomeScreen() {
                 selectedFilter={filter}
                 onFilterChange={setFilter}
               />
-            </Animated.View>}
+            </Animated.View>
+          }
           ListEmptyComponent={
             <View style={styles.emptyItem}>
               <MaterialIcons color={color} name="search" size={50} />
@@ -557,13 +569,17 @@ function HomeScreen() {
             scrollY.value = offset;
           }}
           decelerationRate={'fast'}
-          onRefresh={() => console.log('refresh')}
 
         />
       )}
-      {/* <ThemedButton iconName="add" style={styles.fab} onPress={onNavigateToScanScreen} /> */}
-      {!isLoading && <ThemedFAB style={styles.fab} onPress1={onNavigateToScanScreen} onPress2={onNavigateToAddScreen}/>}
-      
+      {!isLoading &&
+        <ThemedFAB
+          open={fabOpen}
+          setOpen={setFabOpen}
+          animatedStyle={[fabStyle, styles.fab]}
+          onPress1={onNavigateToScanScreen}
+          onPress2={onNavigateToAddScreen} />
+      }
       <ThemedStatusToast
         isVisible={isToastVisible}
         message={toastMessage}
@@ -576,6 +592,7 @@ function HomeScreen() {
         message={bottomToastMessage}
         iconName="cloud-offline"
         style={styles.bottomToastContainer}
+        
       />
       <ThemedBottomSheet
         ref={bottomSheetRef}
@@ -642,7 +659,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 15,
   },
   searchInput: {
-    borderRadius: 50,
+    borderRadius: 15,
     paddingVertical: 0,
   },
   listContainer: {
@@ -680,7 +697,9 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   fab: {
-    marginBottom: 40,
+    bottom: 20,
+    right: 15,
+    position: 'absolute',
   },
   loadingContainer: {
     paddingTop: STATUSBAR_HEIGHT + 105,

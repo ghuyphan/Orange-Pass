@@ -34,7 +34,10 @@ export type ThemedButtonProps = {
     disabled?: boolean;
     /** Whether the button is in a loading state */
     loading?: boolean;
+    /** Color of the loading indicator */
     loadingColor?: string;
+    /** Pointer events for the button */
+    pointerEvents?: 'auto' | 'none';
 };
 
 /**
@@ -59,17 +62,18 @@ export function ThemedButton({
     disabled = false,
     loading = false,
     loadingColor,
+    pointerEvents = 'auto',
 }: ThemedButtonProps): JSX.Element {
     const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
     const icon = useThemeColor({ light: Colors.light.text, dark: Colors.dark.text }, 'icon');
 
     // Get the currentTheme from useTheme
-    const { currentTheme } = useTheme(); 
+    const { currentTheme } = useTheme();
 
     const buttonStyle = useMemo(() => ([
         {
             // Use currentTheme to determine the background color
-            backgroundColor: currentTheme === 'light' ? Colors.light.buttonBackground : Colors.dark.buttonBackground, 
+            backgroundColor: currentTheme === 'light' ? Colors.light.buttonBackground : Colors.dark.buttonBackground,
             opacity: disabled || loading ? 0.7 : 1,
             // borderRadius: Platform.OS === 'ios' ? 10 : 50,
         },
@@ -78,6 +82,7 @@ export function ThemedButton({
 
     return (
         <Pressable
+            pointerEvents={pointerEvents}
             onPress={onPress}
             disabled={disabled || loading}
             accessible
@@ -88,17 +93,17 @@ export function ThemedButton({
             style={[buttonStyle, style]}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-                {loading ? (
-                    <>
-                        <ActivityIndicator size={iconSize} color={loadingColor ? loadingColor : color} />
-                        {loadingLabel && <ThemedText style={[styles.label, { color }]} type='defaultSemiBold'>{loadingLabel}</ThemedText>}
-                    </>
-                ) : (
-                    <>
-                        {iconName && <MaterialCommunityIcons name={iconName} size={iconSize} color={iconColor ? iconColor : icon} />}
-                        {label && <ThemedText style={[styles.label, { color }]} type='defaultSemiBold'>{label}</ThemedText>}
-                    </>
-                )}
+            {loading ? (
+                <>
+                    <ActivityIndicator size={iconSize} color={loadingColor ? loadingColor : color} />
+                    {loadingLabel && <ThemedText style={[styles.label, { color }]} type='defaultSemiBold'>{loadingLabel}</ThemedText>}
+                </>
+            ) : (
+                <>
+                    {iconName && <MaterialCommunityIcons name={iconName} size={iconSize} color={iconColor ? iconColor : icon} />}
+                    {label && <ThemedText style={[styles.label, { color }]} type='defaultSemiBold'>{label}</ThemedText>}
+                </>
+            )}
         </Pressable>
     );
 }

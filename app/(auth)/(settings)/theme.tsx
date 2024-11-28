@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
     },
     descriptionContainer: {
         flexDirection: 'row',
-        borderRadius: 10,
+        borderRadius: 15,
         paddingVertical: 10,
         paddingHorizontal: 35,
         overflow: 'hidden',
@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
     },
     sectionContainer: {
         gap: 5,
-        borderRadius: 10,
+        borderRadius: 15,
         overflow: 'hidden',
     },
     section: {

@@ -44,7 +44,7 @@ export function ThemedCardSkeleton({ show = true, index = 0 }) {
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 10,
+    borderRadius: 15,
     marginBottom: 20,
     overflow: 'hidden',
   },

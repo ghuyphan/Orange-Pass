@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
-import { StyleSheet, View, useColorScheme, Linking, Keyboard, FlatList, TouchableOpacity, TextInput, Pressable, InteractionManager } from 'react-native';
+import { StyleSheet, View, Linking, Keyboard, FlatList, TextInput, Pressable } from 'react-native';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store/rootReducer';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
@@ -167,7 +167,7 @@ export default function DetailScreen() {
                             ? Colors.light.cardFooter
                             : Colors.dark.cardFooter,
                     overflow: 'hidden',
-                    borderRadius: 25,
+                    // borderRadius: 15,
                 },
             ]}
         >
@@ -305,7 +305,7 @@ const styles = StyleSheet.create({
     },
     cardWrapper: {
         padding: 15,
-        borderRadius: 10,
+        borderRadius: 15,
     },
     storeDetails: {
         flexDirection: 'row',
@@ -321,7 +321,7 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
     },
     infoWrapper: {
-        borderRadius: 10,
+        borderRadius: 15,
         gap: 5,
         overflow: 'hidden',
         // paddingVertical: 10,
@@ -332,7 +332,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 15,
         paddingVertical: 10,
         gap: 10,
-        borderRadius: 10,
+        borderRadius: 15,
         overflow: 'hidden'
     },
     loadingWrapper: {
@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
     suggestionItem: {
         paddingHorizontal: 15,
         paddingVertical: 5,
-        borderRadius: 10,
+        borderRadius: 15,
         overflow: 'hidden',
 
     },

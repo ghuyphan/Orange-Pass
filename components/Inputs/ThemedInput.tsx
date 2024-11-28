@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
     inputContainer: {
         paddingVertical: 10,
         paddingHorizontal: 15,
-        borderRadius: 10,
+        borderRadius: 15,
         flexDirection: 'column',
     },
     label: {

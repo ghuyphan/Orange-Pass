@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 15,
         paddingVertical: 10,
         overflow: 'hidden',
-        borderRadius: 10,
+        borderRadius: 15,
     },
     sectionTitle: {
         fontSize: 16,

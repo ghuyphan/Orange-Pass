@@ -205,12 +205,12 @@ const styles = StyleSheet.create({
     contentContainer: {
         flexDirection: 'column',
         marginBottom: 15,
-        borderRadius: 10,
+        borderRadius: 15,
         paddingVertical: 5,
         paddingHorizontal: 25,
     },
     touchableHighlight: {
-        borderRadius: 10, // Ensures the highlight covers the entire button, including rounded corners
+        borderRadius: 15, // Ensures the highlight covers the entire button, including rounded corners
         marginVertical: 5, // Adds spacing between buttons
     },
     buttonContainer: {

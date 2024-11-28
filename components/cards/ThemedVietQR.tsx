@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
         borderRadius: 15,
     },
     itemContainer: {
-        borderRadius: 10,
+        borderRadius: 15,
         paddingHorizontal: 15,
         paddingVertical: 10,
         overflow: 'hidden',
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
         marginVertical: 15,
         paddingRight: 10,
         backgroundColor: '#fff',
-        borderRadius: 10,
+        borderRadius: 15,
 
     },
     vietQRIcon: {
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
     },
     qr: {
         padding: 10,
-        borderRadius: 10,
+        borderRadius: 15,
         backgroundColor: 'white',
     },
     infoContainer: {

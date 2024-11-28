@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
     },
     sectionContainer: {
         gap: 5,
-        borderRadius: 10,
+        borderRadius: 15,
         overflow: 'hidden',
     },
     section: {

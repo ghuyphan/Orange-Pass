@@ -318,7 +318,7 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         paddingHorizontal: 15,
         marginBottom: 30,
-        borderRadius: 10,
+        borderRadius: 15,
         gap: 0,
     },
     avatarLoadContainer: {
@@ -332,7 +332,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         flexDirection: 'column',
         paddingHorizontal: 15,
-        borderRadius: 10,
+        borderRadius: 15,
         maxWidth: '80%',
         overflow: 'hidden',
     },
@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
         width: '100%',
     },
     sectionContainer: {
-        borderRadius: 10,
+        borderRadius: 15,
         backgroundColor: 'white',
         marginBottom: 30,
         gap: 5,

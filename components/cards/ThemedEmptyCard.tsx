@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { StyleSheet, TouchableWithoutFeedback, View, Image, Pressable } from 'react-native';
+import { StyleSheet, View, Pressable } from 'react-native';
 import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
 import { ThemedButton } from '../buttons/ThemedButton';
@@ -54,12 +54,13 @@ export function ThemedEmptyCard({
     const { currentTheme: colorScheme } = useTheme();
     // const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
     const color = colorScheme === 'light' ? Colors.light.text : Colors.dark.text;
+    const buttoncolor = colorScheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground;
     // const colorScheme = useColorScheme();
 
     const cardContainerStyle = useMemo(() => ([
         {
             backgroundColor: colorScheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground,
-            borderRadius: 10,
+            borderRadius: 15,
         },
         style,
     ]), [colorScheme, style]);
@@ -85,7 +86,7 @@ export function ThemedEmptyCard({
                     </View>
                     <View style={[styles.cardFooterContainer, footerBackground, footerStyle]}>
                         <ThemedText>{footerLabel}</ThemedText>
-                        <ThemedButton label={footButtonLabel} onPress={buttonOnPress} style={styles.cardFooterButton} />
+                        <ThemedButton label={footButtonLabel} onPress={buttonOnPress} style={[styles.cardFooterButton, { backgroundColor: buttoncolor }]} />
                     </View>
                 </ThemedView>
             </Pressable>

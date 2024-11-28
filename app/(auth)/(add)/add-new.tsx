@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useEffect, useState } from 'react';
-import { StyleSheet, View, useColorScheme, Keyboard } from 'react-native';
+import { StyleSheet, View, Keyboard } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -17,41 +17,38 @@ import { t } from '@/i18n';
 import { Colors } from '@/constants/Colors';
 import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
 import { useLocale } from '@/context/LocaleContext';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useMMKVString } from 'react-native-mmkv';
 import { useTheme } from '@/context/ThemeContext';
 import { useLocalSearchParams } from 'expo-router';
 import { ThemedInput } from '@/components/Inputs';
 
+const AnimatedKeyboardAwareScrollView = Animated.createAnimatedComponent(KeyboardAwareScrollView);
 const AddScreen: React.FC = () => {
-  // const colors = useThemeColor({ light: Colors.light.text, dark: Colors.dark.text }, 'text');
-
-  const colorScheme = useColorScheme();
   const { updateLocale } = useLocale();
   const [locale, setLocale] = useMMKVString('locale');
   const scrollY = useSharedValue(0);
   const { codeType, codeValue } = useLocalSearchParams();
+
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
+  const [editedCodeType, setEditedCodeType] = useState(codeType?.toString() || '');
+  const [editedCodeValue, setEditedCodeValue] = useState(codeValue?.toString() || '');
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
-        setKeyboardVisible(true);
+      setKeyboardVisible(true);
     });
     const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
-        setKeyboardVisible(false);
+      setKeyboardVisible(false);
     });
 
     return () => {
-        keyboardDidHideListener.remove();
-        keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+      keyboardDidShowListener.remove();
     };
-}, [isKeyboardVisible]);
+  }, []);
 
-
-  // Màu nền chỉ được tính toán lại khi `colorScheme` thay đổi
   const { currentTheme: theme } = useTheme();
-  // const colors = theme === 'light' ? Colors.light.text : Colors.dark.text;
   const colors = useMemo(() => (theme === 'light' ? Colors.light.text : Colors.dark.text), [theme]);
   const sectionsColors = useMemo(() => (
     theme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground
@@ -79,43 +76,56 @@ const AddScreen: React.FC = () => {
   const onNavigateBack = useCallback(() => {
     router.back();
   }, []);
+
+  const handleSave = useCallback(() => {
+    // Implement save logic here
+    console.log('Saving:', { editedCodeType, editedCodeValue });
+  }, [editedCodeType, editedCodeValue]);
+
   return (
-    <KeyboardAwareScrollView
-      contentContainerStyle={styles.scrollViewContent}
-      enableOnAndroid={true}
-      extraScrollHeight={50}
-      showsVerticalScrollIndicator={false}
-      scrollEnabled={isKeyboardVisible}
-      style={{ backgroundColor: colorScheme === 'light' ? Colors.light.background : Colors.dark.background }}
-    >
-      <ThemedView style={styles.container}>
-        <ThemedView style={styles.blurContainer} />
-        <Animated.View style={[styles.titleContainer, titleContainerStyle]} pointerEvents="auto">
-          <View style={styles.headerContainer}>
-            <View style={styles.titleButtonContainer}>
-              <ThemedButton
-                iconName="chevron-left"
-                style={styles.titleButton}
-                onPress={onNavigateBack}
-              />
-            </View>
-            <ThemedText style={styles.title} type="title">{t('addScreen.title')}</ThemedText>
+    <ThemedView style={styles.container}>
+      <ThemedView style={styles.blurContainer} />
+      <Animated.View style={[styles.titleContainer, titleContainerStyle]} pointerEvents="auto">
+        <View style={styles.headerContainer}>
+          <View style={styles.titleButtonContainer}>
+            <ThemedButton
+              iconName="chevron-left"
+              style={styles.titleButton}
+              onPress={onNavigateBack}
+            />
           </View>
-        </Animated.View>
-        <Animated.ScrollView style={styles.scrollContainer} onScroll={scrollHandler}>
-          <ThemedInput
-            placeholder={t('languageScreen.placeholder')}
-            label='Code Value'
-            value={codeValue}
-          />
-          <ThemedInput
-            placeholder={t('languageScreen.placeholder')}
-            label='Code Type'
-            value={codeType}
-          />
-        </Animated.ScrollView>
-      </ThemedView>
-    </KeyboardAwareScrollView>
+          <ThemedText style={styles.title} type="title">{t('addScreen.title')}</ThemedText>
+        </View>
+      </Animated.View>
+      <AnimatedKeyboardAwareScrollView
+        contentContainerStyle={[styles.scrollViewContent, {backgroundColor: theme === 'light' ? Colors.light.background : Colors.dark.background }]}
+        enableOnAndroid={true}
+        extraScrollHeight={50}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        style={{ }}
+        onScroll={scrollHandler}
+      >
+        <ThemedInput
+          placeholder={t('languageScreen.placeholder')}
+          label='Mã vạch'
+          value={editedCodeValue}
+          onChangeText={setEditedCodeValue}
+        />
+        <ThemedInput
+          placeholder={t('languageScreen.placeholder')}
+          label='Code Type'
+          value={editedCodeType}
+          onChangeText={setEditedCodeType}
+        />
+        <ThemedButton
+          label='save'
+          onPress={handleSave}
+          style={styles.saveButton}
+        />
+        {/* </Animated.ScrollView> */}
+      </AnimatedKeyboardAwareScrollView>
+    </ThemedView>
   );
 }
 
@@ -124,12 +134,14 @@ export default React.memo(AddScreen);
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: 'red',
   },
   scrollViewContent: {
-    // flex: 1,
     flexGrow: 1,
-    marginHorizontal: 15,
-    maxHeight: '120%',
+    // flex: 1,
+    paddingHorizontal: 15,
+    backgroundColor: 'red',
+    paddingTop: STATUSBAR_HEIGHT + 105,
   },
   titleContainer: {
     position: 'absolute',
@@ -163,8 +175,11 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   scrollContainer: {
-    flexGrow: 1,
+    flex: 1,
     paddingHorizontal: 15,
     paddingTop: STATUSBAR_HEIGHT + 105,
+  },
+  saveButton: {
+    marginTop: 20,
   },
 });

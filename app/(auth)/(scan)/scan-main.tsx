@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
-import { StyleSheet, View, Text, ActivityIndicator, TouchableWithoutFeedback, LayoutChangeEvent, Linking, SafeAreaView, StatusBar, Touchable } from 'react-native';
+import { StyleSheet, View, Text, ActivityIndicator, TouchableWithoutFeedback, LayoutChangeEvent, Linking, SafeAreaView, StatusBar } from 'react-native';
 import { Camera, Code, useCameraDevice, useCameraPermission, useCodeScanner, CodeScannerFrame } from 'react-native-vision-camera';
 import Reanimated, { useSharedValue, useAnimatedStyle, withSpring, runOnJS, withTiming, useAnimatedProps, SharedValue } from 'react-native-reanimated';
 import {
@@ -458,7 +458,7 @@ const styles = StyleSheet.create({
     marginTop: STATUSBAR_HEIGHT + 10,
     flex: 2.5,
     backgroundColor: 'black',
-    borderRadius: 10,
+    borderRadius: 15,
     overflow: 'hidden',
   },
   loader: {
