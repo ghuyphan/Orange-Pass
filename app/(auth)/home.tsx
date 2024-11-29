@@ -238,54 +238,123 @@ function HomeScreen() {
   const searchContainerStyle = useAnimatedStyle(() => {
     return {
       paddingHorizontal: 15,
-      height: isSearching ? withTiming(40, { duration: 250, easing: Easing.out(Easing.ease) }) : withTiming(0, { duration: 250, easing: Easing.out(Easing.ease) }),
-      opacity: withTiming(isSearching ? 1 : 0, { duration: 250, easing: Easing.out(Easing.ease) }),
-      transform: [{ translateY: withTiming(isSearching ? 0 : -20, { duration: 250, easing: Easing.out(Easing.quad) }) }],
+      height: isSearching 
+        ? withTiming(40, { 
+            duration: 250, 
+            easing: Easing.bezier(0.4, 0, 0.2, 1) 
+          }) 
+        : withTiming(0, { 
+            duration: 200, 
+            easing: Easing.bezier(0.4, 0, 0.2, 1) 
+          }),
+      opacity: withTiming(isSearching ? 1 : 0, { 
+        duration: 250, 
+        easing: Easing.out(Easing.ease) 
+      }),
+      transform: [
+        { 
+          scale: withTiming(isSearching ? 1 : 0.95, { 
+            duration: 250, 
+            easing: Easing.out(Easing.ease) 
+          })
+        }, 
+        { 
+          translateY: withTiming(isSearching ? 0 : -5, { 
+            duration: 250, 
+            easing: Easing.out(Easing.ease) 
+          }) 
+        }
+      ],
       overflow: 'hidden',
       pointerEvents: isSearching ? 'auto' : 'none',
-      marginBottom: isSearching ? withTiming(15, { duration: 250, easing: Easing.out(Easing.ease) }) : withTiming(0, { duration: 250, easing: Easing.out(Easing.ease) }),
+      marginBottom: isSearching 
+        ? withTiming(15, { 
+            duration: 250, 
+            easing: Easing.bezier(0.4, 0, 0.2, 1) 
+          }) 
+        : withTiming(0, { 
+            duration: 200, 
+            easing: Easing.bezier(0.4, 0, 0.2, 1) 
+          }),
     };
   }, [isSearching]);
 
   const titleContainerStyle = useAnimatedStyle(() => {
-    const scrollThreshold = isSearching === true ? 140 + 40 : 120;
-
+    // Adjust these thresholds based on your design preferences
+    const scrollThreshold = isSearching ? 180 : 120; // Increased threshold when searching
+    const animationRange = 50; // Range over which the animation occurs
+  
+    // Interpolate opacity with a smoother transition
     const opacity = interpolate(
       scrollY.value,
-      [scrollThreshold, scrollThreshold + 30],
+      [scrollThreshold, scrollThreshold + animationRange],
       [1, 0],
       Extrapolation.CLAMP
     );
-
+  
+    // Softer vertical translation
     const translateY = interpolate(
       scrollY.value,
-      [0, 150],
-      [0, -35],
+      [0, scrollThreshold],
+      [0, -30],
       Extrapolation.CLAMP
     );
-
+  
     return {
       opacity,
       transform: [{ translateY }],
-      zIndex: scrollY.value > 100 || isActive ? 0 : 1,
+      zIndex: scrollY.value > 120 ? 0 : 1,
     };
   });
 
-  const listHeaderStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(scrollY.value, [0, 50], [1, 0], Extrapolation.CLAMP),
-    pointerEvents: scrollY.value > 40 ? 'none' : 'auto',
-  }));
-
-  const fabStyle = useAnimatedStyle(() => {
-    const marginBottom = interpolate(
-      isBottomToastVisible ? 1 : 0,
-      [-0.5, 1.5],
-      [20, 60], // 40 is the original margin, 60 is the toast height (adjust if needed)
+  const listHeaderStyle = useAnimatedStyle(() => {
+    // More relaxed thresholds
+    const fadeStartThreshold = isSearching ? 10 : 5;    
+    const fadeCompleteThreshold = isSearching ? 40 : 30; 
+  
+    // Softer opacity curve that respects search state
+    const opacity = interpolate(
+      scrollY.value,
+      [fadeStartThreshold, fadeCompleteThreshold],
+      [1, 0],
       Extrapolation.CLAMP
     );
+  
+    // Even gentler vertical translation
+    const translateY = interpolate(
+      scrollY.value,
+      [0, fadeCompleteThreshold],
+      [0, -3],  // Very subtle movement
+      Extrapolation.CLAMP
+    );
+  
+    // More subtle scale effect
+    const scale = interpolate(
+      scrollY.value,
+      [0, fadeCompleteThreshold],
+      [1, 0.97],  // Extremely subtle scale reduction
+      Extrapolation.CLAMP
+    );
+  
+    return {
+      opacity,
+      transform: [
+        { scale },
+        { translateY }
+      ],
+      // Ensure interactivity when not fully scrolled
+      pointerEvents: scrollY.value > fadeCompleteThreshold ? 'none' : 'auto',
+    };
+  }, [isSearching]); // Add isSearching as a dependency
+  
+  const fabStyle = useAnimatedStyle(() => {
+    const marginBottom = withTiming(isBottomToastVisible ? 40 : 10, {
+      duration: 300,
+      easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+    });
     return {
       marginBottom,
-      zIndex: isActive ? 10 : 0, 
+      zIndex: isActive ? 0 : 1,
     };
   });
 
@@ -337,36 +406,24 @@ function HomeScreen() {
 
   const onDragEnd = useCallback(async ({ data }: { data: QRRecord[] }) => {
     try {
-      // Check if the order has changed
-      const isOrderChanged =
-        data.length !== qrData.length ||
-        data.some((item, index) => item.id !== qrData[index].id);
+      triggerHapticFeedback();
+      const updatedData = data.map((item, index) => ({
+        ...item,
+        qr_index: index,
+        updated: new Date().toISOString(),
+      }));
   
-      // Proceed only if the order has changed
-      if (isOrderChanged) {
-        // Update the component state with the new order
-        setQrData(data); // This will re-render DraggableFlatList
+      // Update the component state with the new order
+      setQrData(updatedData);
   
-        // Update qr_index values and timestamps
-        const updatedData = data.map((item, index) => ({
-          ...item,
-          qr_index: index,
-          updated: new Date().toISOString(),
-        }));
-  
-        // Update the indexes and timestamps in the local database
-        await updateQrIndexes(updatedData);
-        // console.log('QR indexes and timestamps updated in the database');
-      } else {
-        // console.log('Order has not changed; no update needed.');
-      }
+      // Update the indexes and timestamps in the local database
+      await updateQrIndexes(updatedData);
     } catch (error) {
       console.error('Error updating QR indexes and timestamps:', error);
     } finally {
       setIsActive(false);
     }
-  }, [qrData]); // Include qrData in the dependency array
-
+  }, []);
   const scrollToTop = useCallback(() => {
     flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
   }, [flatListRef]);
@@ -423,7 +480,6 @@ function HomeScreen() {
 
   const renderItem = useCallback(
     ({ item, drag }: { item: QRRecord; drag: () => void }) => {
-
       return (
         <ScaleDecorator activeScale={1.04}>
           <ThemedCardItem

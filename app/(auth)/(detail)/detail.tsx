@@ -97,18 +97,31 @@ export default function DetailScreen() {
     const transferHeight = useSharedValue(0);
 
     const transferStyle = useAnimatedStyle(() => ({
-        height: withTiming(transferHeight.value, { duration: 250, easing: Easing.out(Easing.ease) }),
-        opacity: withTiming(transferHeight.value > 0 ? 1 : 0, { duration: 250, easing: Easing.out(Easing.ease) }),
-        overflow: 'hidden', // Giữ nội dung trong phạm vi chiều cao
-        pointerEvents: transferHeight.value > 0 ? 'auto' : 'none', // Tắt sự kiện khi ẩn
+        height: withTiming(transferHeight.value, { 
+            duration: 300, 
+            easing: Easing.bezier(0.4, 0, 0.2, 1) // More natural cubic bezier curve
+        }),
+        opacity: withTiming(transferHeight.value > 0 ? 1 : 0, { 
+            duration: 250, 
+            easing: Easing.out(Easing.quad) // Smoother opacity transition
+        }),
+        transform: [
+            { 
+                scaleY: withTiming(transferHeight.value > 0 ? 1 : 0.95, {
+                    duration: 300,
+                    easing: Easing.bezier(0.4, 0, 0.2, 1)
+                })
+            }
+        ],
+        overflow: 'hidden',
+        pointerEvents: transferHeight.value > 0 ? 'auto' : 'none',
     }));
-
+    
     const onToggleTransfer = useCallback(() => {
         if (isOffline) return;
-        // triggerLightHapticFeedback();
-
-        // Chuyển đổi giữa mở và đóng `transfer container` bằng cách thay đổi `height`
-        transferHeight.value = transferHeight.value === 0 ? 100 : 0; // Điều chỉnh 90 thành chiều cao mong muốn
+    
+        // Toggle between 0 and 100, with a slight overshoot for a more dynamic feel
+        transferHeight.value = transferHeight.value === 0 ? 100 : 0;
     }, [isOffline]);
 
     const transferAmount = useCallback(throttle(async () => {
