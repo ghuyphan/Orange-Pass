@@ -1,5 +1,5 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { useState, useMemo, forwardRef } from 'react'; 
+import { useState, useMemo, forwardRef } from 'react';
 import { TextInput, StyleSheet, View, Pressable } from 'react-native';
 import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
@@ -35,6 +35,8 @@ export type ThemedInputProps = {
     onFocus?: () => void;
     /** Function to call when the clear button is pressed */
     onSubmitEditing?: () => void;
+    /** Whether the input is disabled */
+    disabled?: boolean; 
 };
 
 export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(({
@@ -51,9 +53,10 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(({
     onChangeText = () => { },
     onBlur = () => { },
     onFocus = () => { },
-    onSubmitEditing = () => { }
-}, ref) => { 
-    const { currentTheme } = useTheme(); 
+    onSubmitEditing = () => { },
+    disabled = false // Add disabled prop with default value
+}, ref) => {
+    const { currentTheme } = useTheme();
     const color = currentTheme === 'light' ? Colors.light.text : Colors.dark.text;
     const [localValue, setLocalValue] = useState(value);
     const [isSecure, setIsSecure] = useState(secureTextEntry);
@@ -75,7 +78,7 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(({
         {
             backgroundColor: currentTheme === 'light' ? Colors.light.inputBackground : Colors.dark.inputBackground,
             borderBottomColor: currentTheme === 'light' ? Colors.light.error : Colors.dark.error,
-            borderBottomWidth: isError && errorMessage.length > 0 ? 2 : 0
+            borderBottomWidth: isError && errorMessage.length > 0 ? 2 : 0,
         },
         style,
     ]), [currentTheme, isError, errorMessage, style]);
@@ -105,8 +108,9 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(({
                         accessible
                         aria-label={label}
                         keyboardType={keyboardType}
+                        editable={!disabled} // Disable input if disabled prop is true
                     />
-                    {localValue.length > 0 && (
+                    {localValue.length > 0 && !disabled && ( // Only show buttons if input is not disabled
                         <Pressable
                             onPress={secureTextEntry ? onToggleSecureValue : onClearValue}
                             style={[styles.iconTouchable]}

@@ -61,7 +61,7 @@
     "react-native-screens": "3.31.1",
     "react-native-svg": "15.2.0",
     "react-native-svg-transformer": "^1.5.0",
-    "react-native-vision-camera": "^4.5.3",
+    "react-native-vision-camera": "^4.6.3",
     "react-native-web": "~0.19.10",
     "react-native-wifi-reborn": "^4.12.1",
     "react-native-worklets-core": "^1.5.0",

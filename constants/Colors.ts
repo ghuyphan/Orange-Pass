@@ -20,7 +20,7 @@ export const Colors = {
     logoIcon: '#FF8A65', // Dark orange for logos
   },
   dark: {
-    text: '#FFF5E1', // Light gray for text on dark background
+    text: '#FFFBF4', // Light gray for text on dark background
     background: '#181818', // Very dark background for dark mode
     tint: tintColorDark,
     icon: '#FFB74D', // Bright orange for icons

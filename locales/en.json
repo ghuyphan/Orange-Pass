@@ -99,10 +99,14 @@
       "footer": "Add your first QR code",
       "footerButton": "Add",
       "content": "Keep your banks, wallet, membership QR codes, loyalty cards, and more all in one convenient place. Stay organized and access everything you need quickly and easily."
+    },
+    "fab": {
+      "add": "Add",
+      "scan": "Scan"
     }
   },
   "addScreen": {
-    "title": "Add QR Code",
+    "title": "Add Card",
     "type": "Type",
     "bank": "Bank",
     "store": "Store",

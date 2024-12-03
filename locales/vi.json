@@ -100,7 +100,21 @@
       "footer": "Thêm mã QR mới",
       "footerButton": "Thêm",
       "content": "Giữ tất cả mã QR ngân hàng, ví điện tử, thẻ thành viên và nhiều thứ khác của bạn ở một nơi tiện lợi. Dễ dàng sắp xếp và truy cập mọi thứ bạn cần một cách nhanh chóng."
+    },
+    "fab": {
+      "add": "Thêm mã",
+      "scan": "Quét mã"
     }
+  },
+  "addScreen": {
+    "title": "Thêm thẻ",
+    "type": "Type",
+    "bank": "Bank",
+    "store": "Store",
+    "ewallet": "E-Wallet",
+    "qr": "QR Code",
+    "barcode": "Barcode",
+    "image": "Image"
   },
   "scanScreen": {
     "join": "Kết nối",

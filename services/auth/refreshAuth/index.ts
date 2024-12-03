@@ -8,94 +8,128 @@ import { getTokenExpirationDate } from "@/utils/JWTdecode";
 import { getUserById } from '@/services/localDB/userDB';
 import { t } from '@/i18n';
 
-// Mapping function for UserRecord
-const mapRecordtoUserData = (record: any): UserRecord => ({
-    id: record.id,
-    username: record.username || '',
-    email: record.email || '',
-    verified: record.verified || false,
-    name: record.name || '',
-    avatar: record.avatar || ''
-});
+// Enhanced type definitions
+interface AuthErrorData {
+    status: number;
+    message: string;
+}
 
-// Handle errors during token refresh
-const handleTokenRefreshError = async (error: any, authToken: string): Promise<boolean> => {
-    const errorData: { status: number; message: string } = error as { status: number; message: string };
-    await SecureStore.deleteItemAsync('authToken');
+// More robust mapping function with type safety
+const mapRecordToUserData = (record: Record<string, any>): UserRecord => {
+    return {
+        id: record.id ?? '',
+        username: record.username ?? '',
+        email: record.email ?? '',
+        verified: record.verified ?? false,
+        name: record.name ?? '',
+        avatar: record.avatar ?? ''
+    };
+};
 
-    switch (errorData.status) {
-        case 401:
-        case 403:
-        case 404:
-            store.dispatch(setErrorMessage(t(`authRefresh.errors.${errorData.status}`)));
+// Centralized error handling with more specific error types
+const handleTokenRefreshError = async (
+    error: Error & { data?: AuthErrorData }, 
+    authToken: string
+): Promise<boolean> => {
+    const errorStatus = error.data?.status ?? 500;
+
+    switch (errorStatus) {
+        case 401:   // Unauthorized
+        case 403:   // Forbidden
+        case 404:   // Not Found
+            await SecureStore.deleteItemAsync('authToken');
+            store.dispatch(setErrorMessage(t(`authRefresh.errors.${errorStatus}`)));
             return true;
-        default:
+        
+        case 500:   // Internal Server Error
             store.dispatch(setErrorMessage(t('authRefresh.errors.500')));
+            console.warn('Token refresh encountered a server error', error);
+            return false;
+        
+        default:
+            await SecureStore.deleteItemAsync('authToken');
+            store.dispatch(setErrorMessage(t('authRefresh.errors.unknown')));
+            console.error('Unexpected token refresh error', error);
             return true;
     }
 };
 
-// Initial authentication check
+// Comprehensive initial authentication check
 const checkInitialAuth = async (): Promise<boolean> => {
     try {
-        const isOffline = store.getState().network.isOffline;
+        const { network: { isOffline } } = store.getState();
         const authToken = await SecureStore.getItemAsync('authToken');
         const userID = await SecureStore.getItemAsync('userID');
 
-        if (authToken && userID) {
-            const expirationDate = getTokenExpirationDate(authToken);
+        // Early return if no token or user ID
+        if (!authToken || !userID) return false;
 
-            if (expirationDate && expirationDate > new Date()) {
-                const localUserData = await getUserById(userID);
-
-                if (localUserData) {
-                    store.dispatch(setAuthData({ token: authToken, user: localUserData }));
-
-                    // Only refresh if online
-                    if (!isOffline) { 
-                        // Refresh token in the background (no need to wait)
-                        refreshAuthToken(authToken); 
-                    }
-                    return true;
-                }
-            } else if (!isOffline) { // Only refresh if online
-                const refreshSuccess = await refreshAuthToken(authToken);
-                return refreshSuccess;
-            }
+        const expirationDate = getTokenExpirationDate(authToken);
+        
+        // Check token validity
+        if (!expirationDate || expirationDate <= new Date()) {
+            return isOffline ? false : await refreshAuthToken(authToken);
         }
-        return false;
-    } catch {
+
+        // Retrieve local user data
+        const localUserData = await getUserById(userID);
+        if (!localUserData) return false;
+
+        // Update auth state
+        store.dispatch(setAuthData({ token: authToken, user: localUserData }));
+
+        // Attempt token refresh in background if online
+        if (!isOffline) {
+            refreshAuthToken(authToken).catch(error => {
+                console.warn('Background token refresh failed', error);
+            });
+        }
+
+        return true;
+    } catch (error) {
+        console.error('Authentication check failed', error);
         return false;
     }
 };
 
-// Function to refresh auth token in the background
+// Refined token refresh with improved error handling
 const refreshAuthToken = async (authToken: string): Promise<boolean> => {
     try {
+        // Validate existing auth store
         pb.authStore.save(authToken, null);
-
         if (!pb.authStore.isValid) {
             await SecureStore.deleteItemAsync('authToken');
             store.dispatch(setErrorMessage(t('authRefresh.errors.401')));
             return false;
         }
 
+        // Attempt to refresh authentication
         const authData = await pb.collection('users').authRefresh();
-
+        
+        // Validate refresh response
         if (!authData?.token || !authData?.record) {
-            throw new Error("Invalid auth refresh response");
+            throw new Error("Invalid authentication refresh response");
         }
 
-        const userData = mapRecordtoUserData(authData.record);
+        // Update stored authentication details
+        const userData = mapRecordToUserData(authData.record);
         await SecureStore.setItemAsync('authToken', authData.token);
         pb.authStore.save(authData.token, authData.record);
 
-        store.dispatch(setAuthData({ token: authData.token, user: userData }));
+        // Update global state
+        store.dispatch(setAuthData({ 
+            token: authData.token, 
+            user: userData 
+        }));
+
         return true;
     } catch (error: any) {
-        await handleTokenRefreshError(error, authToken);
-        return false;
+        return handleTokenRefreshError(error, authToken);
     }
 };
 
-export { mapRecordtoUserData, checkInitialAuth };
+export { 
+    mapRecordToUserData, 
+    checkInitialAuth, 
+    refreshAuthToken 
+};

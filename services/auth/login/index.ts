@@ -1,7 +1,7 @@
 import pb from "@/services/pocketBase";
 import { Keyboard } from "react-native";
 import * as SecureStore from 'expo-secure-store';
-import { mapRecordtoUserData } from "../refreshAuth";
+import { mapRecordToUserData } from "../refreshAuth";
 import { store } from "@/store";
 import { setAuthData } from "@/store/reducers/authSlice";
 import { t } from '@/i18n';
@@ -18,7 +18,7 @@ export const login = async (email: string, password: string) => {
             const authData = await pb.collection('users').authWithPassword(email, password);
             await SecureStore.setItemAsync('authToken', authData.token);
             await SecureStore.setItemAsync('userID', authData.record.id)
-            const userData = mapRecordtoUserData(authData.record);
+            const userData = mapRecordToUserData(authData.record);
             store.dispatch(setAuthData({ token: authData.token, user: userData }));
             await createTable();
             await insertUser(userData);

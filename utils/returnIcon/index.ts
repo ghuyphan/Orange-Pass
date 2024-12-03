@@ -76,5 +76,5 @@ export function getIconPath(key: string): any {
       'TOP': require('@/assets/images/logoIcons/TOP.png'),
       'WNM': require('@/assets/images/logoIcons/WNM.png'),
   } as Record<string, any>;
-  return iconPaths[key];
+  return iconPaths[key] || require('@/assets/images/logoIcons/default.png'); 
 }

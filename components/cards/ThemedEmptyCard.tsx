@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { StyleSheet, View, Pressable } from 'react-native';
+import { StyleSheet, View, Pressable, Image } from 'react-native';
 import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
 import { ThemedButton } from '../buttons/ThemedButton';
@@ -7,7 +7,7 @@ import { ThemedButton } from '../buttons/ThemedButton';
 // import { useColorScheme } from '@/hooks/useColorScheme';
 import { useTheme } from '@/context/ThemeContext';
 import { Colors } from '@/constants/Colors';
-import CARD from '@/assets/svgs/card.svg';
+// import CARD from '@/assets/svgs/card.svg';
 
 export type ThemedEmptyCard = {
     /** Light color theme for the card text */
@@ -78,11 +78,11 @@ export function ThemedEmptyCard({
                         </ThemedText>
                     </View>
                     <View style={styles.cardImageContainer}>
-                        {/* <Image
-                            source={require('@/assets/images/empty-icon.png')}
+                        <Image
+                            source={require('@/assets/images/card.png')}
                             style={styles.image}
-                        /> */}
-                        <CARD width={320} height={350} />
+                        />
+                        {/* <CARD width={320} height={320} /> */}
                     </View>
                     <View style={[styles.cardFooterContainer, footerBackground, footerStyle]}>
                         <ThemedText>{footerLabel}</ThemedText>
@@ -106,12 +106,13 @@ const styles = StyleSheet.create({
     },
     cardImageContainer: {
         alignItems: 'center',
-        height: 220,
+        height: 230,
         justifyContent: 'center',
+        paddingBottom: 20
     },
     image: {
-        width: 400, 
-        height: 350, 
+        width: 350, 
+        height: 300, 
         resizeMode: 'cover',    
     },
     cardFooterContainer: {

@@ -1,5 +1,5 @@
 import React, { memo, useMemo, useState, useEffect } from 'react';
-import { Image, StyleSheet, View, TouchableHighlight, InteractionManager, useWindowDimensions } from 'react-native';
+import { Image, StyleSheet, View, InteractionManager, useWindowDimensions } from 'react-native';
 import { ThemedText } from '../ThemedText';
 import QRCode from 'react-native-qrcode-svg';
 import Barcode from 'react-native-barcode-svg';
@@ -8,66 +8,44 @@ import { getIconPath } from '@/utils/returnIcon';
 import { returnItemData } from '@/utils/returnItemData';
 import { returnMidpointColor } from '@/utils/returnMidpointColor';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Colors } from '@/constants/Colors';
 
 export type ThemedPinnedCardProps = {
-  lightColor?: string;
-  darkColor?: string;
   code: string;
   type: 'bank' | 'store' | 'ewallet';
   metadata: string;
   metadata_type: 'qr' | 'barcode';
   accountName?: string;
   accountNumber?: string;
-  onItemLongPress?: () => void;
   style?: object;
 };
 
 export const ThemedPinnedCard = memo(function ThemedPinnedCard({
-  lightColor,
-  darkColor,
   code,
   type,
   metadata,
   metadata_type,
   accountName,
   accountNumber,
-  onItemLongPress,
   style,
 }: ThemedPinnedCardProps): JSX.Element {
-  // const colorScheme = useColorScheme();
   const { currentTheme } = useTheme();
-  // const colors = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
-  const colors = currentTheme === 'light' ? Colors.light.text : Colors.dark.text;
   const { width } = useWindowDimensions();
 
-  // Calculate sizes based on screen width
-  const qrSize = useMemo(() => width * 0.4, [width]); // Adjust QR code size to 50% of screen width
-  const barcodeHeight = useMemo(() => width * 0.25, [width]); // Adjust Barcode height to 20% of screen width
-  const barcodeWidth = useMemo(() => width * 0.6, [width]); // Adjust Barcode max width to 80% of screen width
+  const qrSize = useMemo(() => width * 0.4, [width]);
+  const barcodeHeight = useMemo(() => width * 0.25, [width]);
+  const barcodeWidth = useMemo(() => width * 0.6, [width]);
 
-  // Memoize the result of returnItemData to avoid unnecessary computations
-  const { full_name, name, color, accent_color } = useMemo(() => returnItemData(code, type), [code, type]);
-
-  // Memoize iconPath to prevent re-computation
+  const { name, color, accent_color } = useMemo(() => returnItemData(code, type), [code, type]);
   const iconPath = useMemo(() => getIconPath(code), [code]);
 
-  // State to control when to render the QR code or barcode
   const [shouldRenderCode, setShouldRenderCode] = useState(false);
 
   useEffect(() => {
-    // Defer the rendering of the QR code/barcode to prevent blocking the UI thread
     const task = InteractionManager.runAfterInteractions(() => {
       setShouldRenderCode(true);
     });
     return () => task.cancel();
   }, []);
-
-  const underlayColor = useMemo(() => (currentTheme === 'light' ? color.dark : color.light), [
-    currentTheme,
-    color.light,
-    color.dark,
-  ]);
 
   return (
     <LinearGradient
@@ -85,11 +63,9 @@ export const ThemedPinnedCard = memo(function ThemedPinnedCard({
           <View style={styles.iconContainer}>
             <Image source={iconPath} style={styles.icon} resizeMode="contain" />
           </View>
-          <View style={styles.labelContainer}>
-            <ThemedText type="defaultSemiBold" style={styles.companyName}>
-              {name}
-            </ThemedText>
-          </View>
+          <ThemedText type="defaultSemiBold" style={styles.companyName}>
+            {name}
+          </ThemedText>
         </View>
       </View>
 
@@ -101,7 +77,7 @@ export const ThemedPinnedCard = memo(function ThemedPinnedCard({
                 value={metadata}
                 size={qrSize}
                 logo={iconPath}
-                logoSize={qrSize * 0.2} // Adjust logo size relative to the QR code size
+                logoSize={qrSize * 0.2}
                 logoBackgroundColor="white"
                 logoBorderRadius={50}
                 logoMargin={5}
@@ -112,22 +88,22 @@ export const ThemedPinnedCard = memo(function ThemedPinnedCard({
             )}
           </View>
         )}
-        {type === 'bank' ? (
-          <View style={[styles.infoContainer, styles.infoContainerWithMarginTop]}>
-            <ThemedText type='defaultSemiBold' style={styles.accountName} numberOfLines={1}>
-              {accountName}
-            </ThemedText>
-            <ThemedText style={styles.accountNumber} numberOfLines={1}>
-              {accountNumber}
-            </ThemedText>
-          </View>
-        ) :
-          <View style={[styles.infoContainer, styles.infoContainerWithMarginTop]}>
+        <View style={styles.infoContainer}>
+          {type === 'bank' ? (
+            <>
+              <ThemedText type="defaultSemiBold" style={styles.accountName} numberOfLines={1}>
+                {accountName}
+              </ThemedText>
+              <ThemedText style={styles.accountNumber} numberOfLines={1}>
+                {accountNumber}
+              </ThemedText>
+            </>
+          ) : (
             <ThemedText style={styles.memberID} numberOfLines={2}>
               {metadata}
             </ThemedText>
-          </View>
-        }
+          )}
+        </View>
       </View>
     </LinearGradient>
   );
@@ -136,20 +112,20 @@ export const ThemedPinnedCard = memo(function ThemedPinnedCard({
 const styles = StyleSheet.create({
   itemContainer: {
     borderRadius: 15,
-    paddingHorizontal: 15,
-    paddingVertical: 10,
+    paddingHorizontal: 15,  // Horizontal padding: 15
+    paddingVertical: 10,   // Vertical padding: 10
     overflow: 'hidden',
   },
   headerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 10,
+    marginBottom: 10,      // Vertical margin: 10
   },
   leftHeaderContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 10, 
   },
   iconContainer: {
     width: 35,
@@ -158,9 +134,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'white',
-  },
-  labelContainer: {
-    flexDirection: 'column',
   },
   icon: {
     width: '60%',
@@ -173,20 +146,17 @@ const styles = StyleSheet.create({
   qrContainer: {
     flexDirection: 'column',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'center', 
     overflow: 'hidden',
-    paddingTop: 15,
   },
   qr: {
-    padding: 10,
+    padding: 10, 
     borderRadius: 15,
     backgroundColor: 'white',
+    marginBottom: 10,   
   },
   infoContainer: {
-    justifyContent: 'center',
-  },
-  infoContainerWithMarginTop: {
-    marginTop: 15,
+    justifyContent: 'center', 
   },
   accountName: {
     fontSize: 16,
@@ -202,7 +172,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
     color: 'white',
-    maxWidth: 250,
-    overflow: 'hidden',
+    maxWidth: 250, 
   }
 });

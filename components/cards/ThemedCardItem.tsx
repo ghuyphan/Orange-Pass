@@ -1,59 +1,50 @@
-import React, { memo, useMemo, useEffect, useCallback } from 'react';
-import { Image, StyleSheet, View, Dimensions, Pressable } from 'react-native';
+import React, { memo, useMemo, useEffect } from 'react';
+import { Image, StyleSheet, View, Pressable } from 'react-native';
 import { ThemedText } from '../ThemedText';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import QRCode from 'react-native-qrcode-svg';
 import Barcode from 'react-native-barcode-svg';
 import { getIconPath } from '@/utils/returnIcon';
-import { returnItemData } from '@/utils/returnItemData'; 
-import { returnMidpointColor } from "@/utils/returnMidpointColor"
+import { returnItemData } from '@/utils/returnItemData';
+import { returnMidpointColor } from '@/utils/returnMidpointColor';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/context/ThemeContext';
-import { Colors } from '@/constants/Colors';
-import { useLocale } from '@/context/LocaleContext'; 
+import { useLocale } from '@/context/LocaleContext';
 
 export type ThemedCardItemProps = {
-  lightColor?: string;
-  darkColor?: string;
   code: string;
   type: 'bank' | 'store' | 'ewallet';
   metadata: string;
   metadata_type: 'qr' | 'barcode';
   accountName?: string;
   accountNumber?: string;
-  onItemPress: () => void;
+  style?: object;
+  animatedStyle?: object;
+  onItemPress?: () => void; // onItemPress is now optional
   onMoreButtonPress?: () => void;
   onDrag?: () => void;
-  style?: object;
-  isActive?: boolean;
 };
-
-const screenWidth = Dimensions.get('window').width;
 
 export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps): JSX.Element {
   const {
-    lightColor,
-    darkColor,
     code,
     type,
     metadata,
-    metadata_type,
+    metadata_type = 'qr',
     accountName,
     accountNumber,
+    style,
+    animatedStyle,
     onItemPress,
     onMoreButtonPress,
     onDrag,
-    style,
-    isActive,
   } = props;
 
   const { currentTheme } = useTheme();
   const { locale } = useLocale();
-  const colors = currentTheme === 'light' ? Colors.light.text : Colors.dark.text;
 
-  const { full_name, name, color, accent_color } = useMemo(() => returnItemData(code, type, locale), [code, type, locale]);
-
+  const { name, color, accent_color } = useMemo(() => returnItemData(code, type), [code, type, locale]);
   const iconPath = useMemo(() => getIconPath(code), [code]);
 
   const accountDisplayName = useMemo(() => {
@@ -62,56 +53,25 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
       const maskedLength = Math.max(0, length - 4);
       return `${'*'.repeat(maskedLength)}${accountNumber?.slice(-4)}`;
     } else {
-      return full_name;
+      return accountName;
     }
-  }, [type, accountNumber, full_name]);
-
-  const handleItemPress = useCallback(() => {
-    if (!isActive) {
-      onItemPress();
-    }
-  }, [isActive, onItemPress]);
-
-  const scale = useSharedValue(1);
-  const shadowOpacity = useSharedValue(0);
-  const elevation = useSharedValue(0);
-
-  useEffect(() => {
-    if (isActive) {
-      scale.value = withTiming(1.06, { duration: 150 });
-      shadowOpacity.value = withTiming(0.3, { duration: 150 });
-      elevation.value = 5;
-    } else {
-      scale.value = withTiming(1, { duration: 100 });
-      shadowOpacity.value = withTiming(0, { duration: 100 });
-      elevation.value = 0;
-    }
-  }, [isActive]);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    marginHorizontal: 15,
-    transform: [{ scale: scale.value }],
-    shadowOpacity: shadowOpacity.value,
-    elevation: elevation.value,
-    marginBottom: 25,
-    borderRadius: 15,
-    overflow: 'hidden'
-  }));
+  }, [type, accountNumber, accountName]);
 
   return (
-    <Animated.View style={animatedStyle}>
-      <Pressable
-        onPress={handleItemPress}
-        onLongPress={onDrag}
-        delayLongPress={150}
-        android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
-      >
-        <View style={[styles.touchableHighlight, style]}>
+    <Animated.View style={[animatedStyle, style]}>
+      {onItemPress ? (
+        <Pressable
+          onPress={onItemPress}
+          onLongPress={onDrag}
+          delayLongPress={150}
+          android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
+          style={{ marginHorizontal: 15, marginBottom: 15 }}
+        >
           <LinearGradient
             colors={
               currentTheme === 'light'
-                ? [color?.light || '#ffffff', returnMidpointColor(color.light, accent_color.light) || '#cccccc', accent_color?.light || '#f0f0f0']
-                : [color?.dark || '#000000', returnMidpointColor(color.dark, accent_color.dark) || '#505050', accent_color?.dark || '#303030']
+                ? [color?.light || '#f0f8ff', returnMidpointColor(color.light, accent_color.light) || '#dcedff', accent_color?.light || '#a8d4ff']
+                : [color?.dark || '#21252b', returnMidpointColor(color.dark, accent_color.dark) || '#343a40', accent_color?.dark || '#495057']
             }
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
@@ -132,8 +92,8 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
                     </ThemedText>
                     {type === 'bank' && (
                       <ThemedText style={styles.companyFullName} numberOfLines={1} ellipsizeMode="tail">
-                      {accountDisplayName}
-                    </ThemedText>
+                        {accountDisplayName}
+                      </ThemedText>
                     )}
                   </View>
                 </View>
@@ -163,20 +123,72 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
                 {accountNumber ? accountName : metadata}
               </ThemedText>
             </View>
-
           </LinearGradient>
-        </View>
-      </Pressable>
-    </Animated.View>
+        </Pressable>
+      ) : ( // Render content directly without Pressable
+        <LinearGradient
+          colors={
+            currentTheme === 'light'
+              ? [color?.light || '#ffffff', returnMidpointColor(color.light, accent_color.light) || '#cccccc', accent_color?.light || '#f0f0f0']
+              : [color?.dark || '#000000', returnMidpointColor(color.dark, accent_color.dark) || '#505050', accent_color?.dark || '#303030']
+          }
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.itemContainer}
+        >
+          <View style={styles.headerContainer}>
+            <View style={styles.headerLeft}>
+              <View style={styles.dragIconContainer}>
+                <MaterialCommunityIcons name="menu" size={18} color="white" />
+              </View>
+              <View style={styles.leftHeaderContainer}>
+                <View style={styles.iconContainer}>
+                  <Image source={iconPath} style={styles.icon} resizeMode="contain" />
+                </View>
+                <View style={styles.labelContainer}>
+                  <ThemedText type="defaultSemiBold" style={styles.companyName}>
+                    {name}
+                  </ThemedText>
+                  {type === 'bank' && (
+                    <ThemedText style={styles.companyFullName} numberOfLines={1} ellipsizeMode="tail">
+                      {accountDisplayName}
+                    </ThemedText>
+                  )}
+                </View>
+              </View>
+            </View>
+            {onMoreButtonPress && (
+              <Pressable
+                onPress={onMoreButtonPress}
+                hitSlop={{ bottom: 40, left: 30, right: 30, top: 30 }}
+              >
+                <MaterialCommunityIcons name="dots-vertical" size={18} color="white" />
+              </Pressable>
+            )}
+          </View>
 
+          <View style={styles.qrContainer}>
+            <View style={styles.qr}>
+              {metadata_type === 'qr' ? (
+                <QRCode value={metadata} size={75} />
+              ) : (
+                <Barcode height={75} maxWidth={150} value={metadata} format="CODE128" />
+              )}
+            </View>
+          </View>
+
+          <View style={styles.footerContainer}>
+            <ThemedText style={styles.footerText} numberOfLines={1} ellipsizeMode="tail">
+              {accountNumber ? accountName : metadata}
+            </ThemedText>
+          </View>
+        </LinearGradient>
+      )}
+    </Animated.View>
   );
 });
 
 const styles = StyleSheet.create({
-  touchableHighlight: {
-    borderRadius: 15,
-    overflow: 'hidden',
-  },
   itemContainer: {
     borderRadius: 15,
     overflow: 'hidden',
@@ -185,9 +197,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 10,
     paddingHorizontal: 15,
-    pointerEvents: 'box-none',
+    paddingVertical: 10,
   },
   headerLeft: {
     flexDirection: 'row',
@@ -224,15 +235,13 @@ const styles = StyleSheet.create({
   },
   companyFullName: {
     fontSize: 14,
-    flexShrink: 1,
-    width: screenWidth * 0.5,
-    overflow: 'hidden',
+    width: '100%',
     color: 'white',
   },
   qrContainer: {
-    marginVertical: 10,
-    paddingHorizontal: 15,
     alignItems: 'flex-end',
+    paddingHorizontal: 15,
+    marginVertical: 10,
     pointerEvents: 'none',
   },
   qr: {
@@ -244,6 +253,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 15,
+    // paddingVertical: 10, 
     paddingBottom: 10,
     pointerEvents: 'none',
   },

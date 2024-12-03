@@ -87,6 +87,10 @@ function HomeScreen() {
 
   const [fabOpen, setFabOpen] = useState(false);
 
+  const closeFAB = () => {
+    setFabOpen(false); 
+  };
+
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const syncWithServer = useCallback(async (userId: string) => {
     if (isOffline || isSyncing) {
@@ -238,115 +242,108 @@ function HomeScreen() {
   const searchContainerStyle = useAnimatedStyle(() => {
     return {
       paddingHorizontal: 15,
-      height: isSearching 
-        ? withTiming(40, { 
-            duration: 250, 
-            easing: Easing.bezier(0.4, 0, 0.2, 1) 
-          }) 
-        : withTiming(0, { 
-            duration: 200, 
-            easing: Easing.bezier(0.4, 0, 0.2, 1) 
-          }),
-      opacity: withTiming(isSearching ? 1 : 0, { 
-        duration: 250, 
-        easing: Easing.out(Easing.ease) 
+      height: isSearching
+        ? withTiming(40, {
+          duration: 250,
+          easing: Easing.bezier(0.4, 0, 0.2, 1)
+        })
+        : withTiming(0, {
+          duration: 200,
+          easing: Easing.bezier(0.4, 0, 0.2, 1)
+        }),
+      opacity: withTiming(isSearching ? 1 : 0, {
+        duration: 250,
+        easing: Easing.out(Easing.ease)
       }),
       transform: [
-        { 
-          scale: withTiming(isSearching ? 1 : 0.95, { 
-            duration: 250, 
-            easing: Easing.out(Easing.ease) 
+        {
+          scale: withTiming(isSearching ? 1 : 0.95, {
+            duration: 250,
+            easing: Easing.out(Easing.ease)
           })
-        }, 
-        { 
-          translateY: withTiming(isSearching ? 0 : -5, { 
-            duration: 250, 
-            easing: Easing.out(Easing.ease) 
-          }) 
+        },
+        {
+          translateY: withTiming(isSearching ? 0 : -5, {
+            duration: 250,
+            easing: Easing.out(Easing.ease)
+          })
         }
       ],
       overflow: 'hidden',
       pointerEvents: isSearching ? 'auto' : 'none',
-      marginBottom: isSearching 
-        ? withTiming(15, { 
-            duration: 250, 
-            easing: Easing.bezier(0.4, 0, 0.2, 1) 
-          }) 
-        : withTiming(0, { 
-            duration: 200, 
-            easing: Easing.bezier(0.4, 0, 0.2, 1) 
-          }),
+      marginBottom: isSearching
+        ? withTiming(15, {
+          duration: 250,
+          easing: Easing.bezier(0.4, 0, 0.2, 1)
+        })
+        : withTiming(0, {
+          duration: 200,
+          easing: Easing.bezier(0.4, 0, 0.2, 1)
+        }),
     };
   }, [isSearching]);
 
   const titleContainerStyle = useAnimatedStyle(() => {
-    // Adjust these thresholds based on your design preferences
-    const scrollThreshold = isSearching ? 180 : 120; // Increased threshold when searching
-    const animationRange = 50; // Range over which the animation occurs
-  
-    // Interpolate opacity with a smoother transition
+    const scrollThreshold = isSearching ? 180 : 120;
+    const animationRange = 50;
+
+    // Use withTiming for smoother, more performant animations
     const opacity = interpolate(
       scrollY.value,
       [scrollThreshold, scrollThreshold + animationRange],
       [1, 0],
       Extrapolation.CLAMP
     );
-  
-    // Softer vertical translation
+
     const translateY = interpolate(
       scrollY.value,
       [0, scrollThreshold],
       [0, -30],
       Extrapolation.CLAMP
     );
-  
+
     return {
       opacity,
       transform: [{ translateY }],
-      zIndex: scrollY.value > 120 ? 0 : 1,
+      zIndex: scrollY.value > 120 || isActive ? 0 : 1,
     };
-  });
+  }, [isSearching, isActive]); // Memoize based on these dependencies
 
   const listHeaderStyle = useAnimatedStyle(() => {
-    // More relaxed thresholds
-    const fadeStartThreshold = isSearching ? 10 : 5;    
-    const fadeCompleteThreshold = isSearching ? 40 : 30; 
-  
-    // Softer opacity curve that respects search state
+    const fadeStartThreshold = isSearching ? 10 : 5;
+    const fadeCompleteThreshold = isSearching ? 50 : 40;
+
     const opacity = interpolate(
       scrollY.value,
       [fadeStartThreshold, fadeCompleteThreshold],
       [1, 0],
       Extrapolation.CLAMP
     );
-  
-    // Even gentler vertical translation
+
     const translateY = interpolate(
       scrollY.value,
       [0, fadeCompleteThreshold],
-      [0, -3],  // Very subtle movement
+      [0, -2],
       Extrapolation.CLAMP
     );
-  
-    // More subtle scale effect
+
     const scale = interpolate(
       scrollY.value,
       [0, fadeCompleteThreshold],
-      [1, 0.97],  // Extremely subtle scale reduction
+      [1, 0.95],
       Extrapolation.CLAMP
     );
-  
+
     return {
       opacity,
       transform: [
         { scale },
         { translateY }
       ],
-      // Ensure interactivity when not fully scrolled
       pointerEvents: scrollY.value > fadeCompleteThreshold ? 'none' : 'auto',
     };
-  }, [isSearching]); // Add isSearching as a dependency
-  
+  }, [isSearching]); // Memoize based on search state
+
   const fabStyle = useAnimatedStyle(() => {
     const marginBottom = withTiming(isBottomToastVisible ? 40 : 10, {
       duration: 300,
@@ -368,6 +365,7 @@ function HomeScreen() {
 
   const onNavigateToDetailScreen = useCallback(
     throttle((item: QRRecord) => {
+      closeFAB();
       router.push({
         pathname: `/detail`,
         params: {
@@ -380,13 +378,16 @@ function HomeScreen() {
   );
 
   const onNavigateToScanScreen = useCallback(() => {
+    closeFAB();
     router.push('/(scan)/scan-main');
   }, []);
 
   const onNavigateToSettingsScreen = useCallback(() => {
+    closeFAB();
     router.push('/settings');
   }, []);
   const onNavigateToAddScreen = useCallback(() => {
+    closeFAB();
     router.push('/(add)/add-new');
   }, [])
 
@@ -400,6 +401,7 @@ function HomeScreen() {
   });
 
   const onDragBegin = useCallback(() => {
+    closeFAB();
     triggerHapticFeedback();
     setIsActive(true);
   }, []);
@@ -412,10 +414,10 @@ function HomeScreen() {
         qr_index: index,
         updated: new Date().toISOString(),
       }));
-  
+
       // Update the component state with the new order
       setQrData(updatedData);
-  
+
       // Update the indexes and timestamps in the local database
       await updateQrIndexes(updatedData);
     } catch (error) {
@@ -424,7 +426,9 @@ function HomeScreen() {
       setIsActive(false);
     }
   }, []);
+
   const scrollToTop = useCallback(() => {
+    closeFAB();
     flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
   }, [flatListRef]);
 
@@ -438,35 +442,39 @@ function HomeScreen() {
     setIsModalVisible(true);
   }, []);
 
+  const reindexQrCodes = async (qrCodes: QRRecord[]) => {
+    return qrCodes.map((item, index) => ({
+      ...item,
+      qr_index: index,
+      updated: new Date().toISOString(),
+    }));
+  };
+  
   const onDeletePress = useCallback(async () => {
     if (!selectedItemId) return;
-
+  
     try {
       setIsSyncing(true);
       setIsToastVisible(true);
       setToastMessage(t('homeScreen.deleting'));
-
-      // Mark the QR code as deleted in the local database
+  
+      // Delete the specific QR code
       await deleteQrCode(selectedItemId);
-
-      // Fetch updated data from the local database
+  
+      // Fetch updated data
       const updatedLocalData = await getQrCodesByUserId(userId);
-
+  
       // Reindex the remaining items
-      const reindexedData = updatedLocalData.map((item, index) => ({
-        ...item,
-        qr_index: index,
-        updated: new Date().toISOString(),
-      }));
-
-      // Update the indexes and timestamps in the local database
+      const reindexedData = await reindexQrCodes(updatedLocalData);
+  
+      // Update indexes in the database
       await updateQrIndexes(reindexedData);
-
-      // Update state with the new data
+  
+      // Update UI state
       setQrData(reindexedData);
       setIsEmpty(reindexedData.length === 0);
-
-      // Deletion successful, hide modal and toast
+  
+      // Reset UI state
       setIsModalVisible(false);
       setIsToastVisible(false);
     } catch (error) {
@@ -475,36 +483,34 @@ function HomeScreen() {
       setIsToastVisible(true);
     } finally {
       setSelectedItemId(null);
+      setIsSyncing(false);
     }
   }, [selectedItemId, userId]);
 
   const renderItem = useCallback(
-    ({ item, drag }: { item: QRRecord; drag: () => void }) => {
-      return (
-        <ScaleDecorator activeScale={1.04}>
-          <ThemedCardItem
-            onItemPress={() => onNavigateToDetailScreen(item)}
-            code={item.code}
-            type={item.type}
-            metadata={item.metadata}
-            metadata_type={item.metadata_type}
-            onMoreButtonPress={() => handleExpandPress(item.id)}
-            accountName={item.account_name}
-            accountNumber={item.account_number}
-            onDrag={drag}
-          />
-        </ScaleDecorator>
-      );
-    },
+    ({ item, drag }: { item: QRRecord; drag: () => void }) => (
+      <ScaleDecorator activeScale={1.04}>
+        <ThemedCardItem
+          key={item.id} // Ensure stable key
+          onItemPress={() => onNavigateToDetailScreen(item)}
+          {...item} // Spread item props for cleaner prop passing
+          onMoreButtonPress={() => handleExpandPress(item.id)}
+          onDrag={drag}
+        />
+      </ScaleDecorator>
+    ),
+    // Memoize dependencies more carefully
     [onNavigateToDetailScreen, handleExpandPress]
   );
 
-  const paddingValues = [0, screenHeight * 0.73, screenHeight * 0.43, screenHeight * 0.23];
+  const paddingValues = useMemo(() => {
+    return [0, screenHeight * 0.73, screenHeight * 0.43, screenHeight * 0.23];
+  }, [screenHeight]);
 
   const listContainerPadding = useMemo(() => {
-    return paddingValues[qrData.length] || 0; // Default to 0 if length is beyond the array
-  }, [qrData.length, screenHeight]);
-  
+    return paddingValues[qrData.length] || 0;
+  }, [qrData.length, paddingValues]);
+
   return (
     <ThemedView style={styles.container}>
       <ThemedView style={styles.blurContainer} />
@@ -576,7 +582,7 @@ function HomeScreen() {
                 <ThemedIconInput
                   style={styles.searchInput}
                   placeholder={t('homeScreen.searchPlaceholder')}
-                  iconName="search"
+                  iconName="magnify"
                   value={searchQuery}
                   onChangeText={setSearchQuery}
                   ref={inputRef}
@@ -603,7 +609,7 @@ function HomeScreen() {
           keyExtractor={(item, index) => `draggable-item-${item.id}`}
           containerStyle={{ flex: 1 }}
           contentContainerStyle={[styles.listContainer, qrData.length > 0 && { paddingBottom: listContainerPadding }]}
-          scrollEventThrottle={32}
+          scrollEventThrottle={16}
           showsVerticalScrollIndicator={false}
           onDragBegin={onDragBegin}
           onDragEnd={onDragEnd}
@@ -613,7 +619,6 @@ function HomeScreen() {
             scrollY.value = offset;
           }}
           decelerationRate={'fast'}
-
         />
       )}
       {!isLoading &&
@@ -622,10 +627,10 @@ function HomeScreen() {
           setOpen={setFabOpen}
           animatedStyle={[fabStyle, styles.fab]}
           onPress1={onNavigateToScanScreen}
-          onPress2={onNavigateToAddScreen} 
-          text1='Add'
-          text2='Scan'
-          />
+          onPress2={onNavigateToAddScreen}
+          text1={t('homeScreen.fab.add')}
+          text2={t('homeScreen.fab.scan')}
+        />
       }
       <ThemedStatusToast
         isVisible={isToastVisible}
@@ -639,7 +644,7 @@ function HomeScreen() {
         message={bottomToastMessage}
         iconName="cloud-offline"
         style={styles.bottomToastContainer}
-        
+
       />
       <ThemedBottomSheet
         ref={bottomSheetRef}

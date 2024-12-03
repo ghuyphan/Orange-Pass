@@ -1,5 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useState, useMemo, forwardRef } from 'react';
 import { TextInput, StyleSheet, View, Pressable } from 'react-native';
 import { ThemedView } from '../ThemedView';
@@ -9,7 +9,7 @@ import { useTheme } from '@/context/ThemeContext';
 export type ThemedIconInputProps = {
     lightColor?: string;
     darkColor?: string;
-    iconName: keyof typeof MaterialIcons.glyphMap;
+    iconName: keyof typeof MaterialCommunityIcons.glyphMap;
     value?: string;
     placeholder?: string;
     style?: object;
@@ -17,7 +17,7 @@ export type ThemedIconInputProps = {
     onChangeText?: (text: string) => void;
     onBlur?: () => void;
     onFocus?: () => void;
-    rightIconName?: keyof typeof MaterialIcons.glyphMap;
+    rightIconName?: keyof typeof MaterialCommunityIcons.glyphMap;
     onRightIconPress?: () => void;
     onSubmitEditing?: () => void;
     onLayout?: () => void;
@@ -65,7 +65,7 @@ export const ThemedIconInput = forwardRef<TextInput, ThemedIconInputProps>(({
         <ThemedView style={inputContainerStyle}>
             <View style={styles.inputRow}>
                 <View style={styles.leftContainer}>
-                    <MaterialIcons name={iconName} size={20} color={color || currentTheme === 'light' ? Colors.light.placeHolder : Colors.dark.placeHolder} />
+                    <MaterialCommunityIcons name={iconName} size={20} color={color || currentTheme === 'light' ? Colors.light.placeHolder : Colors.dark.placeHolder} />
                     <TextInput
                         ref={ref} // The ref is attached to the TextInput
                         style={[styles.input, { color }]}
@@ -103,7 +103,7 @@ export const ThemedIconInput = forwardRef<TextInput, ThemedIconInputProps>(({
                             hitSlop={40}
                         >
                             <View style={styles.iconTouchable}>
-                                <MaterialIcons
+                                <MaterialCommunityIcons
                                     name={rightIconName}
                                     size={20}
                                     color={color}

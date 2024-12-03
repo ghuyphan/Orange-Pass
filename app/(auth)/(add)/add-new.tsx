@@ -3,8 +3,6 @@ import { StyleSheet, View, Keyboard } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
-  withTiming,
-  Easing,
   interpolate,
   Extrapolation,
   useAnimatedScrollHandler
@@ -16,37 +14,19 @@ import { ThemedButton } from '@/components/buttons/ThemedButton';
 import { t } from '@/i18n';
 import { Colors } from '@/constants/Colors';
 import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
-import { useLocale } from '@/context/LocaleContext';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { useMMKVString } from 'react-native-mmkv';
 import { useTheme } from '@/context/ThemeContext';
 import { useLocalSearchParams } from 'expo-router';
 import { ThemedInput } from '@/components/Inputs';
+import { Formik } from 'formik';
+import { qrCodeSchema } from '@/utils/validationSchemas';
+import { ThemedCardItem } from '@/components/cards';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 const AnimatedKeyboardAwareScrollView = Animated.createAnimatedComponent(KeyboardAwareScrollView);
+
 const AddScreen: React.FC = () => {
-  const { updateLocale } = useLocale();
-  const [locale, setLocale] = useMMKVString('locale');
   const scrollY = useSharedValue(0);
   const { codeType, codeValue } = useLocalSearchParams();
-
-  const [isKeyboardVisible, setKeyboardVisible] = useState(false);
-  const [editedCodeType, setEditedCodeType] = useState(codeType?.toString() || '');
-  const [editedCodeValue, setEditedCodeValue] = useState(codeValue?.toString() || '');
-
-  useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
-      setKeyboardVisible(true);
-    });
-    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
-      setKeyboardVisible(false);
-    });
-
-    return () => {
-      keyboardDidHideListener.remove();
-      keyboardDidShowListener.remove();
-    };
-  }, []);
 
   const { currentTheme: theme } = useTheme();
   const colors = useMemo(() => (theme === 'light' ? Colors.light.text : Colors.dark.text), [theme]);
@@ -61,15 +41,39 @@ const AddScreen: React.FC = () => {
   });
 
   const titleContainerStyle = useAnimatedStyle(() => {
-    const translateY = interpolate(scrollY.value, [0, 140], [0, -35], Extrapolation.CLAMP);
-    const opacity = withTiming(scrollY.value > 70 ? 0 : 1, {
-      duration: 300,
-      easing: Easing.out(Easing.ease),
-    });
+    const scrollThreshold = 70;
+    const animationRange = 50;
+
+    const opacity = interpolate(
+      scrollY.value,
+      [scrollThreshold, scrollThreshold + animationRange],
+      [1, 0],
+      Extrapolation.CLAMP
+    );
+
+    const translateY = interpolate(
+      scrollY.value,
+      [0, scrollThreshold],
+      [0, -30],
+      Extrapolation.CLAMP
+    );
+
     return {
       opacity,
       transform: [{ translateY }],
-      zIndex: scrollY.value > 50 ? 0 : 20,
+      zIndex: scrollY.value > 50 ? 0 : 1,
+    };
+  });
+
+  const cardStyle = useAnimatedStyle(() => {
+    const scale = interpolate(
+      scrollY.value,
+      [0, 70],
+      [1, 0.8],
+      Extrapolation.CLAMP
+    )
+    return {
+      transform: [{ scale }],
     };
   });
 
@@ -77,55 +81,100 @@ const AddScreen: React.FC = () => {
     router.back();
   }, []);
 
-  const handleSave = useCallback(() => {
-    // Implement save logic here
-    console.log('Saving:', { editedCodeType, editedCodeValue });
-  }, [editedCodeType, editedCodeValue]);
+  const renderCardItem = (metadata: string) => { 
+    if (codeType) {
+      return (
+        <ThemedCardItem
+          code=''
+          type='store'
+          metadata={metadata} // Use the metadata passed from Formik
+          metadata_type={codeType === '256' ? 'qr' : 'barcode'}
+          animatedStyle={cardStyle}
+          style={{ marginBottom: 30 }}
+        />
+      );
+    }
+    return null;
+  };
 
   return (
-    <ThemedView style={styles.container}>
-      <ThemedView style={styles.blurContainer} />
-      <Animated.View style={[styles.titleContainer, titleContainerStyle]} pointerEvents="auto">
-        <View style={styles.headerContainer}>
-          <View style={styles.titleButtonContainer}>
-            <ThemedButton
-              iconName="chevron-left"
-              style={styles.titleButton}
-              onPress={onNavigateBack}
+    <Formik
+      initialValues={{
+        code: codeValue?.toString() || '',
+        qr_index: '',
+        metadata: codeValue?.toString() || '', // Initialize metadata with codeValue
+        type: codeType?.toString() || '',
+        metadata_type: 'qr',
+        account_name: '',
+        account_number: '',
+      }}
+      validationSchema={qrCodeSchema}
+      onSubmit={async (values, { setSubmitting }) => {
+        setSubmitting(true);
+        try {
+          console.log('Saving:', values);
+          router.replace('/(auth)/home');
+        } catch (error) {
+          console.error(error);
+        } finally {
+          setSubmitting(false);
+        }
+      }}
+    >
+      {({ handleChange, handleBlur, handleSubmit, values, errors, touched, isSubmitting }) => (
+        <ThemedView style={styles.container}>
+          <Animated.View style={[styles.titleContainer, titleContainerStyle]} pointerEvents="auto">
+            <View style={styles.headerContainer}>
+              <View style={styles.titleButtonContainer}>
+                <ThemedButton
+                  iconName="chevron-left"
+                  style={styles.titleButton}
+                  onPress={onNavigateBack}
+                />
+              </View>
+              <ThemedText style={styles.title} type="title">{t('addScreen.title')}</ThemedText>
+            </View>
+          </Animated.View>
+          <AnimatedKeyboardAwareScrollView
+            contentContainerStyle={[styles.scrollViewContent]}
+            enableOnAndroid={true}
+            extraScrollHeight={50}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            onScroll={scrollHandler}
+            scrollEnabled= {true}
+          >
+            {renderCardItem(values.metadata)} 
+            {/* <ThemedInput
+              iconName='qrcode'
+              placeholder={t('qrCodeScreen.codePlaceholder')}
+              label={t('qrCodeScreen.codeLabel')}
+              value={values.code}
+              onChangeText={handleChange('code')}
+              onBlur={handleBlur('code')}
+              error={touched.code && errors.code}
+            /> */}
+            <ThemedInput 
+              iconName='card-text-outline' 
+              placeholder={t('qrCodeScreen.metadataPlaceholder')} 
+              label={t('qrCodeScreen.metadataLabel')} 
+              value={values.metadata} 
+              onChangeText={handleChange('metadata')}
+              onBlur={handleBlur('metadata')}
+              error={touched.metadata && errors.metadata} 
+              disabled={true}
             />
-          </View>
-          <ThemedText style={styles.title} type="title">{t('addScreen.title')}</ThemedText>
-        </View>
-      </Animated.View>
-      <AnimatedKeyboardAwareScrollView
-        contentContainerStyle={[styles.scrollViewContent, {backgroundColor: theme === 'light' ? Colors.light.background : Colors.dark.background }]}
-        enableOnAndroid={true}
-        extraScrollHeight={50}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-        style={{ }}
-        onScroll={scrollHandler}
-      >
-        <ThemedInput
-          placeholder={t('languageScreen.placeholder')}
-          label='Mã vạch'
-          value={editedCodeValue}
-          onChangeText={setEditedCodeValue}
-        />
-        <ThemedInput
-          placeholder={t('languageScreen.placeholder')}
-          label='Code Type'
-          value={editedCodeType}
-          onChangeText={setEditedCodeType}
-        />
-        <ThemedButton
-          label='save'
-          onPress={handleSave}
-          style={styles.saveButton}
-        />
-        {/* </Animated.ScrollView> */}
-      </AnimatedKeyboardAwareScrollView>
-    </ThemedView>
+
+            <ThemedButton
+              label={t('addScreen.saveButton')}
+              onPress={handleSubmit}
+              style={styles.saveButton}
+              disabled={isSubmitting}
+            />
+          </AnimatedKeyboardAwareScrollView>
+        </ThemedView>
+      )}
+    </Formik>
   );
 }
 
@@ -134,13 +183,11 @@ export default React.memo(AddScreen);
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'red',
   },
   scrollViewContent: {
     flexGrow: 1,
-    // flex: 1,
+    maxHeight: '130%',
     paddingHorizontal: 15,
-    backgroundColor: 'red',
     paddingTop: STATUSBAR_HEIGHT + 105,
   },
   titleContainer: {

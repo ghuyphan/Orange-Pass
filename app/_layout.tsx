@@ -1,134 +1,167 @@
-import { useEffect, useState, useCallback } from 'react';
-import { StyleSheet, UIManager, Platform, Dimensions, View } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import { StyleSheet, UIManager, Platform, Dimensions } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { Provider } from 'react-redux';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { PaperProvider } from 'react-native-paper';
+
+// Import core services and providers
 import { store } from '@/store';
 import { createTable } from '@/services/localDB/userDB';
 import { checkInitialAuth } from '@/services/auth';
 import { checkOfflineStatus } from '@/services/network';
+import { storage } from '@/utils/storage';
+
+// Import context providers
 import { LocaleProvider } from '@/context/LocaleContext';
 import { ThemeProvider } from '@/context/ThemeContext';
-import { storage } from '@/utils/storage';
-import { StatusBar } from 'expo-status-bar';
+
+// Import components
 import { ThemedView } from '@/components/ThemedView';
 
-// Keep the splash screen visible while we fetch resources
+// Prevent auto-hide of splash screen
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
-    const [fontsLoaded] = useFonts({
-        'HelveticaNeue-Bold': require('../assets/fonts/HelveticaNeueBold.ttf'),
-    });
-
-    const [isAppReady, setIsAppReady] = useState(false);
-    const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-    const [hasSeenOnboarding, setHasSeenOnboarding] = useState<boolean | null>(null);
-    const router = useRouter();
-
-    // Enable layout animation on Android
-    if (Platform.OS === 'android') {
-        UIManager.setLayoutAnimationEnabledExperimental?.(true);
-    }
-
-    const onLayoutRootView = useCallback(() => {
-        if (isAppReady) {
-            SplashScreen.hideAsync();
-        }
-    }, [isAppReady]);
-
-    useEffect(() => {
-        const prepareApp = async () => {
-            try {
-                await createTable();
-
-                const onboardingStatus = storage.getBoolean('hasSeenOnboarding') ?? false;
-                setHasSeenOnboarding(onboardingStatus);
-
-                // Check authentication status *after* onboarding status is known
-                if (onboardingStatus) {
-                    const authStatus = await checkInitialAuth();
-                    setIsAuthenticated(authStatus);
-                } else {
-                    setIsAuthenticated(false);
-                }
-
-                if (fontsLoaded) {
-                    setIsAppReady(true);
-                }
-            } catch (error) {
-                console.error("Error during app initialization:", error);
-            }
-        };
-
-        prepareApp();
-
-        const unsubscribe = checkOfflineStatus();
-        return () => unsubscribe();
-    }, [fontsLoaded]);
-
-    useEffect(() => {
-        // This effect now runs only once when all states are ready
-        if (isAppReady && hasSeenOnboarding !== null && isAuthenticated !== null) {
-            if (!hasSeenOnboarding) {
-                router.replace('/onboard');
-            } else if (isAuthenticated) {
-                router.replace('/home');
-            } else {
-                router.replace('/login');
-            }
-        }
-    }, [isAppReady, hasSeenOnboarding, isAuthenticated, router]); // Add router to dependency array
-
-    if (!isAppReady || isAuthenticated === null || hasSeenOnboarding === null) {
-        return null;
-    }
-
-    return (
-        <ThemeProvider>
-            <Provider store={store}>
-                <GestureHandlerRootView>
-                    <PaperProvider>
-                        <LocaleProvider>
-                            <ThemedView style={styles.root} onLayout={onLayoutRootView}>
-                                <Stack
-                                    screenOptions={{
-                                        headerShown: false,
-                                        animation: 'ios',
-                                    }}
-                                >
-                                    <Stack.Screen
-                                        name="(public)"
-                                    />
-                                    <Stack.Screen
-                                        name="(auth)"
-                                        options={{
-                                            animation: 'none',
-                                        }}
-                                    />
-                                    <Stack.Screen
-                                        name="+not-found"
-                                    />
-                                    <Stack.Screen
-                                        name="onboard"
-                                    />
-                                </Stack>
-                            </ThemedView>
-                        </LocaleProvider>
-                    </PaperProvider>
-                </GestureHandlerRootView>
-            </Provider>
-        </ThemeProvider>
-    );
+// Type for app initialization state
+interface AppInitState {
+  isAppReady: boolean;
+  isAuthenticated: boolean | null;
+  hasSeenOnboarding: boolean | null;
 }
 
-const { width, height } = Dimensions.get('window');
+export default function RootLayout() {
+  // Font loading
+  const [fontsLoaded] = useFonts({
+    'HelveticaNeue-Bold': require('../assets/fonts/HelveticaNeueBold.ttf'),
+  });
 
+  // App initialization state
+  const [appState, setAppState] = useState<AppInitState>({
+    isAppReady: false,
+    isAuthenticated: null,
+    hasSeenOnboarding: null,
+  });
+
+  const router = useRouter();
+
+  // Enable layout animation on Android
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      UIManager.setLayoutAnimationEnabledExperimental?.(true);
+    }
+  }, []);
+
+  // Callback to hide splash screen when app is ready
+  const onLayoutRootView = useCallback(() => {
+    if (appState.isAppReady) {
+      SplashScreen.hideAsync();
+    }
+  }, [appState.isAppReady]);
+
+  // App initialization effect
+  useEffect(() => {
+    const prepareApp = async () => {
+      try {
+        // Create local database table
+        await createTable();
+
+        // Check onboarding status
+        const onboardingStatus = storage.getBoolean('hasSeenOnboarding') ?? false;
+
+        // Determine authentication status
+        const authStatus = onboardingStatus 
+          ? await checkInitialAuth() 
+          : false;
+
+        // Update app state
+        setAppState({
+          isAppReady: fontsLoaded,
+          isAuthenticated: authStatus,
+          hasSeenOnboarding: onboardingStatus,
+        });
+      } catch (error) {
+        console.error("App initialization error:", error);
+        
+        // Fallback state in case of initialization failure
+        setAppState(prev => ({
+          ...prev,
+          isAppReady: true,
+          isAuthenticated: false,
+        }));
+      }
+    };
+
+    // Run preparation and set up offline status check
+    prepareApp();
+    const unsubscribe = checkOfflineStatus();
+    
+    // Cleanup subscription
+    return () => unsubscribe();
+  }, [fontsLoaded]);
+
+  // Navigation effect based on app state
+  useEffect(() => {
+    const { isAppReady, hasSeenOnboarding, isAuthenticated } = appState;
+
+    if (isAppReady && hasSeenOnboarding !== null && isAuthenticated !== null) {
+      if (!hasSeenOnboarding) {
+        router.replace('/onboard');
+      } else if (isAuthenticated) {
+        router.replace('/home');
+      } else {
+        router.replace('/login');
+      }
+    }
+  }, [appState, router]);
+
+  // Render nothing until app is fully initialized
+  if (!appState.isAppReady || 
+      appState.isAuthenticated === null || 
+      appState.hasSeenOnboarding === null) {
+    return null;
+  }
+
+  return (
+    <ThemeProvider>
+      <Provider store={store}>
+        <GestureHandlerRootView style={styles.container}>
+          <PaperProvider>
+            <LocaleProvider>
+              <ThemedView 
+                style={styles.root} 
+                onLayout={onLayoutRootView}
+              >
+                <Stack
+                  screenOptions={{
+                    headerShown: false,
+                    animation: 'ios',
+                  }}
+                >
+                  <Stack.Screen name="(public)" />
+                  <Stack.Screen 
+                    name="(auth)" 
+                    options={{ animation: 'none' }} 
+                  />
+                  <Stack.Screen name="+not-found" />
+                  <Stack.Screen name="onboard" />
+                </Stack>
+              </ThemedView>
+            </LocaleProvider>
+          </PaperProvider>
+        </GestureHandlerRootView>
+      </Provider>
+    </ThemeProvider>
+  );
+}
+
+// Simplified styles
 const styles = StyleSheet.create({
-    root: {
-        flex: 1,
-    },
+  container: {
+    flex: 1,
+  },
+  root: {
+    flex: 1,
+  },
 });

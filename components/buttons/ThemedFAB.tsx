@@ -43,6 +43,7 @@ export function ThemedFAB({
  const icon = currentTheme === 'light' ? Colors.light.text : Colors.dark.text;
  const button = currentTheme === 'light' ? Colors.light.buttonBackground : Colors.dark.buttonBackground;
  const textColor = currentTheme === 'light' ? Colors.light.text : Colors.dark.text;
+ const textBackgroundColor = currentTheme === 'light' ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.4)';
 
  const translateY = useAnimatedStyle(() => {
   return {
@@ -132,7 +133,7 @@ export function ThemedFAB({
        <Animated.Text 
         style={[
          styles.buttonText, 
-         { color: textColor }, 
+         { color: textColor, backgroundColor: textBackgroundColor, borderRadius: 10, padding: 5 }, 
          textStyle, 
          textStyle2
         ]}
@@ -152,9 +153,9 @@ export function ThemedFAB({
        <Animated.Text 
         style={[
          styles.buttonText, 
-         { color: textColor }, 
+         { color: textColor, backgroundColor: textBackgroundColor, borderRadius: 10, padding: 5 }, 
          textStyle, 
-         textStyle1
+         textStyle1,
         ]}
        >
         {text1}

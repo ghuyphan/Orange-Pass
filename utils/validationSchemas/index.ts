@@ -39,3 +39,30 @@ export const forgotPasswordSchema = yup.object().shape({
         .email(t('forgotPasswordScreen.errors.invalidEmail'))
         .required(t('forgotPasswordScreen.errors.emailRequired')),
 });
+
+export const qrCodeSchema = yup.object().shape({
+    code: yup
+      .string()
+      .required(t('qrCodeScreen.errors.codeRequired')),
+    qr_index: yup
+      .number()
+      .integer(t('qrCodeScreen.errors.qrIndexInteger'))
+      .required(t('qrCodeScreen.errors.qrIndexRequired')),
+    metadata: yup
+      .string()
+      .nullable(), 
+    type: yup
+      .string()
+      .oneOf(['store', 'bank', 'ewallet'], t('qrCodeScreen.errors.invalidType'))
+      .required(t('qrCodeScreen.errors.typeRequired')),
+    metadata_type: yup
+      .string()
+      .oneOf(['qr', 'barcode'], t('qrCodeScreen.errors.invalidMetadataType'))
+      .required(t('qrCodeScreen.errors.metadataTypeRequired')),
+    account_name: yup
+      .string()
+      .nullable(),
+    account_number: yup
+      .string()
+      .nullable(),
+  });
