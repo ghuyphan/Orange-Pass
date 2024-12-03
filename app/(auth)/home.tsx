@@ -435,6 +435,7 @@ function HomeScreen() {
   const handleExpandPress = useCallback((id: string) => {
     setSelectedItemId(id);
     bottomSheetRef.current?.expand();
+    closeFAB();
   }, [setSelectedItemId, bottomSheetRef]);
 
   const onDeleteSheetPress = useCallback(() => {
@@ -630,6 +631,7 @@ function HomeScreen() {
           onPress2={onNavigateToAddScreen}
           text1={t('homeScreen.fab.add')}
           text2={t('homeScreen.fab.scan')}
+          text3='Gallery'
         />
       }
       <ThemedStatusToast
