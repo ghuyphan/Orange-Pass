@@ -42,9 +42,9 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
   } = props;
 
   const { currentTheme } = useTheme();
-  const { locale } = useLocale();
+  // console.log(accountName, accountNumber);
 
-  const { name, color, accent_color } = useMemo(() => returnItemData(code, type), [code, type, locale]);
+  const { name, color, accent_color } = useMemo(() => returnItemData(code, type), [code, type]);
   const iconPath = useMemo(() => getIconPath(code), [code]);
 
   const accountDisplayName = useMemo(() => {
@@ -125,7 +125,7 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
             </View>
           </LinearGradient>
         </Pressable>
-      ) : ( // Render content directly without Pressable
+      ) : ( // Render content directly withoutfz Pressable
         <LinearGradient
           colors={
             currentTheme === 'light'
@@ -179,7 +179,7 @@ export const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItem
 
           <View style={styles.footerContainer}>
             <ThemedText style={styles.footerText} numberOfLines={1} ellipsizeMode="tail">
-              {accountNumber ? accountName : metadata}
+              {type === 'bank' ? accountName : metadata}
             </ThemedText>
           </View>
         </LinearGradient>

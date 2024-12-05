@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { StyleSheet, UIManager, Platform, Dimensions } from 'react-native';
+import { StyleSheet, UIManager, Platform, ActivityIndicator } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
@@ -33,8 +33,9 @@ interface AppInitState {
 
 export default function RootLayout() {
   // Font loading
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     'HelveticaNeue-Bold': require('../assets/fonts/HelveticaNeueBold.ttf'),
+    // Add more custom fonts here
   });
 
   // App initialization state
@@ -54,9 +55,13 @@ export default function RootLayout() {
   }, []);
 
   // Callback to hide splash screen when app is ready
-  const onLayoutRootView = useCallback(() => {
+  const onLayoutRootView = useCallback(async () => {
     if (appState.isAppReady) {
-      SplashScreen.hideAsync();
+      try {
+        await SplashScreen.hideAsync();
+      } catch (error) {
+        console.error('Failed to hide splash screen', error);
+      }
     }
   }, [appState.isAppReady]);
 
@@ -72,12 +77,12 @@ export default function RootLayout() {
 
         // Determine authentication status
         const authStatus = onboardingStatus 
-          ? await checkInitialAuth() 
+          ? await checkInitialAuth().catch(() => false)
           : false;
 
         // Update app state
         setAppState({
-          isAppReady: fontsLoaded,
+          isAppReady: fontsLoaded && !fontError,
           isAuthenticated: authStatus,
           hasSeenOnboarding: onboardingStatus,
         });
@@ -89,6 +94,7 @@ export default function RootLayout() {
           ...prev,
           isAppReady: true,
           isAuthenticated: false,
+          hasSeenOnboarding: false,
         }));
       }
     };
@@ -98,29 +104,42 @@ export default function RootLayout() {
     const unsubscribe = checkOfflineStatus();
     
     // Cleanup subscription
-    return () => unsubscribe();
-  }, [fontsLoaded]);
+    return () => {
+      unsubscribe();
+    };
+  }, [fontsLoaded, fontError]);
 
   // Navigation effect based on app state
   useEffect(() => {
     const { isAppReady, hasSeenOnboarding, isAuthenticated } = appState;
 
-    if (isAppReady && hasSeenOnboarding !== null && isAuthenticated !== null) {
-      if (!hasSeenOnboarding) {
-        router.replace('/onboard');
-      } else if (isAuthenticated) {
-        router.replace('/home');
-      } else {
-        router.replace('/login');
+    if (isAppReady && 
+        hasSeenOnboarding !== null && 
+        isAuthenticated !== null) {
+      try {
+        if (!hasSeenOnboarding) {
+          router.replace('/onboard');
+        } else if (isAuthenticated) {
+          router.replace('/home');
+        } else {
+          router.replace('/login');
+        }
+      } catch (navigationError) {
+        console.error('Navigation error:', navigationError);
       }
     }
   }, [appState, router]);
 
-  // Render nothing until app is fully initialized
+  // Show loading state while app is initializing
   if (!appState.isAppReady || 
       appState.isAuthenticated === null || 
       appState.hasSeenOnboarding === null) {
-    return null;
+    return (
+      // <ThemedView style={styles.loadingContainer}>
+        // <ActivityIndicator size="large" />
+      // </ThemedView>
+      null
+    );
   }
 
   return (
@@ -156,12 +175,17 @@ export default function RootLayout() {
   );
 }
 
-// Simplified styles
+// Styles with added loading container
 const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
   root: {
     flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

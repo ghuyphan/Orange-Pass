@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center', 
   },
   accountName: {
-    fontSize: 16,
+    fontSize: 18,
     textAlign: 'center',
     color: 'white',
   },
@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   memberID: {
-    fontSize: 16,
+    fontSize: 18,
     textAlign: 'center',
     color: 'white',
     maxWidth: 250, 

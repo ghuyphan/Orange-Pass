@@ -15,7 +15,6 @@ import { ThemedView } from '@/components/ThemedView';
 import { ThemedButton } from '@/components/buttons/ThemedButton';
 import { t } from '@/i18n';
 import { Colors } from '@/constants/Colors';
-import { useThemeColor } from '@/hooks/useThemeColor';
 import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
 import GB from '@/assets/svgs/GB.svg';
 import VN from '@/assets/svgs/VN.svg';
@@ -29,7 +28,6 @@ import { useTheme } from '@/context/ThemeContext';
 const LanguageScreen: React.FC = () => {
     // const colors = useThemeColor({ light: Colors.light.text, dark: Colors.dark.text }, 'text');
     
-    const colorScheme = useColorScheme();
     const { updateLocale } = useLocale();
     const [locale, setLocale] = useMMKVString('locale');
     const scrollY = useSharedValue(0);

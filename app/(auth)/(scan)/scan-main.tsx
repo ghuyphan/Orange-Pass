@@ -19,7 +19,8 @@ import { throttle } from 'lodash';
 
 import { ScannerFrame, FocusIndicator, ZoomControl } from '@/components/camera';
 import { ThemedView } from '@/components/ThemedView';
-import { BottomSheetModal } from '@gorhom/bottom-sheet';
+// import { BottomSheetModal, bottomsheetmodal } from '@gorhom/bottom-sheet';
+import type { BottomSheetModal } from '@gorhom/bottom-sheet';
 import ThemedSettingSheet from '@/components/bottomsheet/ThemedSettingSheet';
 import { ThemedStatusToast } from '@/components/toast/ThemedOfflineToast';
 import { useMMKVBoolean } from 'react-native-mmkv';
@@ -27,7 +28,6 @@ import { triggerLightHapticFeedback } from '@/utils/haptic';
 import useHandleCodeScanned from '@/hooks/useHandleCodeScanned'; // Import the custom hook
 import Animated from 'react-native-reanimated';
 import { useLocale } from '@/context/LocaleContext';
-import BarcodeScanning from '@react-native-ml-kit/barcode-scanning';
 import { decodeQR } from '@/utils/decodeQR';
 
 const ReanimatedCamera = Reanimated.createAnimatedComponent(Camera);
@@ -40,6 +40,19 @@ interface CameraHighlight {
   width: number;
   height: number;
 }
+
+interface ThemedSettingSheetMethods extends BottomSheetModal {
+  presentSecondSheet: () => void;
+  dismissSecondSheet: () => void;
+  expandSecondSheet: () => void;
+  collapseSecondSheet: () => void;
+  closeSecondSheet: () => void;
+  snapSecondSheetToIndex: (index: number) => void;
+  snapSecondSheetToPosition: (position: string | number) => void;
+  forceCloseSecondSheet: () => void;
+}
+const bottomSheetModalRef = useRef<ThemedSettingSheetMethods>(null);
+
 
 // Custom hooks
 const useCameraSetup = (cameraRef: React.RefObject<Camera>) => {
@@ -169,10 +182,27 @@ export default function ScanScreen() {
   const [toastMessage, setToastMessage] = useState('');
   const [isDecoding, setIsDecoding] = useState(false);
 
-  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+
+  const showToast = (message: string) => {
+    setToastMessage(message);
+    setIsToastVisible(true);
+    setTimeout(() => {
+      setIsToastVisible(false);
+    }, 2500);
+  };
+
+  // const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+  
   const handleExpandPress = useCallback(() => {
     bottomSheetModalRef.current?.present();
   }, []);
+  
+
+  const handleOpenSecondSheet = () => {
+    if (bottomSheetModalRef.current) {
+      bottomSheetModalRef.current.presentSecondSheet(); 
+    }
+  };
 
   const onLayout = useCallback((event: LayoutChangeEvent) => {
     setLayout(event.nativeEvent.layout);
@@ -256,7 +286,8 @@ export default function ScanScreen() {
         onNavigateToAddScreen(result.format, result.value);
         // router.push('/(auth)/(add)/add-new');
       } else {
-        console.log('Failed to decode QR code');
+        // console.log('Failed to decode QR code');
+        showToast('Failed to decode QR code');
       }
 
     } catch (error) {
@@ -280,13 +311,6 @@ export default function ScanScreen() {
   );
 
   // Utility function for showing toast messages
-  const showToast = (message: string) => {
-    setToastMessage(message);
-    setIsToastVisible(true);
-    setTimeout(() => {
-      setIsToastVisible(false);
-    }, 2500);
-  };
 
   useEffect(() => {
     return () => {
@@ -400,7 +424,6 @@ export default function ScanScreen() {
         </View>
 
         <View style={styles.bottomButtonsContainer}>
-
           <ThemedButton
             iconName="image"
             iconColor="white"
@@ -422,7 +445,7 @@ export default function ScanScreen() {
 
       <View style={styles.headerContainer}>
         <ThemedButton iconColor='#fff' style={styles.headerButton} onPress={() => router.back()} iconName="chevron-left" />
-        <ThemedButton underlayColor='#fff' iconColor={torch === 'on' ? '#FFCC00' : '#fff'} style={styles.headerButton} onPress={toggleFlash} iconName={torch === 'on' ? 'flash-on' : 'flash-off'} />
+        <ThemedButton underlayColor='#fff' iconColor={torch === 'on' ? '#FFCC00' : '#fff'} style={styles.headerButton} onPress={toggleFlash} iconName={torch === 'on' ? 'flash' : 'flash-off'} />
       </View>
       <ThemedStatusToast
         isVisible={isToastVisible}

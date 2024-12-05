@@ -44,17 +44,14 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
         return () => listener.remove();
     }, []);
 
-    const updateThemeEffect = useCallback(() => {
-        const newTheme = getCurrentTheme();
-        setCurrentTheme(newTheme);
+    useEffect(() => {
+        setCurrentTheme(getCurrentTheme());
 
         // This will only save the preference, not change the system appearance
         if (isDarkMode !== undefined) {
             storage.set('dark-mode', isDarkMode);
         }
-    }, [getCurrentTheme, isDarkMode]);
-
-    useEffect(updateThemeEffect, [updateThemeEffect]);
+    }, [getCurrentTheme, isDarkMode]); 
 
     const setDarkMode = (value: boolean | undefined) => {
         setIsDarkMode(value);

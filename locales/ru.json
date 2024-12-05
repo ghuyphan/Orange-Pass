@@ -102,8 +102,22 @@
     },
     "fab": {
       "add": "Добавить",
-      "scan": "Сканировать"
+      "scan": "Сканировать",
+      "gallery": "Галерея"
     }
+  },
+  "addScreen": {
+    "title": "Добавить карту",
+    "type": "Тип",
+    "bank": "Банк",
+    "store": "Магазин",
+    "ewallet": "Электронный кошелек",
+    "qr": "QR-код",
+    "barcode": "Штрих-код",
+    "image": "Изображение",
+    "metadataPlaceholder": "Введите номер карты",
+    "metadataLabel": "Номер карты",
+    "saveButton": "Сохранить"
   },
   "settingsScreen": {
     "title": "Настройки",

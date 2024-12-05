@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, forwardRef } from 'react';
 import { FAB } from 'react-native-paper';
 import { StyleProp, ViewStyle, View, StyleSheet, TextStyle } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -9,10 +9,11 @@ import Animated, {
   withTiming, 
   Easing, 
   withDelay,
-  withSequence
+  withSequence,
+  useSharedValue,
+  SharedValue,
 } from 'react-native-reanimated';
 import { ThemedButton } from './ThemedButton';
-import { Text } from 'react-native';
 
 export type ThemedFABProps = {
   lightColor?: string;
@@ -31,7 +32,7 @@ export type ThemedFABProps = {
   textStyle?: StyleProp<TextStyle>;
 };
 
-export function ThemedFAB({
+export const ThemedFAB = forwardRef(({
   open,
   setOpen,
   onPress1,
@@ -41,10 +42,11 @@ export function ThemedFAB({
   text3,
   style,
   animatedStyle,
-  textStyle
-}: ThemedFABProps) {
+  textStyle,
+}: ThemedFABProps, ref) => {
   const { currentTheme } = useTheme();
   const [closing, setClosing] = useState(false);
+  const isAnimating = useSharedValue(false);
 
   // Memoize color calculations to prevent unnecessary re-renders
   const colors = useMemo(() => {
@@ -126,7 +128,7 @@ export function ThemedFAB({
     if (!open) {
       const timeoutId = setTimeout(() => {
         setClosing(false); 
-      }, animationConfig.duration); // Adjust delay as needed
+      }, animationConfig.duration * 2); // Adjust delay as needed
 
       return () => clearTimeout(timeoutId); 
     } else {
@@ -134,6 +136,16 @@ export function ThemedFAB({
     }
   }, [open]);
 
+  const handleFABPress = () => {
+    if (isAnimating.value) return; 
+
+    isAnimating.value = true;
+    setOpen(!open);
+
+    setTimeout(() => {
+      isAnimating.value = false;
+    }, animationConfig.duration * 1.5); 
+  };
 
   return (
     <Animated.View style={[style, animatedStyle, styles.container]}>
@@ -216,18 +228,11 @@ export function ThemedFAB({
         icon={open ? 'close' : 'plus'}
         color={colors.icon}
         style={{ backgroundColor: colors.button }}
-        onPress={() => {
-          if (open) {
-            // setClosing(true);
-            setOpen(false);
-          } else {
-            setOpen(true);
-          }
-        }}
+        onPress={handleFABPress} // Use the new function here
       />
     </Animated.View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

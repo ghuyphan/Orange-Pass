@@ -1,11 +1,8 @@
 import React, { useMemo, useEffect, useState } from 'react';
 import { StyleSheet, View, StyleProp, ViewStyle, TouchableHighlight, ActivityIndicator, TouchableWithoutFeedback, Platform } from 'react-native';
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { Portal } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { ThemedText } from '../ThemedText';
-import { useThemeColor } from '@/hooks/useThemeColor';
-import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { storage } from '@/utils/storage';
 import { useMMKVString } from 'react-native-mmkv';
@@ -15,7 +12,7 @@ import { useTheme } from '@/context/ThemeContext';
 export type ThemedBottomToastProps = {
     lightColor?: string;
     darkColor?: string;
-    iconName?: keyof typeof Ionicons.glyphMap;
+    iconName?: keyof typeof MaterialCommunityIcons.glyphMap;
     message: string;
     isVisible?: boolean;
     isSyncing?: boolean; // New prop for syncing state
@@ -97,8 +94,8 @@ export function ThemedBottomToast({
                     {isSyncing ? (
                         <ActivityIndicator size={15} color={color} />
                     ) : (
-                        <Ionicons
-                            name={iconName || 'information-circle-outline'}
+                        <MaterialCommunityIcons
+                            name={iconName || 'information-outline'}
                             size={15}
                             color={color}
                         />

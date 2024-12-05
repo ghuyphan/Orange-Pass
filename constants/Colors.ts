@@ -15,7 +15,7 @@ export const Colors = {
     toastBackground: '#EADFD7', // Light orange for toast notifications
     buttonBackground: '#e8dcd3', // Soft orange for button backgrounds
     buttonHighlight: '#FFECB3', // Brighter to highlight on hover
-    cardBackground: '#fcf3ed', // Light beige for card background
+    cardBackground: '#fcf1eb', // Light beige for card background
     cardFooter: '#EADFD7', // Bright orange for card footer
     logoIcon: '#FF8A65', // Dark orange for logos
   },

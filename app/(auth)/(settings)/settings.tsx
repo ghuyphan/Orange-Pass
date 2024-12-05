@@ -90,9 +90,7 @@ function SettingsScreen() {
     };
 
     // const [avatarConfig, setAvatarConfig] = useState<{ [key: string]: any } | null>(null);
-    // Get currentTheme from useTheme
     const { currentTheme } = useTheme();
-    const isDarkMode = currentTheme === 'dark';
 
     const [isLoading, setIsLoading] = useState(false);
     const [isModalVisible, setIsModalVisible] = useState(false);
@@ -109,17 +107,6 @@ function SettingsScreen() {
 
     const scrollHandler = useAnimatedScrollHandler((event) => {
         scrollY.value = event.contentOffset.y;
-    });
-
-    const translateY = useDerivedValue(() => {
-        return interpolate(scrollY.value, [0, 140], [0, -35], Extrapolation.CLAMP);
-    });
-
-    const opacity = useDerivedValue(() => {
-        return withTiming(scrollY.value > 70 ? 0 : 1, {
-            duration: 300,
-            easing: Easing.out(Easing.ease),
-        });
     });
 
     const titleContainerStyle = useAnimatedStyle(() => {

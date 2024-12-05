@@ -54,6 +54,7 @@ const ThemedSettingSheet = React.memo(forwardRef<BottomSheetModal, ThemedSetting
 
         // Expose BottomSheetModal methods to parent component via ref
         useImperativeHandle(ref, () => ({
+            // First sheet methods
             expand: () => bottomSheetModalRef.current?.expand(),
             collapse: () => bottomSheetModalRef.current?.collapse(),
             close: () => bottomSheetModalRef.current?.close(),
@@ -62,6 +63,16 @@ const ThemedSettingSheet = React.memo(forwardRef<BottomSheetModal, ThemedSetting
             forceClose: () => bottomSheetModalRef.current?.forceClose(),
             present: () => bottomSheetModalRef.current?.present(),
             dismiss: () => bottomSheetModalRef.current?.dismiss(),
+        
+            // Second sheet methods
+            presentSecondSheet: () => bottomSheetModalRef2.current?.present(),
+            dismissSecondSheet: () => bottomSheetModalRef2.current?.dismiss(),
+            expandSecondSheet: () => bottomSheetModalRef2.current?.expand(),
+            collapseSecondSheet: () => bottomSheetModalRef2.current?.collapse(),
+            closeSecondSheet: () => bottomSheetModalRef2.current?.close(),
+            snapSecondSheetToIndex: (index: number) => bottomSheetModalRef2.current?.snapToIndex(index),
+            snapSecondSheetToPosition: (position: string | number) => bottomSheetModalRef2.current?.snapToPosition(position),
+            forceCloseSecondSheet: () => bottomSheetModalRef2.current?.forceClose(),
         }));
 
         // Memoize Backdrop Component

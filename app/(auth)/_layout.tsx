@@ -14,6 +14,7 @@ export default function HomeLayout() {
         <Stack.Screen name="(add)" />
         <Stack.Screen name="(detail)"/>
         <Stack.Screen name="(scan)"/>
+        <Stack.Screen name="(settings)"/>
         <Stack.Screen name="empty"/>
       </Stack>
   );

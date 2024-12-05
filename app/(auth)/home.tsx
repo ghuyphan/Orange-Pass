@@ -84,14 +84,14 @@ function HomeScreen() {
   const scrollY = useSharedValue(0);
 
   const bottomSheetRef = useRef<BottomSheet>(null);
-
   const [fabOpen, setFabOpen] = useState(false);
 
   const closeFAB = () => {
-    setFabOpen(false); 
+    setFabOpen(false);
   };
 
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+
   const syncWithServer = useCallback(async (userId: string) => {
     if (isOffline || isSyncing) {
       console.log('Cannot sync while offline or another sync is in progress');
@@ -184,6 +184,7 @@ function HomeScreen() {
   }, [isOffline, userId]); // syncWithServer is a dependency
 
   useEffect(() => {
+    setIsSyncing(false)
     setBottomToastMessage(t('homeScreen.offline'));
     setIsBottomToastVisible(isOffline);
   }, [isOffline, locale]);
@@ -311,7 +312,7 @@ function HomeScreen() {
 
   const listHeaderStyle = useAnimatedStyle(() => {
     const fadeStartThreshold = isSearching ? 10 : 5;
-    const fadeCompleteThreshold = isSearching ? 50 : 40;
+    const fadeCompleteThreshold = isSearching ? 60 : 50;
 
     const opacity = interpolate(
       scrollY.value,
@@ -391,10 +392,13 @@ function HomeScreen() {
     router.push('/(add)/add-new');
   }, [])
 
+  // In your existing code where you define scrollHandler
   const scrollHandler = useAnimatedScrollHandler((event) => {
     scrollY.value = event.contentOffset.y;
+
+    // Use the existing shared value for FAB behavior
     if (event.contentOffset.y > 50 && fabOpen) {
-      setFabOpen(false);
+      closeFAB();
     } else if (event.contentOffset.y <= 50 && !fabOpen) {
       setFabOpen(true);
     }
@@ -450,31 +454,31 @@ function HomeScreen() {
       updated: new Date().toISOString(),
     }));
   };
-  
+
   const onDeletePress = useCallback(async () => {
     if (!selectedItemId) return;
-  
+
     try {
       setIsSyncing(true);
       setIsToastVisible(true);
       setToastMessage(t('homeScreen.deleting'));
-  
+
       // Delete the specific QR code
       await deleteQrCode(selectedItemId);
-  
+
       // Fetch updated data
       const updatedLocalData = await getQrCodesByUserId(userId);
-  
+
       // Reindex the remaining items
       const reindexedData = await reindexQrCodes(updatedLocalData);
-  
+
       // Update indexes in the database
       await updateQrIndexes(reindexedData);
-  
+
       // Update UI state
       setQrData(reindexedData);
       setIsEmpty(reindexedData.length === 0);
-  
+
       // Reset UI state
       setIsModalVisible(false);
       setIsToastVisible(false);
@@ -489,18 +493,23 @@ function HomeScreen() {
   }, [selectedItemId, userId]);
 
   const renderItem = useCallback(
-    ({ item, drag }: { item: QRRecord; drag: () => void }) => (
-      <ScaleDecorator activeScale={1.04}>
-        <ThemedCardItem
-          key={item.id} // Ensure stable key
-          onItemPress={() => onNavigateToDetailScreen(item)}
-          {...item} // Spread item props for cleaner prop passing
-          onMoreButtonPress={() => handleExpandPress(item.id)}
-          onDrag={drag}
-        />
-      </ScaleDecorator>
-    ),
-    // Memoize dependencies more carefully
+    ({ item, drag }: { item: QRRecord; drag: () => void }) => {
+      return (
+        <ScaleDecorator activeScale={1.04}>
+          <ThemedCardItem
+            onItemPress={() => onNavigateToDetailScreen(item)}
+            code={item.code}
+            type={item.type}
+            metadata={item.metadata}
+            metadata_type={item.metadata_type}
+            onMoreButtonPress={() => handleExpandPress(item.id)}
+            accountName={item.account_name}
+            accountNumber={item.account_number}
+            onDrag={drag}
+          />
+        </ScaleDecorator>
+      );
+    },
     [onNavigateToDetailScreen, handleExpandPress]
   );
 
@@ -623,6 +632,7 @@ function HomeScreen() {
         />
       )}
       {!isLoading &&
+
         <ThemedFAB
           open={fabOpen}
           setOpen={setFabOpen}
@@ -631,9 +641,12 @@ function HomeScreen() {
           onPress2={onNavigateToAddScreen}
           text1={t('homeScreen.fab.add')}
           text2={t('homeScreen.fab.scan')}
-          text3='Gallery'
+          text3={t('homeScreen.fab.gallery')}
         />
       }
+      {fabOpen && (
+        <ThemedView style={[StyleSheet.absoluteFill, { backgroundColor: 'red', zIndex: 11 }]} />
+      )}
       <ThemedStatusToast
         isVisible={isToastVisible}
         message={toastMessage}
@@ -644,7 +657,7 @@ function HomeScreen() {
         isSyncing={isSyncing}
         isVisible={isBottomToastVisible}
         message={bottomToastMessage}
-        iconName="cloud-offline"
+        iconName="wifi-off"
         style={styles.bottomToastContainer}
 
       />
@@ -754,6 +767,7 @@ const styles = StyleSheet.create({
     bottom: 20,
     right: 15,
     position: 'absolute',
+    zIndex: 13,
   },
   loadingContainer: {
     paddingTop: STATUSBAR_HEIGHT + 105,

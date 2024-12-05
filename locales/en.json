@@ -96,13 +96,14 @@
     },
     "emptyCard": {
       "header": "Your QR Codes\nAll in one place",
-      "footer": "Add your first QR code",
+      "footer": "Add your first Card",
       "footerButton": "Add",
       "content": "Keep your banks, wallet, membership QR codes, loyalty cards, and more all in one convenient place. Stay organized and access everything you need quickly and easily."
     },
     "fab": {
       "add": "Add",
-      "scan": "Scan"
+      "scan": "Scan",
+      "gallery": "Gallery"
     }
   },
   "addScreen": {
@@ -113,7 +114,10 @@
     "ewallet": "E-Wallet",
     "qr": "QR Code",
     "barcode": "Barcode",
-    "image": "Image"
+    "image": "Image",
+    "metadataPlaceholder": "Enter card number",
+    "metadataLabel": "Card number",
+    "saveButton": "Save"
   },
   "scanScreen": {
     "join": "Join",

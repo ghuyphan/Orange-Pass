@@ -6,8 +6,6 @@ import { useTheme } from '@/context/ThemeContext';
 import { getIconPath } from '@/utils/returnIcon';
 import { returnItemData } from '@/utils/returnItemData';
 import { returnMidpointColor } from '@/utils/returnMidpointColor';
-import NAPAS from '@/assets/svgs/napas.svg';
-import VIETQR from '@/assets/svgs/vietqr.svg';
 import { LinearGradient } from 'expo-linear-gradient';
 
 export type ThemedVietQRProps = {
@@ -28,7 +26,7 @@ export const ThemedVietQRCard = memo(function ThemedVietQRCard({
     const { currentTheme } = useTheme();
     const { width } = useWindowDimensions();
 
-    const qrSize = useMemo(() => width * 0.45, [width]); 
+    const qrSize = useMemo(() => width * 0.45, [width]);
     const { name, color, accent_color } = useMemo(() => returnItemData(code, type), [code, type]);
     const iconPath = useMemo(() => getIconPath(code), [code]);
     const [shouldRenderCode, setShouldRenderCode] = useState(false);
@@ -69,7 +67,7 @@ export const ThemedVietQRCard = memo(function ThemedVietQRCard({
                             value={metadata}
                             size={qrSize}
                             logo={iconPath}
-                            logoSize={qrSize * 0.2} 
+                            logoSize={qrSize * 0.2}
                             logoBackgroundColor="white"
                             logoBorderRadius={50}
                             logoMargin={5}
@@ -78,9 +76,11 @@ export const ThemedVietQRCard = memo(function ThemedVietQRCard({
                     </View>
                 )}
                 <View style={styles.logoContainer}>
-                    <VIETQR width={70} height={30} style={styles.vietQRIcon} />
+                    {/* <VIETQR width={70} height={30} style={styles.vietQRIcon} /> */}
+                    <Image style={styles.vietQRIcon} source={require('@/assets/images/vietqr.png')} resizeMode="contain" />
                     <View style={styles.divider} />
-                    <NAPAS width={60} height={30} style={styles.napasIcon} />
+                    <Image style={styles.napasIcon} source={require('@/assets/images/napas.png')} resizeMode="contain" />
+                    {/* <NAPAS width={60} height={30} style={styles.napasIcon} /> */}
                 </View>
                 <View style={styles.infoContainer}>
                     <ThemedText type="defaultSemiBold" style={styles.accountName} numberOfLines={1}>
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     leftHeaderContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 10, 
+        gap: 10,
     },
     iconContainer: {
         width: 35,
@@ -145,21 +145,20 @@ const styles = StyleSheet.create({
         borderRadius: 15,
     },
     vietQRIcon: {
-        width: '24%',
-        marginRight: -5, 
-        height: 40,
+        width: '23%',
+        height: 30,
     },
     divider: {
         width: 1.5,
         height: '50%',
         backgroundColor: '#535f78',
-        marginHorizontal: 20, 
+        marginHorizontal: 15,
     },
     napasIcon: {
-        width: '22%',
-        height: 30,
-        marginTop: 5, 
-        marginLeft: 5, 
+        width: '21%',
+        height: 20,
+        marginTop: 5,
+        marginLeft: 5,
     },
     qr: {
         padding: 10,

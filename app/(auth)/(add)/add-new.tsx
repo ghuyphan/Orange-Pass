@@ -1,5 +1,5 @@
-import React, { useCallback, useMemo, useEffect, useState } from 'react';
-import { StyleSheet, View, Keyboard } from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -27,6 +27,7 @@ const AnimatedKeyboardAwareScrollView = Animated.createAnimatedComponent(Keyboar
 const AddScreen: React.FC = () => {
   const scrollY = useSharedValue(0);
   const { codeType, codeValue } = useLocalSearchParams();
+  const [type, setType] = useState<'store' | 'bank' | 'ewallet'>('store');
 
   const { currentTheme: theme } = useTheme();
   const colors = useMemo(() => (theme === 'light' ? Colors.light.text : Colors.dark.text), [theme]);
@@ -81,20 +82,18 @@ const AddScreen: React.FC = () => {
     router.back();
   }, []);
 
-  const renderCardItem = (metadata: string) => { 
-    if (codeType) {
-      return (
-        <ThemedCardItem
-          code=''
-          type='store'
-          metadata={metadata} // Use the metadata passed from Formik
-          metadata_type={codeType === '256' ? 'qr' : 'barcode'}
-          animatedStyle={cardStyle}
-          style={{ marginBottom: 30 }}
-        />
-      );
-    }
-    return null;
+  const renderCardItem = (metadata: string) => {
+
+    return (
+      <ThemedCardItem
+        code=''
+        type={'bank'}
+        metadata={metadata || '1234'} // Use the metadata passed from Formik
+        metadata_type={codeType === '256' ? 'qr' : 'barcode'}
+        animatedStyle={cardStyle}
+        style={{ marginBottom: 30 }}
+      />
+    );
   };
 
   return (
@@ -142,9 +141,9 @@ const AddScreen: React.FC = () => {
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
             onScroll={scrollHandler}
-            scrollEnabled= {true}
+            scrollEnabled={true}
           >
-            {renderCardItem(values.metadata)} 
+            {renderCardItem(values.metadata)}
             {/* <ThemedInput
               iconName='qrcode'
               placeholder={t('qrCodeScreen.codePlaceholder')}
@@ -154,15 +153,15 @@ const AddScreen: React.FC = () => {
               onBlur={handleBlur('code')}
               error={touched.code && errors.code}
             /> */}
-            <ThemedInput 
-              iconName='card-text-outline' 
-              placeholder={t('qrCodeScreen.metadataPlaceholder')} 
-              label={t('qrCodeScreen.metadataLabel')} 
-              value={values.metadata} 
+            <ThemedInput
+              iconName='card-text-outline'
+              placeholder={t('addScreen.metadataPlaceholder')}
+              label={t('addScreen.metadataLabel')}
+              value={values.metadata}
               onChangeText={handleChange('metadata')}
               onBlur={handleBlur('metadata')}
-              error={touched.metadata && errors.metadata} 
-              disabled={true}
+              error={touched.metadata && errors.metadata}
+              // disabled={codeValue?.toString() !== ''}
             />
 
             <ThemedButton
