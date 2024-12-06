@@ -281,12 +281,12 @@
     },
     "KLB": {
         "color": {
-            "light": "#374074",
-            "dark": "#252D52"
-        },
-        "accent_color": {
             "light": "#DD946B",
             "dark": "#B87850"
+        },
+        "accent_color": {
+            "light": "#374074",
+            "dark": "#252D52"
         }
     },
     "LVB": {
@@ -391,12 +391,12 @@
     },
     "PGB": {
         "color": {
-            "light": "#3A5A8C",
-            "dark": "#2B426E"
-        },
-        "accent_color": {
             "light": "#91C5E5",
             "dark": "#75A7C7"
+        },
+        "accent_color": {
+            "light": "#3A5A8C",
+            "dark": "#2B426E"
         }
     },
     "PBVN": {
@@ -721,12 +721,12 @@
     },
     "SVL": {
         "color": {
-            "light": "#027958",
-            "dark": "#007B42"
+            "light": "#80D9B6",
+            "dark": "#41856c"
         },
         "accent_color": {
-            "light": "#80D9B6",
-            "dark": "#2A634E"
+            "light": "#027958",
+            "dark": "#0a593c"
         }
     },
     "TOP": {

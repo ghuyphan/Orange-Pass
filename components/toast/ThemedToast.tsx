@@ -20,6 +20,12 @@ export type ThemedToastProps = {
     onVisibilityToggle?: (isVisible: boolean) => void;
 };
 
+/**
+ * A themed toast component that displays a message with an icon.
+ *
+ * @param {ThemedToastProps} props - The component props.
+ * @returns {JSX.Element | null} - The rendered toast component or null if not visible.
+ */
 export function ThemedToast({
     lightColor,
     darkColor,
@@ -33,22 +39,25 @@ export function ThemedToast({
     onVisibilityToggle,
 }: ThemedToastProps) {
     const { currentTheme } = useTheme();
-    // const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
     const color = currentTheme === 'light' ? Colors.light.text : Colors.dark.text;
+
+    // State to track whether the animation is complete
     const [isAnimationComplete, setIsAnimationComplete] = useState(false);
 
+    // Memoize the toast style to prevent unnecessary re-renders
     const toastStyle = useMemo(() => ([
         styles.toastContainer,
         {
-            backgroundColor: currentTheme === 'light' ? Colors.light.toastBackground : Colors.dark.toastBackground
+            backgroundColor: currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground,
         },
-        style
+        style,
     ]), [currentTheme, style]);
 
-    // Reanimated values
+    // Reanimated shared values for opacity and translation
     const opacity = useSharedValue(0);
     const translateY = useSharedValue(50);
 
+    // Animated style for the toast
     const animatedStyle = useAnimatedStyle(() => {
         return {
             opacity: opacity.value,
@@ -56,28 +65,36 @@ export function ThemedToast({
         };
     });
 
+    // Effect hook to handle toast visibility and animation
     useEffect(() => {
         if (isVisible) {
+            // Animate in
             opacity.value = withTiming(1, { duration: 300 });
             translateY.value = withTiming(0, { duration: 300 });
 
+            // Automatically hide the toast after the specified duration
             const timer = setTimeout(() => {
                 if (onVisibilityToggle) {
                     onVisibilityToggle(false);
                 }
             }, duration);
 
+            // Clear the timeout on unmount or when visibility changes
             return () => clearTimeout(timer);
         } else {
-            setIsAnimationComplete(true);
+            // Animate out
+            setIsAnimationComplete(true); 
             opacity.value = withTiming(0, { duration: 300 });
             translateY.value = withTiming(50, { duration: 300 });
+
+            // Reset animation complete state after animation finishes
             setTimeout(() => {
                 setIsAnimationComplete(false);
-            }, 300);
+            }, 300); 
         }
     }, [isVisible, duration, onVisibilityToggle, opacity, translateY]);
 
+    // Don't render the toast if it's not visible and the animation is complete
     if (!isVisible && !isAnimationComplete) {
         return null;
     }
@@ -87,21 +104,31 @@ export function ThemedToast({
             <Animated.View style={[toastStyle, animatedStyle]}>
                 <View style={styles.toastContent}>
                     <View style={styles.toastTitle}>
+                        {/* Icon */}
                         <MaterialIcons
                             name={iconName || 'info'}
                             size={20}
                             color={color}
                         />
+
+                        {/* Message container */}
                         <View style={styles.messageContainer}>
-                            <ThemedText style={styles.toastText} numberOfLines={2} ellipsizeMode="tail" type='defaultSemiBold'>
+                            <ThemedText 
+                                style={styles.toastText} 
+                                numberOfLines={2} 
+                                ellipsizeMode="tail" 
+                                type='defaultSemiBold'
+                            >
                                 {message}
                             </ThemedText>
                         </View>
                     </View>
+
+                    {/* Dismiss button */}
                     <Pressable
                         onPress={onDismiss}
                         style={styles.iconTouchable}
-                        hitSlop={30}
+                        hitSlop={30} 
                     >
                         <MaterialIcons
                             name={dismissIconName || 'close'}
@@ -133,7 +160,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         flex: 1,
-        gap: 10,
+        gap: 10, 
     },
     messageContainer: {
         flex: 1,
@@ -144,6 +171,6 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
     },
     iconTouchable: {
-        borderRadius: 50,
+        borderRadius: 50, 
     },
 });

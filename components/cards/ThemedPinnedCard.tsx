@@ -1,5 +1,5 @@
-import React, { memo, useMemo, useState, useEffect } from 'react';
-import { Image, StyleSheet, View, InteractionManager, useWindowDimensions } from 'react-native';
+import React, { memo, useMemo } from 'react';
+import { Image, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { ThemedText } from '../ThemedText';
 import QRCode from 'react-native-qrcode-svg';
 import Barcode from 'react-native-barcode-svg';
@@ -31,29 +31,23 @@ export const ThemedPinnedCard = memo(function ThemedPinnedCard({
   const { currentTheme } = useTheme();
   const { width } = useWindowDimensions();
 
+  // Calculate dimensions with useMemo
   const qrSize = useMemo(() => width * 0.4, [width]);
   const barcodeHeight = useMemo(() => width * 0.25, [width]);
   const barcodeWidth = useMemo(() => width * 0.6, [width]);
 
+  // Pre-calculate data with useMemo
   const { name, color, accent_color } = useMemo(() => returnItemData(code, type), [code, type]);
   const iconPath = useMemo(() => getIconPath(code), [code]);
-
-  const [shouldRenderCode, setShouldRenderCode] = useState(false);
-
-  useEffect(() => {
-    const task = InteractionManager.runAfterInteractions(() => {
-      setShouldRenderCode(true);
-    });
-    return () => task.cancel();
-  }, []);
+  const gradientColors = useMemo(() => 
+    currentTheme === 'light'
+      ? [color?.light || '#ffffff', returnMidpointColor(color.light, accent_color.light) || '#cccccc', accent_color?.light || '#f0f0f0']
+      : [color?.dark || '#000000', returnMidpointColor(color.dark, accent_color.dark) || '#505050', accent_color?.dark || '#303030']
+  , [currentTheme, color, accent_color]);
 
   return (
     <LinearGradient
-      colors={
-        currentTheme === 'light'
-          ? [color?.light || '#ffffff', returnMidpointColor(color.light, accent_color.light) || '#cccccc', accent_color?.light || '#f0f0f0']
-          : [color?.dark || '#000000', returnMidpointColor(color.dark, accent_color.dark) || '#505050', accent_color?.dark || '#303030']
-      }
+      colors={gradientColors}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={[styles.itemContainer, style]}
@@ -70,24 +64,22 @@ export const ThemedPinnedCard = memo(function ThemedPinnedCard({
       </View>
 
       <View style={styles.qrContainer}>
-        {shouldRenderCode && (
-          <View style={styles.qr}>
-            {metadata_type === 'qr' ? (
-              <QRCode
-                value={metadata}
-                size={qrSize}
-                logo={iconPath}
-                logoSize={qrSize * 0.2}
-                logoBackgroundColor="white"
-                logoBorderRadius={50}
-                logoMargin={5}
-                quietZone={3}
-              />
-            ) : (
-              <Barcode height={barcodeHeight} maxWidth={barcodeWidth} value={metadata} format="CODE128" />
-            )}
-          </View>
-        )}
+        <View style={styles.qr}> 
+          {metadata_type === 'qr' ? (
+            <QRCode
+              value={metadata}
+              size={qrSize}
+              logo={iconPath}
+              logoSize={qrSize * 0.2}
+              logoBackgroundColor="white"
+              logoBorderRadius={50}
+              logoMargin={5}
+              quietZone={3}
+            />
+          ) : (
+            <Barcode height={barcodeHeight} maxWidth={barcodeWidth} value={metadata} format="CODE128" />
+          )}
+        </View>
         <View style={styles.infoContainer}>
           {type === 'bank' ? (
             <>

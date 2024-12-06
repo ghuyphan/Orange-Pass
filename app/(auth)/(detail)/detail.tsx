@@ -13,9 +13,6 @@ import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
 import QRRecord from '@/types/qrType';
 import { t } from '@/i18n';
 import { ThemedText } from '@/components/ThemedText';
-import ThemedBottomSheet from '@/components/bottomsheet/ThemedBottomSheet';
-import BottomSheet from '@gorhom/bottom-sheet';
-// import Ionicons from '@expo/vector-icons/Ionicons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { returnItemData } from '@/utils/returnItemData';
 import { getVietQRData } from '@/utils/vietQR';
@@ -31,104 +28,76 @@ const formatAmount = (amount: string) => {
 };
 
 export default function DetailScreen() {
-    const { locale } = useLocale();
-
+    const { locale } = useLocale(); 
     const { item: encodedItem } = useLocalSearchParams();
-
-    const bottomSheetRef = useRef<BottomSheet>(null);
     const router = useRouter();
     const { currentTheme } = useTheme();
-    // const colorScheme = useColorScheme();
-    const [amount, setAmount] = useState(''); // State to hold the amount of money
-    const [isKeyboardVisible, setKeyboardVisible] = useState(false);
+    const isOffline = useSelector((state: RootState) => state.network.isOffline);
+
+    // State variables
+    const [amount, setAmount] = useState('');
     const [isToastVisible, setIsToastVisible] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
     const [isSyncing, setIsSyncing] = useState(false);
-    const isOffline = useSelector((state: RootState) => state.network.isOffline);
+    const transferHeight = useSharedValue(0); 
 
+    // Derived values and constants
     const iconColor = currentTheme === 'light' ? Colors.light.text : Colors.dark.text;
+    const amountSuggestions = ['10,000', '50,000', '100,000', '500,000', '1,000,000'];
 
-    useUnmountBrightness(0.8, false);
-
-    useEffect(() => {
-        const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
-            setKeyboardVisible(true);
-        });
-        const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
-            setKeyboardVisible(false);
-        });
-
-        return () => {
-            keyboardDidHideListener.remove();
-            keyboardDidShowListener.remove();
-        };
-    }, [isKeyboardVisible]);
-
-    const item: QRRecord | null = useMemo(() => {
+    // Memoized item parsing to prevent unnecessary re-renders
+    const item = useMemo(() => {
         if (!encodedItem) return null;
         try {
-            return JSON.parse(decodeURIComponent(encodedItem as string));
+            return JSON.parse(decodeURIComponent(String(encodedItem)));
         } catch (error) {
             console.error('Failed to parse item:', error);
             return null;
         }
     }, [encodedItem]);
 
+    // Effect hook for keyboard listeners
+    useEffect(() => {
+        const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
+            // No need to manage keyboard visibility state here
+        });
+        const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+            // No need to manage keyboard visibility state here
+        });
+
+        return () => {
+            keyboardDidHideListener.remove();
+            keyboardDidShowListener.remove();
+        };
+    }, []); 
+
+    // useCallback for optimized event handlers
     const handleExpandPress = useCallback(() => {
-        bottomSheetRef.current?.expand();
+        // This function is currently unused, consider removing or implementing
     }, []);
 
     const openMap = useCallback(() => {
-        // triggerLightHapticFeedback();
-        if (!item || !item.type || !item.code) return;
+        if (!item?.type || !item?.code) return; 
 
-        let itemName = returnItemData(item.code, item.type);
+        const itemName = returnItemData(item.code, item.type);
 
-        if (!itemName || !itemName.name) {
+        if (!itemName?.name) {
             console.error('Invalid itemName or itemName.name');
             return;
         }
 
-        const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(itemName.name)}`;
+        const url = `https://www.google.com/maps/search/?api=1&query=$${encodeURIComponent(itemName.name)}`;
         Linking.openURL(url).catch((err) => console.error('Failed to open Google Maps:', err));
     }, [item]);
 
-    // Đặt giá trị ban đầu cho `transferHeight` là 0 để ẩn transfer container
-    const transferHeight = useSharedValue(0);
-
-    const transferStyle = useAnimatedStyle(() => ({
-        height: withTiming(transferHeight.value, { 
-            duration: 300, 
-            easing: Easing.bezier(0.4, 0, 0.2, 1) // More natural cubic bezier curve
-        }),
-        opacity: withTiming(transferHeight.value > 0 ? 1 : 0, { 
-            duration: 250, 
-            easing: Easing.out(Easing.quad) // Smoother opacity transition
-        }),
-        transform: [
-            { 
-                scaleY: withTiming(transferHeight.value > 0 ? 1 : 0.95, {
-                    duration: 300,
-                    easing: Easing.bezier(0.4, 0, 0.2, 1)
-                })
-            }
-        ],
-        overflow: 'hidden',
-        pointerEvents: transferHeight.value > 0 ? 'auto' : 'none',
-    }));
-    
     const onToggleTransfer = useCallback(() => {
         if (isOffline) return;
-    
-        // Toggle between 0 and 100, with a slight overshoot for a more dynamic feel
-        transferHeight.value = transferHeight.value === 0 ? 100 : 0;
+        transferHeight.value = transferHeight.value === 0 ? 100 : 0; 
     }, [isOffline]);
 
     const transferAmount = useCallback(throttle(async () => {
+        if (!item?.type || !item?.code || !amount) return;
 
-        if (!item || !item.type || !item.code || !amount) return;
-
-        // triggerLightHapticFeedback();
         setIsSyncing(true);
         setIsToastVisible(true);
 
@@ -139,10 +108,10 @@ export default function DetailScreen() {
             const response = await getVietQRData(
                 item.account_number,
                 item.account_name,
-                itemName.number_code as string,
+                itemName.number_code !== undefined ? itemName.number_code : '', // or some other default value
                 parseInt(amount.replace(/,/g, '')),
                 'Hello'
-            );
+              );
 
             const qrCode = response.data.qrCode;
             router.replace({
@@ -154,12 +123,47 @@ export default function DetailScreen() {
                 },
             });
         } finally {
+            setIsSyncing(false);
             setIsToastVisible(false);
         }
-    }, 500), [item, amount])
+    }, 500), [item, amount]);
 
-    // Amount suggestions
-    const amountSuggestions = ['10,000', '50,000', '100,000', '500,000', '1,000,000'];
+    // Animated styles for the transfer section
+    const transferStyle = useAnimatedStyle(() => ({
+        height: withTiming(transferHeight.value, { 
+            duration: 300, 
+            easing: Easing.bezier(0.4, 0, 0.2, 1) 
+        }),
+        opacity: withTiming(transferHeight.value > 0 ? 1 : 0, { 
+            duration: 250, 
+            easing: Easing.out(Easing.quad) 
+        }),
+        transform: [{ 
+            scaleY: withTiming(transferHeight.value > 0 ? 1 : 0.95, {
+                duration: 300,
+                easing: Easing.bezier(0.4, 0, 0.2, 1)
+            })
+        }],
+        overflow: 'hidden',
+        pointerEvents: transferHeight.value > 0 ? 'auto' : 'none', 
+    }));
+
+    // SuggestionItem component (consider moving this outside for better organization)
+    const SuggestionItem = React.memo(({ item, onPress: onPress }: { item: string; onPress: (item: string) => void }) => (
+        <Pressable
+            onPress={() => onPress(item)}
+            android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
+            style={[
+                styles.suggestionItem,
+                {
+                    backgroundColor: currentTheme === 'light' ? Colors.light.buttonBackground : Colors.dark.buttonBackground,
+                    overflow: 'hidden', 
+                },
+            ]}
+        >
+            <ThemedText style={styles.suggestionText}>{item}</ThemedText>
+        </Pressable>
+    ));
 
     if (!item) {
         return (
@@ -168,25 +172,6 @@ export default function DetailScreen() {
             </ThemedView>
         );
     }
-    const SuggestionItem = React.memo(({ item, onPress: onPress }: { item: string; onPress: (item: string) => void }) => (
-        <Pressable
-            onPress={() => onPress(item)}
-            android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
-            style={[
-                styles.suggestionItem,
-                {
-                    backgroundColor:
-                        currentTheme === 'light'
-                            ? Colors.light.cardFooter
-                            : Colors.dark.cardFooter,
-                    overflow: 'hidden',
-                    // borderRadius: 15,
-                },
-            ]}
-        >
-            <ThemedText style={styles.suggestionText}>{item}</ThemedText>
-        </Pressable>
-    ));
 
     return (
         <>
@@ -196,14 +181,14 @@ export default function DetailScreen() {
                 contentContainerStyle={styles.container}
                 extraScrollHeight={80}
                 extraHeight={200}
-                enableOnAndroid={true}
+                enableOnAndroid 
                 showsVerticalScrollIndicator={false}
-                scrollEnabled={isKeyboardVisible}
             >
                 <View style={styles.headerWrapper}>
                     <ThemedButton onPress={router.back} iconName="chevron-left" />
-                    <ThemedButton onPress={handleExpandPress} iconName="dots-vertical" />
+                    <ThemedButton onPress={handleExpandPress} iconName="dots-vertical" /> 
                 </View>
+
                 <ThemedPinnedCard
                     style={styles.pinnedCardWrapper}
                     metadata_type={item.metadata_type}
@@ -222,12 +207,10 @@ export default function DetailScreen() {
                         android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', borderless: false }}
                         style={styles.actionButton}
                     >
-                        {/* <View style={styles.actionButton}> */}
                         <MaterialCommunityIcons name="map-marker-outline" size={18} color={iconColor} />
                         <ThemedText style={styles.labelText}>
                             {t('detailsScreen.nearbyLocation')}
                         </ThemedText>
-                        {/* </View> */}
                     </Pressable>
 
                     {(item.type === 'bank' || item.type === 'ewallet') && (
@@ -246,6 +229,7 @@ export default function DetailScreen() {
                                     )}
                                 </View>
                             </Pressable>
+
                             <Animated.View style={[styles.transferSection, transferStyle]}>
                                 <View style={styles.inputWrapper}>
                                     <TextInput
@@ -256,10 +240,13 @@ export default function DetailScreen() {
                                         placeholderTextColor={currentTheme === 'light' ? Colors.light.placeHolder : Colors.dark.placeHolder}
                                         onChangeText={(text) => setAmount(formatAmount(text))}
                                     />
-                                    <ThemedText>đ</ThemedText>
-                                    <Pressable hitSlop={{ bottom: 40, left: 30, right: 30, top: 30 }} onPress={transferAmount} style={[styles.transferButton, { opacity: amount ? 1 : 0.3 }]}>
-                                        {amount ? <MaterialCommunityIcons name="chevron-right" size={18} color={iconColor} /> :
-                                            <MaterialCommunityIcons name="chevron-right" size={18} color={iconColor} />}
+                                    <ThemedText>đ</ThemedText> 
+                                    <Pressable 
+                                        hitSlop={{ bottom: 40, left: 30, right: 30, top: 30 }} 
+                                        onPress={transferAmount} 
+                                        style={[styles.transferButton, { opacity: amount ? 1 : 0.3 }]} 
+                                    >
+                                        <MaterialCommunityIcons name="chevron-right" size={18} color={iconColor} /> 
                                     </Pressable>
                                 </View>
                                 <FlatList
@@ -270,14 +257,14 @@ export default function DetailScreen() {
                                     keyExtractor={(item) => item}
                                     contentContainerStyle={styles.suggestionListContent}
                                     renderItem={({ item }) => (
-                                        <SuggestionItem item={item} onPress={setAmount} colorScheme={currentTheme} />
+                                        <SuggestionItem item={item} onPress={setAmount} /> 
                                     )}
                                 />
-
                             </Animated.View>
                         </View>
                     )}
-                    <ThemedStatusToast
+
+                    <ThemedStatusToast 
                         isSyncing={isSyncing}
                         isVisible={isToastVisible}
                         message={toastMessage}
@@ -286,14 +273,7 @@ export default function DetailScreen() {
                         style={styles.toastContainer}
                     />
                 </View>
-                {/* <ThemedBottomSheet
-                ref={bottomSheetRef}
-                onEditPress={() => { }}
-                editText={t('homeScreen.edit')}
-                deleteText={t('homeScreen.delete')}
-            /> */}
             </KeyboardAwareScrollView>
-            
         </>
     );
 }

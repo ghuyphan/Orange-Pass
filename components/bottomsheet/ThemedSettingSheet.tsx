@@ -6,6 +6,7 @@ import { ThemedText } from '../ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { Colors } from '@/constants/Colors';
 import { Portal } from 'react-native-paper';
+import CustomBackdrop from './bottomsheetBackdrop';
 
 interface ThemedSettingSheetProps {
     ref?: React.Ref<BottomSheetModal>;
@@ -76,16 +77,16 @@ const ThemedSettingSheet = React.memo(forwardRef<BottomSheetModal, ThemedSetting
         }));
 
         // Memoize Backdrop Component
-        const renderBackdrop = useCallback((props: BottomSheetBackdropProps) => (
-            <BottomSheetBackdrop
-                {...props}
-                opacity={0.5}
-                appearsOnIndex={0}
-                disappearsOnIndex={-1}
-                style={styles.backdrop}
-                onPress={() => bottomSheetModalRef.current?.dismiss()}
-            />
-        ), []);
+        // const renderBackdrop = useCallback((props: BottomSheetBackdropProps) => (
+        //     <BottomSheetBackdrop
+        //         {...props}
+        //         opacity={0.5}
+        //         appearsOnIndex={0}
+        //         disappearsOnIndex={-1}
+        //         style={styles.backdrop}
+        //         onPress={() => bottomSheetModalRef.current?.dismiss()}
+        //     />
+        // ), []);
 
         return (
             <Portal>
@@ -100,7 +101,12 @@ const ThemedSettingSheet = React.memo(forwardRef<BottomSheetModal, ThemedSetting
                             borderTopRightRadius: 50,
                         }}
                         handleIndicatorStyle={styles.handleIndicator}
-                        backdropComponent={renderBackdrop}
+                        backdropComponent={(props) => (
+                            <CustomBackdrop 
+                              {...props} 
+                              onPress={() => bottomSheetModalRef.current?.dismiss()}
+                            />
+                          )}
                         enablePanDownToClose={true}
                     >
                         <BottomSheetScrollView scrollEnabled={false} style={styles.container}>
@@ -167,7 +173,13 @@ const ThemedSettingSheet = React.memo(forwardRef<BottomSheetModal, ThemedSetting
                             borderTopRightRadius: 50,
                         }}
                         handleIndicatorStyle={styles.handleIndicator}
-                        backdropComponent={renderBackdrop}
+                        // backdropComponent={renderBackdrop}
+                        backdropComponent={(props) => (
+                            <CustomBackdrop 
+                              {...props} 
+                              onPress={() => bottomSheetModalRef.current?.dismiss()}
+                            />
+                          )}
                         enablePanDownToClose={true}
                     >
                         <BottomSheetScrollView scrollEnabled={false} style={styles.container}>

@@ -46,7 +46,7 @@ export function ThemedModal({
     const modalStyle = [
         styles.modalContainer,
         {
-            backgroundColor: currentTheme === 'light' ? Colors.light.background : Colors.dark.background,
+            backgroundColor: currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground,
         },
         style,
     ];

@@ -1,13 +1,13 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { StyleSheet, View, Pressable } from 'react-native';
 import Animated, {
-    useAnimatedStyle,
-    useSharedValue,
-    withTiming,
-    Easing,
-    interpolate,
-    Extrapolation,
-    useAnimatedScrollHandler
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+  Easing,
+  interpolate,
+  Extrapolation,
+  useAnimatedScrollHandler,
 } from 'react-native-reanimated';
 import { router } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
@@ -16,149 +16,115 @@ import { ThemedButton } from '@/components/buttons/ThemedButton';
 import { t } from '@/i18n';
 import { Colors } from '@/constants/Colors';
 import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
-
-import { useLocale } from '@/context/LocaleContext';
+import { useTheme } from '@/context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DARK from '@/assets/svgs/dark.svg';
 import LIGHT from '@/assets/svgs/light.svg';
 import { throttle } from 'lodash';
-import { useTheme } from '@/context/ThemeContext';
 
-const ThemeScreen: React.FC = () => {
-    const { currentTheme } = useTheme();
-    // const colors = useThemeColor({ light: Colors.light.text, dark: Colors.dark.text }, 'text');
-    const colors = useMemo(() => (currentTheme === 'light' ? Colors.light.text : Colors.dark.text), [currentTheme]);
-    // const sectionsColors = useThemeColor({ light: Colors.light.cardBackground, dark: Colors.dark.cardBackground }, 'cardBackground');
-    const sectionsColors = useMemo(() => (currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground), [currentTheme]);
-    const { setDarkMode, useSystemTheme, isDarkMode } = useTheme();
-    const { updateLocale } = useLocale();
-    const [isToastVisible, setIsToastVisible] = useState(false);
+const ThemeScreen = () => {
+  const { currentTheme, setDarkMode, useSystemTheme, isDarkMode } = useTheme();
+  const colors = useMemo(() => (currentTheme === 'light' ? Colors.light.text : Colors.dark.text), [currentTheme]);
+  const sectionsColors = useMemo(() => (
+    currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground
+  ), [currentTheme]);
 
-    const scrollY = useSharedValue(0);
+  const scrollY = useSharedValue(0);
 
-    const scrollHandler = useAnimatedScrollHandler({
-        onScroll: (event) => {
-            scrollY.value = event.contentOffset.y;
-        },
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollY.value = event.contentOffset.y;
+    },
+  });
+
+  const titleContainerStyle = useAnimatedStyle(() => {
+    const translateY = interpolate(scrollY.value, [0, 140], [0, -35], Extrapolation.CLAMP);
+    const opacity = withTiming(scrollY.value > 70 ? 0 : 1, {
+      duration: 300,
+      easing: Easing.out(Easing.ease),
     });
+    return {
+      opacity,
+      transform: [{ translateY }],
+      zIndex: scrollY.value > 50 ? 0 : 20,
+    };
+  });
 
-    const titleContainerStyle = useAnimatedStyle(() => {
-        const translateY = interpolate(scrollY.value, [0, 140], [0, -35], Extrapolation.CLAMP);
-        const opacity = withTiming(scrollY.value > 70 ? 0 : 1, {
-            duration: 300,
-            easing: Easing.out(Easing.ease),
-        });
-        return {
-            opacity,
-            transform: [{ translateY }],
-            zIndex: scrollY.value > 50 ? 0 : 20,
-        };
-    });
+  const onNavigateBack = useCallback(() => {
+    router.back();
+  }, []);
 
-    const onNavigateBack = useCallback(() => {
-        router.back();
-    }, []);
+  const handleThemeChange = useCallback(
+    throttle((theme) => {
+      if (theme === 'dark') {
+        setDarkMode(true);
+      } else if (theme === 'light') {
+        setDarkMode(false);
+      } else {
+        useSystemTheme();
+      }
+    }, 300),
+    [setDarkMode, useSystemTheme]
+  );
 
-    const handleThemeChange = useCallback(
-        throttle((theme: string) => {
-            if (theme === 'dark') {
-                setDarkMode(true);
-            } else if (theme === 'light') {
-                setDarkMode(false);
-            } else {
-                useSystemTheme();
-            }
-        }, 300), // Adjust the delay (in milliseconds) as needed
-        [setDarkMode, useSystemTheme]
-    );
+  const renderThemeOption = (themeName: string, iconName: string, isChecked: boolean) => (
+    <Pressable
+      android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
+      onPress={() => handleThemeChange(themeName)}
+      key={themeName}
+    >
+      <View style={styles.section}>
+        <View style={styles.leftSectionContainer}>
+          <View style={[
+            styles.iconContainer,
+            { backgroundColor: currentTheme === 'dark' ? Colors.dark.buttonBackground : Colors.light.buttonBackground }
+          ]}>
+            <MaterialCommunityIcons name={iconName} size={20} color={colors} />
+          </View>
+          <ThemedText>{t(`themeScreen.${themeName}`)}</ThemedText>
+        </View>
+        {isChecked && <Ionicons name="checkmark-outline" size={20} color={colors} />}
+      </View>
+    </Pressable>
+  );
 
-    return (
-        <ThemedView style={styles.container}>
-            <ThemedView style={styles.blurContainer} />
+  return (
+    <ThemedView style={styles.container}>
+      <ThemedView style={styles.blurContainer} />
 
-            <Animated.View style={[styles.titleContainer, titleContainerStyle]}>
-                <View style={styles.headerContainer}>
-                    <ThemedButton
-                        iconName="chevron-left"
-                        style={styles.titleButton}
-                        onPress={onNavigateBack}
-                    />
-                    <ThemedText type='title' style={styles.title}>{t('themeScreen.title')}</ThemedText>
-                </View>
-            </Animated.View>
+      <Animated.View style={[styles.titleContainer, titleContainerStyle]}>
+        <View style={styles.headerContainer}>
+          <ThemedButton
+            iconName="chevron-left"
+            style={styles.titleButton}
+            onPress={onNavigateBack}
+          />
+          <ThemedText type='title' style={styles.title}>{t('themeScreen.title')}</ThemedText>
+        </View>
+      </Animated.View>
 
-            <Animated.ScrollView style={styles.scrollContainer} onScroll={scrollHandler}>
-                <View style={[styles.descriptionContainer, { backgroundColor: sectionsColors }]}>
-                    <View style={styles.descriptionItem}>
-                        <LIGHT width={120} height={120} />
-                        <ThemedText>{t('themeScreen.light')}</ThemedText>
-                    </View>
-                    <View style={styles.descriptionItem}>
-                        <DARK width={120} height={120} />
-                        <ThemedText>{t('themeScreen.dark')}</ThemedText>
-                    </View>
-                </View>
+      <Animated.ScrollView style={styles.scrollContainer} onScroll={scrollHandler}>
+        <View style={[styles.descriptionContainer, { backgroundColor: sectionsColors }]}>
+          <View style={styles.descriptionItem}>
+            <LIGHT width={120} height={120} />
+            <ThemedText>{t('themeScreen.light')}</ThemedText>
+          </View>
+          <View style={styles.descriptionItem}>
+            <DARK width={120} height={120} />
+            <ThemedText>{t('themeScreen.dark')}</ThemedText>
+          </View>
+        </View>
 
-                <ThemedView style={[styles.sectionContainer, { backgroundColor: sectionsColors }]}>
-                    <Pressable
-                        android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
-                        onPress={() => handleThemeChange('light')}
-                    >
-                        <View style={styles.section}>
-                            <View style={styles.leftSectionContainer}>
-                                <View style={[
-                                    styles.iconContainer,
-                                    currentTheme === 'dark' ? { backgroundColor: Colors.dark.buttonBackground } : { backgroundColor: Colors.light.buttonBackground }
-                                ]}>
-                                    <MaterialCommunityIcons name="weather-sunny" size={20} color={colors} />
-                                </View>
-                                <ThemedText>{t('themeScreen.light')}</ThemedText>
-                            </View>
-                            {isDarkMode === false && <Ionicons name="checkmark-outline" size={20} color={Colors.light.text} />}
-                        </View>
-                    </Pressable>
-
-                    <Pressable
-                        android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
-                        onPress={() => handleThemeChange('dark')}
-                    >
-                        <View style={styles.section}>
-                            <View style={styles.leftSectionContainer}>
-                                <View style={[
-                                    styles.iconContainer,
-                                    currentTheme === 'dark' ? { backgroundColor: Colors.dark.buttonBackground } : { backgroundColor: Colors.light.buttonBackground }
-                                ]}>
-                                    <MaterialCommunityIcons name="weather-night" size={20} color={colors} />
-                                </View>
-                                <ThemedText>{t('themeScreen.dark')}</ThemedText>
-                            </View>
-                            {isDarkMode === true && <Ionicons name="checkmark" size={20} color={Colors.dark.text} />}
-                        </View>
-                    </Pressable>
-
-                    <Pressable
-                        android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
-                        onPress={() => handleThemeChange('system')}
-                    >
-                        <View style={styles.section}>
-                            <View style={styles.leftSectionContainer}>
-                                <View style={[
-                                    styles.iconContainer,
-                                    currentTheme === 'dark' ? { backgroundColor: Colors.dark.buttonBackground } : { backgroundColor: Colors.light.buttonBackground }
-                                ]}>
-                                    <MaterialCommunityIcons name="cog-outline" size={20} color={colors} />
-                                </View>
-                                <ThemedText>{t('themeScreen.system')}</ThemedText>
-                            </View>
-                            {isDarkMode === undefined && <Ionicons name="checkmark-outline" size={20} color={colors} />}
-                        </View>
-                    </Pressable>
-                </ThemedView>
-            </Animated.ScrollView>
+        <ThemedView style={[styles.sectionContainer, { backgroundColor: sectionsColors }]}>
+          {renderThemeOption('light', 'weather-sunny', isDarkMode === false)}
+          {renderThemeOption('dark', 'weather-night', isDarkMode === true)}
+          {renderThemeOption('system', 'cog-outline', isDarkMode === undefined)}
         </ThemedView>
-    );
-}
+      </Animated.ScrollView>
+    </ThemedView>
+  );
+};
 
 export default React.memo(ThemeScreen);
 

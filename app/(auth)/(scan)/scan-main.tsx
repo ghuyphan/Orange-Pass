@@ -124,7 +124,6 @@ export default function ScanScreen() {
   const router = useRouter();
   const cameraRef = useRef<Camera>(null);
   const { device, hasPermission, torch, toggleFlash } = useCameraSetup(cameraRef);
-  const isUltrawide = device?.name?.toLowerCase().includes('ultrawide'); // Customize this as needed based on your device
 
   //MMKV settings
   const [quickScan, setQuickScan] = useMMKVBoolean('quickScan', storage);
@@ -210,17 +209,14 @@ export default function ScanScreen() {
 
   useUnmountBrightness(0.8, true);
 
-  const handleCodeScanned = useCallback(
-    useHandleCodeScanned({
-      isConnecting,
-      quickScan,
-      setCodeType,
-      setIconName,
-      setCodeValue,
-      setIsConnecting,
-    }),
-    [isConnecting, quickScan, setCodeType, setIconName, setCodeValue, setIsConnecting]
-  );
+  const handleCodeScanned = useHandleCodeScanned({
+    isConnecting,
+    quickScan,
+    setCodeType,
+    setIconName,
+    setCodeValue,
+    setIsConnecting,
+  }); 
 
   const codeScanner = useCodeScanner({
     codeTypes: ['qr', 'code-128', 'code-39', 'ean-13', 'ean-8', 'upc-a', 'upc-e', 'data-matrix'],
@@ -394,6 +390,8 @@ export default function ScanScreen() {
               resizeMode='cover'
               videoStabilizationMode='auto'
               animatedProps={cameraAnimatedProps}
+              enableZoomGesture={true}
+              zoom={2}
             />
           </Reanimated.View>
           <FocusIndicator focusPoint={focusPoint} animatedFocusStyle={animatedFocusStyle} />

@@ -19,7 +19,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { ThemedInput } from '@/components/Inputs';
 import { Formik } from 'formik';
 import { qrCodeSchema } from '@/utils/validationSchemas';
-import { ThemedCardItem } from '@/components/cards';
+import ThemedCardItem from '@/components/cards/ThemedCardItem';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 const AnimatedKeyboardAwareScrollView = Animated.createAnimatedComponent(KeyboardAwareScrollView);

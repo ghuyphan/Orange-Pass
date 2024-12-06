@@ -35,7 +35,7 @@ const mapRecordToUserData = (record: Record<string, any>): UserRecord => ({
   email: record.email ?? '',
   verified: record.verified ?? false,
   name: record.name ?? '',
-  avatar: record.avatar ?? ''
+  avatar: typeof record.avatar === 'object' ? record.avatar : record.avatar ?? ''
 });
 
 /**

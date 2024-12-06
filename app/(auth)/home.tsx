@@ -1,43 +1,53 @@
-import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
-import { StyleSheet, View, TextInput, FlatList, Dimensions } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { StyleSheet, View, TextInput, FlatList, TouchableWithoutFeedback } from 'react-native';
 import { useSelector } from 'react-redux';
 import Animated, {
+  Easing,
+  Extrapolation,
+  interpolate,
+  useAnimatedScrollHandler,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
   withTiming,
-  useAnimatedScrollHandler,
-  Easing,
-  interpolate,
-  Extrapolation,
 } from 'react-native-reanimated';
 import { router } from 'expo-router';
 import DraggableFlatList, { ScaleDecorator } from 'react-native-draggable-flatlist';
 import { debounce, throttle } from 'lodash';
+import { BlurView } from '@react-native-community/blur';
+import BottomSheet from '@gorhom/bottom-sheet';
+import { MaterialIcons } from '@expo/vector-icons';
 
-import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
+// Types and constants
 import QRRecord from '@/types/qrType';
+import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
+import { height } from '@/constants/Constants';
+
+// Hooks and utils
 import { useThemeColor } from '@/hooks/useThemeColor';
-import ThemedFilter from '@/components/ThemedFilter';
+import { triggerHapticFeedback } from '@/utils/haptic';
+import { useLocale } from '@/context/LocaleContext';
+import { useMMKVString } from 'react-native-mmkv';
+import { storage } from '@/utils/storage';
+import { useTheme } from '@/context/ThemeContext';
+
+// Components
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedIconInput } from '@/components/Inputs';
 import { ThemedFAB, ThemedButton } from '@/components/buttons';
 import ThemedBottomSheet from '@/components/bottomsheet/ThemedBottomSheet';
-import { ThemedEmptyCard, ThemedCardItem } from '@/components/cards';
-import { ThemedFilterSkeleton, ThemedCardSkeleton } from '@/components/skeletons';;
+import { ThemedEmptyCard } from '@/components/cards';
+import ThemedCardItem from '@/components/cards/ThemedCardItem';
+import { ThemedFilterSkeleton, ThemedCardSkeleton } from '@/components/skeletons';
 import { ThemedStatusToast } from '@/components/toast/ThemedOfflineToast';
 import { ThemedModal } from '@/components/modals/ThemedIconModal';
+import { ThemedBottomToast } from '@/components/toast/ThemedBottomToast';
+import ThemedFilter from '@/components/ThemedFilter';
+
+// Services and store
 import { fetchQrData } from '@/services/auth/fetchQrData';
 import { RootState } from '@/store/rootReducer';
-import { t } from '@/i18n';
-import BottomSheet from '@gorhom/bottom-sheet';
-// import Ionicons from '@expo/vector-icons/Ionicons';
-import { MaterialIcons } from '@expo/vector-icons';
-import { triggerHapticFeedback } from '@/utils/haptic';
-import { useLocale } from '@/context/LocaleContext';
-import { useMMKVString } from 'react-native-mmkv';
-import { storage } from '@/utils/storage';
 import {
   createTable,
   getQrCodesByUserId,
@@ -48,12 +58,16 @@ import {
   updateQrIndexes,
   filterQrCodes,
 } from '@/services/localDB/qrDB';
-import { ThemedBottomToast } from '@/components/toast/ThemedBottomToast';
 
-const screenHeight = Dimensions.get('window').height;
+// Internationalization
+import { t } from '@/i18n';
+
+const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
+// const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 function HomeScreen() {
   const { updateLocale } = useLocale();
+  const { currentTheme } = useTheme();
   const [locale, setLocale] = useMMKVString('locale', storage);
   const color = useThemeColor({ light: '#3A2E24', dark: '#FFF5E1' }, 'text');
   const [isEmpty, setIsEmpty] = useState(false);
@@ -85,9 +99,16 @@ function HomeScreen() {
 
   const bottomSheetRef = useRef<BottomSheet>(null);
   const [fabOpen, setFabOpen] = useState(false);
+  const [isBlurVisible, setIsBlurVisible] = useState(false); // For rendering
+  const [isBlurAnimating, setIsBlurAnimating] = useState(false); // For animation
+
 
   const closeFAB = () => {
     setFabOpen(false);
+  };
+
+  const openFAB = () => {
+    setFabOpen(true);
   };
 
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
@@ -120,9 +141,11 @@ function HomeScreen() {
       setIsToastVisible(true);
     } finally {
       setIsBottomToastVisible(false);
-      // setIsSyncing(false);
+      setTimeout(() => {
+        setIsSyncing(false);
+      }, 200);
     }
-  }, [isOffline, isSyncing, userId]);
+  }, [isOffline, isSyncing, t]);
 
   const fetchServerData = async (userId: string) => {
     try {
@@ -150,15 +173,16 @@ function HomeScreen() {
       setToastMessage(t('homeScreen.loadError'));
       setIsToastVisible(true);
     }
-  }, []);
+  }, [setQrData, setIsEmpty, setToastMessage, setIsToastVisible, t]);
 
-  // Fetch initial data
   useEffect(() => {
     const loadLocalData = async () => {
       try {
-        setIsLoading(true); // Set loading to true here
+        setIsLoading(true);
         await createTable();
-        await fetchLocalData(userId);
+        if (userId) {
+          await fetchLocalData(userId);
+        }
       } catch (error) {
         console.error('Error loading local data:', error);
       } finally {
@@ -168,9 +192,7 @@ function HomeScreen() {
       }
     };
 
-    if (userId) {
-      loadLocalData();
-    }
+    loadLocalData();
   }, [userId, fetchLocalData]);
 
   useEffect(() => {
@@ -181,19 +203,19 @@ function HomeScreen() {
     }, 2000);
 
     return () => clearTimeout(syncTimeout);
-  }, [isOffline, userId]); // syncWithServer is a dependency
+  }, [isOffline, userId]);
 
   useEffect(() => {
-    setIsSyncing(false)
+    setIsSyncing(false);
     setBottomToastMessage(t('homeScreen.offline'));
     setIsBottomToastVisible(isOffline);
-  }, [isOffline, locale]);
+  }, [isOffline, t]);
 
   const debouncedSetSearchQuery = useCallback(
     debounce((query) => {
       setDebouncedSearchQuery(query);
     }, 300),
-    []
+    [setDebouncedSearchQuery]
   );
 
   // Update debounced search query whenever searchQuery changes
@@ -219,7 +241,7 @@ function HomeScreen() {
     if (isEmpty) {
       animateEmptyCard();
     }
-  }, [isEmpty]);
+  }, [isEmpty, isEmptyShared]);
 
   useEffect(() => {
     if (isSearching) {
@@ -231,7 +253,19 @@ function HomeScreen() {
       // Clean up the timeout
       return () => clearTimeout(focusTimeout);
     }
-  }, [isSearching]);
+  }, [isSearching, inputRef]);
+
+  useEffect(() => {
+    if (fabOpen) {
+      setIsBlurVisible(true); // Show the blur view
+      setIsBlurAnimating(true); // Start fade-in animation
+    } else {
+      setIsBlurAnimating(false); // Start fade-out animation
+      setTimeout(() => {
+        setIsBlurVisible(false); // Unmount after animation completes
+      }, 250); // Match the animation duration
+    }
+  }, [fabOpen]);
 
   const animateEmptyCard = () => {
     emptyCardOffset.value = withSpring(0, {
@@ -299,7 +333,7 @@ function HomeScreen() {
     const translateY = interpolate(
       scrollY.value,
       [0, scrollThreshold],
-      [0, -30],
+      [0, -35],
       Extrapolation.CLAMP
     );
 
@@ -311,7 +345,7 @@ function HomeScreen() {
   }, [isSearching, isActive]); // Memoize based on these dependencies
 
   const listHeaderStyle = useAnimatedStyle(() => {
-    const fadeStartThreshold = isSearching ? 10 : 5;
+    const fadeStartThreshold = isSearching ? 35 : 30;
     const fadeCompleteThreshold = isSearching ? 60 : 50;
 
     const opacity = interpolate(
@@ -324,7 +358,7 @@ function HomeScreen() {
     const translateY = interpolate(
       scrollY.value,
       [0, fadeCompleteThreshold],
-      [0, -2],
+      [0, 30],
       Extrapolation.CLAMP
     );
 
@@ -346,15 +380,22 @@ function HomeScreen() {
   }, [isSearching]); // Memoize based on search state
 
   const fabStyle = useAnimatedStyle(() => {
-    const marginBottom = withTiming(isBottomToastVisible ? 40 : 10, {
-      duration: 300,
+    const marginBottom = withTiming(isBottomToastVisible || isToastVisible ? 40 : 10, {
+      duration: 250,
       easing: Easing.bezier(0.25, 0.1, 0.25, 1),
     });
     return {
       marginBottom,
-      zIndex: isActive ? 0 : 1,
     };
   });
+
+  const animatedBlurStyle = useAnimatedStyle(() => ({
+    opacity: withTiming(isBlurAnimating ? 1 : 0, {
+      duration: 250,
+      easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+    }),
+    zIndex: isBlurVisible ? 2 : -1,
+  }), [isBlurVisible, isBlurAnimating]); // Add dependencies here
 
   const emptyCardStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: emptyCardOffset.value }],
@@ -403,6 +444,9 @@ function HomeScreen() {
       setFabOpen(true);
     }
   });
+  const onScrollOffsetChange = useCallback((offset: number) => {
+    scrollY.value = offset;
+  }, [scrollY]);
 
   const onDragBegin = useCallback(() => {
     closeFAB();
@@ -514,8 +558,8 @@ function HomeScreen() {
   );
 
   const paddingValues = useMemo(() => {
-    return [0, screenHeight * 0.73, screenHeight * 0.43, screenHeight * 0.23];
-  }, [screenHeight]);
+    return [0, height * 0.73, height * 0.43, height * 0.23];
+  }, [height]);
 
   const listContainerPadding = useMemo(() => {
     return paddingValues[qrData.length] || 0;
@@ -581,6 +625,7 @@ function HomeScreen() {
       ) : (
         <DraggableFlatList
           ref={flatListRef}
+          bounces={true}
           ListHeaderComponent={
             <Animated.View
               style={[listHeaderStyle, { marginBottom: 25 }]}
@@ -625,17 +670,16 @@ function HomeScreen() {
           onDragEnd={onDragEnd}
           dragItemOverflow={false}
           activationDistance={10}
-          onScrollOffsetChange={(offset) => {
-            scrollY.value = offset;
-          }}
+          onScrollOffsetChange={onScrollOffsetChange}
           decelerationRate={'fast'}
+          scrollEnabled={!fabOpen}
         />
       )}
       {!isLoading &&
 
         <ThemedFAB
           open={fabOpen}
-          setOpen={setFabOpen}
+          setOpen={fabOpen ? closeFAB : openFAB}
           animatedStyle={[fabStyle, styles.fab]}
           onPress1={onNavigateToScanScreen}
           onPress2={onNavigateToAddScreen}
@@ -644,8 +688,19 @@ function HomeScreen() {
           text3={t('homeScreen.fab.gallery')}
         />
       }
-      {fabOpen && (
-        <ThemedView style={[StyleSheet.absoluteFill, { backgroundColor: 'red', zIndex: 11 }]} />
+      {isBlurVisible && (
+        <TouchableWithoutFeedback
+          onPress={() => {
+            closeFAB();
+          }}
+        >
+          <AnimatedBlurView
+            blurType={'dark'}
+            blurAmount={5}
+            style={[StyleSheet.absoluteFill, animatedBlurStyle]}
+            reducedTransparencyFallbackColor="white"
+          />
+        </TouchableWithoutFeedback>
       )}
       <ThemedStatusToast
         isVisible={isToastVisible}
@@ -761,13 +816,13 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: STATUSBAR_HEIGHT,
-    zIndex: 10,
+    zIndex: 1,
   },
   fab: {
     bottom: 20,
     right: 15,
     position: 'absolute',
-    zIndex: 13,
+    zIndex: 3,
   },
   loadingContainer: {
     paddingTop: STATUSBAR_HEIGHT + 105,

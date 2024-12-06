@@ -1,39 +1,39 @@
-const tintColorLight = '#FF8C42'; // Bright, emphasizing a warm orange
-const tintColorDark = '#FFA726';  // Brighter to stand out in dark mode
+const tintColorLight = '#FF8C42'; 
+const tintColorDark = '#FF9800'; 
 
 export const Colors = {
   light: {
-    text: '#5A4639', // Dark gray-black for readability
-    background: '#FAFAFA', // Pure white for background
+    text: '#5A4639', 
+    background: '#FAFAFA', 
     tint: tintColorLight,
-    icon: '#FFB74D', // Soft orange for icons
-    inputBackground: '#fcf3ed', // Light beige for input background
-    placeHolder: '#9E9E9E', // Gray for placeholders
-    tabIconDefault: '#BDBDBD', // Light gray for unselected tab icons
+    icon: '#FFB74D', 
+    inputBackground: '#fcf3ed', 
+    placeHolder: '#9E9E9E', 
+    tabIconDefault: '#BDBDBD', 
     tabIconSelected: tintColorLight,
-    error: '#E53935', // Bright red for clear error notifications
-    toastBackground: '#EADFD7', // Light orange for toast notifications
-    buttonBackground: '#e8dcd3', // Soft orange for button backgrounds
-    buttonHighlight: '#FFECB3', // Brighter to highlight on hover
-    cardBackground: '#fcf1eb', // Light beige for card background
-    cardFooter: '#EADFD7', // Bright orange for card footer
-    logoIcon: '#FF8A65', // Dark orange for logos
+    error: '#E53935', 
+    toastBackground: '#EADFD7', 
+    buttonBackground: '#e8dcd3', 
+    buttonHighlight: '#FFECB3', 
+    cardBackground: '#fcf1eb',
+    cardFooter: '#EADFD7', 
+    logoIcon: '#FF8A65', 
   },
   dark: {
-    text: '#FFFBF4', // Light gray for text on dark background
-    background: '#181818', // Very dark background for dark mode
+    text: '#E0E0E0', 
+    background: '#181818', 
     tint: tintColorDark,
-    icon: '#FFB74D', // Bright orange for icons
-    inputBackground: '#322C28', // Dark gray for input background
-    placeHolder: '#B0BEC5', // Light blue-gray for placeholders
-    tabIconDefault: '#757575', // Gray for unselected tab icons
+    icon: '#FFC107', 
+    inputBackground: '#212121',
+    placeHolder: '#757575', 
+    tabIconDefault: '#757575',
     tabIconSelected: tintColorDark,
-    error: '#EF5350', // Bright red for error notifications
-    toastBackground: '#322C28', // Dark brown for toast notifications
-    buttonBackground: '#4E3B32', // Dark brown for button backgrounds
-    buttonHighlight: '#8D6E63', // Brighter for hover effect
-    cardBackground: '#322C28', // Dark gray for card background
-    cardFooter: '#4E3B32', // Soft brown for card footer
-    logoIcon: '#FF7043', // Dark orange for logos
+    error: '#EF9A9A',
+    toastBackground: '#2E282A',
+    buttonBackground: '#42332D',
+    buttonHighlight: '#6A4F4B', 
+    cardBackground: '#2E282A',
+    cardFooter: '#4E342E',
+    logoIcon: '#FF9800',
   },
 };

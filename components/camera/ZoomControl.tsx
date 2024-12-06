@@ -12,7 +12,6 @@ import Animated, {
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import { ThemedText } from '@/components/ThemedText';
 import { triggerHapticFeedback } from '@/utils/haptic';
-import { cancelAnimation } from 'react-native-reanimated';
 
 const MemoizedThemedText = React.memo(ThemedText);
 
