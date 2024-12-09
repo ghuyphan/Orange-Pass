@@ -7,9 +7,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
-  withTiming,
-  Easing,
-  useDerivedValue,
   interpolate,
   Extrapolation,
   useAnimatedScrollHandler

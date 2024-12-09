@@ -38,7 +38,10 @@ import { debounce, throttle } from 'lodash';
 // Components
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedButton } from '@/components/buttons/ThemedButton';
-import { ScannerFrame, FocusIndicator, ZoomControl } from '@/components/camera';
+// import { ScannerFrame, FocusIndicator, ZoomControl } from '@/components/camera';
+import { ScannerFrame } from '@/components/camera/ScannerFrame';
+import { FocusIndicator } from '@/components/camera/FocusIndicator';
+import { ZoomControl } from '@/components/camera/ZoomControl';
 import { ThemedView } from '@/components/ThemedView';
 import ThemedSettingSheet from '@/components/bottomsheet/ThemedSettingSheet';
 import { ThemedStatusToast } from '@/components/toast/ThemedOfflineToast';
@@ -57,6 +60,7 @@ import { useLocale } from '@/context/LocaleContext';
 
 // Types
 import type { BottomSheetModal } from '@gorhom/bottom-sheet';
+
 
 const ReanimatedCamera = Reanimated.createAnimatedComponent(Camera);
 Reanimated.addWhitelistedNativeProps({ zoom: true });
@@ -79,8 +83,6 @@ interface ThemedSettingSheetMethods extends BottomSheetModal {
   snapSecondSheetToPosition: (position: string | number) => void;
   forceCloseSecondSheet: () => void;
 }
-const bottomSheetModalRef = useRef<ThemedSettingSheetMethods>(null);
-
 
 // Custom hooks
 const useCameraSetup = (cameraRef: React.RefObject<Camera>) => {
@@ -157,6 +159,7 @@ export default function ScanScreen() {
   const [quickScan, setQuickScan] = useMMKVBoolean('quickScan', storage);
   const [showIndicator, setShowIndicator] = useMMKVBoolean('showIndicator', storage);
   const [autoBrightness, setAutoBrightness] = useMMKVBoolean('autoBrightness', storage);
+  const bottomSheetModalRef = useRef<ThemedSettingSheetMethods>(null);
 
   useEffect(() => {
     if (showIndicator === undefined) {
@@ -503,7 +506,7 @@ const styles = StyleSheet.create({
     marginTop: STATUSBAR_HEIGHT + 10,
     flex: 2.5,
     backgroundColor: 'black',
-    borderRadius: 16,
+    borderRadius: 15,
     overflow: 'hidden',
   },
   loader: {

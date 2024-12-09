@@ -21,7 +21,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DARK from '@/assets/svgs/dark.svg';
 import LIGHT from '@/assets/svgs/light.svg';
-import { throttle } from 'lodash';
 
 const ThemeScreen = () => {
   const { currentTheme, setDarkMode, useSystemTheme, isDarkMode } = useTheme();
@@ -55,23 +54,33 @@ const ThemeScreen = () => {
     router.back();
   }, []);
 
-  const handleThemeChange = useCallback(
-    throttle((theme) => {
-      if (theme === 'dark') {
-        setDarkMode(true);
-      } else if (theme === 'light') {
-        setDarkMode(false);
-      } else {
-        useSystemTheme();
-      }
-    }, 300),
-    [setDarkMode, useSystemTheme]
-  );
+  const handleLightTheme = useCallback(() => {
+    setDarkMode(false);
+  }, [setDarkMode]);
 
+  const handleDarkTheme = useCallback(() => {
+    setDarkMode(true);
+  }, [setDarkMode]);
+
+  const HandleSystemTheme = () => {
+    useSystemTheme();
+  }
   const renderThemeOption = (themeName: string, iconName: string, isChecked: boolean) => (
     <Pressable
       android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
-      onPress={() => handleThemeChange(themeName)}
+      onPress={() => {
+        switch(themeName) {
+          case 'light':
+            handleLightTheme();
+            break;
+          case 'dark':
+            handleDarkTheme();
+            break;
+          case 'system':
+            HandleSystemTheme();
+            break;
+        }
+      }}
       key={themeName}
     >
       <View style={styles.section}>

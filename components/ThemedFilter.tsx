@@ -6,8 +6,6 @@ import {
     StyleSheet,
     View,
     Pressable,
-    Platform,
-    UIManager,
     LayoutAnimation,
 } from 'react-native';
 import { t } from '@/i18n'; // Translation function

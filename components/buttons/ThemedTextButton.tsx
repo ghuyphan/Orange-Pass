@@ -60,7 +60,7 @@ export function ThemedTextButton({
         },
         styles.touchable,
         style, // External styles should be applied last
-    ]), [colorScheme, disabled, loading, style]);
+    ]), [disabled, loading, style]);
 
     return (
             <Pressable

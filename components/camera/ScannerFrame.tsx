@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useLayoutEffect } from 'react';
 import { StyleSheet } from 'react-native';
 import Animated, { useAnimatedStyle, withSpring, withTiming, useSharedValue } from 'react-native-reanimated';
 
@@ -15,21 +15,46 @@ interface ScannerFrameProps {
     scanFrame: { height: number; width: number };
 }
 
-export const ScannerFrame: React.FC<ScannerFrameProps> = ({ highlight, layout, scanFrame }) => {
-    if (!layout || layout.width <= 0 || layout.height <= 0) return null;
+const FRAME_SIZE = 220; // Consistent frame size
 
-    // Shared values for animations
-    const frameX = useSharedValue(layout.width / 2 - 110); 
-    const frameY = useSharedValue(layout.height / 2 - 110);
-    const frameWidth = useSharedValue(220);
-    const frameHeight = useSharedValue(220);
+export const ScannerFrame: React.FC<ScannerFrameProps> = ({ highlight, layout, scanFrame }) => {
+    // Initialize shared values (no need for separate initialX and initialY)
+    const frameX = useSharedValue(0); 
+    const frameY = useSharedValue(0);
+    const frameWidth = useSharedValue(FRAME_SIZE);
+    const frameHeight = useSharedValue(FRAME_SIZE);
     const frameColor = useSharedValue('rgba(255, 255, 255, 0.8)');
     const frameBackgroundColor = useSharedValue('rgba(255, 255, 255, 0)');
 
-    const [isFirstMount, setIsFirstMount] = useState(true);
+    // Always create these hooks, even if not used immediately
+    const animatedFrameStyle = useAnimatedStyle(() => ({
+        position: 'absolute',
+        borderRadius: 6,
+        backgroundColor: frameBackgroundColor.value,
+        left: frameX.value,
+        top: frameY.value,
+        width: frameWidth.value,
+        height: frameHeight.value,
+        borderColor: frameColor.value,
+    }));
 
+    const animatedBorderStyle = useAnimatedStyle(() => ({
+        borderColor: frameColor.value,
+    }));
+
+    // Always create the memoized corners
+    const corners = useMemo(() => (
+        <>
+            <Animated.View style={[styles.corner, styles.topLeft, animatedBorderStyle]} />
+            <Animated.View style={[styles.corner, styles.topRight, animatedBorderStyle]} />
+            <Animated.View style={[styles.corner, styles.bottomLeft, animatedBorderStyle]} />
+            <Animated.View style={[styles.corner, styles.bottomRight, animatedBorderStyle]} />
+        </>
+    ), [animatedBorderStyle]);
+
+    // useEffect to handle highlight changes
     useEffect(() => {
-        if (highlight && scanFrame) {
+        if (highlight && scanFrame && layout.width > 0 && layout.height > 0) {
             // Calculate scales and adjusted values
             const xScale = layout.width / scanFrame.height - 0.025;
             const yScale = layout.height / scanFrame.width - 0.01;
@@ -48,43 +73,23 @@ export const ScannerFrame: React.FC<ScannerFrameProps> = ({ highlight, layout, s
             frameHeight.value = withSpring(adjustedHeight, { stiffness: 200, damping: 16 });
             frameColor.value = '#FFCC00';
             frameBackgroundColor.value = 'rgba(128, 128, 128, 0.2)';
-            setIsFirstMount(false);
-        } else if (!isFirstMount) {
-            // Reset to default values
-            frameX.value = withTiming(layout.width / 2 - 110);
-            frameY.value = withTiming(layout.height / 2 - 110);
-            frameWidth.value = withTiming(220);
-            frameHeight.value = withTiming(220);
-            frameColor.value = withTiming('rgba(255, 255, 255, 0.8)');
-            frameBackgroundColor.value = withTiming('rgba(255, 255, 255, 0)');
+        } 
+    }, [highlight, layout, scanFrame, 
+        frameX, frameY, frameWidth, frameHeight, 
+        frameColor, frameBackgroundColor]);
+
+    // useLayoutEffect to set initial position after layout is available
+    useLayoutEffect(() => {
+        if (layout.width > 0 && layout.height > 0) {
+            frameX.value = (layout.width - FRAME_SIZE) / 2;
+            frameY.value = (layout.height - FRAME_SIZE) / 2;
         }
-    }, [highlight, layout, scanFrame, isFirstMount]);
+    }, [layout]); 
 
-    // Animated styles
-    const animatedFrameStyle = useAnimatedStyle(() => ({
-        position: 'absolute',
-        borderRadius: 6,
-        backgroundColor: frameBackgroundColor.value,
-        left: frameX.value,
-        top: frameY.value,
-        width: frameWidth.value,
-        height: frameHeight.value,
-        borderColor: frameColor.value,
-    }));
-
-    const animatedBorderStyle = useAnimatedStyle(() => ({
-        borderColor: frameColor.value,
-    }));
-
-    // Memoize non-animated styles to avoid unnecessary recalculations
-    const corners = useMemo(() => (
-        <>
-            <Animated.View style={[styles.corner, styles.topLeft, animatedBorderStyle]} />
-            <Animated.View style={[styles.corner, styles.topRight, animatedBorderStyle]} />
-            <Animated.View style={[styles.corner, styles.bottomLeft, animatedBorderStyle]} />
-            <Animated.View style={[styles.corner, styles.bottomRight, animatedBorderStyle]} />
-        </>
-    ), [animatedBorderStyle]);
+    // Check for valid layout before rendering
+    if (!layout || layout.width <= 0 || layout.height <= 0) {
+        return null;
+    }
 
     return <Animated.View style={[animatedFrameStyle]}>{corners}</Animated.View>;
 };

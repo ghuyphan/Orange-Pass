@@ -65,9 +65,18 @@ const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps):
 
   const gradientColors = useMemo(() => {
     return currentTheme === 'light'
-      ? [color?.light || '#f0f8ff', returnMidpointColor(color.light, accent_color.light) || '#dcedff', accent_color?.light || '#a8d4ff']
-      : [color?.dark || '#21252b', returnMidpointColor(color.dark, accent_color.dark) || '#343a40', accent_color?.dark || '#495057'];
+      ? [
+          color?.light || '#FAF3E7',  // Light beige with a hint of cream
+          returnMidpointColor(color.light, accent_color.light) || '#EADBC8',  // Warmer mid-tone beige
+          accent_color?.light || '#D6C4AF'  // Deeper beige for clear contrast
+        ]
+      : [
+          color?.dark || '#21252b', 
+          returnMidpointColor(color.dark, accent_color.dark) || '#343a40', 
+          accent_color?.dark || '#495057'
+        ];
   }, [currentTheme, color, accent_color]);
+  
 
   const renderContent = () => (
     <LinearGradient

@@ -144,15 +144,6 @@ const AddScreen: React.FC = () => {
             scrollEnabled={true}
           >
             {renderCardItem(values.metadata)}
-            {/* <ThemedInput
-              iconName='qrcode'
-              placeholder={t('qrCodeScreen.codePlaceholder')}
-              label={t('qrCodeScreen.codeLabel')}
-              value={values.code}
-              onChangeText={handleChange('code')}
-              onBlur={handleBlur('code')}
-              error={touched.code && errors.code}
-            /> */}
             <ThemedInput
               iconName='card-text-outline'
               placeholder={t('addScreen.metadataPlaceholder')}

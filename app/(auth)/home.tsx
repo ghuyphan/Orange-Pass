@@ -16,6 +16,7 @@ import DraggableFlatList, { ScaleDecorator } from 'react-native-draggable-flatli
 import { debounce, throttle } from 'lodash';
 import { BlurView } from '@react-native-community/blur';
 import BottomSheet from '@gorhom/bottom-sheet';
+import ImagePicker from 'react-native-image-crop-picker';
 import { MaterialIcons } from '@expo/vector-icons';
 
 // Types and constants
@@ -145,7 +146,7 @@ function HomeScreen() {
         setIsSyncing(false);
       }, 200);
     }
-  }, [isOffline, isSyncing, t]);
+  }, [isOffline, isSyncing]);
 
   const fetchServerData = async (userId: string) => {
     try {
@@ -173,7 +174,7 @@ function HomeScreen() {
       setToastMessage(t('homeScreen.loadError'));
       setIsToastVisible(true);
     }
-  }, [setQrData, setIsEmpty, setToastMessage, setIsToastVisible, t]);
+  }, [setQrData, setIsEmpty, setToastMessage, setIsToastVisible]);
 
   useEffect(() => {
     const loadLocalData = async () => {
@@ -209,7 +210,7 @@ function HomeScreen() {
     setIsSyncing(false);
     setBottomToastMessage(t('homeScreen.offline'));
     setIsBottomToastVisible(isOffline);
-  }, [isOffline, t]);
+  }, [isOffline]);
 
   const debouncedSetSearchQuery = useCallback(
     debounce((query) => {
@@ -241,14 +242,14 @@ function HomeScreen() {
     if (isEmpty) {
       animateEmptyCard();
     }
-  }, [isEmpty, isEmptyShared]);
+  }, [isEmpty, isEmptyShared, animateEmptyCard]);
 
   useEffect(() => {
     if (isSearching) {
       // Use a small timeout to ensure the input is rendered
       const focusTimeout = setTimeout(() => {
         inputRef.current?.focus();
-      }, 250); // Small delay to allow rendering
+      }, 300); // Small delay to allow rendering
 
       // Clean up the timeout
       return () => clearTimeout(focusTimeout);
@@ -420,8 +421,7 @@ function HomeScreen() {
   );
 
   const onNavigateToScanScreen = useCallback(() => {
-    closeFAB();
-    router.push('/(scan)/scan-main');
+      router.push('/(scan)/scan-main');
   }, []);
 
   const onNavigateToSettingsScreen = useCallback(() => {
@@ -429,9 +429,22 @@ function HomeScreen() {
     router.push('/settings');
   }, []);
   const onNavigateToAddScreen = useCallback(() => {
-    closeFAB();
-    router.push('/(add)/add-new');
+      router.push('/(add)/add-new');
   }, [])
+
+  const onOpenGallery = async () => {
+      try {
+        const result = await ImagePicker.openPicker({
+          width: 300,
+          height: 400,
+          includeBase64: true,
+          mediaType: 'photo',
+        });
+        console.log(result);
+      } catch (error) {
+        console.log(error);
+      }
+  }
 
   // In your existing code where you define scrollHandler
   const scrollHandler = useAnimatedScrollHandler((event) => {
@@ -599,7 +612,7 @@ function HomeScreen() {
       </Animated.View>
       {isLoading ? (
         <View style={styles.loadingContainer}>
-          <View style={{ marginBottom: 25 }}>
+          <View style={{ marginBottom:  15 }}>
             <ThemedFilterSkeleton show={true} />
           </View>
           {Array.from({ length: 3 }).map((_, index) => (
@@ -683,6 +696,7 @@ function HomeScreen() {
           animatedStyle={[fabStyle, styles.fab]}
           onPress1={onNavigateToScanScreen}
           onPress2={onNavigateToAddScreen}
+          onPress3={onOpenGallery}
           text1={t('homeScreen.fab.add')}
           text2={t('homeScreen.fab.scan')}
           text3={t('homeScreen.fab.gallery')}
@@ -786,9 +800,7 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     paddingTop: STATUSBAR_HEIGHT + 105,
-    // paddingHorizontal: 15,
     flexGrow: 1,
-    // paddingBottom: screenHeight / 5,
   },
   emptyItem: {
     flex: 1,

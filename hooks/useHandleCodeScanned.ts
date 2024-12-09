@@ -2,7 +2,6 @@ import { useCallback } from 'react';
 import { throttle } from 'lodash';
 import WifiManager from 'react-native-wifi-reborn';
 import { t } from '@/i18n';
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { MaterialIcons } from '@expo/vector-icons';
 
 interface Pattern {
