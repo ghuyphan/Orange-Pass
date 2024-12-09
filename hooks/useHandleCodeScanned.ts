@@ -1,118 +1,146 @@
 import { useCallback } from 'react';
 import { throttle } from 'lodash';
 import WifiManager from 'react-native-wifi-reborn';
-import { t } from '@/i18n';
 import { MaterialIcons } from '@expo/vector-icons';
-
-interface Pattern {
-  pattern: RegExp;
-  handler: () => void;
-}
 
 // Define the type for Ionicons glyphs (icon names)
 type MaterialIconsIconName = keyof typeof MaterialIcons.glyphMap;
 
-interface UseHandleCodeScannedProps {
-  isConnecting: boolean;
-  quickScan?: boolean;
-  setCodeType: (type: string) => void;
-  setIconName: (name: MaterialIconsIconName) => void;
-  setCodeValue: (value: string) => void;
-  setIsConnecting: (connecting: boolean) => void;
+interface ScanResult {
+  codeType: string;
+  iconName: MaterialIconsIconName;
+  codeValue: string;
+  codeFormat?: number;
 }
 
-const useHandleCodeScanned = ({
-  isConnecting,
-  quickScan,
-  setCodeType,
-  setIconName,
-  setCodeValue,
-  setIsConnecting,
-}: UseHandleCodeScannedProps) => {
+interface Pattern {
+  pattern: RegExp;
+  handler: (
+    codeMetadata: string,
+    options: {
+      quickScan?: boolean;
+      codeFormat?: number;
+      t: (key: string) => string;
+      setIsConnecting?: (connecting: boolean) => void;
+    }
+  ) => ScanResult;
+}
+
+const useHandleCodeScanned = () => {
   const handleCodeScanned = useCallback(
-    throttle((codeMetadata: string) => {
-      if (isConnecting) return;
+    throttle(
+      (
+        codeMetadata: string,
+        options: {
+          quickScan?: boolean;
+          codeFormat?: number;
+          t: (key: string) => string;
+          setIsConnecting?: (connecting: boolean) => void;
+        }
+      ): ScanResult => {
+        const { quickScan, t, setIsConnecting, codeFormat } = options;
+        const format = options.codeFormat;
 
-      const patterns: { [key: string]: Pattern } = {
-        WIFI: {
-          pattern: /^WIFI:/,
-          handler: () => {
-            const ssidMatch = codeMetadata.match(/S:([^;]*)/);
-            const passMatch = codeMetadata.match(/P:([^;]*)/);
-            const isWepMatch = codeMetadata.match(/T:([^;]*)/);
+        const patterns: { [key: string]: Pattern } = {
+          WIFI: {
+            pattern: /^WIFI:/,
+            handler: (codeMetadata, { quickScan, t }) => {
+              const ssidMatch = codeMetadata.match(/S:([^;]*)/);
+              const passMatch = codeMetadata.match(/P:([^;]*)/);
+              const isWepMatch = codeMetadata.match(/T:([^;]*)/);
 
-            console.log({ ssidMatch, passMatch, isWepMatch });
+              const ssid = ssidMatch ? ssidMatch[1] : 'Unknown';
 
-            const ssid = ssidMatch ? ssidMatch[1] : 'Unknown';
-            setCodeType('WIFI');
-            setIconName('wifi'); // Ionicons icon name
+              const result: ScanResult = {
+                codeType: 'WIFI',
+                iconName: 'wifi',
+                codeValue: `${t('scanScreen.join')} "${ssid}" ${t('scanScreen.join2')}`,
+                codeFormat: format,
+              };
 
-            setCodeValue(`${t('scanScreen.join')} "${ssid}" ${t('scanScreen.join2')}`);
+              if (quickScan && setIsConnecting) {
+                const password = passMatch ? passMatch[1] : '';
+                const isWep = isWepMatch ? isWepMatch[1] === 'WEP' : undefined;
 
-            if (quickScan) {
-              const password = passMatch ? passMatch[1] : '';
-              const isWep = isWepMatch ? isWepMatch[1] === 'WEP' : undefined;
+                setIsConnecting(true);
+                WifiManager.connectToProtectedWifiSSID({
+                  ssid: ssid,
+                  password: password,
+                  isWEP: isWep,
+                }).then(
+                  () => {
+                    console.log('Connected successfully!');
+                    setIsConnecting(false);
+                  },
+                  (error) => {
+                    console.log('Connection failed!', error);
+                    setIsConnecting(false);
+                  }
+                );
+              }
 
-              setIsConnecting(true);
-              WifiManager.connectToProtectedWifiSSID({
-                ssid: ssid,
-                password: password,
-                isWEP: isWep,
-              }).then(
-                () => {
-                  console.log('Connected successfully!');
-                  setIsConnecting(false);
-                },
-                (error) => {
-                  console.log('Connection failed!', error);
-                  setIsConnecting(false);
-                }
-              );
-            }
+              return result;
+            },
           },
-        },
-        URL: {
-          pattern: /^(https:\/\/|http:\/\/)/,
-          handler: () => {
-            const url = codeMetadata.replace(/^https?:\/\//, '');
-            setCodeType('URL');
-            setIconName('explore'); // Ionicons icon name
-            setCodeValue(`${t('scanScreen.goto')} "${url}"`);
+          URL: {
+            pattern: /^(https:\/\/|http:\/\/)/,
+            handler: (codeMetadata, { t }) => {
+              const url = codeMetadata.replace(/^https?:\/\//, '');
+              return {
+                codeType: 'URL',
+                iconName: 'explore',
+                codeValue: `${t('scanScreen.goto')} "${url}"`,
+                codeFormat: format,
+              };
+            },
           },
-        },
-        VietQR: {
-          pattern: /^000201010211/,
-          handler: () => {
-            if (codeMetadata.includes('MOMO')) {
-              setCodeType('ewallet');
-              setIconName('qr-code'); // Ionicons icon name
-              setCodeValue(`${t('scanScreen.momoPayment')}`);
-            } else if (codeMetadata.includes('zalopay')) {
-              setCodeType('ewallet');
-              setIconName('qr-code'); // Ionicons icon name
-              setCodeValue(`${t('scanScreen.zalopayPayment')}`);
-            } else {
-              setCodeType('card');
-              setIconName('qr-code'); // Ionicons icon name
-              setCodeValue(codeMetadata);
-              console.log ('VietQR', codeMetadata);
-            }
+          VietQR: {
+            pattern: /^000201010211/,
+            handler: (codeMetadata, { t }) => {
+              let result: ScanResult = {
+                codeType: 'card',
+                iconName: 'qr-code',
+                codeValue: codeMetadata,
+                codeFormat: format,
+              };
+
+              if (codeMetadata.includes('MOMO')) {
+                result = {
+                  codeType: 'ewallet',
+                  iconName: 'qr-code',
+                  codeValue: `${t('scanScreen.momoPayment')}`,
+                  codeFormat: format,
+                };
+              } else if (codeMetadata.includes('zalopay')) {
+                result = {
+                  codeType: 'ewallet',
+                  iconName: 'qr-code',
+                  codeValue: `${t('scanScreen.zalopayPayment')}`,
+                  codeFormat: format,
+                };
+              }
+
+              return result;
+            },
           },
-        },
-      };
+        };
 
-      for (const key in patterns) {
-        const { pattern, handler } = patterns[key];
-        if (pattern.test(codeMetadata)) {
-          handler();
-          return;
-        }MaterialIcons
-      }
+        for (const key in patterns) {
+          const { pattern, handler } = patterns[key];
+          if (pattern.test(codeMetadata)) {
+            return handler(codeMetadata, options);
+          }
+        }
 
-      setCodeType('unknown');
-      setCodeValue(t('scanScreen.unknownCode'));
-    }, 500),
-    [isConnecting, quickScan]
+        return {
+          codeType: 'unknown',
+          iconName: 'help', // Default icon for unknown
+          codeValue: t('scanScreen.unknownCode'),
+        };
+      },
+      500
+    ),
+    []
   );
 
   return handleCodeScanned;

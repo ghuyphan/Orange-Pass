@@ -242,7 +242,7 @@ function HomeScreen() {
     if (isEmpty) {
       animateEmptyCard();
     }
-  }, [isEmpty, isEmptyShared, animateEmptyCard]);
+  }, [isEmpty, isEmptyShared]);
 
   useEffect(() => {
     if (isSearching) {
@@ -396,6 +396,7 @@ function HomeScreen() {
       easing: Easing.bezier(0.25, 0.1, 0.25, 1),
     }),
     zIndex: isBlurVisible ? 2 : -1,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
   }), [isBlurVisible, isBlurAnimating]); // Add dependencies here
 
   const emptyCardStyle = useAnimatedStyle(() => ({
@@ -708,12 +709,13 @@ function HomeScreen() {
             closeFAB();
           }}
         >
-          <AnimatedBlurView
+          {/* <AnimatedBlurView
             blurType={'dark'}
             blurAmount={5}
             style={[StyleSheet.absoluteFill, animatedBlurStyle]}
             reducedTransparencyFallbackColor="white"
-          />
+          /> */}
+          <Animated.View style={[StyleSheet.absoluteFillObject, animatedBlurStyle]} />
         </TouchableWithoutFeedback>
       )}
       <ThemedStatusToast
@@ -741,7 +743,7 @@ function HomeScreen() {
         primaryActionText={t('homeScreen.moveToTrash')}
         onPrimaryAction={onDeletePress}
         onDismiss={() => setIsModalVisible(false)}
-        // dismissable={true}
+        dismissable={true}
         onSecondaryAction={() => setIsModalVisible(false)}
         secondaryActionText={t('homeScreen.cancel')}
         title={t('homeScreen.confirmDeleteTitle')}

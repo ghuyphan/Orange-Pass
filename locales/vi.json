@@ -152,12 +152,13 @@
     "nearbyLocation": "Vị trí lân cận",
     "createQrCode": "Tạo mã QR nhận tiền",
     "receivePlaceholder": "Nhập số tiền cần nhận",
-    "generatingQRCode": "Đang tạo mã QR..."
+    "generatingQRCode": "Đang tạo mã QR...",
+    "failedToOpenGoogleMaps": "Không thể mở Google Maps."
   },
   "settingsScreen": {
     "title": "Cài đặt",
     "language": "Ngôn ngữ",
-    "About": "Về Orange⁺",
+    "about": "Về Orange⁺",
     "editProfile": "Chỉnh sửa hồ sơ",
     "changePassword": "Đổi mật khẩu",
     "changeEmail": "Đổi email",

@@ -70,11 +70,18 @@ const AddScreen: React.FC = () => {
     const scale = interpolate(
       scrollY.value,
       [0, 70],
-      [1, 0.8],
+      [0.8, 0.6],
+      Extrapolation.CLAMP
+    )
+    const marginBottom = interpolate(
+      scrollY.value,
+      [0, 70],
+      [20, -10],
       Extrapolation.CLAMP
     )
     return {
       transform: [{ scale }],
+      marginBottom
     };
   });
 
@@ -91,8 +98,9 @@ const AddScreen: React.FC = () => {
         metadata={metadata || '1234'} // Use the metadata passed from Formik
         metadata_type={codeType === '256' ? 'qr' : 'barcode'}
         animatedStyle={cardStyle}
-        style={{ marginBottom: 30 }}
+      // style={{ marginBottom: 30 }}
       />
+
     );
   };
 
@@ -144,16 +152,30 @@ const AddScreen: React.FC = () => {
             scrollEnabled={true}
           >
             {renderCardItem(values.metadata)}
-            <ThemedInput
-              iconName='card-text-outline'
-              placeholder={t('addScreen.metadataPlaceholder')}
-              label={t('addScreen.metadataLabel')}
-              value={values.metadata}
-              onChangeText={handleChange('metadata')}
-              onBlur={handleBlur('metadata')}
-              error={touched.metadata && errors.metadata}
+
+            <ThemedView style={{ justifyContent: 'center', backgroundColor: Colors.light.cardBackground, borderRadius: 16}}>
+              <ThemedInput
+                iconName='card-text-outline'
+                placeholder={t('addScreen.metadataPlaceholder')}
+                // label={t('addScreen.metadataLabel')}
+                value={values.metadata}
+                onChangeText={handleChange('metadata')}
+                onBlur={handleBlur('metadata')}
+                // isError={true}
+                // errorMessage='Error message'
+                // disabled={codeValue?.toString() !== ''}
+              />
+              <ThemedInput
+                iconName='data-matrix'
+                placeholder={t('addScreen.metadataPlaceholder')}
+                // label={t('addScreen.metadataLabel')}
+                value={values.metadata}
+                onChangeText={handleChange('metadata')}
+                onBlur={handleBlur('metadata')}
+                error={touched.metadata && errors.metadata}
               // disabled={codeValue?.toString() !== ''}
-            />
+              />
+            </ThemedView>
 
             <ThemedButton
               label={t('addScreen.saveButton')}
@@ -178,7 +200,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     maxHeight: '130%',
     paddingHorizontal: 15,
-    paddingTop: STATUSBAR_HEIGHT + 105,
+    paddingTop: STATUSBAR_HEIGHT + 100,
   },
   titleContainer: {
     position: 'absolute',

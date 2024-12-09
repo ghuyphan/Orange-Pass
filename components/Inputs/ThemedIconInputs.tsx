@@ -119,7 +119,7 @@ export const ThemedIconInput = forwardRef<TextInput, ThemedIconInputProps>(({
 
 const styles = StyleSheet.create({
     inputContainer: {
-        flexGrow: 1,
+        // flexGrow: 1,
         paddingVertical: 5,
         paddingHorizontal: 15,
         borderRadius: 16,

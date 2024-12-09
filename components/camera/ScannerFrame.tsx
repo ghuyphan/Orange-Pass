@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useLayoutEffect } from 'react';
+import React, { useEffect, useMemo, useLayoutEffect } from 'react';
 import { StyleSheet } from 'react-native';
 import Animated, { useAnimatedStyle, withSpring, withTiming, useSharedValue } from 'react-native-reanimated';
 
@@ -73,7 +73,14 @@ export const ScannerFrame: React.FC<ScannerFrameProps> = ({ highlight, layout, s
             frameHeight.value = withSpring(adjustedHeight, { stiffness: 200, damping: 16 });
             frameColor.value = '#FFCC00';
             frameBackgroundColor.value = 'rgba(128, 128, 128, 0.2)';
-        } 
+        } else {
+            frameX.value = withTiming((layout.width - FRAME_SIZE) / 2);
+            frameY.value = withTiming((layout.height - FRAME_SIZE) / 2);
+            frameWidth.value = withTiming(FRAME_SIZE);
+            frameHeight.value = withTiming(FRAME_SIZE);
+            frameColor.value = withTiming('rgba(255, 255, 255, 0.8)');
+            frameBackgroundColor.value = withTiming('rgba(255, 255, 255, 0)');
+        }
     }, [highlight, layout, scanFrame, 
         frameX, frameY, frameWidth, frameHeight, 
         frameColor, frameBackgroundColor]);

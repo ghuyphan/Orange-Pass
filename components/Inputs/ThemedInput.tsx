@@ -5,12 +5,11 @@ import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
 import { useTheme } from '@/context/ThemeContext';
 import { Colors } from '@/constants/Colors';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export type ThemedInputProps = {
-    /** Light color theme for the input text */
-    lightColor?: string;
-    /** Dark color theme for the input text */
-    darkColor?: string;
+    /** The name of the icon to display on the input */
+    iconName: keyof typeof MaterialCommunityIcons.glyphMap;
     /** Label to display on the input */
     label: string;
     /** The value of the input */
@@ -40,8 +39,7 @@ export type ThemedInputProps = {
 };
 
 export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(({
-    lightColor,
-    darkColor,
+    iconName,
     label,
     placeholder,
     value = '',
@@ -80,7 +78,7 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(({
             borderBottomColor: currentTheme === 'light' ? Colors.light.error : Colors.dark.error,
             borderBottomWidth: isError && errorMessage.length > 0 ? 2 : 0,
         },
-        style,
+        // style,
     ]), [currentTheme, isError, errorMessage, style]);
 
     const errorLabelStyle = useMemo(() => ({
@@ -88,12 +86,14 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(({
     }), [currentTheme]);
 
     return (
-        <View style={[styles.container, { marginBottom: isError ? 0 : 20 }]}>
+        <View style={[styles.container, style]}>
             <ThemedView style={inputContainerStyle}>
-                <ThemedText style={[styles.label, { color }]} type='defaultSemiBold'>
+                {!iconName && <ThemedText style={[styles.label, { color }]} type='defaultSemiBold'>
                     {label}
-                </ThemedText>
+                </ThemedText>}
+                
                 <View style={styles.inputRow}>
+                    <MaterialCommunityIcons name={iconName} size={20} color={color} />
                     <TextInput
                         ref={ref}
                         onSubmitEditing={onSubmitEditing}
@@ -161,6 +161,7 @@ const styles = StyleSheet.create({
         height: 30,
         flex: 1,  // Allows the input to take available space but not overlap the button
         marginRight: 10,
+        marginLeft: 10,
     },
     iconTouchable: {
         borderRadius: 50,

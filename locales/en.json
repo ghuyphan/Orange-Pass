@@ -153,7 +153,8 @@
     "nearbyLocation": "Nearby location",
     "createQrCode": "Create payment QR code",
     "receivePlaceholder": "Enter amount to receive",
-    "generatingQRCode": "Generating QR code..."
+    "generatingQRCode": "Generating QR code...",
+    "failedToOpenGoogleMaps": "Couldn't open Google Maps."
   },
   "settingsScreen": {
     "title": "Settings",

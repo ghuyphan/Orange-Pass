@@ -107,6 +107,7 @@ export default function LoginScreen() {
             onBlur={handleBlur('email')}
             value={values.email}
             errorMessage={touched.email && errors.email ? errors.email : ''}
+            style={touched.email && errors.email ? undefined : { marginBottom: 20 }}
           />
           <ThemedInput
             label={t('loginScreen.password')}
@@ -117,6 +118,7 @@ export default function LoginScreen() {
             onBlur={handleBlur('password')}
             value={values.password}
             errorMessage={touched.password && errors.password ? errors.password : ''}
+            style={touched.email && errors.email ? undefined : { marginBottom: 20 }}
           />
           <View style={styles.forgotButton}>
             <ThemedTextButton

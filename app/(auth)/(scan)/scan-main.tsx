@@ -1,44 +1,43 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
-import { 
-  StyleSheet, 
-  View, 
-  Text, 
-  ActivityIndicator, 
-  TouchableWithoutFeedback, 
-  LayoutChangeEvent, 
-  Linking, 
-  SafeAreaView, 
-  StatusBar 
+import {
+  StyleSheet,
+  View,
+  Text,
+  ActivityIndicator,
+  TouchableWithoutFeedback,
+  LayoutChangeEvent,
+  Linking,
+  SafeAreaView,
+  StatusBar
 } from 'react-native';
-import { 
-  Camera, 
-  Code, 
-  useCameraDevice, 
-  useCameraPermission, 
-  useCodeScanner, 
-  CodeScannerFrame 
+import {
+  Camera,
+  Code,
+  useCameraDevice,
+  useCameraPermission,
+  useCodeScanner,
+  CodeScannerFrame
 } from 'react-native-vision-camera';
-import Reanimated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
-  withSpring, 
-  runOnJS, 
-  withTiming, 
-  useAnimatedProps, 
-  SharedValue 
+import Reanimated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  runOnJS,
+  withTiming,
+  useAnimatedProps,
+  SharedValue
 } from 'react-native-reanimated';
-import Animated from 'react-native-reanimated'; 
+import Animated from 'react-native-reanimated';
 import { useUnmountBrightness } from '@reeq/react-native-device-brightness';
 import ImagePicker from 'react-native-image-crop-picker';
 import { Redirect, useRouter } from 'expo-router';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { MaterialIcons } from '@expo/vector-icons';
-import { debounce, throttle } from 'lodash'; 
+import { debounce, throttle } from 'lodash';
 
 // Components
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedButton } from '@/components/buttons/ThemedButton';
-// import { ScannerFrame, FocusIndicator, ZoomControl } from '@/components/camera';
 import { ScannerFrame } from '@/components/camera/ScannerFrame';
 import { FocusIndicator } from '@/components/camera/FocusIndicator';
 import { ZoomControl } from '@/components/camera/ZoomControl';
@@ -55,11 +54,12 @@ import { decodeQR } from '@/utils/decodeQR';
 
 // Hooks
 import { useMMKVBoolean } from 'react-native-mmkv';
-import useHandleCodeScanned from '@/hooks/useHandleCodeScanned'; 
+import useHandleCodeScanned from '@/hooks/useHandleCodeScanned';
 import { useLocale } from '@/context/LocaleContext';
 
 // Types
 import type { BottomSheetModal } from '@gorhom/bottom-sheet';
+import { t } from '@/i18n';
 
 
 const ReanimatedCamera = Reanimated.createAnimatedComponent(Camera);
@@ -211,6 +211,8 @@ export default function ScanScreen() {
   const [toastMessage, setToastMessage] = useState('');
   const [isDecoding, setIsDecoding] = useState(false);
 
+  const handleCodeScanned = useHandleCodeScanned();
+
 
   const showToast = (message: string) => {
     setToastMessage(message);
@@ -221,15 +223,15 @@ export default function ScanScreen() {
   };
 
   // const bottomSheetModalRef = useRef<BottomSheetModal>(null);
-  
+
   const handleExpandPress = useCallback(() => {
     bottomSheetModalRef.current?.present();
   }, []);
-  
+
 
   const handleOpenSecondSheet = () => {
     if (bottomSheetModalRef.current) {
-      bottomSheetModalRef.current.presentSecondSheet(); 
+      bottomSheetModalRef.current.presentSecondSheet();
     }
   };
 
@@ -238,15 +240,6 @@ export default function ScanScreen() {
   }, []);
 
   useUnmountBrightness(0.8, true);
-
-  const handleCodeScanned = useHandleCodeScanned({
-    isConnecting,
-    quickScan,
-    setCodeType,
-    setIconName,
-    setCodeValue,
-    setIsConnecting,
-  }); 
 
   const codeScanner = useCodeScanner({
     codeTypes: ['qr', 'code-128', 'code-39', 'ean-13', 'ean-8', 'upc-a', 'upc-e', 'data-matrix'],
@@ -261,6 +254,7 @@ export default function ScanScreen() {
       if (codes.length > 0) {
         const firstCode = codes[0];
         const { value, frame: codeFrame } = firstCode;
+
 
         setCodeMetadata(value ?? '');
 
@@ -279,7 +273,15 @@ export default function ScanScreen() {
           setCodeScannerHighlights([]);
         }
 
-        handleCodeScanned(value ?? '');
+        const result = handleCodeScanned(value ?? '', {
+          quickScan,
+          t,
+          setIsConnecting,
+        });
+        setCodeType(result.codeType);
+        setIconName(result.iconName);
+        setCodeValue(result.codeValue);
+
       } else {
         console.log('No codes found');
         setIsConnecting(false);
@@ -305,11 +307,18 @@ export default function ScanScreen() {
       }
 
       // decodeQRCode(image.path);
-      const result = await decodeQR(image.path);
+      const decode = await decodeQR(image.path);
 
-      if (result) {
-        onNavigateToAddScreen(result.format, result.value);
-        // router.push('/(auth)/(add)/add-new');
+      const result = handleCodeScanned(decode?.value ?? '', {
+        quickScan,
+        codeFormat: decode?.format,
+        t,
+        setIsConnecting,
+      });
+
+
+      if (result && result.codeFormat !== undefined) {
+        onNavigateToAddScreen(result.codeFormat, result.codeValue);
       } else {
         // console.log('Failed to decode QR code');
         showToast('Failed to decode QR code');

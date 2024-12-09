@@ -32,61 +32,6 @@ export type ThemedFABProps = {
   textStyle?: StyleProp<TextStyle>;
 };
 
-// Custom hook for button animation styles
-const useButtonAnimatedStyle = (open: boolean, delay: number) => {
-  const animationConfig = {
-    duration: 250,
-    easing: Easing.out(Easing.cubic)
-  };
-
-  return useAnimatedStyle(() => ({
-    elevation: withDelay(delay, withTiming(open ? 5 : 0, animationConfig)),
-    opacity: withDelay(
-      delay,
-      withSequence(
-        withTiming(open ? 1 : 0, animationConfig),
-        withTiming(open ? 1 : 0, animationConfig)
-      )
-    ),
-    transform: [{
-      scale: withDelay(
-        delay,
-        withSequence(
-          withTiming(open ? 1 : 0.8, animationConfig),
-          withTiming(open ? 1 : 0.8, animationConfig)
-        )
-      )
-    }]
-  }), [open]);
-};
-
-// Custom hook for text animation styles
-const useTextAnimatedStyle = (open: boolean, delay: number) => {
-  const animationConfig = {
-    duration: 250,
-    easing: Easing.out(Easing.cubic)
-  };
-
-  return useAnimatedStyle(() => ({
-    opacity: withDelay(
-      delay,
-      withSequence(
-        withTiming(open ? 1 : 0, animationConfig),
-        withTiming(open ? 1 : 0, animationConfig)
-      )
-    ),
-    transform: [{
-      translateX: withDelay(
-        delay,
-        withSequence(
-          withTiming(open ? 0 : -20, animationConfig),
-          withTiming(open ? 0 : -20, animationConfig)
-        )
-      )
-    }]
-  }), [open]);
-};
-
 export const ThemedFAB = forwardRef(({
   open,
   setOpen,
@@ -133,13 +78,52 @@ export const ThemedFAB = forwardRef(({
     }]
   }), [open]);
 
-  // Use the new custom hooks for animation styles
-  const buttonStyle1 = useButtonAnimatedStyle(open, 50);
-  const buttonStyle2 = useButtonAnimatedStyle(open, 100);
-  const buttonStyle3 = useButtonAnimatedStyle(open, 150);
-  const textStyle1 = useTextAnimatedStyle(open, 50);
-  const textStyle2 = useTextAnimatedStyle(open, 100);
-  const textStyle3 = useTextAnimatedStyle(open, 150);
+  const createButtonStyle = (delay: number) => useAnimatedStyle(() => ({
+    elevation: withDelay(delay, withTiming(open ? 5 : 0, animationConfig)),
+    opacity: withDelay(
+      delay,
+      withSequence(
+        withTiming(open ? 1 : 0, animationConfig),
+        withTiming(open ? 1 : 0, animationConfig)
+      )
+    ),
+    transform: [{
+      scale: withDelay(
+        delay,
+        withSequence(
+          withTiming(open ? 1 : 0.8, animationConfig),
+          withTiming(open ? 1 : 0.8, animationConfig)
+        )
+      )
+    }]
+  }), [open]);
+
+  const createTextStyle = (delay: number) => useAnimatedStyle(() => ({
+    opacity: withDelay(
+      delay,
+      withSequence(
+        withTiming(open ? 1 : 0, animationConfig),
+        withTiming(open ? 1 : 0, animationConfig)
+      )
+    ),
+    transform: [{
+      translateX: withDelay(
+        delay,
+        withSequence(
+          withTiming(open ? 0 : -20, animationConfig),
+          withTiming(open ? 0 : -20, animationConfig)
+        )
+      )
+    }],
+    // elevation: withDelay(delay, withTiming(open ? 5 : 0, animationConfig))
+  }), [open]);
+
+  const buttonStyle1 = createButtonStyle(50);
+  const buttonStyle2 = createButtonStyle(100);
+  const buttonStyle3 = createButtonStyle(150);
+  const textStyle1 = createTextStyle(50);
+  const textStyle2 = createTextStyle(100);
+  const textStyle3 = createTextStyle(150);
 
   // useEffect to handle closing animation
   useEffect(() => {
@@ -153,6 +137,7 @@ export const ThemedFAB = forwardRef(({
       setClosing(true);
     }
   }, [open]);
+
 
   const handleFABPress = () => {
     if (isAnimating.value) return; // Prevent spamming
@@ -189,6 +174,7 @@ export const ThemedFAB = forwardRef(({
                     styles.buttonText,
                     {
                       color: colors.text,
+                      // backgroundColor: colors.textBackground 
                     },
                     textStyle,
                     textStyle3
@@ -199,7 +185,7 @@ export const ThemedFAB = forwardRef(({
                 <ThemedButton
                   style={styles.fab}
                   animatedStyle={buttonStyle3}
-                  onPress={handlePressWithAnimation(onPress3)}
+                  onPress={handlePressWithAnimation(onPress3)} // Wrap onPress2
                   iconName="image"
                 />
               </View>
@@ -211,6 +197,7 @@ export const ThemedFAB = forwardRef(({
                     styles.buttonText,
                     {
                       color: colors.text,
+                      // backgroundColor: colors.textBackground 
                     },
                     textStyle,
                     textStyle2
@@ -221,7 +208,7 @@ export const ThemedFAB = forwardRef(({
                 <ThemedButton
                   style={styles.fab}
                   animatedStyle={buttonStyle2}
-                  onPress={handlePressWithAnimation(onPress1)}
+                  onPress={handlePressWithAnimation(onPress1)} // Wrap onPress1
                   iconName="camera"
                 />
               </View>
@@ -233,6 +220,7 @@ export const ThemedFAB = forwardRef(({
                     styles.buttonText,
                     {
                       color: colors.text,
+                      // backgroundColor: colors.textBackground 
                     },
                     textStyle,
                     textStyle1
@@ -243,7 +231,7 @@ export const ThemedFAB = forwardRef(({
                 <ThemedButton
                   style={styles.fab}
                   animatedStyle={buttonStyle1}
-                  onPress={handlePressWithAnimation(onPress2)}
+                  onPress={handlePressWithAnimation(onPress2)} // Wrap onPress2
                   iconName="plus-circle"
                 />
               </View>

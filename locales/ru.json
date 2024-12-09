@@ -117,7 +117,8 @@
     "image": "Изображение",
     "metadataPlaceholder": "Введите номер карты",
     "metadataLabel": "Номер карты",
-    "saveButton": "Сохранить"
+    "saveButton": "Сохранить",
+    "failedToOpenGoogleMaps": "  Не удалось открыть Google Maps."
   },
   "settingsScreen": {
     "title": "Настройки",

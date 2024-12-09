@@ -86,8 +86,13 @@ export default function DetailScreen() {
             return;
         }
 
-        const url = `https://www.google.com/maps/search/?api=1&query=$${encodeURIComponent(itemName.name)}`;
-        Linking.openURL(url).catch((err) => console.error('Failed to open Google Maps:', err));
+        const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(itemName.name)}`;
+        
+        Linking.openURL(url).catch((err) =>{ 
+            console.error('Failed to open Google Maps:', err)
+            setIsToastVisible(true);
+            setToastMessage(t('detailsScreen.failedToOpenGoogleMaps'));
+        });
     }, [item]);
 
     const onToggleTransfer = useCallback(() => {

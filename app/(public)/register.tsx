@@ -96,6 +96,7 @@ export default function RegisterScreen() {
                         onBlur={handleBlur('fullName')}
                         value={values.fullName}
                         errorMessage={touched.fullName && errors.fullName ? errors.fullName : ''}
+                        style={touched.email && errors.email ? undefined : { marginBottom: 20 }}
                     />
                     <ThemedInput
                         label={t('registerScreen.email')}
@@ -105,6 +106,7 @@ export default function RegisterScreen() {
                         onBlur={handleBlur('email')}
                         value={values.email}
                         errorMessage={touched.email && errors.email ? errors.email : ''}
+                        style={touched.email && errors.email ? undefined : { marginBottom: 20 }}
                     />
                     <ThemedInput
                         label={t('registerScreen.password')}
@@ -115,6 +117,7 @@ export default function RegisterScreen() {
                         onBlur={handleBlur('password')}
                         value={values.password}
                         errorMessage={touched.password && errors.password ? errors.password : ''}
+                        style={touched.email && errors.email ? undefined : { marginBottom: 20 }}
                     />
                     <ThemedInput
                         label={t('registerScreen.confirmPassword')}
@@ -125,6 +128,7 @@ export default function RegisterScreen() {
                         onBlur={handleBlur('registerScreen.confirmPassword')}
                         value={values.confirmPassword}
                         errorMessage={touched.confirmPassword && errors.confirmPassword ? errors.confirmPassword : ''}
+                        style={touched.email && errors.email ? undefined : { marginBottom: 20 }}
                     />
                     <ThemedButton
                         label={t('registerScreen.register')}

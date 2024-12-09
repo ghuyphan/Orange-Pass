@@ -49,7 +49,7 @@ const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps):
     if (type === 'bank' && accountNumber) {
       const maskedLength = Math.max(0, accountNumber.length - 4);
       return `${'*'.repeat(maskedLength)}${accountNumber.slice(-4)}`;
-    } 
+    }
     return accountName;
   }, [type, accountNumber, accountName]);
 
@@ -66,17 +66,17 @@ const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps):
   const gradientColors = useMemo(() => {
     return currentTheme === 'light'
       ? [
-          color?.light || '#FAF3E7',  // Light beige with a hint of cream
-          returnMidpointColor(color.light, accent_color.light) || '#EADBC8',  // Warmer mid-tone beige
-          accent_color?.light || '#D6C4AF'  // Deeper beige for clear contrast
-        ]
+        color?.light || '#FAF3E7',  // Light beige with a hint of cream
+        returnMidpointColor(color.light, accent_color.light) || '#EADBC8',  // Warmer mid-tone beige
+        accent_color?.light || '#D6C4AF'  // Deeper beige for clear contrast
+      ]
       : [
-          color?.dark || '#21252b', 
-          returnMidpointColor(color.dark, accent_color.dark) || '#343a40', 
-          accent_color?.dark || '#495057'
-        ];
+        color?.dark || '#21252b',
+        returnMidpointColor(color.dark, accent_color.dark) || '#343a40',
+        accent_color?.dark || '#495057'
+      ];
   }, [currentTheme, color, accent_color]);
-  
+
 
   const renderContent = () => (
     <LinearGradient
@@ -87,7 +87,7 @@ const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps):
     >
       <View style={styles.headerContainer}>
         <View style={styles.headerLeft}>
-          {onDrag && <View style={styles.dragIconContainer}> 
+          {onDrag && <View style={styles.dragIconContainer}>
             <MaterialCommunityIcons name="menu" size={18} color="white" />
           </View>}
           <View style={styles.leftHeaderContainer}>
@@ -128,28 +128,30 @@ const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps):
 
       <View style={styles.footerContainer}>
         <ThemedText style={styles.footerText} numberOfLines={1} ellipsizeMode="tail">
-          {accountNumber ? accountName : metadata} 
+          {accountNumber ? accountName : metadata}
         </ThemedText>
       </View>
     </LinearGradient>
   );
 
   return (
-    <Animated.View style={[animatedStyle, style]}>
-      {onItemPress ? (
-        <Pressable
-          onPress={onItemPress}
-          onLongPress={onDrag}
-          delayLongPress={150}
-          android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
-          style={containerStyle}
-        >
-          {renderContent()}
-        </Pressable>
-      ) : (
-        renderContent()
-      )}
-    </Animated.View>
+    <View style={{ overflow: 'hidden' }}>
+      <Animated.View style={[animatedStyle, style]}>
+        {onItemPress ? (
+          <Pressable
+            onPress={onItemPress}
+            onLongPress={onDrag}
+            delayLongPress={150}
+            android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
+            style={containerStyle}
+          >
+            {renderContent()}
+          </Pressable>
+        ) : (
+          renderContent()
+        )}
+      </Animated.View>
+    </View>
   );
 });
 
@@ -200,7 +202,7 @@ const styles = StyleSheet.create({
   },
   companyFullName: {
     fontSize: 14,
-    width: '100%',
+    width: '90%',
     color: 'white',
   },
   qrContainer: {
@@ -221,10 +223,13 @@ const styles = StyleSheet.create({
     // paddingVertical: 10, 
     paddingBottom: 10,
     pointerEvents: 'none',
+    maxWidth: '50%',
+    overflow: 'hidden',
   },
   footerText: {
     fontSize: 13,
     color: 'white',
+
   },
 });
 export default ThemedCardItem;

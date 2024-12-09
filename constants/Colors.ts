@@ -33,7 +33,7 @@ export const Colors = {
     buttonBackground: '#604D45',
     buttonHighlight: '#6A4F4B', 
     cardBackground: '#2E282A',
-    cardFooter: '#4E342E',
+    cardFooter: '#604D45',
     logoIcon: '#FF9800',
   },
 };

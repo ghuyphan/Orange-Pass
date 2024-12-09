@@ -7,6 +7,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { BlurView } from "@react-native-community/blur";
 import { StyleSheet, TouchableWithoutFeedback } from "react-native";
+import { View } from "moti";
 
 const CustomBackdrop = ({
   animatedIndex,
@@ -33,12 +34,13 @@ const CustomBackdrop = ({
     <TouchableWithoutFeedback onPress={onPress} accessible={false}>
       <Animated.View style={[style, containerAnimatedStyle, {zIndex: 0}]}>
         <Animated.View style={[StyleSheet.absoluteFillObject, shouldRenderBlurStyle]}>
-          <BlurView
+          {/* <BlurView
             style={StyleSheet.absoluteFillObject}
             blurType="dark"
             blurAmount={5}
             reducedTransparencyFallbackColor="gray"
-          />
+          /> */}
+          <View style={[StyleSheet.absoluteFillObject, {backgroundColor: 'rgba(0, 0, 0, 0.7)'}]}/>
         </Animated.View>
       </Animated.View>
     </TouchableWithoutFeedback>

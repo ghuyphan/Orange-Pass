@@ -88,6 +88,7 @@ export default function ForgotPasswordScreen() {
             onBlur={handleBlur('email')}
             value={values.email}
             errorMessage={touched.email && errors.email ? errors.email : ''}
+            style={touched.email && errors.email ? undefined : { marginBottom: 20 }}
           />
           <ThemedButton
             label={t('forgotPasswordScreen.sendResetLink')}
