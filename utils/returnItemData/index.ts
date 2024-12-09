@@ -1,10 +1,10 @@
 import enDatas from '@/assets/enDatas.json';
 import colorConfig from '@/assets/color-config.json';
+import tinycolor from 'tinycolor2'; 
 
-// Simplified type definitions with more precise typing
 interface ColorInfo {
-  color: { light: string; dark: string };
-  accent_color: { light: string; dark: string };
+  color: { light: string };
+  accent_color: { light: string };
 }
 
 interface ItemType {
@@ -14,13 +14,12 @@ interface ItemType {
   normalized_name: string;
   normalized_full_name: string;
   number_code?: string;
-  color: { light: string; dark: string };
-  accent_color: { light: string; dark: string };
+  color: { light: string; dark: string }; // Include dark here
+  accent_color: { light: string; dark: string }; // Include dark here
 }
 
 type DataType = 'bank' | 'store' | 'ewallet';
 
-// Memoized text normalization to reduce repeated computations
 const normalizeTextCache = new Map<string, string>();
 function normalizeText(text: string): string {
   if (normalizeTextCache.has(text)) {
@@ -34,7 +33,21 @@ function normalizeText(text: string): string {
   return normalized;
 }
 
-// Single class to manage data and search indices
+function getDarkModeColor(lightColor: string): string {
+  const color = tinycolor(lightColor);
+  let { h, s, l } = color.toHsl();
+
+  // Darken the color more gradually
+  l = Math.max(0.1, Math.min(0.4, l * 0.6));
+
+  // Adjust saturation to maintain color vibrancy
+  s = Math.min(1, s * 1.15);
+
+  // Slight hue shift for variety
+  h = (h + 3) % 360;
+
+  return tinycolor({ h, s, l }).toHexString();
+}
 class DataManager {
   private dataByCode: Record<DataType, Record<string, ItemType>> = {
     bank: {},
@@ -64,16 +77,16 @@ class DataManager {
         const normalizedFullName = normalizeText(full_name);
 
         const colorData = (colorConfig as Record<string, ColorInfo>)[code] || {
-          color: { light: '', dark: '' },
-          accent_color: { light: '', dark: '' }
+          color: { light: '' },
+          accent_color: { light: '' }
         };
 
         this.dataByCode[type][code] = {
           ...item,
           normalized_name: normalizedName,
           normalized_full_name: normalizedFullName,
-          color: colorData.color,
-          accent_color: colorData.accent_color
+          color: { light: colorData.color.light, dark: getDarkModeColor(colorData.color.light) },
+          accent_color: { light: colorData.accent_color.light, dark: getDarkModeColor(colorData.accent_color.light) }
         };
 
         this.addSearchTerms(type, code, normalizedName, normalizedFullName);
@@ -91,8 +104,7 @@ class DataManager {
   }
 
   public getItemData(code: string, type: DataType): ItemType {
-    const item = this.dataByCode[type]?.[code];
-    return item || {
+    return this.dataByCode[type]?.[code] || {
       code: '',
       name: '',
       full_name: '',
@@ -113,13 +125,11 @@ class DataManager {
       const typeSearchIndex = this.searchIndex[type];
       if (!typeSearchIndex) continue;
 
-      // Exact match
       const exactMatch = typeSearchIndex.get(normalizedSearchTerm);
       if (exactMatch) {
         exactMatch.forEach(code => matchingCodes.add(code));
       }
 
-      // Partial match with early break
       for (const [term, codes] of typeSearchIndex.entries()) {
         if (normalizedSearchTerm.length > 1 && term.includes(normalizedSearchTerm)) {
           codes.forEach(code => matchingCodes.add(code));
@@ -131,7 +141,6 @@ class DataManager {
   }
 }
 
-// Singleton instance for global use
 const dataManager = new DataManager();
 
 export const returnItemData = (code: string, type: DataType) => 
