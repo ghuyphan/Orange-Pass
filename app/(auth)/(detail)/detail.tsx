@@ -10,7 +10,6 @@ import { ThemedView } from '@/components/ThemedView';
 import { ThemedButton } from '@/components/buttons/ThemedButton';
 import { ThemedPinnedCard } from '@/components/cards';
 import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
-import QRRecord from '@/types/qrType';
 import { t } from '@/i18n';
 import { ThemedText } from '@/components/ThemedText';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -29,6 +28,7 @@ const formatAmount = (amount: string) => {
 
 export default function DetailScreen() {
     const { locale } = useLocale(); 
+    useUnmountBrightness(1, false);
     const { item: encodedItem } = useLocalSearchParams();
     const router = useRouter();
     const { currentTheme } = useTheme();
@@ -298,7 +298,7 @@ const styles = StyleSheet.create({
     },
     cardWrapper: {
         padding: 15,
-        borderRadius: 15,
+        borderRadius: 16,
     },
     storeDetails: {
         flexDirection: 'row',
@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
     },
     infoWrapper: {
-        borderRadius: 15,
+        borderRadius: 16,
         gap: 5,
         overflow: 'hidden',
         // paddingVertical: 10,
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 15,
         paddingVertical: 10,
         gap: 10,
-        borderRadius: 15,
+        borderRadius: 16,
         overflow: 'hidden'
     },
     loadingWrapper: {
@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
     suggestionItem: {
         paddingHorizontal: 15,
         paddingVertical: 5,
-        borderRadius: 15,
+        borderRadius: 16,
         overflow: 'hidden',
 
     },

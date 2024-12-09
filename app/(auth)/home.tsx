@@ -345,7 +345,7 @@ function HomeScreen() {
   }, [isSearching, isActive]); // Memoize based on these dependencies
 
   const listHeaderStyle = useAnimatedStyle(() => {
-    const fadeStartThreshold = isSearching ? 35 : 30;
+    const fadeStartThreshold = isSearching ? 10 : 5;
     const fadeCompleteThreshold = isSearching ? 60 : 50;
 
     const opacity = interpolate(
@@ -355,12 +355,12 @@ function HomeScreen() {
       Extrapolation.CLAMP
     );
 
-    const translateY = interpolate(
-      scrollY.value,
-      [0, fadeCompleteThreshold],
-      [0, 30],
-      Extrapolation.CLAMP
-    );
+    // const translateY = interpolate(
+    //   scrollY.value,
+    //   [0, fadeCompleteThreshold],
+    //   [0, 30],
+    //   Extrapolation.CLAMP
+    // );
 
     const scale = interpolate(
       scrollY.value,
@@ -373,7 +373,7 @@ function HomeScreen() {
       opacity,
       transform: [
         { scale },
-        { translateY }
+        // { translateY }
       ],
       pointerEvents: scrollY.value > fadeCompleteThreshold ? 'none' : 'auto',
     };
@@ -727,7 +727,7 @@ function HomeScreen() {
         primaryActionText={t('homeScreen.moveToTrash')}
         onPrimaryAction={onDeletePress}
         onDismiss={() => setIsModalVisible(false)}
-        dismissable={true}
+        // dismissable={true}
         onSecondaryAction={() => setIsModalVisible(false)}
         secondaryActionText={t('homeScreen.cancel')}
         title={t('homeScreen.confirmDeleteTitle')}
@@ -781,7 +781,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 15,
   },
   searchInput: {
-    borderRadius: 15,
+    borderRadius: 16,
     paddingVertical: 0,
   },
   listContainer: {

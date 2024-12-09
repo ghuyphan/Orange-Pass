@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
         flexGrow: 1,
         paddingVertical: 5,
         paddingHorizontal: 15,
-        borderRadius: 15,
+        borderRadius: 16,
         flexDirection: 'column',
         alignItems: 'center',
     },

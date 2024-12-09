@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import * as SecureStore from 'expo-secure-store';
@@ -9,6 +9,7 @@ import Animated, {
   useSharedValue,
   withTiming,
   Easing,
+  useDerivedValue,
   interpolate,
   Extrapolation,
   useAnimatedScrollHandler
@@ -34,57 +35,49 @@ import { useMMKVString } from 'react-native-mmkv';
 import { useLocale } from '@/context/LocaleContext';
 import { ActivityIndicator } from 'react-native-paper';
 import { clearErrorMessage } from '@/store/reducers/errorSlice';
-import { useTheme } from '@/context/ThemeContext'; 
+import { useTheme } from '@/context/ThemeContext'; // Import useTheme
 
-import { AvatarConfig } from '@zamplyy/react-native-nice-avatar';
+import {
+  AvatarConfig
+} from '@zamplyy/react-native-nice-avatar';
 
-const SettingsScreen = () => {
+function SettingsScreen() {
   const { updateLocale } = useLocale();
   const [locale, setLocale] = useMMKVString('locale', storage);
   const avatarConfigString = useSelector((state: RootState) => state.auth.user?.avatar ?? '');
   const [avatarConfig, setAvatarConfig] = useState<AvatarConfig | null>(null);
-  const { currentTheme } = useTheme();
-  const [isLoading, setIsLoading] = useState(false);
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const dispatch = useDispatch();
-
-  const scrollY = useSharedValue(0);
-  const email = useSelector((state: RootState) => state.auth.user?.email ?? '-');
-  const name = useSelector((state: RootState) => state.auth.user?.name ?? '-');
-
-  const sectionsColors = useMemo(() => 
-    currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground, 
-    [currentTheme]
-  );
 
   useEffect(() => {
-    const parseConfig = () => {
+    setTimeout(() => {
       if (!avatarConfigString) {
         setAvatarConfig(null);
         return;
       }
 
+      let parsedConfig: AvatarConfig | null = null;
+
       try {
         if (typeof avatarConfigString === 'object') {
-          setAvatarConfig(avatarConfigString);
+          parsedConfig = avatarConfigString as AvatarConfig;
         } else if (typeof avatarConfigString === 'string') {
           if (avatarConfigString.startsWith('{')) {
-            setAvatarConfig(JSON.parse(avatarConfigString));
+            parsedConfig = JSON.parse(avatarConfigString) as AvatarConfig;
           } else if (avatarConfigString.includes('=')) {
-            setAvatarConfig(parseAvatarString(avatarConfigString));
+            parsedConfig = parseAvatarString(avatarConfigString);
           }
         }
       } catch (error) {
         console.error("Error parsing avatar config:", error);
-        setAvatarConfig(null);
+        parsedConfig = null;
       }
-    };
 
-    parseConfig();
+      setAvatarConfig(parsedConfig);
+    }, 200);
+
   }, [avatarConfigString]);
 
   // Function to parse the offline string format
-  const parseAvatarString = useCallback((str: string): AvatarConfig => {
+  const parseAvatarString = (str: string): AvatarConfig => {
     const cleanStr = str.replace(/[{}]/g, '').trim();
     const pairs = cleanStr.split(', ');
     const config: { [key: string]: string } = {};
@@ -97,7 +90,20 @@ const SettingsScreen = () => {
     });
 
     return config as AvatarConfig;
-  }, []);
+  };
+
+  // const [avatarConfig, setAvatarConfig] = useState<{ [key: string]: any } | null>(null);
+  const { currentTheme } = useTheme();
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const dispatch = useDispatch();
+
+  const scrollY = useSharedValue(0);
+  const email = useSelector((state: RootState) => state.auth.user?.email ?? '-');
+  const name = useSelector((state: RootState) => state.auth.user?.name ?? '-');
+
+  const sectionsColors = currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground
 
   const scrollHandler = useAnimatedScrollHandler((event) => {
     scrollY.value = event.contentOffset.y;
@@ -127,30 +133,30 @@ const SettingsScreen = () => {
 
   const onNavigateBack = useCallback(() => {
     router.back();
-  }, []);
+  }, [])
 
-  const logout = useCallback(async () => {
+  const logout = async () => {
     try {
       setIsModalVisible(false);
       setIsLoading(true);
       await SecureStore.deleteItemAsync('authToken');
       pb.authStore.clear();
-      // Delay for visual feedback, consider replacing with a loading indicator
+    } catch (error) {
+      console.log(error);
+    } finally {
       setTimeout(() => {
         setIsLoading(false);
         dispatch(clearAuthData());
-        dispatch(clearErrorMessage()); 
+        dispatch(clearErrorMessage()); // Clear error on logout
         router.replace('/login');
       }, 1000);
-    } catch (error) {
-      console.error(error); 
-      setIsLoading(false); // Ensure loading state is reset on error
     }
-  }, [dispatch]);
+  };
 
   const onLogout = useCallback(() => {
     setIsModalVisible(true);
-  }, []);
+  }, [])
+
 
   return (
     <ThemedView style={styles.container}>
@@ -184,8 +190,8 @@ const SettingsScreen = () => {
             )}
           </LinearGradient>
           <View style={styles.userContainer}>
-            <ThemedText numberOfLines={1} style={styles.userEmail}>{name}</ThemedText>
-            <ThemedText numberOfLines={1} style={styles.userName}>{email}</ThemedText>
+            <ThemedText numberOfLines={1} style={styles.userEmail}>{name ? name : '-'}</ThemedText>
+            <ThemedText numberOfLines={1} style={styles.userName}>{email ? email : '-'}</ThemedText>
           </View>
         </View>
 
@@ -226,11 +232,12 @@ const SettingsScreen = () => {
           loadingLabel='Logging out...'
           loading={isLoading}
           onPress={onLogout}
+
         />
       </Animated.ScrollView>
       <ThemedModal
         onDismiss={() => setIsModalVisible(false)}
-        dismissable={true}
+        // dismissable={true}
         primaryActionText={t('settingsScreen.logout')}
         onPrimaryAction={logout}
         onSecondaryAction={() => setIsModalVisible(false)}
@@ -242,7 +249,7 @@ const SettingsScreen = () => {
       />
     </ThemedView>
   );
-};
+}
 
 export default React.memo(SettingsScreen);
 
@@ -287,10 +294,10 @@ const styles = StyleSheet.create({
     paddingTop: STATUSBAR_HEIGHT + 105,
   },
   gradient: {
-    borderRadius: 50, 
+    borderRadius: 50, // Make it circular
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 5, 
+    padding: 5, // Optional: Add padding if needed
   },
   avatarContainer: {
     alignItems: 'center',
@@ -298,7 +305,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 15,
     marginBottom: 30,
-    borderRadius: 15,
+    borderRadius: 16,
     gap: 0,
   },
   avatarLoadContainer: {
@@ -312,7 +319,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flexDirection: 'column',
     paddingHorizontal: 15,
-    borderRadius: 15,
+    borderRadius: 16,
     maxWidth: '80%',
     overflow: 'hidden',
   },
@@ -325,10 +332,29 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   sectionContainer: {
-    borderRadius: 15,
+    borderRadius: 16,
     backgroundColor: 'white',
     marginBottom: 30,
     gap: 5,
     overflow: 'hidden',
+  },
+  settingsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 15,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    paddingVertical: 15,
+  },
+  settingsText: {
+    fontSize: 16,
+    opacity: 0.7,
+  },
+  languageContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
   },
 });

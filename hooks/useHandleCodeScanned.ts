@@ -107,7 +107,7 @@ const useHandleCodeScanned = ({
         if (pattern.test(codeMetadata)) {
           handler();
           return;
-        }
+        }MaterialIcons
       }
 
       setCodeType('unknown');

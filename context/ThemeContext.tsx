@@ -51,7 +51,7 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
         if (isDarkMode !== undefined) {
             storage.set('dark-mode', isDarkMode);
         }
-    }, [getCurrentTheme, isDarkMode]); 
+    }, [isDarkMode]); // Only `isDarkMode` is a dependency now
 
     const setDarkMode = (value: boolean | undefined) => {
         setIsDarkMode(value);

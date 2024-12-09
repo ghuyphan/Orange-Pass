@@ -48,10 +48,10 @@ const ThemedBottomSheet = forwardRef<BottomSheet, ThemedBottomSheetProps>(
           index={-1}
           animateOnMount={true}
           backgroundStyle={[styles.background, { 
-            backgroundColor: currentTheme === 'light' ? Colors.light.background : Colors.dark.background 
+            backgroundColor: currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground 
           }]}
           handleStyle={[styles.handle, {
-            backgroundColor: currentTheme === 'light' ? Colors.light.background : Colors.dark.background,
+            backgroundColor: currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground,
           }]}
           handleIndicatorStyle={styles.handleIndicator}
           enablePanDownToClose={true}
@@ -76,6 +76,7 @@ const ThemedBottomSheet = forwardRef<BottomSheet, ThemedBottomSheetProps>(
                   foreground: true, 
                   borderless: false 
                 }}
+                
               >
                 <MaterialCommunityIcons 
                   name="pencil-outline" 

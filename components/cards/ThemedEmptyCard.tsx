@@ -60,7 +60,7 @@ export function ThemedEmptyCard({
     const cardContainerStyle = useMemo(() => ([
         {
             backgroundColor: colorScheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground,
-            borderRadius: 15,
+            borderRadius: 16,
         },
         style,
     ]), [colorScheme, style]);

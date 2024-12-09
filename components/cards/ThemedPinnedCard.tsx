@@ -103,7 +103,7 @@ export const ThemedPinnedCard = memo(function ThemedPinnedCard({
 
 const styles = StyleSheet.create({
   itemContainer: {
-    borderRadius: 15,
+    borderRadius: 16,
     paddingHorizontal: 15,  // Horizontal padding: 15
     paddingVertical: 10,   // Vertical padding: 10
     overflow: 'hidden',
@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
   },
   qr: {
     padding: 10, 
-    borderRadius: 15,
+    borderRadius: 16,
     backgroundColor: 'white',
     marginBottom: 10,   
   },

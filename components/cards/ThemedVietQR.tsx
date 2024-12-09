@@ -31,12 +31,12 @@ export const ThemedVietQRCard = memo(function ThemedVietQRCard({
     const iconPath = useMemo(() => getIconPath(code), [code]);
     const [shouldRenderCode, setShouldRenderCode] = useState(false);
 
-    useEffect(() => {
-        const task = InteractionManager.runAfterInteractions(() => {
-            setShouldRenderCode(true);
-        });
-        return () => task.cancel();
-    }, []);
+    // useEffect(() => {
+    //     const task = InteractionManager.runAfterInteractions(() => {
+    //         setShouldRenderCode(true);
+    //     });
+    //     return () => task.cancel();
+    // }, []);
 
     return (
         <LinearGradient
@@ -61,7 +61,6 @@ export const ThemedVietQRCard = memo(function ThemedVietQRCard({
             </View>
 
             <View style={styles.qrContainer}>
-                {shouldRenderCode && (
                     <View style={styles.qr}>
                         <QRCode
                             value={metadata}
@@ -74,7 +73,6 @@ export const ThemedVietQRCard = memo(function ThemedVietQRCard({
                             quietZone={3}
                         />
                     </View>
-                )}
                 <View style={styles.logoContainer}>
                     {/* <VIETQR width={70} height={30} style={styles.vietQRIcon} /> */}
                     <Image style={styles.vietQRIcon} source={require('@/assets/images/vietqr.png')} resizeMode="contain" />

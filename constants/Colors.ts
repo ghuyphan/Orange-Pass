@@ -21,7 +21,7 @@ export const Colors = {
   },
   dark: {
     text: '#E0E0E0', 
-    background: '#181818', 
+    background: '#121212', 
     tint: tintColorDark,
     icon: '#FFC107', 
     inputBackground: '#212121',
@@ -30,7 +30,7 @@ export const Colors = {
     tabIconSelected: tintColorDark,
     error: '#EF9A9A',
     toastBackground: '#2E282A',
-    buttonBackground: '#42332D',
+    buttonBackground: '#604D45',
     buttonHighlight: '#6A4F4B', 
     cardBackground: '#2E282A',
     cardFooter: '#4E342E',

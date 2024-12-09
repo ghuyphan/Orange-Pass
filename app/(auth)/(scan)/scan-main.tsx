@@ -1,34 +1,62 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
-import { StyleSheet, View, Text, ActivityIndicator, TouchableWithoutFeedback, LayoutChangeEvent, Linking, SafeAreaView, StatusBar } from 'react-native';
-import { Camera, Code, useCameraDevice, useCameraPermission, useCodeScanner, CodeScannerFrame } from 'react-native-vision-camera';
-import Reanimated, { useSharedValue, useAnimatedStyle, withSpring, runOnJS, withTiming, useAnimatedProps, SharedValue } from 'react-native-reanimated';
-import {
-  useUnmountBrightness,
-} from '@reeq/react-native-device-brightness';
+import { 
+  StyleSheet, 
+  View, 
+  Text, 
+  ActivityIndicator, 
+  TouchableWithoutFeedback, 
+  LayoutChangeEvent, 
+  Linking, 
+  SafeAreaView, 
+  StatusBar 
+} from 'react-native';
+import { 
+  Camera, 
+  Code, 
+  useCameraDevice, 
+  useCameraPermission, 
+  useCodeScanner, 
+  CodeScannerFrame 
+} from 'react-native-vision-camera';
+import Reanimated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withSpring, 
+  runOnJS, 
+  withTiming, 
+  useAnimatedProps, 
+  SharedValue 
+} from 'react-native-reanimated';
+import Animated from 'react-native-reanimated'; 
+import { useUnmountBrightness } from '@reeq/react-native-device-brightness';
 import ImagePicker from 'react-native-image-crop-picker';
 import { Redirect, useRouter } from 'expo-router';
-import { ThemedText } from '@/components/ThemedText';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import { ThemedButton } from '@/components/buttons/ThemedButton';
-import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
-import { MAX_ZOOM_FACTOR } from '@/constants/Constants';
 import { MaterialIcons } from '@expo/vector-icons';
-import { debounce } from 'lodash';
-import { storage } from '@/utils/storage';
-import { throttle } from 'lodash';
+import { debounce, throttle } from 'lodash'; 
 
+// Components
+import { ThemedText } from '@/components/ThemedText';
+import { ThemedButton } from '@/components/buttons/ThemedButton';
 import { ScannerFrame, FocusIndicator, ZoomControl } from '@/components/camera';
 import { ThemedView } from '@/components/ThemedView';
-// import { BottomSheetModal, bottomsheetmodal } from '@gorhom/bottom-sheet';
-import type { BottomSheetModal } from '@gorhom/bottom-sheet';
 import ThemedSettingSheet from '@/components/bottomsheet/ThemedSettingSheet';
 import { ThemedStatusToast } from '@/components/toast/ThemedOfflineToast';
-import { useMMKVBoolean } from 'react-native-mmkv';
+
+// Constants and Utils
+import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
+import { MAX_ZOOM_FACTOR } from '@/constants/Constants';
+import { storage } from '@/utils/storage';
 import { triggerLightHapticFeedback } from '@/utils/haptic';
-import useHandleCodeScanned from '@/hooks/useHandleCodeScanned'; // Import the custom hook
-import Animated from 'react-native-reanimated';
-import { useLocale } from '@/context/LocaleContext';
 import { decodeQR } from '@/utils/decodeQR';
+
+// Hooks
+import { useMMKVBoolean } from 'react-native-mmkv';
+import useHandleCodeScanned from '@/hooks/useHandleCodeScanned'; 
+import { useLocale } from '@/context/LocaleContext';
+
+// Types
+import type { BottomSheetModal } from '@gorhom/bottom-sheet';
 
 const ReanimatedCamera = Reanimated.createAnimatedComponent(Camera);
 Reanimated.addWhitelistedNativeProps({ zoom: true });
@@ -161,7 +189,6 @@ export default function ScanScreen() {
   const { gesture, focusPoint, animatedFocusStyle } = useFocusGesture(cameraRef, zoom);
   const minZoom = device?.minZoom ?? 1;
   const maxZoom = Math.min(device?.maxZoom ?? 1, MAX_ZOOM_FACTOR);
-  // console.log({ minZoom, maxZoom });
 
   const cameraAnimatedProps = useAnimatedProps(() => ({
     zoom: Math.max(Math.min(zoom.value, maxZoom), minZoom),
@@ -278,7 +305,6 @@ export default function ScanScreen() {
       const result = await decodeQR(image.path);
 
       if (result) {
-        console.log('Decoded QR code:', result.format, result.value);
         onNavigateToAddScreen(result.format, result.value);
         // router.push('/(auth)/(add)/add-new');
       } else {
@@ -390,8 +416,6 @@ export default function ScanScreen() {
               resizeMode='cover'
               videoStabilizationMode='auto'
               animatedProps={cameraAnimatedProps}
-              enableZoomGesture={true}
-              zoom={2}
             />
           </Reanimated.View>
           <FocusIndicator focusPoint={focusPoint} animatedFocusStyle={animatedFocusStyle} />
@@ -479,7 +503,7 @@ const styles = StyleSheet.create({
     marginTop: STATUSBAR_HEIGHT + 10,
     flex: 2.5,
     backgroundColor: 'black',
-    borderRadius: 15,
+    borderRadius: 16,
     overflow: 'hidden',
   },
   loader: {

@@ -9,10 +9,9 @@ import { useTheme } from '@/context/ThemeContext';
 export function ThemedCardSkeleton({ show = true, index = 0 }) {
   const { currentTheme: colorScheme } = useTheme();
   const colorsArray = colorScheme === 'dark'
-  ? ['#4E3B32', '#49362D', '#443128', '#3F2C23', '#3A271E'] 
-  : ['#EADFD7', '#E8E0CF', '#E5D1C7', '#E2C2BD', '#DFB3B3'];
+    ? ['#604D45', '#504038', '#42332D', '#352722', '#2A1C18'] // Increased color variation
+    : ['#E3D8CD', '#E0D0C3', '#DBCABA', '#D8C3B1', '#D5BCAB']; 
   const qrWidth = index % 2 === 0 ? 170 : 90;
-
   return (
     <MotiView
       transition={{
@@ -44,7 +43,7 @@ export function ThemedCardSkeleton({ show = true, index = 0 }) {
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 15,
+    borderRadius: 16,
     marginBottom: 20,
     overflow: 'hidden',
   },

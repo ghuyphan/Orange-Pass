@@ -1,6 +1,6 @@
-import React, { forwardRef, useImperativeHandle, useRef, useMemo, useCallback } from 'react';
+import React, { forwardRef, useImperativeHandle, useRef, useMemo } from 'react';
 import { View, StyleSheet, Switch } from 'react-native';
-import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView, BottomSheetBackdropProps, BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import {BottomSheetModal, BottomSheetScrollView, BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { ThemedText } from '../ThemedText';
 // import { useColorScheme } from 'react-native';
 import { useTheme } from '@/context/ThemeContext';
@@ -228,12 +228,12 @@ const styles = StyleSheet.create({
     contentContainer: {
         flexDirection: 'column',
         marginBottom: 15,
-        borderRadius: 15,
+        borderRadius: 16,
         paddingVertical: 5,
         paddingHorizontal: 25,
     },
     touchableHighlight: {
-        borderRadius: 15, // Ensures the highlight covers the entire button, including rounded corners
+        borderRadius: 16, // Ensures the highlight covers the entire button, including rounded corners
         marginVertical: 5, // Adds spacing between buttons
     },
     buttonContainer: {

@@ -20,27 +20,29 @@ const CustomBackdrop = ({
       [0, 0.5, 1],
       Extrapolation.CLAMP
     ),
-    pointerEvents: animatedIndex.value > -1 ? "auto" : "none",
+    // Allow touches to propagate when the backdrop is fully closed
+    pointerEvents: animatedIndex.value >= 0 ? "auto" : "none",
   }));
+
 
   const shouldRenderBlurStyle = useAnimatedStyle(() => ({
     display: animatedIndex.value > -1 && animatedIndex.value <= 0 ? "flex" : "none",
   }));
 
   return (
-    <TouchableWithoutFeedback onPress={onPress} accessibilityRole="button">
-      <Animated.View style={[style, containerAnimatedStyle]}>
+    <TouchableWithoutFeedback onPress={onPress} accessible={false}>
+      <Animated.View style={[style, containerAnimatedStyle, {zIndex: 0}]}>
         <Animated.View style={[StyleSheet.absoluteFillObject, shouldRenderBlurStyle]}>
           <BlurView
             style={StyleSheet.absoluteFillObject}
             blurType="dark"
             blurAmount={5}
-            
             reducedTransparencyFallbackColor="gray"
           />
         </Animated.View>
       </Animated.View>
     </TouchableWithoutFeedback>
+
   );
 };
 

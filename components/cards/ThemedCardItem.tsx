@@ -146,7 +146,7 @@ const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps):
 
 const styles = StyleSheet.create({
   itemContainer: {
-    borderRadius: 15,
+    borderRadius: 16,
     overflow: 'hidden',
   },
   headerContainer: {
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
   qr: {
     backgroundColor: 'white',
     padding: 10,
-    borderRadius: 15,
+    borderRadius: 16,
   },
   footerContainer: {
     flexDirection: 'row',
