@@ -32,9 +32,9 @@ export const ThemedPinnedCard = memo(function ThemedPinnedCard({
   const { width } = useWindowDimensions();
 
   // Calculate dimensions with useMemo
-  const qrSize = useMemo(() => width * 0.4, [width]);
-  const barcodeHeight = useMemo(() => width * 0.25, [width]);
-  const barcodeWidth = useMemo(() => width * 0.6, [width]);
+  const qrSize = useMemo(() => width * 0.43, [width]);
+  const barcodeHeight = useMemo(() => width * 0.26, [width]);
+  const barcodeWidth = useMemo(() => width * 0.65, [width]);
 
   // Pre-calculate data with useMemo
   const { name, color, accent_color } = useMemo(() => returnItemData(code, type), [code, type]);

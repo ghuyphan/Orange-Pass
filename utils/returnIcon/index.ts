@@ -75,6 +75,12 @@ export function getIconPath(key: string): any {
       'SVL': require('@/assets/images/logoIcons/SVL.png'),
       'TOP': require('@/assets/images/logoIcons/TOP.png'),
       'WNM': require('@/assets/images/logoIcons/WNM.png'),
+      'MOMO': require('@/assets/images/logoIcons/MOMO.png'),
+      'ZLP': require('@/assets/images/logoIcons/ZLP.png'),
+      'SPP': require('@/assets/images/logoIcons/SPP.png'),
+      'VNP': require('@/assets/images/logoIcons/VNP.png'),
+      'VTP': require('@/assets/images/logoIcons/VTP.png')
+
   } as Record<string, any>;
   return iconPaths[key] || require('@/assets/images/logoIcons/default.png'); 
 }

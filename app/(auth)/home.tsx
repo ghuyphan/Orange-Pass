@@ -597,7 +597,7 @@ function HomeScreen() {
   );
 
   const paddingValues = useMemo(() => {
-    return [0, height * 0.74, height * 0.44, height * 0.24];
+    return [0, height * 0.74, height * 0.44, height * 0.20];
   }, []);
 
   const listContainerPadding = useMemo(() => {

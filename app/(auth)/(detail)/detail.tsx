@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import { StyleSheet, View, Linking, Keyboard, FlatList, TextInput, Pressable, Image} from 'react-native';
+import { StyleSheet, View, Linking, Keyboard, FlatList, TextInput, Pressable, Image } from 'react-native';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store/rootReducer';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
@@ -20,6 +20,8 @@ import { throttle } from 'lodash';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
 import { useLocale } from '@/context/LocaleContext';
 import { useTheme } from '@/context/ThemeContext';
+import { getIconPath } from '@/utils/returnIcon';
+import { returnItemsByType } from '@/utils/returnItemData';
 
 // Utility function to format the amount
 const formatAmount = (amount: string) => {
@@ -42,8 +44,10 @@ export default function DetailScreen() {
     const transferHeight = useSharedValue(0);
 
     // Derived values and constants
+    const cardColor = currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground;
     const iconColor = currentTheme === 'light' ? Colors.light.text : Colors.dark.text;
     const amountSuggestions = ['10,000', '50,000', '100,000', '500,000', '1,000,000'];
+    const ewallet = returnItemsByType('ewallet');
 
     // Memoized item parsing to prevent unnecessary re-renders
     const item = useMemo(() => {
@@ -55,21 +59,6 @@ export default function DetailScreen() {
             return null;
         }
     }, [encodedItem]);
-
-    // Effect hook for keyboard listeners
-    useEffect(() => {
-        const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
-            // No need to manage keyboard visibility state here
-        });
-        const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
-            // No need to manage keyboard visibility state here
-        });
-
-        return () => {
-            keyboardDidHideListener.remove();
-            keyboardDidShowListener.remove();
-        };
-    }, []);
 
     // useCallback for optimized event handlers
     const handleExpandPress = useCallback(() => {
@@ -114,7 +103,7 @@ export default function DetailScreen() {
                     item.account_name,
                     itemName?.number_code || '',
                     parseInt(amount.replace(/,/g, '')),
-                    'Hello'
+                    'Hello' 
                 );
 
                 const qrCode = response.data.qrCode;
@@ -132,7 +121,8 @@ export default function DetailScreen() {
                 setIsSyncing(false);
                 setIsToastVisible(false);
             }
-        }, 500), [item, amount, router, t]
+        }, 500),
+        [item, amount, router, t]
     );
 
     // Animated styles for the transfer section
@@ -155,7 +145,7 @@ export default function DetailScreen() {
         pointerEvents: transferHeight.value > 0 ? 'auto' : 'none',
     }));
 
-    // SuggestionItem component (consider moving this outside for better organization)
+    // SuggestionItem component 
     const SuggestionItem = React.memo(({ item, onPress: onPress }: { item: string; onPress: (item: string) => void }) => (
         <Pressable
             onPress={() => onPress(item)}
@@ -206,9 +196,7 @@ export default function DetailScreen() {
                     accountNumber={item.account_number}
                 />
 
-                <View style={[styles.infoWrapper, {
-                    backgroundColor: currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground,
-                }]}>
+                <View style={[styles.infoWrapper, { backgroundColor: cardColor }]}>
                     <Pressable
                         onPress={openMap}
                         android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', borderless: false }}
@@ -280,22 +268,45 @@ export default function DetailScreen() {
                         style={styles.toastContainer}
                     />
                 </View>
-                <View style={{ flexDirection: 'row', marginTop: 20, justifyContent: 'flex-start', backgroundColor: 'red' }}>
-                    <Image source={require('@/assets/images/logoIcons/MOMO.png')} style={{ width: 50, height: 50, borderRadius: 16, }} resizeMode="contain" />
-                    <Image source={require('@/assets/images/logoIcons/ZLP.png')} style={{ width: 50, height: 50, borderRadius: 16, }} resizeMode="contain" />
+
+                {item.type === 'store' && (
+                    <View style={[styles.bottomContainer, { backgroundColor: cardColor }]}>
+                        <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
+                            <MaterialCommunityIcons name="wallet-outline" size={18} color={iconColor} />
+                            <ThemedText>Pay With E-Wallet</ThemedText>
+                        </View>
+                        <FlatList 
+                            data={ewallet}
+                            horizontal
+                            style={styles.botSuggestionList}
+                            showsHorizontalScrollIndicator={false}
+                            keyExtractor={(item) => item.code}
+                            contentContainerStyle={styles.botSuggestionListContent}
+                            renderItem={({ item }) => (
+                                <View style={{ flexDirection: 'column', gap: 0, alignItems: 'center', justifyContent: 'center' }}>
+                                    <Pressable
+                                        style={{ borderRadius: 16, overflow: 'hidden', elevation: 3 }}
+                                        onPress={() => console.log('hi')} 
+                                        android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
+                                    >
+                                        <Image source={getIconPath(item.code)} style={{ width: 50, height: 50, borderRadius: 16 }} resizeMode='contain' />
+                                    </Pressable>
+                                    <ThemedText style={{ fontSize: 12 }}>{item.name}</ThemedText>
+                                </View>
+                            )}
+                        />
                     </View>
+                )}
             </KeyboardAwareScrollView>
         </>
     );
 }
+
 const styles = StyleSheet.create({
     container: {
         flexGrow: 1,
         marginHorizontal: 15,
         maxHeight: '130%',
-    },
-    mainContainer: {
-        backgroundColor: 'red'
     },
     headerWrapper: {
         paddingTop: STATUSBAR_HEIGHT + 45,
@@ -307,28 +318,10 @@ const styles = StyleSheet.create({
     pinnedCardWrapper: {
         marginBottom: 30,
     },
-    cardWrapper: {
-        padding: 15,
-        borderRadius: 16,
-    },
-    storeDetails: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 15,
-    },
-    labelText: {
-        fontSize: 16,
-    },
-    truncatedText: {
-        fontSize: 16,
-        maxWidth: 300,
-        overflow: 'hidden',
-    },
     infoWrapper: {
         borderRadius: 16,
         gap: 5,
         overflow: 'hidden',
-        // paddingVertical: 10,
     },
     actionButton: {
         flexDirection: 'row',
@@ -344,6 +337,9 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
+    labelText: {
+        fontSize: 16,
+        },
     transferContainer: {
         // gap: 10,
     },
@@ -356,7 +352,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 15,
-        // gap: 10
     },
     inputField: {
         height: 50,
@@ -368,7 +363,6 @@ const styles = StyleSheet.create({
         paddingLeft: 5,
     },
     suggestionList: {
-
     },
     suggestionListContent: {
         gap: 10,
@@ -380,9 +374,23 @@ const styles = StyleSheet.create({
         paddingVertical: 5,
         borderRadius: 16,
         overflow: 'hidden',
-
     },
     suggestionText: {
+        fontSize: 16,
+    },
+    botSuggestionList: {
+    },
+    botSuggestionListContent: {
+        gap: 20,
+        paddingHorizontal: 5,
+    },
+    botSuggestionItem: {
+        paddingHorizontal: 15,
+        paddingVertical: 5,
+        borderRadius: 16,
+        overflow: 'hidden',
+    },
+    botSuggestionText: {
         fontSize: 16,
     },
     toastContainer: {
@@ -391,4 +399,12 @@ const styles = StyleSheet.create({
         left: 15,
         right: 15,
     },
+    bottomContainer: {
+        flexDirection: 'column',
+        marginTop: 20,
+        gap: 20,
+        paddingHorizontal: 15,
+        paddingVertical: 10,
+        borderRadius: 16
+    }
 });

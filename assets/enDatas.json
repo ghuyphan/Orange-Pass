@@ -301,5 +301,33 @@
             "full_name": "Convenience Store"
         }
     ],
-    "ewallet": []
+    "ewallet": [
+        {
+            "code": "MOMO",
+            "name": "Momo",
+            "full_name": "Momo"
+        },
+        {
+            "code": "ZLP",
+            "name": "ZaloPay",
+            "full_name": "ZaloPay"
+        },
+
+        {
+            "code": "SPP",
+            "name": "ShopeePay",
+            "full_name": "ShoppePay Wallet"
+        },
+        {
+            "code": "VNP",
+            "name": "VNPAY",
+            "full_name": "VNPAY Wallet"
+        },
+        {
+            "code": "VTP",
+            "name": "Viettel Money",
+            "full_name": "Viettel Money"
+        }
+
+    ]
 }

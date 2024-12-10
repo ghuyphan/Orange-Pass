@@ -14,8 +14,8 @@ interface ItemType {
   normalized_name: string;
   normalized_full_name: string;
   number_code?: string;
-  color: { light: string; dark: string }; // Include dark here
-  accent_color: { light: string; dark: string }; // Include dark here
+  color: { light: string; dark: string };
+  accent_color: { light: string; dark: string };
 }
 
 type DataType = 'bank' | 'store' | 'ewallet';
@@ -37,17 +37,13 @@ function getDarkModeColor(lightColor: string): string {
   const color = tinycolor(lightColor);
   let { h, s, l } = color.toHsl();
 
-  // Darken the color more gradually
   l = Math.max(0.18, Math.min(0.48, l * 0.58));
-
-  // Adjust saturation less to maintain color vibrancy
-  s = Math.min(1, s * 1.05); // Changed from 1.1 to 1.05
-
-  // Slight hue shift for variety
+  s = Math.min(1, s * 1.05); 
   h = (h + 3) % 360;
 
   return tinycolor({ h, s, l }).toHexString();
 }
+
 class DataManager {
   private dataByCode: Record<DataType, Record<string, ItemType>> = {
     bank: {},
@@ -116,6 +112,10 @@ class DataManager {
     };
   }
 
+  public getItemsByType(type: DataType): ItemType[] {
+    return Object.values(this.dataByCode[type]);
+  }
+
   public searchItems(searchTerm: string, types?: DataType[]): string[] {
     const normalizedSearchTerm = normalizeText(searchTerm);
     const matchingCodes = new Set<string>();
@@ -145,6 +145,9 @@ const dataManager = new DataManager();
 
 export const returnItemData = (code: string, type: DataType) => 
   dataManager.getItemData(code, type);
+
+export const returnItemsByType = (type: DataType) => 
+  dataManager.getItemsByType(type);
 
 export const returnItemCode = (searchTerm: string, type?: DataType) => 
   dataManager.searchItems(searchTerm, type ? [type] : undefined);

@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'gray', 
   },
   contentContainer: {
-    padding: 20,
+    padding: 10,
   },
   title: {
     fontSize: 18,
@@ -138,14 +138,16 @@ const styles = StyleSheet.create({
   buttonsContainer: {
     flexDirection: 'column',
     gap: 5,
+
   },
   button: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
     paddingVertical: 10,
-
-    borderRadius: 10,
+    paddingHorizontal: 10,
+    borderRadius: 16,
+    overflow: 'hidden',
   },
   buttonText: {
     fontSize: 16,
