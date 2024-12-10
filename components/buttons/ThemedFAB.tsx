@@ -32,7 +32,8 @@ export type ThemedFABProps = {
   textStyle?: StyleProp<TextStyle>;
 };
 
-export const ThemedFAB = forwardRef(({
+// Add display name to resolve the display name warning
+export const ThemedFAB = forwardRef<View, ThemedFABProps>(({
   open,
   setOpen,
   onPress1,
@@ -44,7 +45,7 @@ export const ThemedFAB = forwardRef(({
   style,
   animatedStyle,
   textStyle,
-}: ThemedFABProps, ref) => {
+}, ref) => {
   const { currentTheme } = useTheme();
   const [closing, setClosing] = useState(false);
   const isAnimating = useSharedValue(false);
@@ -63,10 +64,10 @@ export const ThemedFAB = forwardRef(({
   }, [currentTheme]);
 
   // Shared animation configuration
-  const animationConfig = {
+  const animationConfig = useMemo(() => ({
     duration: 250,
     easing: Easing.out(Easing.cubic)
-  };
+  }), []);
 
   // Optimize repeated animation styles with memoization
   const translateY = useAnimatedStyle(() => ({
@@ -78,66 +79,71 @@ export const ThemedFAB = forwardRef(({
     }]
   }), [open]);
 
-  const createButtonStyle = (delay: number) => useAnimatedStyle(() => ({
-    elevation: withDelay(delay, withTiming(open ? 5 : 0, animationConfig)),
-    opacity: withDelay(
-      delay,
-      withSequence(
-        withTiming(open ? 1 : 0, animationConfig),
-        withTiming(open ? 1 : 0, animationConfig)
-      )
-    ),
-    transform: [{
-      scale: withDelay(
+  // Create custom hooks for animation styles to resolve hook rule errors
+  const useButtonAnimationStyle = (delay: number) => {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    return useAnimatedStyle(() => ({
+      elevation: withDelay(delay, withTiming(open ? 5 : 0, animationConfig)),
+      opacity: withDelay(
         delay,
         withSequence(
-          withTiming(open ? 1 : 0.8, animationConfig),
-          withTiming(open ? 1 : 0.8, animationConfig)
+          withTiming(open ? 1 : 0, animationConfig),
+          withTiming(open ? 1 : 0, animationConfig)
         )
-      )
-    }]
-  }), [open]);
+      ),
+      transform: [{
+        scale: withDelay(
+          delay,
+          withSequence(
+            withTiming(open ? 1 : 0.8, animationConfig),
+            withTiming(open ? 1 : 0.8, animationConfig)
+          )
+        )
+      }]
+    }), [open, delay, animationConfig]);
+  };
 
-  const createTextStyle = (delay: number) => useAnimatedStyle(() => ({
-    opacity: withDelay(
-      delay,
-      withSequence(
-        withTiming(open ? 1 : 0, animationConfig),
-        withTiming(open ? 1 : 0, animationConfig)
-      )
-    ),
-    transform: [{
-      translateX: withDelay(
+  const useTextAnimationStyle = (delay: number) => {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    return useAnimatedStyle(() => ({
+      opacity: withDelay(
         delay,
         withSequence(
-          withTiming(open ? 0 : -20, animationConfig),
-          withTiming(open ? 0 : -20, animationConfig)
+          withTiming(open ? 1 : 0, animationConfig),
+          withTiming(open ? 1 : 0, animationConfig)
         )
-      )
-    }],
-    // elevation: withDelay(delay, withTiming(open ? 5 : 0, animationConfig))
-  }), [open]);
+      ),
+      transform: [{
+        translateX: withDelay(
+          delay,
+          withSequence(
+            withTiming(open ? 0 : -20, animationConfig),
+            withTiming(open ? 0 : -20, animationConfig)
+          )
+        )
+      }],
+    }), [open, delay, animationConfig]);
+  };
 
-  const buttonStyle1 = createButtonStyle(50);
-  const buttonStyle2 = createButtonStyle(100);
-  const buttonStyle3 = createButtonStyle(150);
-  const textStyle1 = createTextStyle(50);
-  const textStyle2 = createTextStyle(100);
-  const textStyle3 = createTextStyle(150);
+  const buttonStyle1 = useButtonAnimationStyle(50);
+  const buttonStyle2 = useButtonAnimationStyle(100);
+  const buttonStyle3 = useButtonAnimationStyle(150);
+  const textStyle1 = useTextAnimationStyle(50);
+  const textStyle2 = useTextAnimationStyle(100);
+  const textStyle3 = useTextAnimationStyle(150);
 
   // useEffect to handle closing animation
   useEffect(() => {
     if (!open) {
       const timeoutId = setTimeout(() => {
         setClosing(false);
-      }, animationConfig.duration * 2); // Adjust delay as needed
+      }, animationConfig.duration * 2);
 
       return () => clearTimeout(timeoutId);
     } else {
       setClosing(true);
     }
-  }, [open]);
-
+  }, [open, animationConfig.duration]);
 
   const handleFABPress = () => {
     if (isAnimating.value) return; // Prevent spamming
@@ -163,7 +169,7 @@ export const ThemedFAB = forwardRef(({
   };
 
   return (
-    <Animated.View style={[style, animatedStyle, styles.container]}>
+    <Animated.View style={[style, animatedStyle, styles.container]} ref={ref}>
       {(open || closing) && ( // Render while open or closing
         <Animated.View style={translateY}>
           <View style={styles.buttonsWrapper}>
@@ -174,7 +180,6 @@ export const ThemedFAB = forwardRef(({
                     styles.buttonText,
                     {
                       color: colors.text,
-                      // backgroundColor: colors.textBackground 
                     },
                     textStyle,
                     textStyle3
@@ -185,7 +190,7 @@ export const ThemedFAB = forwardRef(({
                 <ThemedButton
                   style={styles.fab}
                   animatedStyle={buttonStyle3}
-                  onPress={handlePressWithAnimation(onPress3)} // Wrap onPress2
+                  onPress={handlePressWithAnimation(onPress3)}
                   iconName="image"
                 />
               </View>
@@ -197,7 +202,6 @@ export const ThemedFAB = forwardRef(({
                     styles.buttonText,
                     {
                       color: colors.text,
-                      // backgroundColor: colors.textBackground 
                     },
                     textStyle,
                     textStyle2
@@ -208,7 +212,7 @@ export const ThemedFAB = forwardRef(({
                 <ThemedButton
                   style={styles.fab}
                   animatedStyle={buttonStyle2}
-                  onPress={handlePressWithAnimation(onPress1)} // Wrap onPress1
+                  onPress={handlePressWithAnimation(onPress1)}
                   iconName="camera"
                 />
               </View>
@@ -220,7 +224,6 @@ export const ThemedFAB = forwardRef(({
                     styles.buttonText,
                     {
                       color: colors.text,
-                      // backgroundColor: colors.textBackground 
                     },
                     textStyle,
                     textStyle1
@@ -231,7 +234,7 @@ export const ThemedFAB = forwardRef(({
                 <ThemedButton
                   style={styles.fab}
                   animatedStyle={buttonStyle1}
-                  onPress={handlePressWithAnimation(onPress2)} // Wrap onPress2
+                  onPress={handlePressWithAnimation(onPress2)}
                   iconName="plus-circle"
                 />
               </View>
@@ -248,6 +251,9 @@ export const ThemedFAB = forwardRef(({
     </Animated.View>
   );
 });
+
+// Add display name explicitly
+ThemedFAB.displayName = 'ThemedFAB';
 
 const styles = StyleSheet.create({
   container: {

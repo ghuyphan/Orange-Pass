@@ -1,5 +1,5 @@
-import React, { memo, useMemo, useState, useEffect } from 'react';
-import { Image, StyleSheet, View, InteractionManager, useWindowDimensions } from 'react-native';
+import React, { memo, useMemo } from 'react';
+import { Image, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { ThemedText } from '../ThemedText';
 import QRCode from 'react-native-qrcode-svg';
 import { useTheme } from '@/context/ThemeContext';
@@ -29,7 +29,7 @@ export const ThemedVietQRCard = memo(function ThemedVietQRCard({
     const qrSize = useMemo(() => width * 0.45, [width]);
     const { name, color, accent_color } = useMemo(() => returnItemData(code, type), [code, type]);
     const iconPath = useMemo(() => getIconPath(code), [code]);
-    const [shouldRenderCode, setShouldRenderCode] = useState(false);
+    // const [shouldRenderCode, setShouldRenderCode] = useState(false);
 
     // useEffect(() => {
     //     const task = InteractionManager.runAfterInteractions(() => {

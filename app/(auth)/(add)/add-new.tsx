@@ -16,17 +16,20 @@ import { Colors } from '@/constants/Colors';
 import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
 import { useTheme } from '@/context/ThemeContext';
 import { useLocalSearchParams } from 'expo-router';
-import { ThemedInput } from '@/components/Inputs';
+import { ThemedInput, ThemedDisplayInput } from '@/components/Inputs';
 import { Formik } from 'formik';
 import { qrCodeSchema } from '@/utils/validationSchemas';
 import ThemedCardItem from '@/components/cards/ThemedCardItem';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import CustomBackdrop from '@/components/bottomsheet/bottomsheetBackdrop';
+import BottomSheet, { BottomSheetScrollView, BottomSheetBackdrop, BottomSheetView } from '@gorhom/bottom-sheet';
 
 const AnimatedKeyboardAwareScrollView = Animated.createAnimatedComponent(KeyboardAwareScrollView);
 
 const AddScreen: React.FC = () => {
   const scrollY = useSharedValue(0);
   const { codeType, codeValue } = useLocalSearchParams();
+  const bottomSheetRef = React.useRef<BottomSheet>(null);
   const [type, setType] = useState<'store' | 'bank' | 'ewallet'>('store');
 
   const { currentTheme: theme } = useTheme();
@@ -76,7 +79,7 @@ const AddScreen: React.FC = () => {
     const marginBottom = interpolate(
       scrollY.value,
       [0, 70],
-      [20, -10],
+      [15, -15],
       Extrapolation.CLAMP
     )
     return {
@@ -87,6 +90,10 @@ const AddScreen: React.FC = () => {
 
   const onNavigateBack = useCallback(() => {
     router.back();
+  }, []);
+
+  const handleSheetChanges = useCallback((index: number) => {
+    console.log('handleSheetChanges', index);
   }, []);
 
   const renderCardItem = (metadata: string) => {
@@ -153,7 +160,7 @@ const AddScreen: React.FC = () => {
           >
             {renderCardItem(values.metadata)}
 
-            <ThemedView style={{ justifyContent: 'center', backgroundColor: Colors.light.cardBackground, borderRadius: 16}}>
+            <ThemedView style={{ justifyContent: 'center', backgroundColor: sectionsColors, borderRadius: 16 }}>
               <ThemedInput
                 iconName='card-text-outline'
                 placeholder={t('addScreen.metadataPlaceholder')}
@@ -161,18 +168,19 @@ const AddScreen: React.FC = () => {
                 value={values.metadata}
                 onChangeText={handleChange('metadata')}
                 onBlur={handleBlur('metadata')}
-                // isError={true}
-                // errorMessage='Error message'
-                // disabled={codeValue?.toString() !== ''}
+                backgroundColor={sectionsColors}
+              // style={{backgroundColor: sectionsColors}}
+              // isError={true}
+              // errorMessage='Error message'
+              // disabled={codeValue?.toString() !== ''}
               />
-              <ThemedInput
-                iconName='data-matrix'
+              <ThemedDisplayInput
+                label='hello'
+                iconName='format-text'
                 placeholder={t('addScreen.metadataPlaceholder')}
                 // label={t('addScreen.metadataLabel')}
                 value={values.metadata}
-                onChangeText={handleChange('metadata')}
-                onBlur={handleBlur('metadata')}
-                error={touched.metadata && errors.metadata}
+                onPress={() => bottomSheetRef.current?.snapToIndex(0)}
               // disabled={codeValue?.toString() !== ''}
               />
             </ThemedView>
@@ -184,6 +192,30 @@ const AddScreen: React.FC = () => {
               disabled={isSubmitting}
             />
           </AnimatedKeyboardAwareScrollView>
+          <BottomSheet
+            index={-1}
+            animateOnMount={true}
+            ref={bottomSheetRef}
+            backgroundStyle={[styles.background, { 
+              backgroundColor: theme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground 
+            }]}
+            handleStyle={[styles.handle, {
+              backgroundColor: theme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground,
+            }]}
+            onChange={handleSheetChanges}
+            enableDynamicSizing={true}
+            backdropComponent={(props) => (
+              <CustomBackdrop
+                {...props}
+                onPress={() => bottomSheetRef.current?.close()}
+              />
+            )}
+          >
+            <BottomSheetView style={styles.contentContainer}>
+              <ThemedText>Awesome 🎉</ThemedText>
+            </BottomSheetView>
+          </BottomSheet>
+
         </ThemedView>
       )}
     </Formik>
@@ -200,7 +232,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     maxHeight: '130%',
     paddingHorizontal: 15,
-    paddingTop: STATUSBAR_HEIGHT + 100,
+    paddingTop: STATUSBAR_HEIGHT + 85,
   },
   titleContainer: {
     position: 'absolute',
@@ -223,15 +255,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
   },
   titleButton: {
-    zIndex: 11,
-  },
-  blurContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: STATUSBAR_HEIGHT,
-    zIndex: 10,
+    // zIndex: 1,
   },
   scrollContainer: {
     flex: 1,
@@ -240,5 +264,15 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     marginTop: 20,
+  },
+  background: {
+    backgroundColor: 'white', 
+  },
+  handle: {
+    borderTopLeftRadius: 50,
+    borderTopRightRadius: 50,
+  },
+  handleIndicator: {
+    backgroundColor: 'gray', 
   },
 });

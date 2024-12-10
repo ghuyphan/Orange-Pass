@@ -82,7 +82,7 @@ export function ThemedButton({
             // borderRadius: Platform.OS === 'ios' ? 10 : 50,
         },
         styles.touchable,
-    ]), [currentTheme, disabled, loading, style]); // Include currentTheme in the dependency array
+    ]), [currentTheme, disabled, loading]); // Include currentTheme in the dependency array
 
     return (
         <AnimatedPressable

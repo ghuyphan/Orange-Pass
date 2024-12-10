@@ -24,7 +24,7 @@ export const Colors = {
     background: '#121212', 
     tint: tintColorDark,
     icon: '#FFC107', 
-    inputBackground: '#212121',
+    inputBackground: '#2E282A',
     placeHolder: '#757575', 
     tabIconDefault: '#757575',
     tabIconSelected: tintColorDark,

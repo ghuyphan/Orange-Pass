@@ -1,6 +1,6 @@
 import { Stack, useSegments } from 'expo-router';
 import React from 'react';
-import { StyleSheet, View, Platform } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { ThemedButton } from '@/components/buttons/ThemedButton';
 import { useRouter, Redirect } from 'expo-router';
 import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';

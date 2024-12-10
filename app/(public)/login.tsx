@@ -10,7 +10,7 @@ import { ThemedInput } from '@/components/Inputs/ThemedInput';
 import { ThemedButton } from '@/components/buttons/ThemedButton';
 import { ThemedTextButton } from '@/components/buttons/ThemedTextButton';
 import { ThemedToast } from '@/components/toast/ThemedToast';
-import { useColorScheme } from '@/hooks/useColorScheme';
+// import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store/rootReducer';

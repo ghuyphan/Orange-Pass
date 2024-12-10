@@ -1,7 +1,6 @@
 import React, { memo } from 'react';
 import { StyleSheet, View, Pressable } from 'react-native';
 import { ThemedText } from '../ThemedText';
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { MaterialIcons } from '@expo/vector-icons';
 // import { useThemeColor } from '@/hooks/useThemeColor';
 import { useTheme } from '@/context/ThemeContext';
@@ -30,7 +29,7 @@ export const ThemedSettingsCardItem = memo(function ThemedSettingsCardItem(props
 
     const { currentTheme } = useTheme();
     const colors = currentTheme === 'light' ? Colors.light.text : Colors.dark.text;
-    const iconsColor = currentTheme === 'light' ? Colors.light.logoIcon : Colors.dark.buttonBackground;
+    // const iconsColor = currentTheme === 'light' ? Colors.light.logoIcon : Colors.dark.buttonBackground;
 
     // const colors = useThemeColor({ light: Colors.light.text, dark: Colors.dark.text }, 'text');
     // const iconsColor = useThemeColor({ light: Colors.light.logoIcon, dark: Colors.dark.buttonBackground }, 'icon');

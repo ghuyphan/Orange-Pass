@@ -176,17 +176,17 @@ export default function ScanScreen() {
   const toggleQuickScan = useCallback(() => {
     setQuickScan(prev => !!!prev);
     triggerLightHapticFeedback();
-  }, []);
+  }, [setQuickScan]);
 
   const toggleShowIndicator = useCallback(() => {
     setShowIndicator(prev => !!!prev);
     triggerLightHapticFeedback();
-  }, [])
+  }, [setShowIndicator])
 
   const toggleAutoBrightness = useCallback(() => {
     setAutoBrightness(prev => !!!prev);
     triggerLightHapticFeedback();
-  }, [])
+  }, [setAutoBrightness]);
 
   const zoom = useSharedValue(1);
   const { gesture, focusPoint, animatedFocusStyle } = useFocusGesture(cameraRef, zoom);
@@ -367,7 +367,7 @@ export default function ScanScreen() {
     } else {
       opacity.value = withTiming(0, { duration: 300 });
     }
-  }, [codeMetadata]);
+  }, [codeMetadata, opacity]);
 
 
   const onResultTap = useCallback((url: string, codeType: string) => {
@@ -393,7 +393,7 @@ export default function ScanScreen() {
       }, 500);
       return () => clearTimeout(timeout);
     }
-  }, [device]);
+  }, [device, cameraOpacity]);
 
   if (!hasPermission) {
     return (

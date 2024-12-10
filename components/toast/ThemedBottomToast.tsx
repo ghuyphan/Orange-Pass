@@ -7,12 +7,21 @@ import { Colors } from '@/constants/Colors';
 import { useTheme } from '@/context/ThemeContext';
 
 export type ThemedBottomToastProps = {
+  /** The icon to display in the toast */
   iconName?: keyof typeof MaterialCommunityIcons.glyphMap;
+  /** The message to display in the toast */
   message: string;
+  /** Whether the toast is visible */
   isVisible?: boolean;
+  /** Whether the toast is syncing */
   isSyncing?: boolean;
+  /** Background color for the input */
+  backgroundColor?: string;
+  /** Style for the input */
   style?: StyleProp<ViewStyle>;
+  /** The duration of the toast in milliseconds */
   duration?: number;
+  /** Callback function to toggle the visibility of the toast */
   onVisibilityToggle?: (isVisible: boolean) => void;
 };
 
@@ -21,6 +30,7 @@ export function ThemedBottomToast({
   message,
   isVisible = false,
   isSyncing = false,
+  backgroundColor,
   style = {},
   duration = 4000,
   onVisibilityToggle,
@@ -74,14 +84,15 @@ export function ThemedBottomToast({
         styles.toastContainer,
         {
           paddingBottom: Platform.OS === 'ios' ? 20 : 0,
-          backgroundColor: currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground,
+          backgroundColor: backgroundColor ? backgroundColor : 
+                             currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground,
         },
         style,
         animatedStyle,
       ]}
     >
       <View style={styles.toastTitle}>
-        {isSyncing ? (
+      {!iconName || isSyncing ? (
           <ActivityIndicator size={15} color={color} />
         ) : (
           <MaterialCommunityIcons name={iconName || 'information-outline'} size={15} color={color} />

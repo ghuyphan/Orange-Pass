@@ -14,10 +14,10 @@ import Animated, {
 import { router } from 'expo-router';
 import DraggableFlatList, { ScaleDecorator } from 'react-native-draggable-flatlist';
 import { debounce, throttle } from 'lodash';
-import { BlurView } from '@react-native-community/blur';
+// import { BlurView } from '@react-native-community/blur';
 import BottomSheet from '@gorhom/bottom-sheet';
 import ImagePicker from 'react-native-image-crop-picker';
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 
 // Types and constants
 import QRRecord from '@/types/qrType';
@@ -45,6 +45,7 @@ import { ThemedStatusToast } from '@/components/toast/ThemedOfflineToast';
 import { ThemedModal } from '@/components/modals/ThemedIconModal';
 import { ThemedBottomToast } from '@/components/toast/ThemedBottomToast';
 import ThemedFilter from '@/components/ThemedFilter';
+import EmptyListItem from '@/components/lists/EmptyListItem';
 
 // Services and store
 import { fetchQrData } from '@/services/auth/fetchQrData';
@@ -62,19 +63,22 @@ import {
 
 // Internationalization
 import { t } from '@/i18n';
+// import { Colors } from '@/constants/Colors';
 
-const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
+// const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
 // const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 function HomeScreen() {
-  const { updateLocale } = useLocale();
-  const { currentTheme } = useTheme();
-  const [locale, setLocale] = useMMKVString('locale', storage);
+  // const { updateLocale } = useLocale();
+  // const { currentTheme } = useTheme();
+  // const [locale, setLocale] = useMMKVString('locale', storage);
   const color = useThemeColor({ light: '#3A2E24', dark: '#FFF5E1' }, 'text');
   const [isEmpty, setIsEmpty] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [isToastVisible, setIsToastVisible] = useState(false);
   const [isBottomToastVisible, setIsBottomToastVisible] = useState(false);
+  const [bottomToastColor, setBottomToastColor] = useState('');
+  const [bottomToastIcon, setBottomToastIcon] = useState('');
   const [bottomToastMessage, setBottomToastMessage] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -92,6 +96,7 @@ function HomeScreen() {
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
   const flatListRef = useRef<FlatList>(null);
 
+  const [wasOffline, setWasOffline] = useState(false);
   const isOffline = useSelector((state: RootState) => state.network.isOffline);
   const userId = useSelector((state: RootState) => state.auth.user?.id ?? '');
 
@@ -121,6 +126,8 @@ function HomeScreen() {
     }
 
     try {
+      setBottomToastIcon('');
+      setBottomToastColor('');
       setIsSyncing(true);
       setBottomToastMessage(t('homeScreen.syncing'));
       setIsBottomToastVisible(true);
@@ -207,17 +214,42 @@ function HomeScreen() {
   }, [isOffline, userId]);
 
   useEffect(() => {
-    setIsSyncing(false);
-    setBottomToastMessage(t('homeScreen.offline'));
-    setIsBottomToastVisible(isOffline);
-  }, [isOffline]);
+    if (isSyncing) return;
+    
+    // Only show online/offline toast if there's an actual change in network state
+    if (!isLoading) {
+      if (isOffline) {
+        if (isBottomToastVisible && bottomToastMessage === t('homeScreen.offline')) return;
+        setBottomToastIcon('wifi-off');
+        setBottomToastMessage(t('homeScreen.offline'));
+        setBottomToastColor('#f2726f');
+        setIsBottomToastVisible(true);
+        setWasOffline(true);
+      } else {
+        // Only show online toast if previously was offline
+        if (wasOffline) {
+          if (isBottomToastVisible && bottomToastMessage === t('homeScreen.online')) return;
+          setBottomToastIcon('wifi');
+          setBottomToastMessage(t('homeScreen.online'));
+          setBottomToastColor('#4caf50');
+          setIsBottomToastVisible(true);
+          const timeout = setTimeout(() => {
+            setIsBottomToastVisible(false);
+          }, 3000);
+          return () => clearTimeout(timeout);
+        }
+        setWasOffline(false);
+      }
+    }
+  }, [isOffline, isBottomToastVisible, bottomToastMessage, isLoading, wasOffline]);
 
   const debouncedSetSearchQuery = useCallback(
     debounce((query) => {
       setDebouncedSearchQuery(query);
     }, 300),
-    [setDebouncedSearchQuery]
+    [debounce, setDebouncedSearchQuery] // Include debounce here
   );
+
 
   // Update debounced search query whenever searchQuery changes
   useEffect(() => {
@@ -355,14 +387,7 @@ function HomeScreen() {
       [1, 0],
       Extrapolation.CLAMP
     );
-
-    // const translateY = interpolate(
-    //   scrollY.value,
-    //   [0, fadeCompleteThreshold],
-    //   [0, 30],
-    //   Extrapolation.CLAMP
-    // );
-
+    
     const scale = interpolate(
       scrollY.value,
       [0, fadeCompleteThreshold],
@@ -422,7 +447,7 @@ function HomeScreen() {
   );
 
   const onNavigateToScanScreen = useCallback(() => {
-      router.push('/(scan)/scan-main');
+    router.push('/(scan)/scan-main');
   }, []);
 
   const onNavigateToSettingsScreen = useCallback(() => {
@@ -430,21 +455,21 @@ function HomeScreen() {
     router.push('/settings');
   }, []);
   const onNavigateToAddScreen = useCallback(() => {
-      router.push('/(add)/add-new');
+    router.push('/(add)/add-new');
   }, [])
 
   const onOpenGallery = async () => {
-      try {
-        const result = await ImagePicker.openPicker({
-          width: 300,
-          height: 400,
-          includeBase64: true,
-          mediaType: 'photo',
-        });
-        console.log(result);
-      } catch (error) {
-        console.log(error);
-      }
+    try {
+      const result = await ImagePicker.openPicker({
+        width: 300,
+        height: 400,
+        includeBase64: true,
+        mediaType: 'photo',
+      });
+      console.log(result);
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   // In your existing code where you define scrollHandler
@@ -572,8 +597,8 @@ function HomeScreen() {
   );
 
   const paddingValues = useMemo(() => {
-    return [0, height * 0.73, height * 0.43, height * 0.23];
-  }, [height]);
+    return [0, height * 0.74, height * 0.44, height * 0.24];
+  }, []);
 
   const listContainerPadding = useMemo(() => {
     return paddingValues[qrData.length] || 0;
@@ -613,7 +638,7 @@ function HomeScreen() {
       </Animated.View>
       {isLoading ? (
         <View style={styles.loadingContainer}>
-          <View style={{ marginBottom:  15 }}>
+          <View style={{ marginBottom: 20 }}>
             <ThemedFilterSkeleton show={true} />
           </View>
           {Array.from({ length: 3 }).map((_, index) => (
@@ -621,28 +646,19 @@ function HomeScreen() {
           ))}
         </View>
       ) : isEmpty ? (
-        <Animated.ScrollView
-          onScroll={scrollHandler}
-          scrollEventThrottle={16}
-          contentContainerStyle={styles.scrollContainer}
-        >
-          <Animated.View style={[styles.emptyCard, emptyCardStyle]}>
-            <ThemedEmptyCard
-              headerLabel={t('homeScreen.emptyCard.header')}
-              footerLabel={t('homeScreen.emptyCard.footer')}
-              footButtonLabel={t('homeScreen.emptyCard.footerButton')}
-              cardOnPress={onNavigateToEmptyScreen}
-              buttonOnPress={onNavigateToScanScreen}
-            />
-          </Animated.View>
-        </Animated.ScrollView>
+        <EmptyListItem
+          scrollHandler={scrollHandler}
+          emptyCardStyle={emptyCardStyle}
+          onNavigateToEmptyScreen={onNavigateToEmptyScreen}
+          onNavigateToScanScreen={onNavigateToScanScreen}
+        />
       ) : (
         <DraggableFlatList
           ref={flatListRef}
           bounces={true}
           ListHeaderComponent={
             <Animated.View
-              style={[listHeaderStyle, { marginBottom: 25 }]}
+              style={[listHeaderStyle, { marginBottom: 30 }]}
             >
               <Animated.View
                 style={[searchContainerStyle]}
@@ -709,12 +725,6 @@ function HomeScreen() {
             closeFAB();
           }}
         >
-          {/* <AnimatedBlurView
-            blurType={'dark'}
-            blurAmount={5}
-            style={[StyleSheet.absoluteFill, animatedBlurStyle]}
-            reducedTransparencyFallbackColor="white"
-          /> */}
           <Animated.View style={[StyleSheet.absoluteFillObject, animatedBlurStyle]} />
         </TouchableWithoutFeedback>
       )}
@@ -728,8 +738,9 @@ function HomeScreen() {
         isSyncing={isSyncing}
         isVisible={isBottomToastVisible}
         message={bottomToastMessage}
-        iconName="wifi-off"
+        iconName={bottomToastIcon as keyof typeof MaterialCommunityIcons.glyphMap}
         style={styles.bottomToastContainer}
+        backgroundColor={bottomToastColor}
 
       />
       <ThemedBottomSheet
@@ -788,13 +799,6 @@ const styles = StyleSheet.create({
     pointerEvents: 'box-none',
   },
   titleButton: {
-  },
-  scrollContainer: {
-    paddingTop: STATUSBAR_HEIGHT + 105,
-    flex: 1,
-  },
-  emptyCard: {
-    marginHorizontal: 15,
   },
   searchInput: {
     borderRadius: 16,

@@ -10,7 +10,7 @@ import Animated, { useSharedValue, useAnimatedStyle, withTiming, runOnJS } from 
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { useCameraPermission } from 'react-native-vision-camera';
 import { t } from '@/i18n';
-import { useUnmountBrightness } from '@reeq/react-native-device-brightness';
+// import { useUnmountBrightness } from '@reeq/react-native-device-brightness';
 import { Colors } from 'react-native/Libraries/NewAppScreen';
 
 const PermissionScreen = () => {

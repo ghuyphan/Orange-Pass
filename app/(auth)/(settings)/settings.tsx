@@ -45,14 +45,14 @@ function SettingsScreen() {
   const [avatarConfig, setAvatarConfig] = useState<AvatarConfig | null>(null);
 
   useEffect(() => {
-    setTimeout(() => {
+    const loadAvatarConfig = async () => {
       if (!avatarConfigString) {
         setAvatarConfig(null);
         return;
       }
-
+  
       let parsedConfig: AvatarConfig | null = null;
-
+  
       try {
         if (typeof avatarConfigString === 'object') {
           parsedConfig = avatarConfigString as AvatarConfig;
@@ -67,11 +67,13 @@ function SettingsScreen() {
         console.error("Error parsing avatar config:", error);
         parsedConfig = null;
       }
-
+  
       setAvatarConfig(parsedConfig);
-    }, 200);
-
+    };
+  
+    loadAvatarConfig();
   }, [avatarConfigString]);
+  
 
   // Function to parse the offline string format
   const parseAvatarString = (str: string): AvatarConfig => {
@@ -146,7 +148,7 @@ function SettingsScreen() {
         dispatch(clearAuthData());
         dispatch(clearErrorMessage()); // Clear error on logout
         router.replace('/login');
-      }, 1000);
+      }, 300);
     }
   };
 
@@ -229,12 +231,12 @@ function SettingsScreen() {
           loadingLabel='Logging out...'
           loading={isLoading}
           onPress={onLogout}
-
+          style={{marginTop: 10}}
         />
       </Animated.ScrollView>
       <ThemedModal
         onDismiss={() => setIsModalVisible(false)}
-        // dismissable={true}
+        dismissable={true}
         primaryActionText={t('settingsScreen.logout')}
         onPrimaryAction={logout}
         onSecondaryAction={() => setIsModalVisible(false)}
@@ -331,7 +333,7 @@ const styles = StyleSheet.create({
   sectionContainer: {
     borderRadius: 16,
     backgroundColor: 'white',
-    marginBottom: 30,
+    marginBottom: 20,
     gap: 5,
     overflow: 'hidden',
   },

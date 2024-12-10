@@ -21,7 +21,8 @@ export const ThemedListItem = memo(function ThemedListItem({
 }: ThemedListItemProps): JSX.Element {
     const colorScheme = useColorScheme();
 
-    const { name, full_name, color, accent_color } = useMemo(() => returnItemData(code, type), [code, type]);
+    // const { name, full_name, color, accent_color } = useMemo(() => returnItemData(code, type), [code, type]);
+    const { name, full_name } = useMemo(() => returnItemData(code, type), [code, type]);
 
     const bankIcon = useMemo(() => getIconPath(code), [code]);
 

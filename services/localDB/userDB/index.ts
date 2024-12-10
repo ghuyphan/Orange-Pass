@@ -81,7 +81,7 @@ export async function insertUser(userData: {
             );
         } else {
             // Insert the new user
-            const result = await db.runAsync(
+            await db.runAsync(
                 'INSERT INTO users (id, username, email, verified, name, avatar) VALUES (?, ?, ?, ?, ?, ?)',
                 [
                     userData.id,

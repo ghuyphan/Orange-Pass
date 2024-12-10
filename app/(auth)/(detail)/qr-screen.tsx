@@ -10,9 +10,9 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedVietQRCard } from '@/components/cards/ThemedVietQR';
 
 // Utility function to format the amount
-const formatAmount = (amount: string) => {
-    return amount.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-};
+// const formatAmount = (amount: string) => {
+//     return amount.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+// };
 
 export default function CreateQRScreen() {
     const { metadata, amount, originalItem: encodedItem } = useLocalSearchParams();

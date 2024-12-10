@@ -38,10 +38,10 @@ function getDarkModeColor(lightColor: string): string {
   let { h, s, l } = color.toHsl();
 
   // Darken the color more gradually
-  l = Math.max(0.2, Math.min(0.5, l * 0.6));
+  l = Math.max(0.18, Math.min(0.48, l * 0.58));
 
-  // Adjust saturation to maintain color vibrancy
-  s = Math.min(1, s * 1.1);
+  // Adjust saturation less to maintain color vibrancy
+  s = Math.min(1, s * 1.05); // Changed from 1.1 to 1.05
 
   // Slight hue shift for variety
   h = (h + 3) % 360;

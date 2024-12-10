@@ -3,7 +3,7 @@ import React, { useMemo } from 'react';
 import { StyleSheet, StyleProp, ViewStyle, ActivityIndicator, TextStyle, Pressable } from 'react-native';
 import { ThemedText } from '../ThemedText';
 import { useThemeColor } from '@/hooks/useThemeColor';
-import { useColorScheme } from '@/hooks/useColorScheme';
+// import { useColorScheme } from '@/hooks/useColorScheme';
 
 /**
  * Props for ThemedTextButton component.
@@ -52,7 +52,7 @@ export function ThemedTextButton({
     loading = false,
 }: ThemedTextButtonProps): JSX.Element {
     const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
-    const colorScheme = useColorScheme();
+    // const colorScheme = useColorScheme();
 
     const buttonStyle = useMemo(() => ([
         {

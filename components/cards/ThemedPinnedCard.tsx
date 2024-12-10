@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center', 
   },
   accountName: {
-    fontSize: 18,
+    fontSize: 16,
     textAlign: 'center',
     color: 'white',
   },
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   memberID: {
-    fontSize: 18,
+    fontSize: 16,
     textAlign: 'center',
     color: 'white',
     maxWidth: 250, 

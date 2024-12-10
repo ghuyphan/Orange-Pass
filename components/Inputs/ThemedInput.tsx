@@ -1,6 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useState, useMemo, forwardRef } from 'react';
-import { TextInput, StyleSheet, View, Pressable } from 'react-native';
+import { TextInput, StyleSheet, StyleProp, ViewStyle, View, Pressable } from 'react-native';
 import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
 import { useTheme } from '@/context/ThemeContext';
@@ -17,7 +17,7 @@ export type ThemedInputProps = {
     /** The placeholder of the input */
     placeholder?: string;
     /** Custom styles for the input */
-    style?: object;
+    style?: StyleProp<ViewStyle>;
     /** Whether the input is in an error state */
     isError?: boolean;
     /** The error message to display if the input is in an error state */
@@ -35,7 +35,9 @@ export type ThemedInputProps = {
     /** Function to call when the clear button is pressed */
     onSubmitEditing?: () => void;
     /** Whether the input is disabled */
-    disabled?: boolean; 
+    disabled?: boolean;
+    /** Background color for the input */
+    backgroundColor?: string; 
 };
 
 export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(({
@@ -52,7 +54,8 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(({
     onBlur = () => { },
     onFocus = () => { },
     onSubmitEditing = () => { },
-    disabled = false // Add disabled prop with default value
+    disabled = false,
+    backgroundColor // Add backgroundColor prop
 }, ref) => {
     const { currentTheme } = useTheme();
     const color = currentTheme === 'light' ? Colors.light.text : Colors.dark.text;
@@ -74,12 +77,13 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(({
     const inputContainerStyle = useMemo(() => ([
         styles.inputContainer,
         {
-            backgroundColor: currentTheme === 'light' ? Colors.light.inputBackground : Colors.dark.inputBackground,
+            backgroundColor: backgroundColor ? backgroundColor : 
+                             currentTheme === 'light' ? Colors.light.inputBackground : Colors.dark.inputBackground,
             borderBottomColor: currentTheme === 'light' ? Colors.light.error : Colors.dark.error,
             borderBottomWidth: isError && errorMessage.length > 0 ? 2 : 0,
         },
         // style,
-    ]), [currentTheme, isError, errorMessage, style]);
+    ]), [currentTheme, isError, errorMessage, style, backgroundColor]); // Include backgroundColor in dependency array
 
     const errorLabelStyle = useMemo(() => ({
         color: currentTheme === 'light' ? Colors.light.error : Colors.dark.error
@@ -93,11 +97,11 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(({
                 </ThemedText>}
                 
                 <View style={styles.inputRow}>
-                    <MaterialCommunityIcons name={iconName} size={20} color={color} />
+                    <MaterialCommunityIcons name={iconName} size={20} color={color || currentTheme === 'light' ? Colors.light.placeHolder : Colors.dark.placeHolder} />
                     <TextInput
                         ref={ref}
                         onSubmitEditing={onSubmitEditing}
-                        style={[styles.input, { color }]}
+                        style={[styles.input, { color, marginLeft: iconName ? 10 : 0 }]}
                         secureTextEntry={isSecure}
                         value={localValue}
                         onChangeText={handleChangeText}
@@ -108,9 +112,9 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(({
                         accessible
                         aria-label={label}
                         keyboardType={keyboardType}
-                        editable={!disabled} // Disable input if disabled prop is true
+                        editable={!disabled} 
                     />
-                    {localValue.length > 0 && !disabled && ( // Only show buttons if input is not disabled
+                    {localValue.length > 0 && !disabled && ( 
                         <Pressable
                             onPress={secureTextEntry ? onToggleSecureValue : onClearValue}
                             style={[styles.iconTouchable]}
@@ -161,7 +165,6 @@ const styles = StyleSheet.create({
         height: 30,
         flex: 1,  // Allows the input to take available space but not overlap the button
         marginRight: 10,
-        marginLeft: 10,
     },
     iconTouchable: {
         borderRadius: 50,

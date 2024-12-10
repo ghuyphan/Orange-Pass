@@ -9,7 +9,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { Colors } from '@/constants/Colors';
 // import CARD from '@/assets/svgs/card.svg';
 
-export type ThemedEmptyCard = {
+export type ThemedEmptyCardProps = {
     /** Light color theme for the card text */
     lightColor?: string;
     /** Dark color theme for the card text */
@@ -50,7 +50,7 @@ export function ThemedEmptyCard({
     style,
     footerStyle,
     paddingTop,
-}: ThemedEmptyCard) {
+}: ThemedEmptyCardProps) {
     const { currentTheme: colorScheme } = useTheme();
     // const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
     const color = colorScheme === 'light' ? Colors.light.text : Colors.dark.text;

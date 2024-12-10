@@ -1,4 +1,4 @@
-import { StyleSheet, ScrollView, View, Platform } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { useColorScheme } from 'react-native';
 import { useRouter } from 'expo-router';

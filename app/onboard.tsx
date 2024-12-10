@@ -33,7 +33,7 @@ const OnBoardScreen = () => {
             -1,
             true
         );
-    }, []);
+    }, [ pulseValue ]);
 
     const handleNextPage = () => {
         const nextPage = currentPage + 1;

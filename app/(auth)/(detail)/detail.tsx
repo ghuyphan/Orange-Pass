@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
-import { StyleSheet, View, Linking, Keyboard, FlatList, TextInput, Pressable } from 'react-native';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import { StyleSheet, View, Linking, Keyboard, FlatList, TextInput, Pressable, Image} from 'react-native';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store/rootReducer';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
@@ -27,7 +27,7 @@ const formatAmount = (amount: string) => {
 };
 
 export default function DetailScreen() {
-    const { locale } = useLocale(); 
+    const { locale } = useLocale();
     useUnmountBrightness(1, false);
     const { item: encodedItem } = useLocalSearchParams();
     const router = useRouter();
@@ -39,7 +39,7 @@ export default function DetailScreen() {
     const [isToastVisible, setIsToastVisible] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
     const [isSyncing, setIsSyncing] = useState(false);
-    const transferHeight = useSharedValue(0); 
+    const transferHeight = useSharedValue(0);
 
     // Derived values and constants
     const iconColor = currentTheme === 'light' ? Colors.light.text : Colors.dark.text;
@@ -69,7 +69,7 @@ export default function DetailScreen() {
             keyboardDidHideListener.remove();
             keyboardDidShowListener.remove();
         };
-    }, []); 
+    }, []);
 
     // useCallback for optimized event handlers
     const handleExpandPress = useCallback(() => {
@@ -77,80 +77,82 @@ export default function DetailScreen() {
     }, []);
 
     const openMap = useCallback(() => {
-        if (!item?.type || !item?.code) return; 
+        if (!item?.type || !item?.code) return;
 
         const itemName = returnItemData(item.code, item.type);
-
-        if (!itemName?.name) {
-            console.error('Invalid itemName or itemName.name');
-            return;
-        }
+        if (!itemName?.name) return;
 
         const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(itemName.name)}`;
-        
-        Linking.openURL(url).catch((err) =>{ 
-            console.error('Failed to open Google Maps:', err)
+
+        Linking.openURL(url).catch((err) => {
+            console.error('Failed to open Google Maps:', err);
             setIsToastVisible(true);
             setToastMessage(t('detailsScreen.failedToOpenGoogleMaps'));
         });
-    }, [item]);
+    }, [item, t]);
 
+    // Corrected onToggleTransfer with correct dependencies
     const onToggleTransfer = useCallback(() => {
         if (isOffline) return;
-        transferHeight.value = transferHeight.value === 0 ? 100 : 0; 
-    }, [isOffline]);
+        transferHeight.value = transferHeight.value === 0 ? 100 : 0;
+    }, [isOffline, transferHeight]);
 
-    const transferAmount = useCallback(throttle(async () => {
-        if (!item?.type || !item?.code || !amount) return;
 
-        setIsSyncing(true);
-        setIsToastVisible(true);
+    // Corrected transferAmount with proper dependencies
+    const transferAmount = useCallback(
+        throttle(async () => {
+            if (!item?.type || !item?.code || !amount) return;
 
-        const itemName = returnItemData(item.code, item.type);
-        setToastMessage(t('detailsScreen.generatingQRCode'));
+            setIsSyncing(true);
+            setIsToastVisible(true);
+            setToastMessage(t('detailsScreen.generatingQRCode'));
 
-        try {
-            const response = await getVietQRData(
-                item.account_number,
-                item.account_name,
-                itemName.number_code !== undefined ? itemName.number_code : '', // or some other default value
-                parseInt(amount.replace(/,/g, '')),
-                'Hello'
-              );
+            try {
+                const itemName = returnItemData(item.code, item.type);
+                const response = await getVietQRData(
+                    item.account_number,
+                    item.account_name,
+                    itemName?.number_code || '',
+                    parseInt(amount.replace(/,/g, '')),
+                    'Hello'
+                );
 
-            const qrCode = response.data.qrCode;
-            router.replace({
-                pathname: '/qr-screen',
-                params: {
-                    metadata: qrCode,
-                    amount: amount,
-                    originalItem: encodeURIComponent(JSON.stringify(item)),
-                },
-            });
-        } finally {
-            setIsSyncing(false);
-            setIsToastVisible(false);
-        }
-    }, 500), [item, amount]);
+                const qrCode = response.data.qrCode;
+                router.replace({
+                    pathname: '/qr-screen',
+                    params: {
+                        metadata: qrCode,
+                        amount: amount,
+                        originalItem: encodeURIComponent(JSON.stringify(item)),
+                    },
+                });
+            } catch (error) {
+                console.error('Error generating QR code:', error);
+            } finally {
+                setIsSyncing(false);
+                setIsToastVisible(false);
+            }
+        }, 500), [item, amount, router, t]
+    );
 
     // Animated styles for the transfer section
     const transferStyle = useAnimatedStyle(() => ({
-        height: withTiming(transferHeight.value, { 
-            duration: 300, 
-            easing: Easing.bezier(0.4, 0, 0.2, 1) 
+        height: withTiming(transferHeight.value, {
+            duration: 300,
+            easing: Easing.bezier(0.4, 0, 0.2, 1)
         }),
-        opacity: withTiming(transferHeight.value > 0 ? 1 : 0, { 
-            duration: 250, 
-            easing: Easing.out(Easing.quad) 
+        opacity: withTiming(transferHeight.value > 0 ? 1 : 0, {
+            duration: 250,
+            easing: Easing.out(Easing.quad)
         }),
-        transform: [{ 
+        transform: [{
             scaleY: withTiming(transferHeight.value > 0 ? 1 : 0.95, {
                 duration: 300,
                 easing: Easing.bezier(0.4, 0, 0.2, 1)
             })
         }],
         overflow: 'hidden',
-        pointerEvents: transferHeight.value > 0 ? 'auto' : 'none', 
+        pointerEvents: transferHeight.value > 0 ? 'auto' : 'none',
     }));
 
     // SuggestionItem component (consider moving this outside for better organization)
@@ -162,7 +164,7 @@ export default function DetailScreen() {
                 styles.suggestionItem,
                 {
                     backgroundColor: currentTheme === 'light' ? Colors.light.buttonBackground : Colors.dark.buttonBackground,
-                    overflow: 'hidden', 
+                    overflow: 'hidden',
                 },
             ]}
         >
@@ -186,12 +188,12 @@ export default function DetailScreen() {
                 contentContainerStyle={styles.container}
                 extraScrollHeight={80}
                 extraHeight={200}
-                enableOnAndroid 
+                enableOnAndroid
                 showsVerticalScrollIndicator={false}
             >
                 <View style={styles.headerWrapper}>
                     <ThemedButton onPress={router.back} iconName="chevron-left" />
-                    <ThemedButton onPress={handleExpandPress} iconName="dots-vertical" /> 
+                    <ThemedButton onPress={handleExpandPress} iconName="dots-vertical" />
                 </View>
 
                 <ThemedPinnedCard
@@ -245,13 +247,13 @@ export default function DetailScreen() {
                                         placeholderTextColor={currentTheme === 'light' ? Colors.light.placeHolder : Colors.dark.placeHolder}
                                         onChangeText={(text) => setAmount(formatAmount(text))}
                                     />
-                                    <ThemedText>đ</ThemedText> 
-                                    <Pressable 
-                                        hitSlop={{ bottom: 40, left: 30, right: 30, top: 30 }} 
-                                        onPress={transferAmount} 
-                                        style={[styles.transferButton, { opacity: amount ? 1 : 0.3 }]} 
+                                    <ThemedText>đ</ThemedText>
+                                    <Pressable
+                                        hitSlop={{ bottom: 40, left: 30, right: 30, top: 30 }}
+                                        onPress={transferAmount}
+                                        style={[styles.transferButton, { opacity: amount ? 1 : 0.3 }]}
                                     >
-                                        <MaterialCommunityIcons name="chevron-right" size={18} color={iconColor} /> 
+                                        <MaterialCommunityIcons name="chevron-right" size={18} color={iconColor} />
                                     </Pressable>
                                 </View>
                                 <FlatList
@@ -262,14 +264,14 @@ export default function DetailScreen() {
                                     keyExtractor={(item) => item}
                                     contentContainerStyle={styles.suggestionListContent}
                                     renderItem={({ item }) => (
-                                        <SuggestionItem item={item} onPress={setAmount} /> 
+                                        <SuggestionItem item={item} onPress={setAmount} />
                                     )}
                                 />
                             </Animated.View>
                         </View>
                     )}
 
-                    <ThemedStatusToast 
+                    <ThemedStatusToast
                         isSyncing={isSyncing}
                         isVisible={isToastVisible}
                         message={toastMessage}
@@ -278,6 +280,10 @@ export default function DetailScreen() {
                         style={styles.toastContainer}
                     />
                 </View>
+                <View style={{ flexDirection: 'row', marginTop: 20, justifyContent: 'flex-start', backgroundColor: 'red' }}>
+                    <Image source={require('@/assets/images/logoIcons/MOMO.png')} style={{ width: 50, height: 50, borderRadius: 16, }} resizeMode="contain" />
+                    <Image source={require('@/assets/images/logoIcons/ZLP.png')} style={{ width: 50, height: 50, borderRadius: 16, }} resizeMode="contain" />
+                    </View>
             </KeyboardAwareScrollView>
         </>
     );
@@ -296,7 +302,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginBottom: 30,
+        marginBottom: 25,
     },
     pinnedCardWrapper: {
         marginBottom: 30,

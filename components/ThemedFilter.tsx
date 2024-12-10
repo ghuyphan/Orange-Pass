@@ -179,7 +179,7 @@ const ThemedFilter = ({ selectedFilter, onFilterChange, style }: ThemedFilterPro
             LayoutAnimation.configureNext(customLayoutAnimation);
             onFilterChange(filterKey);
         },
-        [onFilterChange]
+        [onFilterChange, customLayoutAnimation],
     );
 
     const renderItem = ({ item }: { item: FilterItemType }) => (
