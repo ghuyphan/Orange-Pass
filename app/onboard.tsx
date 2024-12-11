@@ -1,49 +1,47 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { StyleSheet, View, Dimensions, ScrollView } from 'react-native';
-import Ionicons from '@expo/vector-icons/Ionicons';
+import React from 'react';
+import { StyleSheet, View, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+
 import { ThemedButton } from '@/components/buttons/ThemedButton';
-import { ThemedTextButton } from '@/components/buttons/ThemedTextButton';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { t } from '@/i18n';
 import { useThemeColor } from '@/hooks/useThemeColor';
-import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming } from 'react-native-reanimated';
-import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
 import { storage } from '@/utils/storage';
 import { triggerSuccessHapticFeedback } from '@/utils/haptic';
-import { Colors } from 'react-native/Libraries/NewAppScreen';
+import { Colors } from '@/constants/Colors';
+import LOGO from '@/assets/svgs/orange-logo.svg';
+
+// Define a type for features
+type Feature = {
+    icon: string;
+    title: string;
+    subtitle: string;
+};
 
 const OnBoardScreen = () => {
-    const color = useThemeColor({ light: '#5A4639', dark: '#FFF5E1' }, 'text');
-    const iconColor = useThemeColor({ light: Colors.light.buttonBackground, dark: Colors.dark.buttonBackground }, 'buttonBackground');
-    const pageIndicator = useThemeColor({ light: '#5A4639', dark: '#FFF5E14D' }, 'tabIconSelected');
     const router = useRouter();
-    const scrollRef = useRef<ScrollView>(null);
-    const [currentPage, setCurrentPage] = useState(0);
+    const iconColor = useThemeColor({ light: Colors.dark.cardFooter, dark: Colors.light.cardFooter }, 'buttonBackground');
 
-    // Reanimated shared values for animations
-    const fadeValue = useSharedValue(0);
-    const pulseValue = useSharedValue(1);
-
-    // Icon pulse animation
-    useEffect(() => {
-        pulseValue.value = withRepeat(
-            withTiming(1.1, { duration: 1000 }),
-            -1,
-            true
-        );
-    }, [ pulseValue ]);
-
-    const handleNextPage = () => {
-        const nextPage = currentPage + 1;
-        fadeValue.value = 0; // Reset fade value
-        scrollRef.current?.scrollTo({ x: nextPage * Dimensions.get('window').width, animated: true });
-        setCurrentPage(nextPage);
-
-        // Fade in the new content
-        fadeValue.value = withTiming(1, { duration: 500 });
-    };
+    // Array of features to display
+    const features: Feature[] = [
+        {
+            icon: 'qrcode-scan',
+            title: t('onboardingScreen.title1'),
+            subtitle: t('onboardingScreen.subtitle1')
+        },
+        {
+            icon: 'cloud-sync-outline',
+            title: t('onboardingScreen.title2'),
+            subtitle: t('onboardingScreen.subtitle2')
+        },
+        {
+            icon: 'earth',
+            title: t('onboardingScreen.title3'),
+            subtitle: t('onboardingScreen.subtitle3')
+        }
+    ];
 
     const onFinish = () => {
         storage.set('hasSeenOnboarding', true);
@@ -51,155 +49,132 @@ const OnBoardScreen = () => {
         router.replace('/login');
     };
 
-    const animatedFadeStyle = useAnimatedStyle(() => ({
-        opacity: fadeValue.value,
-    }));
-
-    const animatedIconStyle = useAnimatedStyle(() => ({
-        transform: [{ scale: pulseValue.value }],
-    }));
-
     return (
         <ThemedView style={styles.container}>
-            <ThemedTextButton
-                onPress={onFinish}
-                style={styles.skipButton}
-                label={t('onboardingScreen.skipButton')}
-                textStyle={{fontSize: 16,}}
-            />
+            <View style={styles.topContainer}>
+                <View style={styles.logoContainer}>
+                    <LOGO width={width * 0.14} height={width * 0.14} />
+                </View>
+                <ThemedText type='title'>{t('onboardingScreen.title')}</ThemedText>
+            </View>
 
-            <ScrollView
-                horizontal
-                pagingEnabled
-                scrollEnabled={false} // Disable user scrolling
-                showsHorizontalScrollIndicator={false}
-                ref={scrollRef}
-                style={styles.scrollView}
-                onLayout={() => {
-                    fadeValue.value = withTiming(1, { duration: 500 }); // Initial fade-in
-                }}
-            >
-                <Animated.View style={[styles.onboardingSection, animatedFadeStyle]}>
-                    <Animated.View style={[styles.iconContainer, animatedIconStyle, { backgroundColor: iconColor }]}>
-                        <Ionicons name="qr-code" size={75} color={color} />
-                    </Animated.View>
-                    <ThemedText style={styles.title} type='title'>
-                        {t('onboardingScreen.title1')}
-                    </ThemedText>
-                    <ThemedText style={styles.subtitle}>
-                        {t('onboardingScreen.subtitle1')}
-                    </ThemedText>
-                </Animated.View>
-
-                <Animated.View style={[styles.onboardingSection, animatedFadeStyle]}>
-                    <Animated.View style={[styles.iconContainer, animatedIconStyle, { backgroundColor: iconColor }]}>
-                        <Ionicons name="cloud" size={75} color={color} />
-                    </Animated.View>
-                    <ThemedText style={styles.title} type='title'>
-                        {t('onboardingScreen.title2')}
-                    </ThemedText>
-                    <ThemedText style={styles.subtitle}>
-                        {t('onboardingScreen.subtitle2')}
-                    </ThemedText>
-                </Animated.View>
-
-                <Animated.View style={[styles.onboardingSection, animatedFadeStyle]}>
-                    <Animated.View style={[styles.iconContainer, animatedIconStyle, { backgroundColor: iconColor }]}>
-                        <Ionicons name="globe" size={75} color={color} />
-                    </Animated.View>
-                    <ThemedText style={styles.title} type='title'>
-                        {t('onboardingScreen.finishTitle')}
-                    </ThemedText>
-                    <ThemedText style={styles.subtitle}>
-                        {t('onboardingScreen.finishSubtitle')}
-                    </ThemedText>
-                </Animated.View>
-            </ScrollView>
-
-            {/* Page Indicator */}
-            <View style={styles.pageIndicatorContainer}>
-                {[0, 1, 2].map((_, index) => (
-                    <View
-                        key={index}
-                        style={[
-                            styles.pageDot, 
-                            {   backgroundColor: pageIndicator,
-                                opacity: currentPage === index ? 1 : 0.3,
-                                width: currentPage === index ? 12 : 8, // Larger active dot
-                                height: currentPage === index ? 12 : 8, // Larger active dot
-                            }
-                        ]}
-                    />
+            <View style={styles.contentContainer}>
+                {features.map((feature, index) => (
+                    <View key={index} style={styles.featureContainer}>
+                        <MaterialCommunityIcons
+                            name={feature.icon as any}
+                            size={40}
+                            color={iconColor}
+                        />
+                        <View style={styles.featureTextContainer}>
+                            <ThemedText
+                                type='defaultSemiBold'
+                                style={styles.title}
+                            >
+                                {feature.title}
+                            </ThemedText>
+                            <ThemedText style={styles.subtitle}>
+                                {feature.subtitle}
+                            </ThemedText>
+                        </View>
+                    </View>
                 ))}
             </View>
 
             <View style={styles.bottomContainer}>
-                {currentPage < 2 ? (
-                    <ThemedButton label={t('onboardingScreen.nextButton')} style={styles.button1} onPress={handleNextPage} />
-                ) : (
-                    <ThemedButton label={t('onboardingScreen.finishButton')} style={styles.button1} onPress={onFinish} />
-                )}
+                <MaterialCommunityIcons
+                    name='account-multiple'
+                    size={25}
+                    color={iconColor}
+                    style={styles.bottomIcon}
+                />
+                <View style={styles.termsContainer}>
+                    <ThemedText style={styles.termsText}>
+                        By pressing continue, you agree to our{' '}
+                        <ThemedText style={styles.highlightText}>Terms of Service</ThemedText>{' '}
+                        and that you have read our{' '}
+                        <ThemedText style={styles.highlightText}>Privacy Policy</ThemedText>
+                    </ThemedText>
+                </View>
+
+                <ThemedButton 
+                    label={t('onboardingScreen.finishButton')} 
+                    style={styles.button} 
+                    onPress={onFinish} 
+                />
             </View>
         </ThemedView>
     );
 };
 
 const { width } = Dimensions.get('window');
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
     },
-    scrollView: {
+    topContainer: {
+        marginTop: 105,
+        gap: 20,
+        alignItems: 'center'
+    },
+    logoContainer: {
+        backgroundColor: '#FFF5E1', 
+        padding: 14, 
+        borderRadius: 20
+    },
+    contentContainer: {
         flex: 1,
-        flexGrow: 1,
+        // marginTop: 60,
+        justifyContent: 'center',   
+        gap: 40
     },
-    onboardingSection: {
-        width: width, // Adjust to the width of your screen
+    featureContainer: {
+        flexDirection: 'row',
+        gap: 15,
+        marginHorizontal: 30,
         alignItems: 'center',
-        justifyContent: 'center',
-        paddingHorizontal: 15,
+        // marginBottom: 10
     },
-    iconContainer: {
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 30,
-        borderRadius: 100,
-        marginBottom: 20,
+    featureTextContainer: {
+        flexDirection: 'column',
+        flex: 1,
+        width: '100%'
     },
     title: {
-        textAlign: 'center',
-        fontSize: 26,
-        marginBottom: 8,
+        fontSize: 16,
     },
     subtitle: {
-        textAlign: 'center',
-        fontSize: 18,
-        maxWidth: '80%',
-    },
-    pageIndicatorContainer: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 10,
-    },
-    pageDot: {
-        // backgroundColor: '#5A4639',
-        marginHorizontal: 5,
-        borderRadius: 6,
+        fontSize: 16,
+        opacity: 0.7,
     },
     bottomContainer: {
         paddingTop: 15,
-        paddingBottom: 60,
+        paddingBottom: 30,
         paddingHorizontal: 15,
         gap: 15,
+        justifyContent: 'center',
     },
-    button1: {},
-    skipButton: {
-        position: 'absolute',
-        top: STATUSBAR_HEIGHT ,
-        right: 15,
-        zIndex: 10,
+    bottomIcon: {
+        alignSelf: 'center', 
+        marginBottom: -10
     },
+    termsContainer: {
+        alignItems: 'center',
+        paddingHorizontal: 20,
+    },
+    termsText: {
+        fontSize: 12, 
+        letterSpacing: 0.5,
+        textAlign: 'center'
+    },
+    highlightText: {
+        color: '#FFC107', 
+        fontSize: 12, 
+        letterSpacing: 0.5,
+        // fontWeight: 'bold'
+    },
+    button: {},
 });
 
 export default OnBoardScreen;

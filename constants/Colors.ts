@@ -20,7 +20,7 @@ export const Colors = {
     logoIcon: '#FF8A65', 
   },
   dark: {
-    text: '#E0E0E0', 
+    text: '#FFF5E1', 
     background: '#121212', 
     tint: tintColorDark,
     icon: '#FFC107', 

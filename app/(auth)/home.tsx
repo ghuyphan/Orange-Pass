@@ -27,10 +27,10 @@ import { height } from '@/constants/Constants';
 // Hooks and utils
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { triggerHapticFeedback } from '@/utils/haptic';
-import { useLocale } from '@/context/LocaleContext';
-import { useMMKVString } from 'react-native-mmkv';
-import { storage } from '@/utils/storage';
-import { useTheme } from '@/context/ThemeContext';
+// import { useLocale } from '@/context/LocaleContext';
+// import { useMMKVString } from 'react-native-mmkv';
+// import { storage } from '@/utils/storage';
+// import { useTheme } from '@/context/ThemeContext';
 
 // Components
 import { ThemedText } from '@/components/ThemedText';
@@ -38,7 +38,7 @@ import { ThemedView } from '@/components/ThemedView';
 import { ThemedIconInput } from '@/components/Inputs';
 import { ThemedFAB, ThemedButton } from '@/components/buttons';
 import ThemedBottomSheet from '@/components/bottomsheet/ThemedBottomSheet';
-import { ThemedEmptyCard } from '@/components/cards';
+// import { ThemedEmptyCard } from '@/components/cards';
 import ThemedCardItem from '@/components/cards/ThemedCardItem';
 import { ThemedFilterSkeleton, ThemedCardSkeleton } from '@/components/skeletons';
 import { ThemedStatusToast } from '@/components/toast/ThemedOfflineToast';
@@ -601,7 +601,7 @@ function HomeScreen() {
   }, []);
 
   const listContainerPadding = useMemo(() => {
-    return paddingValues[qrData.length] || 0;
+    return paddingValues[qrData.length] || 100;
   }, [qrData.length, paddingValues]);
 
   return (

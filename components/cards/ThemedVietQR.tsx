@@ -2,10 +2,10 @@ import React, { memo, useMemo } from 'react';
 import { Image, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { ThemedText } from '../ThemedText';
 import QRCode from 'react-native-qrcode-svg';
-import { useTheme } from '@/context/ThemeContext';
+// import { useTheme } from '@/context/ThemeContext';
 import { getIconPath } from '@/utils/returnIcon';
 import { returnItemData } from '@/utils/returnItemData';
-import { returnMidpointColor } from '@/utils/returnMidpointColor';
+import { returnMidpointColors } from '@/utils/returnMidpointColor';
 import { LinearGradient } from 'expo-linear-gradient';
 
 export type ThemedVietQRProps = {
@@ -23,7 +23,7 @@ export const ThemedVietQRCard = memo(function ThemedVietQRCard({
     accountName,
     accountNumber,
 }: ThemedVietQRProps): JSX.Element {
-    const { currentTheme } = useTheme();
+    // const { currentTheme } = useTheme();
     const { width } = useWindowDimensions();
 
     const qrSize = useMemo(() => width * 0.45, [width]);
@@ -40,15 +40,20 @@ export const ThemedVietQRCard = memo(function ThemedVietQRCard({
 
     return (
         <LinearGradient
-            colors={
-                currentTheme === 'light'
-                    ? [color?.light || '#ffffff', returnMidpointColor(color.light, accent_color.light) || '#cccccc', accent_color?.light || '#f0f0f0']
-                    : [color?.dark || '#000000', returnMidpointColor(color.dark, accent_color.dark) || '#505050', accent_color?.dark || '#303030']
-            }
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.itemContainer}
-        >
+        colors={
+          returnMidpointColors(
+            color?.light || '#FAF3E7',
+            accent_color?.light || '#D6C4AF',
+            4 // Number of blending steps
+          ) || ['#FAF3E7', '#D6C4AF']
+        }
+        start={{ x: 0.25, y: 0.25 }}
+        end={{ x: 0.75, y: 0.75 }}
+        
+        style={styles.itemContainer}
+      >
+  
+  
             <View style={styles.headerContainer}>
                 <View style={styles.leftHeaderContainer}>
                     <View style={styles.iconContainer}>

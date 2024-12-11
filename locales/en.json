@@ -139,15 +139,16 @@
     "cancelButton": "Decline"
   },
   "onboardingScreen": {
+    "title": "Orange⁺",
     "title1": "Manage QR Codes",
     "subtitle1": "Manage and store QR codes for bank accounts, loyalty cards, and e-wallets.",
     "title2": "Cloud Sync",
     "subtitle2": "Your QR codes are securely stored and synced in the cloud.",
-    "finishTitle": "Ready to Use",
-    "finishSubtitle": "Manage and access your QR codes anytime, anywhere.",
+    "title3": "Ready to Use",
+    "subtitle3": "Manage and access your QR codes anytime, anywhere.",
     "nextButton": "Next",
     "skipButton": "Skip",
-    "finishButton": "Get Started"
+    "finishButton": "Continue"
   },
   "detailsScreen": {
     "edit": "Edit",
@@ -157,7 +158,9 @@
     "createQrCode": "Create payment QR code",
     "receivePlaceholder": "Enter amount to receive",
     "generatingQRCode": "Generating QR code...",
-    "failedToOpenGoogleMaps": "Couldn't open Google Maps."
+    "failedToOpenGoogleMaps": "Couldn't open Google Maps.",
+    "bankTransfer": "Bank transfer with",
+    "transferMessage": "Bank transfer to"
   },
   "settingsScreen": {
     "title": "Settings",

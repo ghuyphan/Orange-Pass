@@ -101,7 +101,7 @@
       "header": "Mã QR của bạn\nTất cả tại một nơi",
       "footer": "Thêm thẻ mới",
       "footerButton": "Thêm",
-      "content": "Giữ tất cả mã QR ngân hàng, ví điện tử, thẻ thành viên và nhiều thứ khác của bạn ở một nơi tiện lợi. Dễ dàng sắp xếp và truy cập mọi thứ bạn cần một cách nhanh chóng."
+      "content": "Giữ tất cả mã QR ngân hàng, ví tiền, thẻ thành viên và nhiều thứ khác của bạn ở một nơi tiện lợi. Dễ dàng sắp xếp và truy cập mọi thứ bạn cần một cách nhanh chóng."
     },
     "fab": {
       "add": "Thêm thẻ",
@@ -137,15 +137,16 @@
     "cancelButton": "Từ Chối"
   },
   "onboardingScreen": {
+    "title": "Orange⁺",
     "title1": "Quản lý mã QR",
-    "subtitle1": "Quản lý và lưu trữ mã QR cho tài khoản ngân hàng, thẻ thành viên và ví điện tử.",
+    "subtitle1": "Quản lý và lưu trữ mã QR cho tài khoản ngân hàng, thẻ thành viên và ví tiền.",
     "title2": "Đồng bộ đám mây",
     "subtitle2": "Mã QR của bạn được lưu trữ và đồng bộ an toàn trên đám mây.",
-    "finishTitle": "Sẵn sàng sử dụng",
-    "finishSubtitle": "Quản lý và truy cập mã QR của bạn mọi lúc, mọi nơi.",
+    "title3": "Sẵn sàng sử dụng",
+    "subtitle3": "Quản lý và truy cập mã QR của bạn mọi lúc, mọi nơi.",
     "nextButton": "Tiếp theo",
     "skipButton": "Bỏ qua",
-    "finishButton": "Bắt đầu"
+    "finishButton": "Tiếp theo"
   },
   "detailsScreen": {
     "edit": "Chỉnh sửa",
@@ -155,7 +156,9 @@
     "createQrCode": "Tạo mã QR nhận tiền",
     "receivePlaceholder": "Nhập số tiền cần nhận",
     "generatingQRCode": "Đang tạo mã QR...",
-    "failedToOpenGoogleMaps": "Không thể mở Google Maps."
+    "failedToOpenGoogleMaps": "Không thể mở Google Maps.",
+    "bankTransfer": "Chuyển khoản với",
+        "transferMessage": "Chuyển tiền tới"
   },
   "settingsScreen": {
     "title": "Cài đặt",

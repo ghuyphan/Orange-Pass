@@ -6,7 +6,7 @@ import Barcode from 'react-native-barcode-svg';
 import { useTheme } from '@/context/ThemeContext';
 import { getIconPath } from '@/utils/returnIcon';
 import { returnItemData } from '@/utils/returnItemData';
-import { returnMidpointColor } from '@/utils/returnMidpointColor';
+import { returnMidpointColors } from '@/utils/returnMidpointColor';
 import { LinearGradient } from 'expo-linear-gradient';
 
 export type ThemedPinnedCardProps = {
@@ -28,7 +28,7 @@ export const ThemedPinnedCard = memo(function ThemedPinnedCard({
   accountNumber,
   style,
 }: ThemedPinnedCardProps): JSX.Element {
-  const { currentTheme } = useTheme();
+  // const { currentTheme } = useTheme();
   const { width } = useWindowDimensions();
 
   // Calculate dimensions with useMemo
@@ -39,17 +39,24 @@ export const ThemedPinnedCard = memo(function ThemedPinnedCard({
   // Pre-calculate data with useMemo
   const { name, color, accent_color } = useMemo(() => returnItemData(code, type), [code, type]);
   const iconPath = useMemo(() => getIconPath(code), [code]);
-  const gradientColors = useMemo(() => 
-    currentTheme === 'light'
-      ? [color?.light || '#ffffff', returnMidpointColor(color.light, accent_color.light) || '#cccccc', accent_color?.light || '#f0f0f0']
-      : [color?.dark || '#000000', returnMidpointColor(color.dark, accent_color.dark) || '#505050', accent_color?.dark || '#303030']
-  , [currentTheme, color, accent_color]);
+  // const gradientColors = useMemo(() => 
+  //   currentTheme === 'light'
+  //     ? [color?.light || '#ffffff', returnMidpointColor(color.light, accent_color.light) || '#cccccc', accent_color?.light || '#f0f0f0']
+  //     : [color?.dark || '#000000', returnMidpointColor(color.dark, accent_color.dark) || '#505050', accent_color?.dark || '#303030']
+  // , [currentTheme, color, accent_color]);
 
   return (
     <LinearGradient
-      colors={gradientColors}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
+      colors={
+        returnMidpointColors(
+          color?.light || '#FAF3E7',
+          accent_color?.light || '#D6C4AF',
+          6 // Number of blending steps
+        ) || ['#FAF3E7', '#D6C4AF']
+      }
+      start={{ x: 0.25, y: 0.25 }}
+      end={{ x: 0.75, y: 0.75 }}
+      
       style={[styles.itemContainer, style]}
     >
       <View style={styles.headerContainer}>
@@ -64,7 +71,7 @@ export const ThemedPinnedCard = memo(function ThemedPinnedCard({
       </View>
 
       <View style={styles.qrContainer}>
-        <View style={styles.qr}> 
+        <View style={styles.qr}>
           {metadata_type === 'qr' ? (
             <QRCode
               value={metadata}
@@ -117,7 +124,7 @@ const styles = StyleSheet.create({
   leftHeaderContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10, 
+    gap: 10,
   },
   iconContainer: {
     width: 35,
@@ -138,17 +145,17 @@ const styles = StyleSheet.create({
   qrContainer: {
     flexDirection: 'column',
     alignItems: 'center',
-    justifyContent: 'center', 
+    justifyContent: 'center',
     overflow: 'hidden',
   },
   qr: {
-    padding: 10, 
+    padding: 10,
     borderRadius: 16,
     backgroundColor: 'white',
-    marginBottom: 10,   
+    marginBottom: 10,
   },
   infoContainer: {
-    justifyContent: 'center', 
+    justifyContent: 'center',
   },
   accountName: {
     fontSize: 16,
@@ -164,6 +171,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
     color: 'white',
-    maxWidth: 250, 
+    maxWidth: 250,
   }
 });

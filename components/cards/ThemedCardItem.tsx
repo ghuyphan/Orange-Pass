@@ -7,9 +7,9 @@ import QRCode from 'react-native-qrcode-svg';
 import Barcode from 'react-native-barcode-svg';
 import { getIconPath } from '@/utils/returnIcon';
 import { returnItemData } from '@/utils/returnItemData';
-import { returnMidpointColor } from '@/utils/returnMidpointColor';
+import { returnMidpointColors } from '@/utils/returnMidpointColor';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useTheme } from '@/context/ThemeContext';
+// import { useTheme } from '@/context/ThemeContext';
 
 export type ThemedCardItemProps = {
   code: string;
@@ -40,7 +40,7 @@ const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps):
     onDrag,
   } = props;
 
-  const { currentTheme } = useTheme();
+  // const { currentTheme } = useTheme();
 
   const { name, color, accent_color } = useMemo(() => returnItemData(code, type), [code, type]);
   const iconPath = useMemo(() => getIconPath(code), [code]);
@@ -63,28 +63,35 @@ const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps):
     ];
   }, []);
 
-  const gradientColors = useMemo(() => {
-    return currentTheme === 'light'
-      ? [
-        color?.light || '#FAF3E7',  // Light beige with a hint of cream
-        returnMidpointColor(color.light, accent_color.light) || '#EADBC8',  // Warmer mid-tone beige
-        accent_color?.light || '#D6C4AF'  // Deeper beige for clear contrast
-      ]
-      : [
-        color?.dark || '#21252b',
-        returnMidpointColor(color.dark, accent_color.dark) || '#343a40',
-        accent_color?.dark || '#495057'
-      ];
-  }, [currentTheme, color, accent_color]);
+  // const gradientColors = useMemo(() => {
+  //   return currentTheme === 'light'
+  //     ? [
+  //       color?.light || '#FAF3E7',  // Light beige with a hint of cream
+  //       returnMidpointColor(color.light, accent_color.light) || '#EADBC8',  // Warmer mid-tone beige
+  //       accent_color?.light || '#D6C4AF'  // Deeper beige for clear contrast
+  //     ]
+  //     : [
+  //       color?.dark || '#21252b',
+  //       returnMidpointColor(color.dark, accent_color.dark) || '#343a40',
+  //       accent_color?.dark || '#495057'
+  //     ];
+  // }, [currentTheme, color, accent_color]);
 
 
   const renderContent = () => (
     <LinearGradient
-      colors={gradientColors}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
+      colors={
+        returnMidpointColors(
+          color?.light || '#FAF3E7',
+          accent_color?.light || '#D6C4AF',
+          6 // Number of blending steps
+        ) || ['#FAF3E7', '#D6C4AF']
+      }
+      start={{ x: 0.25, y: 0.25 }}
+      end={{ x: 0.75, y: 0.75 }}
       style={styles.itemContainer}
     >
+
       <View style={styles.headerContainer}>
         <View style={styles.headerLeft}>
           {onDrag && <View style={styles.dragIconContainer}>

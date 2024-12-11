@@ -515,7 +515,7 @@ const styles = StyleSheet.create({
     marginTop: STATUSBAR_HEIGHT + 10,
     flex: 2.5,
     backgroundColor: 'black',
-    borderRadius: 15,
+    borderRadius: 16,
     overflow: 'hidden',
   },
   loader: {

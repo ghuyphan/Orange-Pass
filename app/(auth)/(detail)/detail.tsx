@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import { StyleSheet, View, Linking, Keyboard, FlatList, TextInput, Pressable, Image } from 'react-native';
+import React, { useState, useCallback, useMemo } from 'react';
+import { StyleSheet, View, Linking, FlatList, TextInput, Pressable, Image } from 'react-native';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store/rootReducer';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
@@ -18,7 +18,6 @@ import { getVietQRData } from '@/utils/vietQR';
 import { ThemedStatusToast } from '@/components/toast/ThemedOfflineToast';
 import { throttle } from 'lodash';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
-import { useLocale } from '@/context/LocaleContext';
 import { useTheme } from '@/context/ThemeContext';
 import { getIconPath } from '@/utils/returnIcon';
 import { returnItemsByType } from '@/utils/returnItemData';
@@ -28,8 +27,22 @@ const formatAmount = (amount: string) => {
     return amount.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 };
 
+interface Item {
+    code: string;
+    name: string;
+}
+
+const SPECIFIC_BANKS = [
+    'ocb', 'icb', 'mb', 'bidv', 'vcb', 'tcb', 'acb', 'vpb', 'vib-2', 'shb',
+    'lpb', 'seab', 'vietbank', 'cake', 'hdb', 'vba', 'tpb', 'timo', 'vib',
+    'shbvn', 'nab', 'abb', 'eib', 'coopbank', 'pvcb', 'wvn', 'klb', 'bvb',
+    'vab', 'ncb', 'acb-biz', 'oceanbank', 'pbvn', 'sgicb', 'cimb'
+];
+
+const AMOUNT_SUGGESTIONS = ['10,000', '50,000', '100,000', '500,000', '1,000,000'];
+
 export default function DetailScreen() {
-    const { locale } = useLocale();
+    // const { locale } = useLocale();
     useUnmountBrightness(1, false);
     const { item: encodedItem } = useLocalSearchParams();
     const router = useRouter();
@@ -46,8 +59,12 @@ export default function DetailScreen() {
     // Derived values and constants
     const cardColor = currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground;
     const iconColor = currentTheme === 'light' ? Colors.light.text : Colors.dark.text;
-    const amountSuggestions = ['10,000', '50,000', '100,000', '500,000', '1,000,000'];
-    const ewallet = returnItemsByType('ewallet');
+    const filteredEwallet = useMemo(() => {
+        const ewallet = returnItemsByType('bank');
+        return ewallet.filter(bank =>
+            SPECIFIC_BANKS.includes(bank.code.toLowerCase())
+        );
+    }, []);
 
     // Memoized item parsing to prevent unnecessary re-renders
     const item = useMemo(() => {
@@ -78,14 +95,23 @@ export default function DetailScreen() {
             setIsToastVisible(true);
             setToastMessage(t('detailsScreen.failedToOpenGoogleMaps'));
         });
-    }, [item, t]);
+    }, [item]);
+
+    const openBank = useCallback(() => {
+        const url = `https://dl.vietqr.io/pay?app=tpb`;
+
+        Linking.openURL(url).catch((err) => {
+            console.error('Failed to open bank link:', err);
+            setIsToastVisible(true);
+            setToastMessage(t('detailsScreen.failedToOpenGoogleMaps'));
+        });
+    }, []);
 
     // Corrected onToggleTransfer with correct dependencies
     const onToggleTransfer = useCallback(() => {
         if (isOffline) return;
         transferHeight.value = transferHeight.value === 0 ? 100 : 0;
     }, [isOffline, transferHeight]);
-
 
     // Corrected transferAmount with proper dependencies
     const transferAmount = useCallback(
@@ -98,12 +124,13 @@ export default function DetailScreen() {
 
             try {
                 const itemName = returnItemData(item.code, item.type);
+                const message = t('detailsScreen.transferMessage') + ' ' + item.account_name;
                 const response = await getVietQRData(
                     item.account_number,
                     item.account_name,
-                    itemName?.number_code || '',
+                    itemName?.bin || '',
                     parseInt(amount.replace(/,/g, '')),
-                    'Hello' 
+                    message
                 );
 
                 const qrCode = response.data.qrCode;
@@ -145,22 +172,38 @@ export default function DetailScreen() {
         pointerEvents: transferHeight.value > 0 ? 'auto' : 'none',
     }));
 
-    // SuggestionItem component 
-    const SuggestionItem = React.memo(({ item, onPress: onPress }: { item: string; onPress: (item: string) => void }) => (
+    const renderSuggestionItem = useCallback(({ item }: { item: string }) => (
         <Pressable
-            onPress={() => onPress(item)}
+            onPress={() => setAmount(item)}
             android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
             style={[
                 styles.suggestionItem,
                 {
-                    backgroundColor: currentTheme === 'light' ? Colors.light.buttonBackground : Colors.dark.buttonBackground,
+                    backgroundColor: currentTheme === 'light'
+                        ? Colors.light.buttonBackground
+                        : Colors.dark.buttonBackground,
                     overflow: 'hidden',
                 },
             ]}
         >
             <ThemedText style={styles.suggestionText}>{item}</ThemedText>
         </Pressable>
-    ));
+    ), [currentTheme]);
+
+    const renderPaymentMethodItem = useCallback(({ item, onPress }: { item: Item, onPress: (bankCode: string) => void }) => (
+        <View style={styles.botSuggestionItem}>
+            <Pressable
+                style={{ borderRadius: 16, overflow: 'hidden', elevation: 3, backgroundColor: '#fff', height: 55, width: 55, justifyContent: 'center', alignItems: 'center' }}
+                // onPress={onOpenPayment(item.code)}
+                onPress={() => onPress(item.code)}
+                android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
+            >
+                <Image source={getIconPath(item.code)} style={{ width: 30, height: 30 }} resizeMode='contain' />
+            </Pressable>
+            <ThemedText numberOfLines={1} style={{ fontSize: 12, maxWidth: 55 }}>{item.name}</ThemedText>
+        </View>
+    ), []);
+
 
     if (!item) {
         return (
@@ -245,20 +288,41 @@ export default function DetailScreen() {
                                     </Pressable>
                                 </View>
                                 <FlatList
-                                    data={amountSuggestions}
+                                    data={AMOUNT_SUGGESTIONS}
                                     horizontal
                                     style={styles.suggestionList}
                                     showsHorizontalScrollIndicator={false}
-                                    keyExtractor={(item) => item}
+                                    keyExtractor={(item) => item.toString()}
                                     contentContainerStyle={styles.suggestionListContent}
-                                    renderItem={({ item }) => (
-                                        <SuggestionItem item={item} onPress={setAmount} />
-                                    )}
+                                    renderItem={renderSuggestionItem}
+                                    initialNumToRender={3}
+                                    maxToRenderPerBatch={3}
+                                    windowSize={3}
                                 />
                             </Animated.View>
                         </View>
                     )}
 
+                    {item.type === 'store' && (
+                        <View style={[styles.bottomContainer, { backgroundColor: cardColor }]}>
+                            <View style={styles.bottomTitle}>
+                                <MaterialCommunityIcons name="bank-outline" size={18} color={iconColor} />
+                                <ThemedText>{t('detailsScreen.bankTransfer')}</ThemedText>
+                                <Image source={require('@/assets/images/vietqr.png')} style={{ height: 30, width: 70, marginLeft: -15 }} resizeMode="contain" />
+                            </View>
+                            <FlatList
+                                data={filteredEwallet}
+                                horizontal
+                                style={styles.botSuggestionList}
+                                showsHorizontalScrollIndicator={false}
+                                keyExtractor={(item) => item.code}
+                                contentContainerStyle={styles.botSuggestionListContent}
+                                renderItem={({ item }) => (
+                                    renderPaymentMethodItem({ item: { code: item.code, name: item.name }, onPress: openBank })
+                                )}
+                            />
+                        </View>
+                    )}
                     <ThemedStatusToast
                         isSyncing={isSyncing}
                         isVisible={isToastVisible}
@@ -268,35 +332,6 @@ export default function DetailScreen() {
                         style={styles.toastContainer}
                     />
                 </View>
-
-                {item.type === 'store' && (
-                    <View style={[styles.bottomContainer, { backgroundColor: cardColor }]}>
-                        <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
-                            <MaterialCommunityIcons name="wallet-outline" size={18} color={iconColor} />
-                            <ThemedText>Pay With E-Wallet</ThemedText>
-                        </View>
-                        <FlatList 
-                            data={ewallet}
-                            horizontal
-                            style={styles.botSuggestionList}
-                            showsHorizontalScrollIndicator={false}
-                            keyExtractor={(item) => item.code}
-                            contentContainerStyle={styles.botSuggestionListContent}
-                            renderItem={({ item }) => (
-                                <View style={{ flexDirection: 'column', gap: 0, alignItems: 'center', justifyContent: 'center' }}>
-                                    <Pressable
-                                        style={{ borderRadius: 16, overflow: 'hidden', elevation: 3 }}
-                                        onPress={() => console.log('hi')} 
-                                        android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
-                                    >
-                                        <Image source={getIconPath(item.code)} style={{ width: 50, height: 50, borderRadius: 16 }} resizeMode='contain' />
-                                    </Pressable>
-                                    <ThemedText style={{ fontSize: 12 }}>{item.name}</ThemedText>
-                                </View>
-                            )}
-                        />
-                    </View>
-                )}
             </KeyboardAwareScrollView>
         </>
     );
@@ -339,7 +374,7 @@ const styles = StyleSheet.create({
     },
     labelText: {
         fontSize: 16,
-        },
+    },
     transferContainer: {
         // gap: 10,
     },
@@ -381,14 +416,14 @@ const styles = StyleSheet.create({
     botSuggestionList: {
     },
     botSuggestionListContent: {
-        gap: 20,
-        paddingHorizontal: 5,
+        gap: 25,
+        paddingHorizontal: 15,
     },
     botSuggestionItem: {
-        paddingHorizontal: 15,
-        paddingVertical: 5,
-        borderRadius: 16,
-        overflow: 'hidden',
+        flexDirection: 'column',
+        gap: 5,
+        alignItems: 'center',
+        justifyContent: 'center'
     },
     botSuggestionText: {
         fontSize: 16,
@@ -401,10 +436,16 @@ const styles = StyleSheet.create({
     },
     bottomContainer: {
         flexDirection: 'column',
-        marginTop: 20,
-        gap: 20,
-        paddingHorizontal: 15,
-        paddingVertical: 10,
+        // marginTop: 20,
+        gap: 15,
+        // paddingHorizontal: 15,
+        paddingBottom: 10,
         borderRadius: 16
+    },
+    bottomTitle: {
+        flexDirection: 'row',
+        gap: 10,
+        alignItems: 'center',
+        paddingHorizontal: 15
     }
 });

@@ -13,7 +13,7 @@ interface ItemType {
   full_name: string;
   normalized_name: string;
   normalized_full_name: string;
-  number_code?: string;
+  bin?: string;
   color: { light: string; dark: string };
   accent_color: { light: string; dark: string };
 }
@@ -106,7 +106,7 @@ class DataManager {
       full_name: '',
       normalized_name: '',
       normalized_full_name: '',
-      number_code: '',
+      bin: '',
       color: { light: '', dark: '' },
       accent_color: { light: '', dark: '' }
     };
