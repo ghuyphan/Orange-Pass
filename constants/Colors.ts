@@ -28,7 +28,7 @@ export const Colors = {
     placeHolder: '#757575', 
     tabIconDefault: '#757575',
     tabIconSelected: tintColorDark,
-    error: '#EF9A9A',
+    error: '#f2726f',
     toastBackground: '#2E282A',
     buttonBackground: '#604D45',
     buttonHighlight: '#6A4F4B', 

@@ -135,7 +135,7 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(({
                     {iconName && (
                         <MaterialCommunityIcons
                             name={iconName}
-                            size={20}
+                            size={18}
                             color={placeholderColor}
                         />
                     )}
@@ -203,8 +203,9 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(({
                         {/* Error Icon */}
                         {isError && errorMessage && (
                             <Tooltip title={errorMessage}
-                            enterTouchDelay={0}
-                            leaveTouchDelay={1500}
+                                enterTouchDelay={0}
+                                leaveTouchDelay={1500}
+                                theme={{ colors: { onSurface: errorColor } }}
                             >
                                 <Pressable
                                     onPress={() => { }}

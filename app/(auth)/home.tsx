@@ -27,10 +27,10 @@ import { height } from '@/constants/Constants';
 // Hooks and utils
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { triggerHapticFeedback } from '@/utils/haptic';
-// import { useLocale } from '@/context/LocaleContext';
-// import { useMMKVString } from 'react-native-mmkv';
-// import { storage } from '@/utils/storage';
-// import { useTheme } from '@/context/ThemeContext';
+import { useLocale } from '@/context/LocaleContext';
+import { useMMKVString } from 'react-native-mmkv';
+import { storage } from '@/utils/storage';
+import { useTheme } from '@/context/ThemeContext';
 
 // Components
 import { ThemedText } from '@/components/ThemedText';
@@ -64,15 +64,11 @@ import {
 
 // Internationalization
 import { t } from '@/i18n';
-// import { Colors } from '@/constants/Colors';
-
-// const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
-// const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 function HomeScreen() {
-  // const { updateLocale } = useLocale();
-  // const { currentTheme } = useTheme();
-  // const [locale, setLocale] = useMMKVString('locale', storage);
+  const { updateLocale } = useLocale();
+  const { currentTheme } = useTheme();
+  const [locale, setLocale] = useMMKVString('locale', storage);
   const color = useThemeColor({ light: '#3A2E24', dark: '#FFF5E1' }, 'text');
   const [isEmpty, setIsEmpty] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
@@ -86,7 +82,7 @@ function HomeScreen() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [isActive, setIsActive] = useState(false);
   const [filter, setFilter] = useState('all');
-  const [isSearching, setIsSearching] = useState(false);
+  // const [isSearching, setIsSearching] = useState(false);
   const inputRef = useRef<TextInput>(null);
 
   const isEmptyShared = useSharedValue(isEmpty ? 1 : 0);
@@ -105,6 +101,7 @@ function HomeScreen() {
   const scrollY = useSharedValue(0);
 
   const bottomSheetRef = useRef<BottomSheet>(null);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [fabOpen, setFabOpen] = useState(false);
   const [isBlurVisible, setIsBlurVisible] = useState(false); // For rendering
   const [isBlurAnimating, setIsBlurAnimating] = useState(false); // For animation
@@ -277,17 +274,6 @@ function HomeScreen() {
     }
   }, [isEmpty, isEmptyShared]);
 
-  useEffect(() => {
-    if (isSearching) {
-      // Use a small timeout to ensure the input is rendered
-      const focusTimeout = setTimeout(() => {
-        inputRef.current?.focus();
-      }, 300); // Small delay to allow rendering
-
-      // Clean up the timeout
-      return () => clearTimeout(focusTimeout);
-    }
-  }, [isSearching, inputRef]);
 
   useEffect(() => {
     if (fabOpen) {
@@ -308,103 +294,86 @@ function HomeScreen() {
     });
   };
 
-  const searchContainerStyle = useAnimatedStyle(() => {
-    return {
-      paddingHorizontal: 15,
-      height: isSearching
-        ? withTiming(40, {
-          duration: 250,
-          easing: Easing.bezier(0.4, 0, 0.2, 1)
-        })
-        : withTiming(0, {
-          duration: 200,
-          easing: Easing.bezier(0.4, 0, 0.2, 1)
-        }),
-      opacity: withTiming(isSearching ? 1 : 0, {
-        duration: 250,
-        easing: Easing.out(Easing.ease)
-      }),
-      transform: [
-        {
-          scale: withTiming(isSearching ? 1 : 0.95, {
-            duration: 250,
-            easing: Easing.out(Easing.ease)
-          })
-        },
-        {
-          translateY: withTiming(isSearching ? 0 : -5, {
-            duration: 250,
-            easing: Easing.out(Easing.ease)
-          })
-        }
-      ],
-      overflow: 'hidden',
-      pointerEvents: isSearching ? 'auto' : 'none',
-      marginBottom: isSearching
-        ? withTiming(15, {
-          duration: 250,
-          easing: Easing.bezier(0.4, 0, 0.2, 1)
-        })
-        : withTiming(0, {
-          duration: 200,
-          easing: Easing.bezier(0.4, 0, 0.2, 1)
-        }),
-    };
-  }, [isSearching]);
 
   const titleContainerStyle = useAnimatedStyle(() => {
-    const scrollThreshold = isSearching ? 180 : 120;
-    const animationRange = 50;
-
-    // Use withTiming for smoother, more performant animations
+    const SCROLL_THRESHOLD = 180;
+    const ANIMATION_RANGE = 50;
+  
     const opacity = interpolate(
       scrollY.value,
-      [scrollThreshold, scrollThreshold + animationRange],
+      [SCROLL_THRESHOLD, SCROLL_THRESHOLD + ANIMATION_RANGE],
       [1, 0],
       Extrapolation.CLAMP
     );
-
+  
     const translateY = interpolate(
       scrollY.value,
-      [0, scrollThreshold],
+      [0, SCROLL_THRESHOLD],
       [0, -35],
       Extrapolation.CLAMP
     );
-
+  
+    const shouldReduceZIndex = 
+      scrollY.value > 120 || 
+      isActive || 
+      isSheetOpen === true;
+  
     return {
       opacity,
       transform: [{ translateY }],
-      zIndex: scrollY.value > 120 || isActive ? 0 : 1,
+      zIndex: shouldReduceZIndex ? 0 : 1,
     };
-  }, [isSearching, isActive]); // Memoize based on these dependencies
+  }, [isActive, isSheetOpen]);
 
   const listHeaderStyle = useAnimatedStyle(() => {
-    const fadeStartThreshold = isSearching ? 10 : 5;
-    const fadeCompleteThreshold = isSearching ? 60 : 50;
-
-    const opacity = interpolate(
-      scrollY.value,
-      [fadeStartThreshold, fadeCompleteThreshold],
-      [1, 0],
-      Extrapolation.CLAMP
+    const opacity = withTiming(
+      interpolate(
+        scrollY.value,
+        [0, 50],
+        [1, 0],
+        Extrapolation.CLAMP
+      ),
+      {
+        duration: 250,
+        easing: Easing.out(Easing.ease)
+      }
     );
 
-    const scale = interpolate(
-      scrollY.value,
-      [0, fadeCompleteThreshold],
-      [1, 0.95],
-      Extrapolation.CLAMP
+    const scale = withTiming(
+      interpolate(
+        scrollY.value,
+        [0, 50],
+        [1, 0.95],
+        Extrapolation.CLAMP
+      ),
+      {
+        duration: 150,
+        easing: Easing.out(Easing.ease)
+      }
+    );
+
+    const translateY = withTiming(
+      interpolate(
+        scrollY.value,
+        [0, 50],
+        [0, -5],
+        Extrapolation.CLAMP
+      ),
+      {
+        duration: 150,
+        easing: Easing.out(Easing.ease)
+      }
     );
 
     return {
       opacity,
       transform: [
         { scale },
-        // { translateY }
+        { translateY }
       ],
-      pointerEvents: scrollY.value > fadeCompleteThreshold ? 'none' : 'auto',
+      pointerEvents: scrollY.value > 50 ? 'none' : 'auto',
     };
-  }, [isSearching]); // Memoize based on search state
+  }, []);
 
   const fabStyle = useAnimatedStyle(() => {
     const marginBottom = withTiming(isBottomToastVisible || isToastVisible ? 40 : 10, {
@@ -515,16 +484,12 @@ function HomeScreen() {
     }
   }, []);
 
-  const scrollToTop = useCallback(() => {
-    closeFAB();
-    flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
-  }, [flatListRef]);
-
   const handleExpandPress = useCallback((id: string) => {
     setSelectedItemId(id);
+    setIsSheetOpen(true);
     bottomSheetRef.current?.expand();
     closeFAB();
-  }, [setSelectedItemId, bottomSheetRef]);
+  }, [setSelectedItemId, bottomSheetRef, setIsSheetOpen, closeFAB]);
 
   const onDeleteSheetPress = useCallback(() => {
     bottomSheetRef.current?.close();
@@ -607,24 +572,21 @@ function HomeScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      {/* <ThemedView style={styles.blurContainer} /> */}
-      <Animated.View style={[styles.titleContainer, titleContainerStyle]} pointerEvents="box-none">
-        <View style={styles.headerContainer} pointerEvents='box-none'>
-          <ThemedText style={styles.titleText} type="title">{t('homeScreen.title')}</ThemedText>
-          <View style={styles.titleButtonContainer}>
-            {!isEmpty && (
-              <ThemedButton
-                iconName="magnify"
-                style={styles.titleButton}
-                onPress={() => {
-                  if (isLoading) return;
-                  setIsSearching(!isSearching);
-                  scrollToTop();
-
-                }}
-              />
-            )}
-
+      <Animated.View
+        style={[styles.titleContainer, titleContainerStyle]}
+        pointerEvents="box-none"
+      >
+        <View
+          style={styles.headerContainer}
+          pointerEvents="box-none"
+        >
+          <ThemedText style={styles.titleText} type="title">
+            {t('homeScreen.title')}
+          </ThemedText>
+          <View
+            style={styles.titleButtonContainer}
+            pointerEvents="auto"  // Crucially, set this to 'auto'
+          >
             <ThemedButton
               iconName="qrcode-scan"
               style={styles.titleButton}
@@ -633,7 +595,8 @@ function HomeScreen() {
             <ThemedButton
               iconName="cog"
               style={styles.titleButton}
-              onPress={onNavigateToSettingsScreen} />
+              onPress={onNavigateToSettingsScreen}
+            />
           </View>
         </View>
       </Animated.View>
@@ -661,10 +624,11 @@ function HomeScreen() {
             <Animated.View
               style={[listHeaderStyle, { marginBottom: 30 }]}
             >
-              <Animated.View
+              {/* <Animated.View
                 style={[searchContainerStyle]}
 
-              >
+              > */}
+              <View style={styles.searchContainer}>
                 <ThemedIconInput
                   style={styles.searchInput}
                   placeholder={t('homeScreen.searchPlaceholder')}
@@ -673,7 +637,8 @@ function HomeScreen() {
                   onChangeText={setSearchQuery}
                   ref={inputRef}
                 />
-              </Animated.View>
+              </View>
+              {/* </Animated.View> */}
               <ThemedFilter
                 selectedFilter={filter}
                 onFilterChange={setFilter}
@@ -704,6 +669,7 @@ function HomeScreen() {
           onScrollOffsetChange={onScrollOffsetChange}
           decelerationRate={'fast'}
           scrollEnabled={!fabOpen}
+          // pointerEvents='box-none'
         />
       )}
       {!isLoading &&
@@ -736,7 +702,7 @@ function HomeScreen() {
         style={styles.toastContainer}
       />
       <ThemedBottomToast
-        isSyncing={isSyncing}
+        // isSyncing={isSyncing}
         isVisible={isBottomToastVisible}
         message={bottomToastMessage}
         iconName={bottomToastIcon as keyof typeof MaterialCommunityIcons.glyphMap}
@@ -744,19 +710,15 @@ function HomeScreen() {
         backgroundColor={bottomToastColor}
 
       />
-      {/* <ThemedBottomSheet
-        ref={bottomSheetRef}
-        onDeletePress={onDeleteSheetPress}
-        onEditPress={() => { }}
-        editText={t('homeScreen.edit')}
-        deleteText={t('homeScreen.delete')}
-      /> */}
       <ThemedReuseableSheet
         // isVisible={shouldRenderSheet}
         ref={bottomSheetRef}
         title="Manage Item"
-        description="Choose an action"
-        snapPoints={['25%']}
+        // description="Choose an action"
+        onClose={() => {setTimeout(() => {
+          setIsSheetOpen(false)
+        }, 50);}}
+        snapPoints={['20%']}
         actions={[
           {
             icon: 'pencil-outline',
@@ -820,6 +782,10 @@ const styles = StyleSheet.create({
     pointerEvents: 'box-none',
   },
   titleButton: {
+  },
+  searchContainer: {
+    paddingHorizontal: 15,
+    marginBottom: 10
   },
   searchInput: {
     borderRadius: 16,

@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
 },
 title:{
-  fontSize: 25,
+  fontSize: 28,
 },
   inputContainer: {
     // padding: 5,

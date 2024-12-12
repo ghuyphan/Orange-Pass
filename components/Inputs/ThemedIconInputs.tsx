@@ -91,7 +91,7 @@ export const ThemedIconInput = forwardRef<TextInput, ThemedIconInputProps>(({
                             <View style={styles.iconTouchable}>
                                 <Ionicons
                                     name={'close-circle'}
-                                    size={20}
+                                    size={16}
                                     color={color}
                                 />
                             </View>

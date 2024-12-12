@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
     },
     title: {
         marginBottom: 20,
-        fontSize: 22,
+        fontSize: 28,
         textAlign: 'center',
     },
     inputContainer: {

@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Keyboard, StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -65,7 +65,7 @@ const AddScreen: React.FC = () => {
     return {
       opacity,
       transform: [{ translateY }],
-      zIndex: scrollY.value > 50 ? 0 : 1,
+      // zIndex: scrollY.value > 50 ? 0 : 1,
     };
   });
 
@@ -95,6 +95,14 @@ const AddScreen: React.FC = () => {
   const handleSheetChanges = useCallback((index: number) => {
     console.log('handleSheetChanges', index);
   }, []);
+  const onOpenBottomSheet = useCallback(() => {
+    if (Keyboard.isVisible()) {
+      Keyboard.dismiss(); 
+      // bottomSheetRef.current?.expand();
+    } else {
+      bottomSheetRef.current?.expand();
+    }
+  },[])
 
   const renderCardItem = (metadata: string) => {
 
@@ -180,7 +188,7 @@ const AddScreen: React.FC = () => {
                 placeholder={t('addScreen.metadataPlaceholder')}
                 // label={t('addScreen.metadataLabel')}
                 value={values.metadata}
-                onPress={() => bottomSheetRef.current?.snapToIndex(0)}
+                onPress={onOpenBottomSheet}
               // disabled={codeValue?.toString() !== ''}
               />
             </ThemedView>

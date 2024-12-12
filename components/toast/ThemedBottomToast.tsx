@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, ReactNode } from 'react';
 import { StyleSheet, View, StyleProp, ViewStyle, ActivityIndicator, Platform } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
@@ -9,18 +9,28 @@ import { useTheme } from '@/context/ThemeContext';
 export type ThemedBottomToastProps = {
   /** The icon to display in the toast */
   iconName?: keyof typeof MaterialCommunityIcons.glyphMap;
+  
   /** The message to display in the toast */
   message: string;
+  
   /** Whether the toast is visible */
   isVisible?: boolean;
-  /** Whether the toast is syncing */
-  isSyncing?: boolean;
-  /** Background color for the input */
+  
+  /** Determines the type of indicator to show */
+  indicatorType?: 'none' | 'spinner' | 'icon';
+  
+  /** Optional icon to show instead of spinner */
+  indicatorIcon?: ReactNode;
+  
+  /** Background color for the toast */
   backgroundColor?: string;
-  /** Style for the input */
+  
+  /** Style for the toast container */
   style?: StyleProp<ViewStyle>;
+  
   /** The duration of the toast in milliseconds */
   duration?: number;
+  
   /** Callback function to toggle the visibility of the toast */
   onVisibilityToggle?: (isVisible: boolean) => void;
 };
@@ -29,7 +39,8 @@ export function ThemedBottomToast({
   iconName,
   message,
   isVisible = false,
-  isSyncing = false,
+  indicatorType = 'none',
+  indicatorIcon,
   backgroundColor,
   style = {},
   duration = 4000,
@@ -41,20 +52,20 @@ export function ThemedBottomToast({
   // Reanimated values for animation
   const opacity = useSharedValue(0);
   const translateY = useSharedValue(50);
-
+  
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
     transform: [{ translateY: translateY.value }],
   }));
 
-  // useCallback for onVisibilityToggle to prevent unnecessary re-renders
+  // Callback for onVisibilityToggle to prevent unnecessary re-renders
   const handleVisibilityToggle = useCallback(
-    (isVisible: boolean) => {
+    (visible: boolean) => {
       if (onVisibilityToggle) {
-        onVisibilityToggle(isVisible);
+        onVisibilityToggle(visible);
       }
     },
-    [onVisibilityToggle],
+    [onVisibilityToggle]
   );
 
   // Handle visibility and animation
@@ -63,11 +74,11 @@ export function ThemedBottomToast({
       // Show toast with animation
       opacity.value = withTiming(1, { duration: 300 });
       translateY.value = withTiming(0, { duration: 300 });
-
+      
       const timer = setTimeout(() => {
         handleVisibilityToggle(false);
       }, duration);
-
+      
       return () => clearTimeout(timer);
     } else {
       // Hide toast with animation
@@ -76,7 +87,17 @@ export function ThemedBottomToast({
     }
   }, [isVisible, duration, handleVisibilityToggle, opacity, translateY]);
 
-  // Removed unnecessary isAnimationComplete state and conditional rendering
+  // Determine the indicator to render
+  const renderIndicator = () => {
+    switch (indicatorType) {
+      case 'spinner':
+        return <ActivityIndicator size={15} color={color} />;
+      case 'icon':
+        return indicatorIcon || null;
+      default:
+        return null;
+    }
+  };
 
   return (
     <Animated.View
@@ -84,20 +105,20 @@ export function ThemedBottomToast({
         styles.toastContainer,
         {
           paddingBottom: Platform.OS === 'ios' ? 20 : 0,
-          backgroundColor: backgroundColor ? backgroundColor : 
-                             currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground,
+          backgroundColor: backgroundColor || 
+            (currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground),
         },
         style,
         animatedStyle,
       ]}
     >
       <View style={styles.toastTitle}>
-      {!iconName || isSyncing ? (
-          <ActivityIndicator size={15} color={color} />
-        ) : (
-          <MaterialCommunityIcons name={iconName || 'information-outline'} size={15} color={color} />
-        )}
-        <ThemedText style={styles.toastText} numberOfLines={2} type="defaultSemiBold">
+        {renderIndicator()}
+        <ThemedText 
+          style={styles.toastText} 
+          numberOfLines={2} 
+          type="defaultSemiBold"
+        >
           {message}
         </ThemedText>
       </View>
@@ -107,7 +128,7 @@ export function ThemedBottomToast({
 
 const styles = StyleSheet.create({
   toastContainer: {
-    paddingTop: 5,
+    paddingVertical: 5,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
@@ -122,3 +143,5 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
 });
+
+export default ThemedBottomToast;
