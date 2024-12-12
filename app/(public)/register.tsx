@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Keyboard } from 'react-native';
+import { StyleSheet, Keyboard, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { Formik } from 'formik';
 import { router } from 'expo-router';
@@ -26,6 +26,7 @@ export default function RegisterScreen() {
     const [isToastVisible, setIsToastVisible] = useState(false);
     const [isKeyboardVisible, setKeyboardVisible] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
+    const cardColor = currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground;
 
     useEffect(() => {
         const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
@@ -78,58 +79,60 @@ export default function RegisterScreen() {
                     keyboardShouldPersistTaps="handled"
                     style={[{ backgroundColor: currentTheme === 'light' ? Colors.light.background : Colors.dark.background }]}
                     contentContainerStyle={styles.container}
-                    extraScrollHeight={200}
+                    extraScrollHeight={100}
                     scrollEnabled={isKeyboardVisible}
                     showsVerticalScrollIndicator={false}
                     enableOnAndroid
                 >
-                    <ThemedView style={styles.logoContainer}>
-                        <LOGO width={width * 0.25} height={width * 0.25} style={styles.orangeLogo} />
-                        {/* <Image source={require('@/assets/images/orange-icon.png')} style={styles.orangeLogo} /> */}
-                    </ThemedView>
-                    <ThemedText style={styles.title} type='defaultSemiBold'>{t('registerScreen.registerNewAccount')}</ThemedText>
-                    <ThemedInput
-                        label={t('registerScreen.fullName')}
-                        placeholder={t('registerScreen.fullNamePlaceholder')}
-                        onChangeText={handleChange('fullName')}
-                        isError={touched.fullName && errors.fullName ? true : false}
-                        onBlur={handleBlur('fullName')}
-                        value={values.fullName}
-                        errorMessage={touched.fullName && errors.fullName ? errors.fullName : ''}
-                        style={touched.email && errors.email ? undefined : { marginBottom: 20 }}
-                    />
-                    <ThemedInput
-                        label={t('registerScreen.email')}
-                        placeholder={t('registerScreen.emailPlaceholder')}
-                        onChangeText={handleChange('email')}
-                        isError={touched.email && errors.email ? true : false}
-                        onBlur={handleBlur('email')}
-                        value={values.email}
-                        errorMessage={touched.email && errors.email ? errors.email : ''}
-                        style={touched.email && errors.email ? undefined : { marginBottom: 20 }}
-                    />
-                    <ThemedInput
-                        label={t('registerScreen.password')}
-                        placeholder={t('registerScreen.passwordPlaceholder')}
-                        secureTextEntry={true}
-                        onChangeText={handleChange('password')}
-                        isError={touched.password && errors.password ? true : false}
-                        onBlur={handleBlur('password')}
-                        value={values.password}
-                        errorMessage={touched.password && errors.password ? errors.password : ''}
-                        style={touched.email && errors.email ? undefined : { marginBottom: 20 }}
-                    />
-                    <ThemedInput
-                        label={t('registerScreen.confirmPassword')}
-                        placeholder={t('registerScreen.confirmPasswordPlaceholder')}
-                        secureTextEntry={true}
-                        onChangeText={handleChange('confirmPassword')}
-                        isError={touched.confirmPassword && errors.confirmPassword ? true : false}
-                        onBlur={handleBlur('registerScreen.confirmPassword')}
-                        value={values.confirmPassword}
-                        errorMessage={touched.confirmPassword && errors.confirmPassword ? errors.confirmPassword : ''}
-                        style={touched.email && errors.email ? undefined : { marginBottom: 20 }}
-                    />
+                    <View style={styles.topContainer}>
+                        <View style={styles.logoContainer}>
+                            <LOGO width={width * 0.14} height={width * 0.14} />
+                        </View>
+                        <ThemedText style={styles.title} type='title'>{t('registerScreen.registerNewAccount')}</ThemedText>
+                    </View>
+                    <View style={[styles.inputContainer, { backgroundColor: cardColor }]}>
+                        <ThemedInput
+                            label={t('registerScreen.fullName')}
+                            placeholder={t('registerScreen.fullNamePlaceholder')}
+                            onChangeText={handleChange('fullName')}
+                            isError={touched.fullName && errors.fullName ? true : false}
+                            onBlur={handleBlur('fullName')}
+                            value={values.fullName}
+                            errorMessage={touched.fullName && errors.fullName ? errors.fullName : ''}
+                        />
+                        <ThemedView style={styles.divider} />
+                        <ThemedInput
+                            label={t('registerScreen.email')}
+                            placeholder={t('registerScreen.emailPlaceholder')}
+                            onChangeText={handleChange('email')}
+                            isError={touched.email && errors.email ? true : false}
+                            onBlur={handleBlur('email')}
+                            value={values.email}
+                            errorMessage={touched.email && errors.email ? errors.email : ''}
+                        />
+                        <ThemedView style={styles.divider} />
+                        <ThemedInput
+                            label={t('registerScreen.password')}
+                            placeholder={t('registerScreen.passwordPlaceholder')}
+                            secureTextEntry={true}
+                            onChangeText={handleChange('password')}
+                            isError={touched.password && errors.password ? true : false}
+                            onBlur={handleBlur('password')}
+                            value={values.password}
+                            errorMessage={touched.password && errors.password ? errors.password : ''}
+                        />
+                        <ThemedView style={styles.divider} />
+                        <ThemedInput
+                            label={t('registerScreen.confirmPassword')}
+                            placeholder={t('registerScreen.confirmPasswordPlaceholder')}
+                            secureTextEntry={true}
+                            onChangeText={handleChange('confirmPassword')}
+                            isError={touched.confirmPassword && errors.confirmPassword ? true : false}
+                            onBlur={handleBlur('registerScreen.confirmPassword')}
+                            value={values.confirmPassword}
+                            errorMessage={touched.confirmPassword && errors.confirmPassword ? errors.confirmPassword : ''}
+                        />
+                    </View>
                     <ThemedButton
                         label={t('registerScreen.register')}
                         style={styles.registerButton}
@@ -145,6 +148,7 @@ export default function RegisterScreen() {
                         onVisibilityToggle={setIsToastVisible}
                         iconName='error'
                     />
+
                 </KeyboardAwareScrollView>
             )}
         </Formik>
@@ -158,23 +162,28 @@ const styles = StyleSheet.create({
         marginHorizontal: 15,
         maxHeight: '150%',
     },
-    logoContainer: {
-        alignItems: 'center',
+    topContainer: {
         marginTop: 105,
-        marginBottom: 10,
+        gap: 20,
+        alignItems: 'center'
     },
-    orangeLogo: {
-        width: width * 0.3,
-        height: height * 0.13,
-        left: 0,
-        right: 0,
-        resizeMode: 'cover',
-        marginBottom: 20,
+    logoContainer: {
+        backgroundColor: '#FFF5E1',
+        padding: 14,
+        borderRadius: 20,
+        alignSelf: 'center',
     },
     title: {
         marginBottom: 20,
         fontSize: 22,
         textAlign: 'center',
+    },
+    inputContainer: {
+        borderRadius: 16,
+        marginBottom: 10
+    },
+    divider: {
+        height: 3,
     },
     registerButton: {
         marginTop: 20,

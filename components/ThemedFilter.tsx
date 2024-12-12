@@ -96,11 +96,11 @@ const FilterItem = React.memo(
                         color={
                             isSelected
                                 ? isDarkMode
-                                    ? '#5A4639'
-                                    : '#FFFFFF'
+                                    ? Colors.light.text
+                                    : Colors.dark.text
                                 : isDarkMode
-                                    ? '#FFFFFF'
-                                    : '#5A4639'
+                                    ? Colors.dark.text
+                                    : Colors.light.text
                         }
                     />
                     {isSelected && (
@@ -226,18 +226,18 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
     selectedFilterTextLightMode: {
-        color: '#FFF',
+        color: Colors.dark.text,
         fontSize: 16,
     },
     selectedFilterTextDarkMode: {
-        color: '#5A4639',
+        color: Colors.light.text,
         fontSize: 16,
     },
     selectedFilterLightMode: {
-        backgroundColor: '#5A4639',
+        backgroundColor: Colors.dark.buttonBackground,
     },
     selectedFilterDarkMode: {
-        backgroundColor: '#FFF5E1',
+        backgroundColor: Colors.light.buttonBackground,
     },
     darkModeButton: {
         backgroundColor: Colors.dark.buttonBackground

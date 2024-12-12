@@ -1,15 +1,24 @@
-import { MaterialIcons } from '@expo/vector-icons';
-import { useState, useMemo, forwardRef } from 'react';
-import { TextInput, StyleSheet, StyleProp, ViewStyle, View, Pressable } from 'react-native';
+import React, { useState, useMemo, forwardRef } from 'react';
+import {
+    TextInput,
+    StyleSheet,
+    StyleProp,
+    ViewStyle,
+    View,
+    Pressable,
+    Modal,
+    TouchableWithoutFeedback
+} from 'react-native';
+import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
 import { useTheme } from '@/context/ThemeContext';
 import { Colors } from '@/constants/Colors';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Tooltip } from 'react-native-paper';
 
 export type ThemedInputProps = {
     /** The name of the icon to display on the input */
-    iconName: keyof typeof MaterialCommunityIcons.glyphMap;
+    iconName?: keyof typeof MaterialCommunityIcons.glyphMap;
     /** Label to display on the input */
     label: string;
     /** The value of the input */
@@ -37,7 +46,7 @@ export type ThemedInputProps = {
     /** Whether the input is disabled */
     disabled?: boolean;
     /** Background color for the input */
-    backgroundColor?: string; 
+    backgroundColor?: string;
 };
 
 export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(({
@@ -55,12 +64,17 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(({
     onFocus = () => { },
     onSubmitEditing = () => { },
     disabled = false,
-    backgroundColor // Add backgroundColor prop
+    backgroundColor
 }, ref) => {
     const { currentTheme } = useTheme();
-    const color = currentTheme === 'light' ? Colors.light.text : Colors.dark.text;
     const [localValue, setLocalValue] = useState(value);
     const [isSecure, setIsSecure] = useState(secureTextEntry);
+    const [isErrorModalVisible, setIsErrorModalVisible] = useState(false);
+
+    // Color configurations
+    const color = currentTheme === 'light' ? Colors.light.text : Colors.dark.text;
+    const placeholderColor = currentTheme === 'light' ? Colors.light.placeHolder : Colors.dark.placeHolder;
+    const errorColor = currentTheme === 'light' ? Colors.light.error : Colors.dark.error;
 
     const onClearValue = () => {
         setLocalValue('');
@@ -77,70 +91,145 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(({
     const inputContainerStyle = useMemo(() => ([
         styles.inputContainer,
         {
-            backgroundColor: backgroundColor ? backgroundColor : 
-                             currentTheme === 'light' ? Colors.light.inputBackground : Colors.dark.inputBackground,
-            borderBottomColor: currentTheme === 'light' ? Colors.light.error : Colors.dark.error,
-            borderBottomWidth: isError && errorMessage.length > 0 ? 2 : 0,
+            backgroundColor: backgroundColor ??
+                (currentTheme === 'light' ? Colors.light.inputBackground : Colors.dark.inputBackground),
         },
-        // style,
-    ]), [currentTheme, isError, errorMessage, style, backgroundColor]); // Include backgroundColor in dependency array
+        style,
+    ]), [currentTheme, isError, errorMessage, style, backgroundColor]);
 
-    const errorLabelStyle = useMemo(() => ({
-        color: currentTheme === 'light' ? Colors.light.error : Colors.dark.error
-    }), [currentTheme]);
+    const ErrorTooltip = () => (
+        <Modal
+            transparent={true}
+            visible={isErrorModalVisible}
+            animationType="fade"
+            onRequestClose={() => setIsErrorModalVisible(false)}
+        >
+            <TouchableWithoutFeedback onPress={() => setIsErrorModalVisible(false)}>
+                <View style={styles.errorModalOverlay}>
+                    <View style={[styles.errorTooltip, { backgroundColor: errorColor }]}>
+                        <ThemedText style={styles.errorTooltipText}>
+                            {errorMessage}
+                        </ThemedText>
+                    </View>
+                </View>
+            </TouchableWithoutFeedback>
+        </Modal>
+    );
 
     return (
         <View style={[styles.container, style]}>
             <ThemedView style={inputContainerStyle}>
-                {!iconName && <ThemedText style={[styles.label, { color }]} type='defaultSemiBold'>
-                    {label}
-                </ThemedText>}
-                
-                <View style={styles.inputRow}>
-                    <MaterialCommunityIcons name={iconName} size={20} color={color || currentTheme === 'light' ? Colors.light.placeHolder : Colors.dark.placeHolder} />
+                {!iconName && (
+                    <ThemedText
+                        style={[styles.label, { color }]}
+                        type='defaultSemiBold'
+                    >
+                        {label}
+                    </ThemedText>
+                )}
+
+                <View style={[styles.inputRow, {
+                    borderBottomColor: errorColor,
+                    borderBottomWidth: isError && errorMessage ? 1.25 : 0,
+                }]}>
+                    {iconName && (
+                        <MaterialCommunityIcons
+                            name={iconName}
+                            size={20}
+                            color={placeholderColor}
+                        />
+                    )}
                     <TextInput
                         ref={ref}
                         onSubmitEditing={onSubmitEditing}
-                        style={[styles.input, { color, marginLeft: iconName ? 10 : 0 }]}
+                        style={[
+                            styles.input,
+                            {
+                                color,
+                                marginLeft: iconName ? 10 : 0
+                            }
+                        ]}
                         secureTextEntry={isSecure}
                         value={localValue}
                         onChangeText={handleChangeText}
                         onBlur={onBlur}
                         onFocus={onFocus}
                         placeholder={placeholder}
-                        placeholderTextColor={currentTheme === 'light' ? Colors.light.placeHolder : Colors.dark.placeHolder}
+                        placeholderTextColor={placeholderColor}
                         accessible
                         aria-label={label}
                         keyboardType={keyboardType}
-                        editable={!disabled} 
+                        editable={!disabled}
                     />
-                    {localValue.length > 0 && !disabled && ( 
-                        <Pressable
-                            onPress={secureTextEntry ? onToggleSecureValue : onClearValue}
-                            style={[styles.iconTouchable]}
-                            hitSlop={{ top: 15, bottom: 10, left: 10, right: 10 }}
-                            android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', borderless: false, radius: 10 }}
-                        >
-                            <MaterialIcons
-                                name={secureTextEntry ? (isSecure ? 'visibility' : 'visibility-off') : 'cancel'}
-                                size={18}
-                                color={color}
-                            />
-                        </Pressable>
-                    )}
+
+                    <View style={styles.rightContainer}>
+
+                        {/* Clear Value Button */}
+                        {localValue.length > 0 && !disabled && (
+                            <Pressable
+                                onPress={onClearValue}
+                                style={styles.iconTouchable}
+                                hitSlop={{ top: 5, bottom: 5, left: 5, right: 5 }}
+                                android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', borderless: false, radius: 10 }}
+                            >
+                                <MaterialIcons
+                                    name={'cancel'}
+                                    color={color}
+                                    size={16}
+                                />
+                            </Pressable>
+                        )}
+
+                        {/* Secure Entry Toggle */}
+                        {localValue.length > 0 && !disabled && secureTextEntry && (
+                            <Pressable
+                                onPress={onToggleSecureValue}
+                                style={[
+                                    styles.iconTouchable,
+                                    // secureTextEntry ? { marginLeft: 15 } : { marginRight: 0 }
+                                ]}
+                                hitSlop={{ top: 5, bottom: 5, left: 5, right: 5 }}
+                                android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', borderless: false, radius: 10 }}
+                            >
+                                <MaterialIcons
+                                    name={isSecure ? 'visibility' : 'visibility-off'}
+                                    size={16}
+                                    color={color}
+                                />
+                            </Pressable>
+                        )}
+
+
+                        {/* Error Icon */}
+                        {isError && errorMessage && (
+                            <Tooltip title={errorMessage}
+                            enterTouchDelay={0}
+                            leaveTouchDelay={1500}
+                            >
+                                <Pressable
+                                    onPress={() => { }}
+                                    style={styles.errorIconContainer}
+                                >
+                                    <MaterialIcons
+                                        name="error"
+                                        size={16}
+                                        color={errorColor}
+                                    />
+                                </Pressable>
+                            </Tooltip>
+                        )}
+
+                    </View>
                 </View>
-            </ThemedView >
-            {isError && errorMessage.length > 0 && (
-                <View style={styles.errorLabelContainer}>
-                    <MaterialIcons name="error" size={14} color={errorLabelStyle.color} />
-                    <ThemedText style={[styles.errorLabel, errorLabelStyle]}>
-                        {errorMessage}
-                    </ThemedText>
-                </View>
-            )}
-        </View >
+            </ThemedView>
+
+            {/* Error Tooltip Modal */}
+            <ErrorTooltip />
+        </View>
     );
 });
+
+ThemedInput.displayName = 'ThemedInput';
 
 const styles = StyleSheet.create({
     container: {
@@ -158,26 +247,44 @@ const styles = StyleSheet.create({
     inputRow: {
         flexDirection: 'row',
         alignItems: 'center',
-
     },
     input: {
         fontSize: 16,
         height: 30,
-        flex: 1,  // Allows the input to take available space but not overlap the button
+        flex: 1,
         marginRight: 10,
+    },
+    rightContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10
     },
     iconTouchable: {
         borderRadius: 50,
         overflow: 'hidden',
     },
-    errorLabelContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 5,
-        marginBottom: 10,
+    errorIconContainer: {
+        marginLeft: 5,
+        padding: 2,
     },
-    errorLabel: {
-        fontSize: 14,
+    errorModalOverlay: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0,0,0,0.5)',
+    },
+    errorTooltip: {
+        maxWidth: '80%',
+        padding: 10,
+        borderRadius: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+    },
+    errorTooltipText: {
+        color: 'white',
+        textAlign: 'center',
     },
 });
-

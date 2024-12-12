@@ -136,17 +136,21 @@
     "allowButton": "Cho Phép Truy Cập",
     "cancelButton": "Từ Chối"
   },
-  "onboardingScreen": {
+"onboardingScreen": {
     "title": "Orange⁺",
-    "title1": "Quản lý mã QR",
-    "subtitle1": "Quản lý và lưu trữ mã QR cho tài khoản ngân hàng, thẻ thành viên và ví tiền.",
-    "title2": "Đồng bộ đám mây",
-    "subtitle2": "Mã QR của bạn được lưu trữ và đồng bộ an toàn trên đám mây.",
-    "title3": "Sẵn sàng sử dụng",
-    "subtitle3": "Quản lý và truy cập mã QR của bạn mọi lúc, mọi nơi.",
-    "nextButton": "Tiếp theo",
-    "skipButton": "Bỏ qua",
-    "finishButton": "Tiếp theo"
+    "title1": "Trình quản lý mã QR của bạn",
+    "subtitle1": "Sắp xếp và lưu trữ mã QR cho tài khoản ngân hàng, thẻ khách hàng thân thiết và ví điện tử của bạn.",
+    "title2": "Đồng bộ hóa đám mây",
+    "subtitle2": "Mã QR của bạn được sao lưu an toàn và đồng bộ hóa với đám mây.",
+    "title3": "Luôn có thể truy cập",
+    "subtitle3": "Truy cập và quản lý mã QR của bạn mọi lúc, mọi nơi.",
+    "finishButton": "Bắt đầu",
+    "termsOfService": {
+      "agreementPrefix": "Bằng cách tiếp tục, bạn đồng ý với",
+      "termsOfServiceLink": "Các quy tắc đơn giản",
+      "privacyPolicyPrefix": "và đã đọc",
+      "privacyPolicyLink": "Thông tin bảo mật"
+    }
   },
   "detailsScreen": {
     "edit": "Chỉnh sửa",
@@ -158,7 +162,7 @@
     "generatingQRCode": "Đang tạo mã QR...",
     "failedToOpenGoogleMaps": "Không thể mở Google Maps.",
     "bankTransfer": "Chuyển khoản với",
-        "transferMessage": "Chuyển tiền tới"
+    "transferMessage": "Chuyển tiền tới"
   },
   "settingsScreen": {
     "title": "Cài đặt",

@@ -37,7 +37,8 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedIconInput } from '@/components/Inputs';
 import { ThemedFAB, ThemedButton } from '@/components/buttons';
-import ThemedBottomSheet from '@/components/bottomsheet/ThemedBottomSheet';
+// import ThemedBottomSheet from '@/components/bottomsheet/ThemedBottomSheet';
+import ThemedReuseableSheet from '@/components/bottomsheet/ThemedReusableSheet';
 // import { ThemedEmptyCard } from '@/components/cards';
 import ThemedCardItem from '@/components/cards/ThemedCardItem';
 import { ThemedFilterSkeleton, ThemedCardSkeleton } from '@/components/skeletons';
@@ -215,7 +216,7 @@ function HomeScreen() {
 
   useEffect(() => {
     if (isSyncing) return;
-    
+
     // Only show online/offline toast if there's an actual change in network state
     if (!isLoading) {
       if (isOffline) {
@@ -387,7 +388,7 @@ function HomeScreen() {
       [1, 0],
       Extrapolation.CLAMP
     );
-    
+
     const scale = interpolate(
       scrollY.value,
       [0, fadeCompleteThreshold],
@@ -606,7 +607,7 @@ function HomeScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <ThemedView style={styles.blurContainer} />
+      {/* <ThemedView style={styles.blurContainer} /> */}
       <Animated.View style={[styles.titleContainer, titleContainerStyle]} pointerEvents="box-none">
         <View style={styles.headerContainer} pointerEvents='box-none'>
           <ThemedText style={styles.titleText} type="title">{t('homeScreen.title')}</ThemedText>
@@ -743,12 +744,32 @@ function HomeScreen() {
         backgroundColor={bottomToastColor}
 
       />
-      <ThemedBottomSheet
+      {/* <ThemedBottomSheet
         ref={bottomSheetRef}
         onDeletePress={onDeleteSheetPress}
         onEditPress={() => { }}
         editText={t('homeScreen.edit')}
         deleteText={t('homeScreen.delete')}
+      /> */}
+      <ThemedReuseableSheet
+        // isVisible={shouldRenderSheet}
+        ref={bottomSheetRef}
+        title="Manage Item"
+        description="Choose an action"
+        snapPoints={['25%']}
+        actions={[
+          {
+            icon: 'pencil-outline',
+            iconLibrary: 'MaterialCommunityIcons',
+            text: t('homeScreen.edit'),
+            onPress: () => bottomSheetRef.current?.close(),
+          },
+          {
+            icon: 'delete-outline',
+            text: t('homeScreen.delete'),
+            onPress: () => onDeleteSheetPress(),
+          }
+        ]}
       />
       <ThemedModal
         primaryActionText={t('homeScreen.moveToTrash')}

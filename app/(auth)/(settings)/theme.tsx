@@ -17,14 +17,14 @@ import { t } from '@/i18n';
 import { Colors } from '@/constants/Colors';
 import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
 import { useTheme } from '@/context/ThemeContext';
-import { Ionicons } from '@expo/vector-icons';
+// import { Ionicons } from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DARK from '@/assets/svgs/dark.svg';
 import LIGHT from '@/assets/svgs/light.svg';
 
 const ThemeScreen = () => {
   const { currentTheme, setDarkMode, useSystemTheme, isDarkMode } = useTheme();
-  const colors = useMemo(() => (currentTheme === 'light' ? Colors.light.text : Colors.dark.text), [currentTheme]);
+  const colors = useMemo(() => (currentTheme === 'light' ? Colors.light.icon : Colors.dark.icon), [currentTheme]);
   const sectionsColors = useMemo(() => (
     currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground
   ), [currentTheme]);
@@ -93,7 +93,7 @@ const ThemeScreen = () => {
           </View>
           <ThemedText>{t(`themeScreen.${themeName}`)}</ThemedText>
         </View>
-        {isChecked && <Ionicons name="checkmark-outline" size={20} color={colors} />}
+        {isChecked && <MaterialCommunityIcons name="check" size={20} color={colors} />}
       </View>
     </Pressable>
   );

@@ -25,7 +25,8 @@ import { useTheme } from '@/context/ThemeContext';
 export default function LoginScreen() {
   const { locale } = useLocale();
   // const colorScheme = useColorScheme();
-  const {currentTheme} = useTheme();
+  const { currentTheme } = useTheme();
+  const cardColor = currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground;
   const authRefreshError = useSelector((state: RootState) => state.error.message)
   const [isToastVisible, setIsToastVisible] = useState(false);
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
@@ -95,31 +96,36 @@ export default function LoginScreen() {
           showsVerticalScrollIndicator={false}
           scrollEnabled={isKeyboardVisible}
         >
-          <ThemedView style={styles.logoContainer}>
-            <LOGO width={width * 0.25} height={width * 0.25} style={styles.orangeLogo} />
-            {/* <Image source={require('@/assets/images/orange-icon.png')} style={styles.orangeLogo} /> */}
-          </ThemedView>
-          <ThemedInput
-            label={t('loginScreen.email')}
-            placeholder={t('loginScreen.emailPlaceholder')}
-            onChangeText={handleChange('email')}
-            isError={touched.email && errors.email ? true : false}
-            onBlur={handleBlur('email')}
-            value={values.email}
-            errorMessage={touched.email && errors.email ? errors.email : ''}
-            style={touched.email && errors.email ? undefined : { marginBottom: 20 }}
-          />
-          <ThemedInput
-            label={t('loginScreen.password')}
-            placeholder={t('loginScreen.passwordPlaceholder')}
-            secureTextEntry={true}
-            onChangeText={handleChange('password')}
-            isError={touched.password && errors.password ? true : false}
-            onBlur={handleBlur('password')}
-            value={values.password}
-            errorMessage={touched.password && errors.password ? errors.password : ''}
-            style={touched.email && errors.email ? undefined : { marginBottom: 20 }}
-          />
+            <View style={styles.topContainer}>
+                <View style={styles.logoContainer}>
+                    <LOGO width={width * 0.14} height={width * 0.14} />
+                </View>
+                <ThemedText style={styles.title} type='title'>{t('onboardingScreen.title')}</ThemedText>
+            </View>
+          <View style={[styles.inputContainer, { backgroundColor: cardColor }]}>
+            <ThemedInput
+              label={t('loginScreen.email')}
+              placeholder={t('loginScreen.emailPlaceholder')}
+              onChangeText={handleChange('email')}
+              isError={touched.email && errors.email ? true : false}
+              onBlur={handleBlur('email')}
+              value={values.email}
+              errorMessage={touched.email && errors.email ? errors.email : ''}
+            // style={{ marginBottom: 10 }}
+            />
+            <ThemedView style={styles.divider} />
+            <ThemedInput
+              label={t('loginScreen.password')}
+              placeholder={t('loginScreen.passwordPlaceholder')}
+              secureTextEntry={true}
+              onChangeText={handleChange('password')}
+              isError={touched.password && errors.password ? true : false}
+              onBlur={handleBlur('password')}
+              value={values.password}
+              errorMessage={touched.password && errors.password ? errors.password : ''}
+            // style={{ marginBottom: 10 }}
+            />
+          </View>
           <View style={styles.forgotButton}>
             <ThemedTextButton
               label={t('loginScreen.forgotPassword')}
@@ -163,18 +169,29 @@ const styles = StyleSheet.create({
     marginHorizontal: 15,
     maxHeight: '120%',
   },
-  logoContainer: {
-    alignItems: 'center',
+  topContainer: {
     marginTop: 105,
+    gap: 20,
+    alignItems: 'center'
+},
+  logoContainer: {
+    backgroundColor: '#FFF5E1',
+    padding: 14,
+    borderRadius: 20,
+    alignSelf: 'center',
+},
+title:{
+  fontSize: 25,
+},
+  inputContainer: {
+    // padding: 5,
+    borderRadius: 16,
+    // gap: 5,
     marginBottom: 10,
+    marginTop: 20,
   },
-  orangeLogo: {
-    width: width * 0.3,
-    height: height * 0.13,
-    left: 0,
-    right: 0,
-    resizeMode: 'cover',
-    marginBottom: 20,
+  divider: {
+    height: 3,
   },
   forgotButton: {
     alignSelf: 'flex-end',

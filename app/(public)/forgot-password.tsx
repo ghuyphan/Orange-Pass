@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Keyboard } from 'react-native';
+import { StyleSheet, Keyboard, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { Formik } from 'formik';
 
@@ -75,11 +75,13 @@ export default function ForgotPasswordScreen() {
           showsVerticalScrollIndicator={false}
           scrollEnabled={isKeyboardVisible}
         >
-          <ThemedView style={styles.logoContainer}>
-            <LOGO width={width * 0.25} height={width * 0.25} style={styles.orangeLogo} />
-            {/* <Image source={require('@/assets/images/orange-icon.png')} style={styles.orangeLogo} /> */}
-          </ThemedView>
-          <ThemedText style={styles.title} type='defaultSemiBold'>{t('forgotPasswordScreen.forgotPassword')}</ThemedText>
+            <View style={styles.topContainer}>
+                <View style={styles.logoContainer}>
+                    <LOGO width={width * 0.14} height={width * 0.14} />
+                </View>
+                <ThemedText style={styles.title} type='title'>{t('forgotPasswordScreen.forgotPassword')}</ThemedText>
+            </View>
+          <View style={styles.inputContainer}>
           <ThemedInput
             label={t('forgotPasswordScreen.email')}
             placeholder={t('forgotPasswordScreen.emailPlaceholder')}
@@ -88,8 +90,8 @@ export default function ForgotPasswordScreen() {
             onBlur={handleBlur('email')}
             value={values.email}
             errorMessage={touched.email && errors.email ? errors.email : ''}
-            style={touched.email && errors.email ? undefined : { marginBottom: 20 }}
           />
+          </View>
           <ThemedButton
             label={t('forgotPasswordScreen.sendResetLink')}
             style={styles.forgotButton}
@@ -117,23 +119,28 @@ const styles = StyleSheet.create({
     marginHorizontal: 15,
     maxHeight: '130%',
   },
-  logoContainer: {
-    alignItems: 'center',
+  topContainer: {
     marginTop: 105,
-    marginBottom: 10,
-  },
-  orangeLogo: {
-    width: width * 0.3,
-    height: height * 0.13,
-    left: 0,
-    right: 0,
-    resizeMode: 'cover',
-    marginBottom: 20,
-  },
+    gap: 20,
+    alignItems: 'center'
+},
+  logoContainer: {
+    backgroundColor: '#FFF5E1',
+    padding: 14,
+    borderRadius: 20,
+    alignSelf: 'center',
+},
   title: {
-    marginBottom: 20,
-    fontSize: 22,
+    // marginBottom: 20,
+    fontSize: 25,
     textAlign: 'center',
+  },
+  inputContainer:{
+    // padding: 5,
+    borderRadius: 16,
+    // gap: 5,
+    marginBottom: 10,
+    marginTop: 20
   },
   forgotButton: {
     marginTop: 20,

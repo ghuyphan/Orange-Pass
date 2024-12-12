@@ -81,7 +81,7 @@ const ThemedBottomSheet = forwardRef<BottomSheet, ThemedBottomSheetProps>(
                 <MaterialCommunityIcons 
                   name="pencil-outline" 
                   size={18} 
-                  color={currentTheme === 'light' ? Colors.light.text : Colors.dark.text} 
+                  color={currentTheme === 'light' ? Colors.light.icon : Colors.dark.icon} 
                 />
                 <ThemedText style={styles.buttonText}>{editText}</ThemedText>
               </Pressable>
@@ -98,7 +98,7 @@ const ThemedBottomSheet = forwardRef<BottomSheet, ThemedBottomSheetProps>(
                 <MaterialIcons 
                   name="delete-outline" 
                   size={18} 
-                  color={currentTheme === 'light' ? Colors.light.text : Colors.dark.text} 
+                  color={currentTheme === 'light' ? Colors.light.icon : Colors.dark.icon} 
                 />
                 <ThemedText style={styles.buttonText}>{deleteText}</ThemedText>
               </Pressable>

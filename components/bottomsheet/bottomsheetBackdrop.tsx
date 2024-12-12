@@ -5,47 +5,59 @@ import Animated, {
   interpolate,
   useAnimatedStyle,
 } from "react-native-reanimated";
-// import { BlurView } from "@react-native-community/blur";
 import { StyleSheet, TouchableWithoutFeedback } from "react-native";
 import { View } from "moti";
+
+interface CustomBackdropProps extends BottomSheetBackdropProps {
+  onPress?: () => void;
+  backgroundColor?: string;
+  pressThreshold?: number; // Added to control press sensitivity
+}
 
 const CustomBackdrop = ({
   animatedIndex,
   style,
   onPress,
-}: BottomSheetBackdropProps & { onPress?: () => void }) => {
+  backgroundColor = 'rgba(0, 0, 0, 0.7)',
+  pressThreshold = 0, // Default threshold for press
+}: CustomBackdropProps) => {
   const containerAnimatedStyle = useAnimatedStyle(() => ({
     opacity: interpolate(
       animatedIndex.value,
-      [-1, -0.5, 0],
+      [-1, -0.1, 1], // Adjusted interpolation range
       [0, 0.5, 1],
       Extrapolation.CLAMP
     ),
-    // Allow touches to propagate when the backdrop is fully closed
-    pointerEvents: animatedIndex.value >= 0 ? "auto" : "none",
+    pointerEvents: animatedIndex.value >= pressThreshold ? "auto" : "none",
   }));
 
-
-  const shouldRenderBlurStyle = useAnimatedStyle(() => ({
-    display: animatedIndex.value > -1 && animatedIndex.value <= 0 ? "flex" : "none",
+  const shouldRenderBackdropStyle = useAnimatedStyle(() => ({
+    display: animatedIndex.value > -1 ? "flex" : "none",
   }));
 
   return (
     <TouchableWithoutFeedback onPress={onPress} accessible={false}>
-      <Animated.View style={[style, containerAnimatedStyle, {zIndex: 0}]}>
-        <Animated.View style={[StyleSheet.absoluteFillObject, shouldRenderBlurStyle]}>
-          {/* <BlurView
-            style={StyleSheet.absoluteFillObject}
-            blurType="dark"
-            blurAmount={5}
-            reducedTransparencyFallbackColor="gray"
-          /> */}
-          <View style={[StyleSheet.absoluteFillObject, {backgroundColor: 'rgba(0, 0, 0, 0.7)'}]}/>
-        </Animated.View>
+      <Animated.View style={[style, containerAnimatedStyle, { zIndex: 0 }]}>
+        <Animated.View 
+          style={[
+            StyleSheet.absoluteFillObject, 
+            shouldRenderBackdropStyle,
+            { backgroundColor }
+          ]}
+        />
       </Animated.View>
     </TouchableWithoutFeedback>
-
   );
 };
+
+const styles = StyleSheet.create({
+  backdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+});
 
 export default CustomBackdrop;

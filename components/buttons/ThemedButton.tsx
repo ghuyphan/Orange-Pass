@@ -69,7 +69,7 @@ export function ThemedButton({
     pointerEvents = 'auto',
 }: ThemedButtonProps): JSX.Element {
     const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
-    const icon = useThemeColor({ light: Colors.light.text, dark: Colors.dark.text }, 'icon');
+    const icon = useThemeColor({ light: Colors.light.icon, dark: Colors.dark.icon }, 'icon');
 
     // Get the currentTheme from useTheme
     const { currentTheme } = useTheme();

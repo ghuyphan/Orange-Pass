@@ -28,7 +28,7 @@ export const ThemedSettingsCardItem = memo(function ThemedSettingsCardItem(props
     } = props;
 
     const { currentTheme } = useTheme();
-    const colors = currentTheme === 'light' ? Colors.light.text : Colors.dark.text;
+    const colors = currentTheme === 'light' ? Colors.light.icon : Colors.dark.icon;
     // const iconsColor = currentTheme === 'light' ? Colors.light.logoIcon : Colors.dark.buttonBackground;
 
     // const colors = useThemeColor({ light: Colors.light.text, dark: Colors.dark.text }, 'text');

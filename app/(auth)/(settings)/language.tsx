@@ -31,7 +31,7 @@ const LanguageScreen = () => {
   const scrollY = useSharedValue(0);
 
   const { currentTheme: theme } = useTheme();
-  const colors = useMemo(() => (theme === 'light' ? Colors.light.text : Colors.dark.text), [theme]);
+  const colors = useMemo(() => (theme === 'light' ? Colors.light.icon : Colors.dark.icon), [theme]);
   const sectionsColors = useMemo(() => (
     theme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground
   ), [theme]);

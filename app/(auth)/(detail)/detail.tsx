@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { StyleSheet, View, Linking, FlatList, TextInput, Pressable, Image } from 'react-native';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store/rootReducer';
@@ -21,6 +21,10 @@ import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from '
 import { useTheme } from '@/context/ThemeContext';
 import { getIconPath } from '@/utils/returnIcon';
 import { returnItemsByType } from '@/utils/returnItemData';
+import ThemedReuseableSheet from '@/components/bottomsheet/ThemedReusableSheet';
+import BottomSheet from '@gorhom/bottom-sheet';
+import { ThemedFilterSkeleton } from '@/components/skeletons';
+import { isLoading } from 'expo-font';
 
 // Utility function to format the amount
 const formatAmount = (amount: string) => {
@@ -32,38 +36,39 @@ interface Item {
     name: string;
 }
 
-const SPECIFIC_BANKS = [
-    'ocb', 'icb', 'mb', 'bidv', 'vcb', 'tcb', 'acb', 'vpb', 'vib-2', 'shb',
-    'lpb', 'seab', 'vietbank', 'cake', 'hdb', 'vba', 'tpb', 'timo', 'vib',
-    'shbvn', 'nab', 'abb', 'eib', 'coopbank', 'pvcb', 'wvn', 'klb', 'bvb',
-    'vab', 'ncb', 'acb-biz', 'oceanbank', 'pbvn', 'sgicb', 'cimb'
-];
-
 const AMOUNT_SUGGESTIONS = ['10,000', '50,000', '100,000', '500,000', '1,000,000'];
 
 export default function DetailScreen() {
-    // const { locale } = useLocale();
     useUnmountBrightness(1, false);
     const { item: encodedItem } = useLocalSearchParams();
     const router = useRouter();
     const { currentTheme } = useTheme();
     const isOffline = useSelector((state: RootState) => state.network.isOffline);
+    const bottomSheetRef = useRef<BottomSheet>(null);
 
     // State variables
     const [amount, setAmount] = useState('');
     const [isToastVisible, setIsToastVisible] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
     const [isSyncing, setIsSyncing] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [vietQRBanks, setVietQRBanks] = useState<any[]>([]);
     const transferHeight = useSharedValue(0);
 
     // Derived values and constants
     const cardColor = currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground;
-    const iconColor = currentTheme === 'light' ? Colors.light.text : Colors.dark.text;
-    const filteredEwallet = useMemo(() => {
-        const ewallet = returnItemsByType('bank');
-        return ewallet.filter(bank =>
-            SPECIFIC_BANKS.includes(bank.code.toLowerCase())
-        );
+    const iconColor = currentTheme === 'light' ? Colors.light.icon : Colors.dark.icon;
+
+    // Optimize bank loading
+    useEffect(() => {
+        setIsLoading(true);
+        const loadBanks = setTimeout(() => {
+            const banks = returnItemsByType('vietqr');
+            setVietQRBanks(banks);
+        }, 500);
+
+        setIsLoading(false);
+        return () => clearTimeout(loadBanks);
     }, []);
 
     // Memoized item parsing to prevent unnecessary re-renders
@@ -77,10 +82,9 @@ export default function DetailScreen() {
         }
     }, [encodedItem]);
 
-    // useCallback for optimized event handlers
-    const handleExpandPress = useCallback(() => {
-        // This function is currently unused, consider removing or implementing
-    }, []);
+    const handleExpandPress: () => void = () => {
+        bottomSheetRef.current?.snapToIndex(0);
+    }
 
     const openMap = useCallback(() => {
         if (!item?.type || !item?.code) return;
@@ -278,14 +282,17 @@ export default function DetailScreen() {
                                         placeholderTextColor={currentTheme === 'light' ? Colors.light.placeHolder : Colors.dark.placeHolder}
                                         onChangeText={(text) => setAmount(formatAmount(text))}
                                     />
-                                    <ThemedText>đ</ThemedText>
                                     <Pressable
                                         hitSlop={{ bottom: 40, left: 30, right: 30, top: 30 }}
                                         onPress={transferAmount}
                                         style={[styles.transferButton, { opacity: amount ? 1 : 0.3 }]}
                                     >
-                                        <MaterialCommunityIcons name="chevron-right" size={18} color={iconColor} />
+                                        <MaterialCommunityIcons name={amount ? 'navigation' : 'navigation-outline'} size={18} color={iconColor} />
                                     </Pressable>
+                                    <View style={styles.currencyContainer}>
+                                        <ThemedText style={styles.currencyText}>đ</ThemedText>
+                                    </View>
+
                                 </View>
                                 <FlatList
                                     data={AMOUNT_SUGGESTIONS}
@@ -311,7 +318,7 @@ export default function DetailScreen() {
                                 <Image source={require('@/assets/images/vietqr.png')} style={{ height: 30, width: 70, marginLeft: -15 }} resizeMode="contain" />
                             </View>
                             <FlatList
-                                data={filteredEwallet}
+                                data={vietQRBanks}
                                 horizontal
                                 style={styles.botSuggestionList}
                                 showsHorizontalScrollIndicator={false}
@@ -320,6 +327,11 @@ export default function DetailScreen() {
                                 renderItem={({ item }) => (
                                     renderPaymentMethodItem({ item: { code: item.code, name: item.name }, onPress: openBank })
                                 )}
+                                ListEmptyComponent={
+                                    <View>
+                                        <ThemedText>{t('detailsScreen.noBank')}</ThemedText>
+                                    </View>
+                                }
                             />
                         </View>
                     )}
@@ -332,6 +344,25 @@ export default function DetailScreen() {
                         style={styles.toastContainer}
                     />
                 </View>
+                <ThemedReuseableSheet
+                    ref={bottomSheetRef}
+                    title="Manage Item"
+                    description="Choose an action"
+                    snapPoints={['25%']}
+                    actions={[
+                        {
+                            icon: 'pencil-outline',
+                            iconLibrary: 'MaterialCommunityIcons',
+                            text: 'Edit',
+                            onPress: () => bottomSheetRef.current?.close(),
+                        },
+                        {
+                            icon: 'delete-outline',
+                            text: 'Delete',
+                            onPress: () => bottomSheetRef.current?.close(),
+                        }
+                    ]}
+                />
             </KeyboardAwareScrollView>
         </>
     );
@@ -340,7 +371,7 @@ export default function DetailScreen() {
 const styles = StyleSheet.create({
     container: {
         flexGrow: 1,
-        marginHorizontal: 15,
+        paddingHorizontal: 15,
         maxHeight: '130%',
     },
     headerWrapper: {
@@ -385,17 +416,35 @@ const styles = StyleSheet.create({
     inputWrapper: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
         paddingHorizontal: 15,
     },
     inputField: {
         height: 50,
         fontSize: 16,
-        width: 290,
+        // width: 290,
         overflow: 'hidden',
+        flexGrow: 1,
+        flexShrink: 1
     },
     transferButton: {
-        paddingLeft: 5,
+        marginLeft: 5,
+        transform: [{ rotate: '90deg' }],
+    },
+    currencyContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: 22,
+        height: 22,
+        borderRadius: 50,
+        overflow: 'hidden',
+        marginLeft: 10,
+        borderColor: 'rgba(0, 0, 0, 0.1)',
+        borderWidth: 1
+    },
+    currencyText:{
+        fontSize: 16,
+        color: 'rgba(0, 0, 0, 0.3)'
     },
     suggestionList: {
     },

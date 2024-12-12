@@ -54,7 +54,7 @@ export const ThemedFAB = forwardRef<View, ThemedFABProps>(({
   const colors = useMemo(() => {
     const isLightTheme = currentTheme === 'light';
     return {
-      icon: isLightTheme ? Colors.light.text : Colors.dark.text,
+      icon: isLightTheme ? Colors.light.icon : Colors.dark.icon,
       button: isLightTheme ? Colors.light.buttonBackground : Colors.dark.buttonBackground,
       text: isLightTheme ? Colors.dark.text : Colors.dark.text,
       textBackground: isLightTheme

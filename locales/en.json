@@ -63,7 +63,7 @@
     }
   },
   "forgotPasswordScreen": {
-    "forgotPassword": "Forgot your password?",
+    "forgotPassword": "Forgot password?",
     "email": "Email",
     "emailPlaceholder": "Enter your email",
     "sendResetLink": "Send reset link",
@@ -140,15 +140,19 @@
   },
   "onboardingScreen": {
     "title": "Orange⁺",
-    "title1": "Manage QR Codes",
-    "subtitle1": "Manage and store QR codes for bank accounts, loyalty cards, and e-wallets.",
+    "title1": "Your QR Code Manager",
+    "subtitle1": "Organize and store QR codes for your bank accounts, loyalty cards, and e-wallets.",
     "title2": "Cloud Sync",
-    "subtitle2": "Your QR codes are securely stored and synced in the cloud.",
-    "title3": "Ready to Use",
-    "subtitle3": "Manage and access your QR codes anytime, anywhere.",
-    "nextButton": "Next",
-    "skipButton": "Skip",
-    "finishButton": "Continue"
+    "subtitle2": "Your QR codes are securely backed up and synced to the cloud.",
+    "title3": "Always Accessible",
+    "subtitle3": "Access and manage your QR codes anytime, anywhere.",
+    "finishButton": "Get Started",
+    "termsOfService": {
+      "agreementPrefix": "By continuing, you're agree to our",
+      "termsOfServiceLink": "Simple Rules",
+      "privacyPolicyPrefix": "and have read our",
+      "privacyPolicyLink": "Privacy Stuff"
+    }
   },
   "detailsScreen": {
     "edit": "Edit",

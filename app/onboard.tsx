@@ -1,6 +1,7 @@
-import React from 'react';
-import { StyleSheet, View, Dimensions } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { StyleSheet, View, TouchableWithoutFeedback } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useTheme } from '@/context/ThemeContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { ThemedButton } from '@/components/buttons/ThemedButton';
@@ -12,6 +13,9 @@ import { storage } from '@/utils/storage';
 import { triggerSuccessHapticFeedback } from '@/utils/haptic';
 import { Colors } from '@/constants/Colors';
 import LOGO from '@/assets/svgs/orange-logo.svg';
+import { WINDOW_WIDTH } from '@gorhom/bottom-sheet';
+import ThemedReuseableSheet from '@/components/bottomsheet/ThemedReusableSheet';
+import BottomSheet from '@gorhom/bottom-sheet';
 
 // Define a type for features
 type Feature = {
@@ -22,7 +26,10 @@ type Feature = {
 
 const OnBoardScreen = () => {
     const router = useRouter();
-    const iconColor = useThemeColor({ light: Colors.dark.cardFooter, dark: Colors.light.cardFooter }, 'buttonBackground');
+    const { currentTheme } = useTheme();
+    const iconColor = useThemeColor({ light: Colors.light.icon, dark: Colors.dark.icon }, 'buttonBackground');
+    const bottomSheetRef = useRef<BottomSheet>(null);
+    const [isBottomSheetVisible, setBottomSheetVisible] = useState(false);
 
     // Array of features to display
     const features: Feature[] = [
@@ -49,11 +56,21 @@ const OnBoardScreen = () => {
         router.replace('/login');
     };
 
+    const onOpenTOS = () => {
+        // bottomSheetRef.current?.snapToIndex(0);
+        setBottomSheetVisible(true);
+    };
+    useEffect(() => {
+        if (isBottomSheetVisible) {
+            bottomSheetRef.current?.snapToIndex(0);
+        }
+    }, [isBottomSheetVisible]);
+
     return (
         <ThemedView style={styles.container}>
             <View style={styles.topContainer}>
                 <View style={styles.logoContainer}>
-                    <LOGO width={width * 0.14} height={width * 0.14} />
+                    <LOGO width={WINDOW_WIDTH * 0.14} height={WINDOW_WIDTH * 0.14} />
                 </View>
                 <ThemedText type='title'>{t('onboardingScreen.title')}</ThemedText>
             </View>
@@ -89,25 +106,55 @@ const OnBoardScreen = () => {
                     style={styles.bottomIcon}
                 />
                 <View style={styles.termsContainer}>
-                    <ThemedText style={styles.termsText}>
-                        By pressing continue, you agree to our{' '}
-                        <ThemedText style={styles.highlightText}>Terms of Service</ThemedText>{' '}
-                        and that you have read our{' '}
-                        <ThemedText style={styles.highlightText}>Privacy Policy</ThemedText>
-                    </ThemedText>
+                    <View style={styles.termsTextContainer}>
+                        <ThemedText style={styles.termsText}>
+                            {t('onboardingScreen.termsOfService.agreementPrefix')}
+                        </ThemedText>
+                        <TouchableWithoutFeedback hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} onPress={onOpenTOS}>
+                            <ThemedText style={[styles.termsText, styles.highlightText]}>
+                                {t('onboardingScreen.termsOfService.termsOfServiceLink')}
+                            </ThemedText>
+                        </TouchableWithoutFeedback>
+                    </View>
+                    <View style={styles.privacyPolicyTextContainer}>
+                        <ThemedText style={styles.termsText}>
+                            {t('onboardingScreen.termsOfService.privacyPolicyPrefix')}
+                        </ThemedText>
+                        <ThemedText style={[styles.termsText, styles.highlightText]}>
+                            {t('onboardingScreen.termsOfService.privacyPolicyLink')}
+                        </ThemedText>
+                    </View>
                 </View>
 
-                <ThemedButton 
-                    label={t('onboardingScreen.finishButton')} 
-                    style={styles.button} 
-                    onPress={onFinish} 
+                <ThemedButton
+                    label={t('onboardingScreen.finishButton')}
+                    style={styles.button}
+                    onPress={onFinish}
                 />
             </View>
+            <ThemedReuseableSheet
+                ref={bottomSheetRef}
+                title="Manage Item"
+                description="Choose an action"
+                snapPoints={['28%']}
+                isVisible={true}
+                actions={[
+                    {
+                        icon: 'pencil-outline',
+                        iconLibrary: 'MaterialCommunityIcons',
+                        text: 'Edit',
+                        onPress: () => bottomSheetRef.current?.close(),
+                    },
+                    {
+                        icon: 'delete-outline',
+                        text: 'Delete',
+                        onPress: () => bottomSheetRef.current?.close(),
+                    }
+                ]}
+            />
         </ThemedView>
     );
 };
-
-const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
     container: {
@@ -119,22 +166,21 @@ const styles = StyleSheet.create({
         alignItems: 'center'
     },
     logoContainer: {
-        backgroundColor: '#FFF5E1', 
-        padding: 14, 
+        backgroundColor: '#FFF5E1',
+        padding: 14,
         borderRadius: 20
     },
     contentContainer: {
         flex: 1,
         // marginTop: 60,
-        justifyContent: 'center',   
+        justifyContent: 'center',
         gap: 40
     },
     featureContainer: {
         flexDirection: 'row',
-        gap: 15,
+        gap: 20,
         marginHorizontal: 30,
         alignItems: 'center',
-        // marginBottom: 10
     },
     featureTextContainer: {
         flexDirection: 'column',
@@ -145,8 +191,9 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
     subtitle: {
-        fontSize: 16,
+        fontSize: 14,
         opacity: 0.7,
+        lineHeight: 20
     },
     bottomContainer: {
         paddingTop: 15,
@@ -156,7 +203,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     bottomIcon: {
-        alignSelf: 'center', 
+        alignSelf: 'center',
         marginBottom: -10
     },
     termsContainer: {
@@ -164,15 +211,26 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
     },
     termsText: {
-        fontSize: 12, 
+        fontSize: 12,
         letterSpacing: 0.5,
-        textAlign: 'center'
+        textAlign: 'center',
+    },
+    termsTextContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 5
+    },
+    privacyPolicyTextContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 5
     },
     highlightText: {
-        color: '#FFC107', 
-        fontSize: 12, 
+        color: '#FFC107',
+        fontSize: 12,
         letterSpacing: 0.5,
         // fontWeight: 'bold'
+        lineHeight: 20
     },
     button: {},
 });
