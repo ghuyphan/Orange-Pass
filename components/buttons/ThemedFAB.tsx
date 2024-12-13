@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect, forwardRef } from 'react';
 import { FAB } from 'react-native-paper';
-import { StyleProp, ViewStyle, View, StyleSheet, TextStyle } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
+import { StyleProp, ViewStyle, View, StyleSheet, TextStyle, TouchableWithoutFeedback } from 'react-native';
+import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
 import { useTheme } from '@/context/ThemeContext';
 import Animated, {
@@ -14,39 +14,29 @@ import Animated, {
 } from 'react-native-reanimated';
 import { ThemedButton } from './ThemedButton';
 
-export type ThemedFABProps = {
-  lightColor?: string;
-  darkColor?: string;
-  label?: string;
-  open: boolean;
-  setOpen: (open: boolean) => void;
-  iconName?: keyof typeof MaterialIcons.glyphMap;
+export interface FABAction {
+  text?: string;
+  iconName: keyof typeof MaterialCommunityIcons.glyphMap;
+  onPress: () => void;
+}
+
+export interface ThemedFABProps {
+  actions: FABAction[];
+  mainIconName?: keyof typeof MaterialCommunityIcons.glyphMap;
   style?: StyleProp<ViewStyle>;
   animatedStyle?: StyleProp<ViewStyle>;
-  onPress1: () => void;
-  onPress2: () => void;
-  onPress3: () => void;
-  text1?: string;
-  text2?: string;
-  text3?: string;
   textStyle?: StyleProp<TextStyle>;
-};
+}
 
-// Add display name to resolve the display name warning
 export const ThemedFAB = forwardRef<View, ThemedFABProps>(({
-  open,
-  setOpen,
-  onPress1,
-  onPress2,
-  onPress3,
-  text1,
-  text2,
-  text3,
+  actions,
+  mainIconName = 'plus',
   style,
   animatedStyle,
   textStyle,
 }, ref) => {
   const { currentTheme } = useTheme();
+  const [open, setOpen] = useState(false);
   const [closing, setClosing] = useState(false);
   const isAnimating = useSharedValue(false);
 
@@ -68,6 +58,12 @@ export const ThemedFAB = forwardRef<View, ThemedFABProps>(({
     duration: 250,
     easing: Easing.out(Easing.cubic)
   }), []);
+
+  // Backdrop opacity animation
+  // const backdropOpacity = useSharedValue(0);
+  const backdropAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: withTiming(open ? 0.7 : 0, animationConfig)
+  }), [open, animationConfig]);
 
   // Optimize repeated animation styles with memoization
   const translateY = useAnimatedStyle(() => ({
@@ -125,12 +121,16 @@ export const ThemedFAB = forwardRef<View, ThemedFABProps>(({
     }), [open, delay, animationConfig]);
   };
 
-  const buttonStyle1 = useButtonAnimationStyle(50);
-  const buttonStyle2 = useButtonAnimationStyle(100);
-  const buttonStyle3 = useButtonAnimationStyle(150);
-  const textStyle1 = useTextAnimationStyle(50);
-  const textStyle2 = useTextAnimationStyle(100);
-  const textStyle3 = useTextAnimationStyle(150);
+  // Dynamically generate animation styles based on number of actions
+  const buttonStyles = actions.map((_, index) => {
+    const delay = (index + 1) * 50;
+    return useButtonAnimationStyle(delay); // Call the custom hook directly
+  });
+
+  const textStyles = actions.map((_, index) => {
+    const delay = (index + 1) * 50;
+    return useTextAnimationStyle(delay); // Call the custom hook directly
+  });
 
   // useEffect to handle closing animation
   useEffect(() => {
@@ -169,86 +169,60 @@ export const ThemedFAB = forwardRef<View, ThemedFABProps>(({
   };
 
   return (
-    <Animated.View style={[style, animatedStyle, styles.container]} ref={ref}>
-      {(open || closing) && ( // Render while open or closing
-        <Animated.View style={translateY}>
-          <View style={styles.buttonsWrapper}>
-            {text3 && (
-              <View style={styles.buttonRow}>
-                <Animated.Text
-                  style={[
-                    styles.buttonText,
-                    {
-                      color: colors.text,
-                    },
-                    textStyle,
-                    textStyle3
-                  ]}
-                >
-                  {text3}
-                </Animated.Text>
-                <ThemedButton
-                  style={styles.fab}
-                  animatedStyle={buttonStyle3}
-                  onPress={handlePressWithAnimation(onPress3)}
-                  iconName="image"
-                />
-              </View>
-            )}
-            {text2 && (
-              <View style={styles.buttonRow}>
-                <Animated.Text
-                  style={[
-                    styles.buttonText,
-                    {
-                      color: colors.text,
-                    },
-                    textStyle,
-                    textStyle2
-                  ]}
-                >
-                  {text2}
-                </Animated.Text>
-                <ThemedButton
-                  style={styles.fab}
-                  animatedStyle={buttonStyle2}
-                  onPress={handlePressWithAnimation(onPress1)}
-                  iconName="camera"
-                />
-              </View>
-            )}
-            {text1 && (
-              <View style={styles.buttonRow}>
-                <Animated.Text
-                  style={[
-                    styles.buttonText,
-                    {
-                      color: colors.text,
-                    },
-                    textStyle,
-                    textStyle1
-                  ]}
-                >
-                  {text1}
-                </Animated.Text>
-                <ThemedButton
-                  style={styles.fab}
-                  animatedStyle={buttonStyle1}
-                  onPress={handlePressWithAnimation(onPress2)}
-                  iconName="plus-circle"
-                />
-              </View>
-            )}
-          </View>
-        </Animated.View>
+    <>
+      {/* Backdrop that covers the entire screen when FAB is open */}
+      {open && (
+        <TouchableWithoutFeedback onPress={handleFABPress}>
+          <Animated.View 
+            style={[
+              StyleSheet.absoluteFillObject, 
+              { 
+                backgroundColor: 'black', 
+                zIndex: 1 
+              }, 
+              backdropAnimatedStyle
+            ]} 
+          />
+        </TouchableWithoutFeedback>
       )}
-      <FAB
-        icon={open ? 'close' : 'plus'}
-        color={colors.icon}
-        style={{ backgroundColor: colors.button }}
-        onPress={handleFABPress}
-      />
-    </Animated.View>
+      
+      <Animated.View style={[style, animatedStyle, styles.container]} ref={ref}>
+        {(open || closing) && ( // Render while open or closing
+          <Animated.View style={translateY}>
+            <View style={styles.buttonsWrapper}>
+              {actions.map((action, index) => (
+                action.text && (
+                  <View key={action.iconName} style={styles.buttonRow}>
+                    <Animated.Text
+                      style={[
+                        styles.buttonText,
+                        { color: colors.text },
+                        textStyle,
+                        textStyles[index]
+                      ]}
+                    >
+                      {action.text}
+                    </Animated.Text>
+                    <ThemedButton
+                      style={styles.fab}
+                      animatedStyle={buttonStyles[index]}
+                      onPress={handlePressWithAnimation(action.onPress)}
+                      iconName={action.iconName}
+                    />
+                  </View>
+                )
+              ))}
+            </View>
+          </Animated.View>
+        )}
+        <FAB
+          icon={open ? 'close' : mainIconName}
+          color={colors.icon}
+          style={{ backgroundColor: colors.button }}
+          onPress={handleFABPress}
+        />
+      </Animated.View>
+    </>
   );
 });
 
@@ -291,3 +265,5 @@ const styles = StyleSheet.create({
     textShadowRadius: 1,
   }
 });
+
+export default ThemedFAB;

@@ -103,17 +103,6 @@ function HomeScreen() {
   const bottomSheetRef = useRef<BottomSheet>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [fabOpen, setFabOpen] = useState(false);
-  const [isBlurVisible, setIsBlurVisible] = useState(false); // For rendering
-  const [isBlurAnimating, setIsBlurAnimating] = useState(false); // For animation
-
-
-  const closeFAB = () => {
-    setFabOpen(false);
-  };
-
-  const openFAB = () => {
-    setFabOpen(true);
-  };
 
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
 
@@ -275,18 +264,6 @@ function HomeScreen() {
   }, [isEmpty, isEmptyShared]);
 
 
-  useEffect(() => {
-    if (fabOpen) {
-      setIsBlurVisible(true); // Show the blur view
-      setIsBlurAnimating(true); // Start fade-in animation
-    } else {
-      setIsBlurAnimating(false); // Start fade-out animation
-      setTimeout(() => {
-        setIsBlurVisible(false); // Unmount after animation completes
-      }, 250); // Match the animation duration
-    }
-  }, [fabOpen]);
-
   const animateEmptyCard = () => {
     emptyCardOffset.value = withSpring(0, {
       damping: 30,
@@ -384,16 +361,7 @@ function HomeScreen() {
       marginBottom,
     };
   });
-
-  const animatedBlurStyle = useAnimatedStyle(() => ({
-    opacity: withTiming(isBlurAnimating ? 1 : 0, {
-      duration: 250,
-      easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-    }),
-    zIndex: isBlurVisible ? 2 : -1,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-  }), [isBlurVisible, isBlurAnimating]); // Add dependencies here
-
+  
   const emptyCardStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: emptyCardOffset.value }],
   }));
@@ -404,7 +372,6 @@ function HomeScreen() {
 
   const onNavigateToDetailScreen = useCallback(
     throttle((item: QRRecord) => {
-      closeFAB();
       router.push({
         pathname: `/detail`,
         params: {
@@ -421,7 +388,6 @@ function HomeScreen() {
   }, []);
 
   const onNavigateToSettingsScreen = useCallback(() => {
-    closeFAB();
     router.push('/settings');
   }, []);
   const onNavigateToAddScreen = useCallback(() => {
@@ -448,7 +414,6 @@ function HomeScreen() {
 
     // Use the existing shared value for FAB behavior
     if (event.contentOffset.y > 50 && fabOpen) {
-      closeFAB();
     } else if (event.contentOffset.y <= 50 && !fabOpen) {
       setFabOpen(true);
     }
@@ -458,7 +423,6 @@ function HomeScreen() {
   }, [scrollY]);
 
   const onDragBegin = useCallback(() => {
-    closeFAB();
     triggerHapticFeedback();
     setIsActive(true);
   }, []);
@@ -488,8 +452,7 @@ function HomeScreen() {
     setSelectedItemId(id);
     setIsSheetOpen(true);
     bottomSheetRef.current?.expand();
-    closeFAB();
-  }, [setSelectedItemId, bottomSheetRef, setIsSheetOpen, closeFAB]);
+  }, [setSelectedItemId, bottomSheetRef, setIsSheetOpen]);
 
   const onDeleteSheetPress = useCallback(() => {
     bottomSheetRef.current?.close();
@@ -669,32 +632,34 @@ function HomeScreen() {
           onScrollOffsetChange={onScrollOffsetChange}
           decelerationRate={'fast'}
           scrollEnabled={!fabOpen}
-          // pointerEvents='box-none'
+        // pointerEvents='box-none'
         />
       )}
       {!isLoading &&
 
         <ThemedFAB
-          open={fabOpen}
-          setOpen={fabOpen ? closeFAB : openFAB}
-          animatedStyle={[fabStyle, styles.fab]}
-          onPress1={onNavigateToScanScreen}
-          onPress2={onNavigateToAddScreen}
-          onPress3={onOpenGallery}
-          text1={t('homeScreen.fab.add')}
-          text2={t('homeScreen.fab.scan')}
-          text3={t('homeScreen.fab.gallery')}
+          actions={[
+            {
+              text: t('homeScreen.fab.add'),
+              iconName: 'plus-circle',
+              onPress: onNavigateToAddScreen
+            },
+            {
+              text: t('homeScreen.fab.scan'),
+              iconName: 'camera',
+              onPress: onNavigateToScanScreen,
+            },
+            {
+              text: t('homeScreen.fab.gallery'),
+              iconName: 'image',
+              onPress: onOpenGallery
+            }
+          ]}
+          style={styles.fab}
+          animatedStyle={fabStyle}
+
         />
       }
-      {isBlurVisible && (
-        <TouchableWithoutFeedback
-          onPress={() => {
-            closeFAB();
-          }}
-        >
-          <Animated.View style={[StyleSheet.absoluteFillObject, animatedBlurStyle]} />
-        </TouchableWithoutFeedback>
-      )}
       <ThemedStatusToast
         isVisible={isToastVisible}
         message={toastMessage}
@@ -713,12 +678,14 @@ function HomeScreen() {
       <ThemedReuseableSheet
         // isVisible={shouldRenderSheet}
         ref={bottomSheetRef}
-        title="Manage Item"
+        title={t('homeScreen.manage')}
         // description="Choose an action"
-        onClose={() => {setTimeout(() => {
-          setIsSheetOpen(false)
-        }, 50);}}
-        snapPoints={['20%']}
+        onClose={() => {
+          setTimeout(() => {
+            setIsSheetOpen(false)
+          }, 50);
+        }}
+        snapPoints={['25%']}
         actions={[
           {
             icon: 'pencil-outline',
@@ -728,6 +695,7 @@ function HomeScreen() {
           },
           {
             icon: 'delete-outline',
+            iconLibrary: 'MaterialCommunityIcons',
             text: t('homeScreen.delete'),
             onPress: () => onDeleteSheetPress(),
           }
@@ -813,15 +781,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-  },
-  blurContainer: {
-    position: 'absolute',
-    opacity: 0.8,
-    top: 0,
-    left: 0,
-    right: 0,
-    height: STATUSBAR_HEIGHT,
-    zIndex: 1,
   },
   fab: {
     bottom: 20,

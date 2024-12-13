@@ -25,6 +25,7 @@ import ThemedReuseableSheet from '@/components/bottomsheet/ThemedReusableSheet';
 import BottomSheet from '@gorhom/bottom-sheet';
 import { ThemedFilterSkeleton } from '@/components/skeletons';
 import { isLoading } from 'expo-font';
+import { baseColors } from 'moti/build/skeleton/shared';
 
 // Utility function to format the amount
 const formatAmount = (amount: string) => {
@@ -289,7 +290,7 @@ export default function DetailScreen() {
                                     >
                                         <MaterialCommunityIcons name={amount ? 'navigation' : 'navigation-outline'} size={18} color={iconColor} />
                                     </Pressable>
-                                    <View style={styles.currencyContainer}>
+                                    <View style={[styles.currencyContainer, currentTheme === 'light' ? { borderColor: 'rgba(0, 0, 0, 0.2) '} : { borderColor: 'rgba(255, 255, 255, 0.2)' }]}>
                                         <ThemedText style={styles.currencyText}>đ</ThemedText>
                                     </View>
 
@@ -328,8 +329,16 @@ export default function DetailScreen() {
                                     renderPaymentMethodItem({ item: { code: item.code, name: item.name }, onPress: openBank })
                                 )}
                                 ListEmptyComponent={
-                                    <View>
-                                        <ThemedText>{t('detailsScreen.noBank')}</ThemedText>
+                                    <View style={{flexDirection: 'row', gap: 25}}>
+                                        <View style={{flexDirection: 'column' ,justifyContent: 'center', alignItems: 'center', gap: 10}}>
+                                        <View style={{backgroundColor: 'red', height: 55, width: 55, borderRadius: 16}}/>
+                                        <View style={{backgroundColor: 'blue', height: 15, width: 50, borderRadius: 16  }}/>
+                                        </View>
+                                       
+                                        <View style={{backgroundColor: 'red', height: 55, width: 55, borderRadius: 16}}/>
+                                        <View style={{backgroundColor: 'red', height: 55, width: 55, borderRadius: 16}}/>
+                                        <View style={{backgroundColor: 'red', height: 55, width: 55, borderRadius: 16}}/>
+                                        <View style={{backgroundColor: 'red', height: 55, width: 55, borderRadius: 16}}/>
                                     </View>
                                 }
                             />
@@ -439,12 +448,12 @@ const styles = StyleSheet.create({
         borderRadius: 50,
         overflow: 'hidden',
         marginLeft: 10,
-        borderColor: 'rgba(0, 0, 0, 0.1)',
+        borderColor: 'rgba(255, 255, 255, 0.1)',
         borderWidth: 1
     },
     currencyText:{
         fontSize: 16,
-        color: 'rgba(0, 0, 0, 0.3)'
+        opacity: 0.3
     },
     suggestionList: {
     },

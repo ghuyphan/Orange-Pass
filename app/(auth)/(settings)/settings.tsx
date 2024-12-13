@@ -51,46 +51,23 @@ function SettingsScreen() {
         return;
       }
   
-      let parsedConfig: AvatarConfig | null = null;
-  
       try {
-        if (typeof avatarConfigString === 'object') {
-          parsedConfig = avatarConfigString as AvatarConfig;
-        } else if (typeof avatarConfigString === 'string') {
-          if (avatarConfigString.startsWith('{')) {
-            parsedConfig = JSON.parse(avatarConfigString) as AvatarConfig;
-          } else if (avatarConfigString.includes('=')) {
-            parsedConfig = parseAvatarString(avatarConfigString);
-          }
-        }
+        // Directly parse if it's a string, or use as-is if it's already an object
+        const parsedConfig = typeof avatarConfigString === 'string'
+          ? JSON.parse(avatarConfigString)
+          : avatarConfigString;
+  
+        setAvatarConfig(parsedConfig);
       } catch (error) {
         console.error("Error parsing avatar config:", error);
-        parsedConfig = null;
+        setAvatarConfig(null);
       }
-  
-      setAvatarConfig(parsedConfig);
     };
   
+    // Remove the unnecessary timeout
     loadAvatarConfig();
   }, [avatarConfigString]);
   
-
-  // Function to parse the offline string format
-  const parseAvatarString = (str: string): AvatarConfig => {
-    const cleanStr = str.replace(/[{}]/g, '').trim();
-    const pairs = cleanStr.split(', ');
-    const config: { [key: string]: string } = {};
-
-    pairs.forEach(pair => {
-      const [key, value] = pair.split('=');
-      if (key && value) {
-        config[key.trim()] = value.trim();
-      }
-    });
-
-    return config as AvatarConfig;
-  };
-
   // const [avatarConfig, setAvatarConfig] = useState<{ [key: string]: any } | null>(null);
   const { currentTheme } = useTheme();
 
