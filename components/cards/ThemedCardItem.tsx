@@ -1,15 +1,13 @@
 import React, { memo, useMemo } from 'react';
-import { Image, StyleSheet, View, Pressable } from 'react-native';
-import { ThemedText } from '../ThemedText';
+import { Image, StyleSheet, View, Pressable, Text } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Animated from 'react-native-reanimated';
 import QRCode from 'react-native-qrcode-svg';
 import Barcode from 'react-native-barcode-svg';
+import { LinearGradient } from 'expo-linear-gradient';
 import { getIconPath } from '@/utils/returnIcon';
 import { returnItemData } from '@/utils/returnItemData';
 import { returnMidpointColors } from '@/utils/returnMidpointColor';
-import { LinearGradient } from 'expo-linear-gradient';
-// import { useTheme } from '@/context/ThemeContext';
 
 export type ThemedCardItemProps = {
   code: string;
@@ -40,8 +38,6 @@ const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps):
     onDrag,
   } = props;
 
-  // const { currentTheme } = useTheme();
-
   const { name, color, accent_color } = useMemo(() => returnItemData(code, type), [code, type]);
   const iconPath = useMemo(() => getIconPath(code), [code]);
 
@@ -53,96 +49,65 @@ const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps):
     return accountName;
   }, [type, accountNumber, accountName]);
 
-  const containerStyle = useMemo(() => {
-    return [
-      styles.itemContainer,
-      {
-        marginHorizontal: 15,
-        marginBottom: 15,
-      },
-    ];
-  }, []);
-
-  // const gradientColors = useMemo(() => {
-  //   return currentTheme === 'light'
-  //     ? [
-  //       color?.light || '#FAF3E7',  // Light beige with a hint of cream
-  //       returnMidpointColor(color.light, accent_color.light) || '#EADBC8',  // Warmer mid-tone beige
-  //       accent_color?.light || '#D6C4AF'  // Deeper beige for clear contrast
-  //     ]
-  //     : [
-  //       color?.dark || '#21252b',
-  //       returnMidpointColor(color.dark, accent_color.dark) || '#343a40',
-  //       accent_color?.dark || '#495057'
-  //     ];
-  // }, [currentTheme, color, accent_color]);
-
-
   const renderContent = () => (
     <LinearGradient
-      colors={
-        returnMidpointColors(
-          color?.light || '#FAF3E7',
-          accent_color?.light || '#D6C4AF',
-          6 // Number of blending steps
-        ) || ['#FAF3E7', '#D6C4AF']
-      }
-      start={{ x: 0.25, y: 0.25 }}
-      end={{ x: 0.75, y: 0.75 }}
-      style={styles.itemContainer}
+    colors={
+      returnMidpointColors(
+        color?.light || '#FAF3E7',
+        accent_color?.light || '#D6C4AF',
+        6
+      ) || ['#FAF3E7', '#D6C4AF']
+    }
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.cardContainer}
     >
-
-      <View style={styles.headerContainer}>
-        <View style={styles.headerLeft}>
-          {onDrag && <View style={styles.dragIconContainer}>
-            <MaterialCommunityIcons name="menu" size={18} color="white" />
-          </View>}
-          <View style={styles.leftHeaderContainer}>
-            <View style={styles.iconContainer}>
-              <Image source={iconPath} style={styles.icon} resizeMode="contain" />
-            </View>
-            <View style={styles.labelContainer}>
-              <ThemedText type="defaultSemiBold" style={styles.companyName}>
-                {name}
-              </ThemedText>
-              {type === 'bank' && (
-                <ThemedText style={styles.companyFullName} numberOfLines={1} ellipsizeMode="tail">
-                  {accountDisplayName}
-                </ThemedText>
-              )}
-            </View>
+      {/* Card Header */}
+      <View style={styles.cardHeader}>
+        <View style={styles.leftHeaderContainer}>
+          <View style={styles.logoContainer}>
+            <Image source={iconPath} style={styles.logo} resizeMode="contain" />
           </View>
+          <Text style={styles.cardName}>{name}</Text>
         </View>
         {onMoreButtonPress && (
           <Pressable
             onPress={onMoreButtonPress}
             hitSlop={{ bottom: 40, left: 30, right: 30, top: 30 }}
           >
-            <MaterialCommunityIcons name="dots-vertical" size={18} color="white" />
+            <MaterialCommunityIcons name="dots-vertical" size={20} color="white" />
           </Pressable>
         )}
       </View>
 
-      <View style={styles.qrContainer}>
-        <View style={styles.qr}>
+      {/* Card Footer */}
+      <View style={styles.cardFooter}>
+        <View style={styles.footerLeft}>
+          <Text style={styles.cardHolderName}>{accountName}</Text>
+          {/* {type === 'bank' && ( */}
+            <Text numberOfLines={1} ellipsizeMode="tail" style={styles.cardType}>{accountNumber ? accountDisplayName : metadata}</Text>
+          {/* )} */}
+        </View>
+        <View style={styles.qrContainer}>
           {metadata_type === 'qr' ? (
-            <QRCode value={metadata} size={75} />
+            <QRCode value={metadata} size={55} />
           ) : (
-            <Barcode height={75} maxWidth={150} value={metadata} format="CODE128" />
+            <Barcode height={55} maxWidth={100} value={metadata} format="CODE128" />
           )}
         </View>
       </View>
 
-      <View style={styles.footerContainer}>
-        <ThemedText style={styles.footerText} numberOfLines={1} ellipsizeMode="tail">
-          {accountNumber ? accountName : metadata}
-        </ThemedText>
-      </View>
+      {/* Drag Handle */}
+      {onDrag && (
+        <View style={styles.dragHandle}>
+          <MaterialCommunityIcons name="drag-horizontal" size={20} color="rgba(255,255,255,0.5)" />
+        </View>
+      )}
     </LinearGradient>
   );
 
   return (
-    <View style={{ overflow: 'hidden' }}>
+    <View style={[styles.outerContainer, { marginHorizontal: 15, marginBottom: 15 }]}>
       <Animated.View style={[animatedStyle, style]}>
         {onItemPress ? (
           <Pressable
@@ -150,7 +115,7 @@ const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps):
             onLongPress={onDrag}
             delayLongPress={150}
             android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
-            style={containerStyle}
+            style={styles.pressableContainer}
           >
             {renderContent()}
           </Pressable>
@@ -163,80 +128,86 @@ const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps):
 });
 
 const styles = StyleSheet.create({
-  itemContainer: {
+  outerContainer: {
+    shadowColor: '#000',
+    // shadowOffset: { width: 0, height: 4 },
+    // shadowOpacity: 0.1,
+    // shadowRadius: 6,
+    // elevation: 5,
+  },
+  cardContainer: {
     borderRadius: 16,
-    overflow: 'hidden',
-  },
-  headerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    // padding: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    aspectRatio: 1.6,
     justifyContent: 'space-between',
-    paddingHorizontal: 15,
-    paddingVertical: 10,
   },
-  headerLeft: {
+  cardHeader: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 10,
-  },
-  dragIconContainer: {
-    pointerEvents: 'none',
   },
   leftHeaderContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
   },
-  iconContainer: {
-    width: 35,
-    aspectRatio: 1,
-    borderRadius: 50,
+  cardName: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  logoContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 25,
+    backgroundColor: 'white',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'white',
   },
-  icon: {
+  logo: {
     width: '60%',
     height: '60%',
   },
-  labelContainer: {
-    flexDirection: 'column',
-    pointerEvents: 'none',
-  },
-  companyName: {
-    fontSize: 14,
-    color: 'white',
-  },
-  companyFullName: {
-    fontSize: 14,
-    width: '90%',
-    color: 'white',
-  },
-  qrContainer: {
-    alignItems: 'flex-end',
-    paddingHorizontal: 15,
-    marginVertical: 10,
-    pointerEvents: 'none',
-  },
-  qr: {
-    backgroundColor: 'white',
-    padding: 10,
-    borderRadius: 16,
-  },
-  footerContainer: {
+  cardFooter: {
     flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 15,
-    // paddingVertical: 10, 
-    paddingBottom: 10,
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
     pointerEvents: 'none',
-    maxWidth: '50%',
+  },
+  footerLeft: {
+    flexDirection: 'column',
+  },
+  cardHolderName: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  cardType: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 12,
+    marginTop: 5,
+    maxWidth: 150, // Set a maximum width
     overflow: 'hidden',
   },
-  footerText: {
-    fontSize: 13,
-    color: 'white',
-
+  qrContainer: {
+    backgroundColor: 'white',
+    borderRadius: 8,
+    padding: 5,
+  },
+  dragHandle: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    pointerEvents: 'none',
+  },
+  pressableContainer: {
+    borderRadius: 20,
+    overflow: 'hidden',
   },
 });
+
 export default ThemedCardItem;

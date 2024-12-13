@@ -90,6 +90,7 @@
     "confirmDeleteMessage": "Are you sure you want to move this card to trash?",
     "cancel": "Cancel",
     "moveToTrash": "Move to trash",
+    "move": "Move",
     "fetchError": "Failed to load data. Please try again.",
     "syncError": "Failed to sync. Please try again.",
     "filters": {
@@ -159,6 +160,7 @@
     "edit": "Edit",
     "delete": "Delete",
     "moveToTrash": "Move to trash",
+    "move": "Move",
     "nearbyLocation": "Nearby location",
     "createQrCode": "Create payment QR code",
     "receivePlaceholder": "Enter amount to receive",

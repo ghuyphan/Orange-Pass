@@ -3,7 +3,6 @@ import { Image, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { ThemedText } from '../ThemedText';
 import QRCode from 'react-native-qrcode-svg';
 import Barcode from 'react-native-barcode-svg';
-import { useTheme } from '@/context/ThemeContext';
 import { getIconPath } from '@/utils/returnIcon';
 import { returnItemData } from '@/utils/returnItemData';
 import { returnMidpointColors } from '@/utils/returnMidpointColor';
@@ -28,22 +27,16 @@ export const ThemedPinnedCard = memo(function ThemedPinnedCard({
   accountNumber,
   style,
 }: ThemedPinnedCardProps): JSX.Element {
-  // const { currentTheme } = useTheme();
   const { width } = useWindowDimensions();
 
   // Calculate dimensions with useMemo
-  const qrSize = useMemo(() => width * 0.43, [width]);
-  const barcodeHeight = useMemo(() => width * 0.26, [width]);
-  const barcodeWidth = useMemo(() => width * 0.65, [width]);
+  const qrSize = useMemo(() => width * 0.40, [width]);
+  const barcodeHeight = useMemo(() => width * 0.25, [width]);
+  const barcodeWidth = useMemo(() => width * 0.60, [width]);
 
   // Pre-calculate data with useMemo
   const { name, color, accent_color } = useMemo(() => returnItemData(code, type), [code, type]);
   const iconPath = useMemo(() => getIconPath(code), [code]);
-  // const gradientColors = useMemo(() => 
-  //   currentTheme === 'light'
-  //     ? [color?.light || '#ffffff', returnMidpointColor(color.light, accent_color.light) || '#cccccc', accent_color?.light || '#f0f0f0']
-  //     : [color?.dark || '#000000', returnMidpointColor(color.dark, accent_color.dark) || '#505050', accent_color?.dark || '#303030']
-  // , [currentTheme, color, accent_color]);
 
   return (
     <LinearGradient
@@ -51,57 +44,57 @@ export const ThemedPinnedCard = memo(function ThemedPinnedCard({
         returnMidpointColors(
           color?.light || '#FAF3E7',
           accent_color?.light || '#D6C4AF',
-          6 // Number of blending steps
+          6
         ) || ['#FAF3E7', '#D6C4AF']
       }
-      start={{ x: 0.25, y: 0.25 }}
-      end={{ x: 0.75, y: 0.75 }}
-      
-      style={[styles.itemContainer, style]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={[styles.container, style]}
     >
       <View style={styles.headerContainer}>
-        <View style={styles.leftHeaderContainer}>
-          <View style={styles.iconContainer}>
-            <Image source={iconPath} style={styles.icon} resizeMode="contain" />
-          </View>
-          <ThemedText type="defaultSemiBold" style={styles.companyName}>
-            {name}
-          </ThemedText>
+        <View style={styles.logoContainer}>
+          <Image source={iconPath} style={styles.logo} resizeMode="contain" />
         </View>
+        <ThemedText style={styles.companyName}>
+          {name}
+        </ThemedText>
       </View>
 
-      <View style={styles.qrContainer}>
-        <View style={styles.qr}>
+      <View style={styles.codeContainer}>
+        <View style={styles.codeWrapper}>
           {metadata_type === 'qr' ? (
             <QRCode
               value={metadata}
               size={qrSize}
-              logo={iconPath}
-              logoSize={qrSize * 0.2}
-              logoBackgroundColor="white"
-              logoBorderRadius={50}
-              logoMargin={5}
+              // logo={iconPath}
+              // logoSize={qrSize * 0.15}
+              // logoBackgroundColor="white"
+              // logoBorderRadius={50}
+              // logoMargin={5}
               quietZone={3}
             />
           ) : (
-            <Barcode height={barcodeHeight} maxWidth={barcodeWidth} value={metadata} format="CODE128" />
+            <Barcode
+              height={barcodeHeight}
+              maxWidth={barcodeWidth}
+              value={metadata}
+              format="CODE128"
+            />
           )}
         </View>
+
         <View style={styles.infoContainer}>
           {type === 'bank' ? (
-            <>
+
               <ThemedText type="defaultSemiBold" style={styles.accountName} numberOfLines={1}>
                 {accountName}
               </ThemedText>
+          ): (
               <ThemedText style={styles.accountNumber} numberOfLines={1}>
-                {accountNumber}
+                {accountNumber ? accountNumber : metadata}
               </ThemedText>
-            </>
-          ) : (
-            <ThemedText style={styles.memberID} numberOfLines={2}>
-              {metadata}
-            </ThemedText>
-          )}
+
+          )} 
         </View>
       </View>
     </LinearGradient>
@@ -109,68 +102,65 @@ export const ThemedPinnedCard = memo(function ThemedPinnedCard({
 });
 
 const styles = StyleSheet.create({
-  itemContainer: {
+  container: {
     borderRadius: 16,
-    paddingHorizontal: 15,  // Horizontal padding: 15
-    paddingVertical: 10,   // Vertical padding: 10
-    overflow: 'hidden',
+    padding: 20,
+    // shadowColor: '#000',
+    // shadowOffset: { width: 0, height: 4 },
+    // shadowOpacity: 0.1,
+    // shadowRadius: 6,
+    // elevation: 5,
   },
   headerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 10,      // Vertical margin: 10
+    marginBottom: 20,
+    gap: 15,
   },
-  leftHeaderContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  iconContainer: {
-    width: 35,
-    aspectRatio: 1,
-    borderRadius: 50,
+  logoContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 25,
+    backgroundColor: 'white',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'white',
   },
-  icon: {
+  logo: {
     width: '60%',
     height: '60%',
   },
   companyName: {
-    fontSize: 16,
     color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+    flex: 1,
   },
-  qrContainer: {
-    flexDirection: 'column',
+  codeContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    overflow: 'hidden',
   },
-  qr: {
-    padding: 10,
-    borderRadius: 16,
+  codeWrapper: {
     backgroundColor: 'white',
-    marginBottom: 10,
+    borderRadius: 16,
+    padding: 8,
+    marginBottom: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   infoContainer: {
+    alignItems: 'center',
     justifyContent: 'center',
   },
   accountName: {
-    fontSize: 18,
-    textAlign: 'center',
     color: 'white',
+    fontSize: 18,
+    fontWeight: '600',
   },
   accountNumber: {
-    fontSize: 16,
-    textAlign: 'center',
-    color: 'white',
-  },
-  memberID: {
-    fontSize: 18,
-    textAlign: 'center',
-    color: 'white',
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 14,
     maxWidth: 250,
-  }
+  },
 });
+
+export default ThemedPinnedCard;

@@ -205,7 +205,7 @@ function SettingsScreen() {
         <ThemedButton
           iconName="logout"
           label={t('settingsScreen.logout')}
-          loadingLabel='Logging out...'
+          loadingLabel={t('settingsScreen.logingOut')}
           loading={isLoading}
           onPress={onLogout}
           style={{marginTop: 10}}

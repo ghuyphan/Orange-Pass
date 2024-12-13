@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
         maxWidth: '90%',
         lineHeight: 24,
         overflow: 'hidden',
-        opacity: 0.8,
+        opacity: 0.7,
     },
     actions: {
         flexDirection: 'row',

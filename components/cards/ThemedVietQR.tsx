@@ -2,7 +2,6 @@ import React, { memo, useMemo } from 'react';
 import { Image, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { ThemedText } from '../ThemedText';
 import QRCode from 'react-native-qrcode-svg';
-// import { useTheme } from '@/context/ThemeContext';
 import { getIconPath } from '@/utils/returnIcon';
 import { returnItemData } from '@/utils/returnItemData';
 import { returnMidpointColors } from '@/utils/returnMidpointColor';
@@ -14,6 +13,7 @@ export type ThemedVietQRProps = {
     metadata: string;
     accountName?: string;
     accountNumber?: string;
+    style?: object;
 };
 
 export const ThemedVietQRCard = memo(function ThemedVietQRCard({
@@ -22,76 +22,73 @@ export const ThemedVietQRCard = memo(function ThemedVietQRCard({
     metadata,
     accountName,
     accountNumber,
+    style,
 }: ThemedVietQRProps): JSX.Element {
-    // const { currentTheme } = useTheme();
     const { width } = useWindowDimensions();
 
-    const qrSize = useMemo(() => width * 0.45, [width]);
+    const qrSize = useMemo(() => width * 0.44, [width]);
     const { name, color, accent_color } = useMemo(() => returnItemData(code, type), [code, type]);
     const iconPath = useMemo(() => getIconPath(code), [code]);
-    // const [shouldRenderCode, setShouldRenderCode] = useState(false);
-
-    // useEffect(() => {
-    //     const task = InteractionManager.runAfterInteractions(() => {
-    //         setShouldRenderCode(true);
-    //     });
-    //     return () => task.cancel();
-    // }, []);
 
     return (
         <LinearGradient
-        colors={
-          returnMidpointColors(
-            color?.light || '#FAF3E7',
-            accent_color?.light || '#D6C4AF',
-            4 // Number of blending steps
-          ) || ['#FAF3E7', '#D6C4AF']
-        }
-        start={{ x: 0.25, y: 0.25 }}
-        end={{ x: 0.75, y: 0.75 }}
-        
-        style={styles.itemContainer}
-      >
-  
-  
+            colors={
+                returnMidpointColors(
+                    color?.light || '#FAF3E7',
+                    accent_color?.light || '#D6C4AF',
+                    6
+                ) || ['#FAF3E7', '#D6C4AF']
+            }
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={[styles.container, style]}
+        >
             <View style={styles.headerContainer}>
-                <View style={styles.leftHeaderContainer}>
-                    <View style={styles.iconContainer}>
-                        <Image source={iconPath} style={styles.icon} resizeMode="contain" />
-                    </View>
-                    <ThemedText type="defaultSemiBold" style={styles.companyName}>
-                        {name}
-                    </ThemedText>
+                <View style={styles.logoContainer}>
+                    <Image source={iconPath} style={styles.logo} resizeMode="contain" />
                 </View>
+                <ThemedText style={styles.companyName}>
+                    {name}
+                </ThemedText>
             </View>
 
-            <View style={styles.qrContainer}>
-                    <View style={styles.qr}>
-                        <QRCode
-                            value={metadata}
-                            size={qrSize}
-                            logo={iconPath}
-                            logoSize={qrSize * 0.2}
-                            logoBackgroundColor="white"
-                            logoBorderRadius={50}
-                            logoMargin={5}
-                            quietZone={3}
+            <View style={styles.codeContainer}>
+                <View style={styles.codeWrapper}>
+                    <QRCode
+                        value={metadata}
+                        size={qrSize}
+                        // logo={iconPath}
+                        // logoSize={qrSize * 0.2}
+                        // logoBackgroundColor="white"
+                        // logoBorderRadius={50}
+                        // logoMargin={5}
+                        quietZone={3}
+                    />
+                </View>
+
+                <View style={styles.additionalInfoContainer}>
+                    <View style={styles.brandContainer}>
+                        <Image 
+                            style={styles.vietQRIcon} 
+                            source={require('@/assets/images/vietqr.png')} 
+                            resizeMode="contain" 
+                        />
+                        <View style={styles.divider} />
+                        <Image 
+                            style={styles.napasIcon} 
+                            source={require('@/assets/images/napas.png')} 
+                            resizeMode="contain" 
                         />
                     </View>
-                <View style={styles.logoContainer}>
-                    {/* <VIETQR width={70} height={30} style={styles.vietQRIcon} /> */}
-                    <Image style={styles.vietQRIcon} source={require('@/assets/images/vietqr.png')} resizeMode="contain" />
-                    <View style={styles.divider} />
-                    <Image style={styles.napasIcon} source={require('@/assets/images/napas.png')} resizeMode="contain" />
-                    {/* <NAPAS width={60} height={30} style={styles.napasIcon} /> */}
-                </View>
-                <View style={styles.infoContainer}>
-                    <ThemedText type="defaultSemiBold" style={styles.accountName} numberOfLines={1}>
-                        {accountName}
-                    </ThemedText>
-                    <ThemedText style={styles.accountNumber} numberOfLines={1}>
-                        {accountNumber}
-                    </ThemedText>
+
+                    <View style={styles.infoContainer}>
+                        <ThemedText type="defaultSemiBold" style={styles.accountName} numberOfLines={1}>
+                            {accountName}
+                        </ThemedText>
+                        <ThemedText style={styles.accountNumber} numberOfLines={1}>
+                            {accountNumber}
+                        </ThemedText>
+                    </View>
                 </View>
             </View>
         </LinearGradient>
@@ -99,53 +96,58 @@ export const ThemedVietQRCard = memo(function ThemedVietQRCard({
 });
 
 const styles = StyleSheet.create({
-    itemContainer: {
-        borderRadius: 15,
-        paddingHorizontal: 15, // Horizontal: 15
-        paddingVertical: 10,  // Vertical: 10
-        overflow: 'hidden',
+    container: {
+        borderRadius: 16,
+        padding: 20,
     },
     headerContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: 10, // Vertical: 10
+        marginBottom: 20,
+        gap: 15,
     },
-    leftHeaderContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 10,
-    },
-    iconContainer: {
-        width: 35,
-        aspectRatio: 1,
-        borderRadius: 50,
+    logoContainer: {
+        width: 40,
+        height: 40,
+        borderRadius: 25,
+        backgroundColor: 'white',
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'white',
     },
-    icon: {
+    logo: {
         width: '60%',
         height: '60%',
     },
     companyName: {
-        fontSize: 16,
         color: 'white',
+        fontSize: 16,
+        fontWeight: 'bold',
+        flex: 1,
     },
-    qrContainer: {
-        flexDirection: 'column',
+    codeContainer: {
         alignItems: 'center',
-        overflow: 'hidden',
+        justifyContent: 'center',
     },
-    logoContainer: {
+    codeWrapper: {
+        backgroundColor: 'white',
+        borderRadius: 16,
+        padding: 8,
+        marginBottom: 15,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    additionalInfoContainer: {
+        width: '100%',
+    },
+    brandContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        marginVertical: 10,  // Vertical: 10
-        paddingHorizontal: 15, // Horizontal: 15
-        paddingVertical: 5,   // Vertical: 5 (adjusted for smaller height)
-        backgroundColor: '#fff',
-        borderRadius: 15,
+        alignSelf: 'center',
+        backgroundColor: 'rgba(255,255,255,0.4)',
+        borderRadius: 10,
+        padding: 5,
+        marginBottom: 15,
     },
     vietQRIcon: {
         width: '23%',
@@ -161,25 +163,22 @@ const styles = StyleSheet.create({
         width: '21%',
         height: 20,
         marginTop: 5,
-        marginLeft: 5,
-    },
-    qr: {
-        padding: 10,
-        borderRadius: 15,
-        backgroundColor: 'white',
-        marginBottom: 10, // Vertical: 10
     },
     infoContainer: {
+        alignItems: 'center',
         justifyContent: 'center',
     },
     accountName: {
-        fontSize: 18,
-        textAlign: 'center',
         color: 'white',
+        fontSize: 18,
+        fontWeight: '600',
+        marginBottom: 5,
     },
     accountNumber: {
-        fontSize: 16,
-        textAlign: 'center',
-        color: 'white',
-    }
+        color: 'rgba(255,255,255,0.7)',
+        fontSize: 14,
+        maxWidth: 250,
+    },
 });
+
+export default ThemedVietQRCard;

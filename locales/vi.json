@@ -90,6 +90,7 @@
     "confirmDeleteMessage": "Bạn có chắc chắn muốn chuyển thẻ này vào thùng rác không?",
     "cancel": "Hủy",
     "moveToTrash": "Chuyển vào thùng rác",
+    "move": "Chuyển",
     "fetchError": "Không thể tải dữ liệu. Vui lòng thử lại.",
     "syncError": "Không thể đồng bộ. Vui lòng thử lại.",
     "filters": {

@@ -224,7 +224,7 @@ export default function DetailScreen() {
                 keyboardShouldPersistTaps="handled"
                 style={[{ backgroundColor: currentTheme === 'light' ? Colors.light.background : Colors.dark.background }]}
                 contentContainerStyle={styles.container}
-                extraScrollHeight={80}
+                extraScrollHeight={100}
                 extraHeight={200}
                 enableOnAndroid
                 showsVerticalScrollIndicator={false}
@@ -283,6 +283,9 @@ export default function DetailScreen() {
                                         placeholderTextColor={currentTheme === 'light' ? Colors.light.placeHolder : Colors.dark.placeHolder}
                                         onChangeText={(text) => setAmount(formatAmount(text))}
                                     />
+                                    <View style={[styles.currencyContainer, currentTheme === 'light' ? { borderColor: 'rgba(0, 0, 0, 0.2) ' } : { borderColor: 'rgba(255, 255, 255, 0.2)' }]}>
+                                        <ThemedText style={styles.currencyText}>đ</ThemedText>
+                                    </View>
                                     <Pressable
                                         hitSlop={{ bottom: 40, left: 30, right: 30, top: 30 }}
                                         onPress={transferAmount}
@@ -290,9 +293,6 @@ export default function DetailScreen() {
                                     >
                                         <MaterialCommunityIcons name={amount ? 'navigation' : 'navigation-outline'} size={18} color={iconColor} />
                                     </Pressable>
-                                    <View style={[styles.currencyContainer, currentTheme === 'light' ? { borderColor: 'rgba(0, 0, 0, 0.2) '} : { borderColor: 'rgba(255, 255, 255, 0.2)' }]}>
-                                        <ThemedText style={styles.currencyText}>đ</ThemedText>
-                                    </View>
 
                                 </View>
                                 <FlatList
@@ -329,16 +329,16 @@ export default function DetailScreen() {
                                     renderPaymentMethodItem({ item: { code: item.code, name: item.name }, onPress: openBank })
                                 )}
                                 ListEmptyComponent={
-                                    <View style={{flexDirection: 'row', gap: 25}}>
-                                        <View style={{flexDirection: 'column' ,justifyContent: 'center', alignItems: 'center', gap: 10}}>
-                                        <View style={{backgroundColor: 'red', height: 55, width: 55, borderRadius: 16}}/>
-                                        <View style={{backgroundColor: 'blue', height: 15, width: 50, borderRadius: 16  }}/>
+                                    <View style={{ flexDirection: 'row', gap: 25 }}>
+                                        <View style={{ flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 10 }}>
+                                            <View style={{ backgroundColor: 'red', height: 55, width: 55, borderRadius: 16 }} />
+                                            <View style={{ backgroundColor: 'blue', height: 15, width: 50, borderRadius: 16 }} />
                                         </View>
-                                       
-                                        <View style={{backgroundColor: 'red', height: 55, width: 55, borderRadius: 16}}/>
-                                        <View style={{backgroundColor: 'red', height: 55, width: 55, borderRadius: 16}}/>
-                                        <View style={{backgroundColor: 'red', height: 55, width: 55, borderRadius: 16}}/>
-                                        <View style={{backgroundColor: 'red', height: 55, width: 55, borderRadius: 16}}/>
+
+                                        <View style={{ backgroundColor: 'red', height: 55, width: 55, borderRadius: 16 }} />
+                                        <View style={{ backgroundColor: 'red', height: 55, width: 55, borderRadius: 16 }} />
+                                        <View style={{ backgroundColor: 'red', height: 55, width: 55, borderRadius: 16 }} />
+                                        <View style={{ backgroundColor: 'red', height: 55, width: 55, borderRadius: 16 }} />
                                     </View>
                                 }
                             />
@@ -355,20 +355,20 @@ export default function DetailScreen() {
                 </View>
                 <ThemedReuseableSheet
                     ref={bottomSheetRef}
-                    title="Manage Item"
-                    description="Choose an action"
+                    title={t('homeScreen.manage')}
                     snapPoints={['25%']}
                     actions={[
                         {
                             icon: 'pencil-outline',
                             iconLibrary: 'MaterialCommunityIcons',
-                            text: 'Edit',
+                            text: t('homeScreen.edit'),
                             onPress: () => bottomSheetRef.current?.close(),
                         },
                         {
                             icon: 'delete-outline',
-                            text: 'Delete',
-                            onPress: () => bottomSheetRef.current?.close(),
+                            iconLibrary: 'MaterialCommunityIcons',
+                            text: t('homeScreen.delete'),
+                            onPress: () => {},
                         }
                     ]}
                 />
@@ -447,11 +447,11 @@ const styles = StyleSheet.create({
         height: 22,
         borderRadius: 50,
         overflow: 'hidden',
-        marginLeft: 10,
+        marginRight: 10,
         borderColor: 'rgba(255, 255, 255, 0.1)',
         borderWidth: 1
     },
-    currencyText:{
+    currencyText: {
         fontSize: 16,
         opacity: 0.3
     },

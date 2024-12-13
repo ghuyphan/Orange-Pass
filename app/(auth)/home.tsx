@@ -273,7 +273,7 @@ function HomeScreen() {
 
 
   const titleContainerStyle = useAnimatedStyle(() => {
-    const SCROLL_THRESHOLD = 180;
+    const SCROLL_THRESHOLD = 130;
     const ANIMATION_RANGE = 50;
   
     const opacity = interpolate(
@@ -591,7 +591,7 @@ function HomeScreen() {
                 style={[searchContainerStyle]}
 
               > */}
-              <View style={styles.searchContainer}>
+              {/* <View style={styles.searchContainer}>
                 <ThemedIconInput
                   style={styles.searchInput}
                   placeholder={t('homeScreen.searchPlaceholder')}
@@ -600,7 +600,7 @@ function HomeScreen() {
                   onChangeText={setSearchQuery}
                   ref={inputRef}
                 />
-              </View>
+              </View> */}
               {/* </Animated.View> */}
               <ThemedFilter
                 selectedFilter={filter}
@@ -702,7 +702,7 @@ function HomeScreen() {
         ]}
       />
       <ThemedModal
-        primaryActionText={t('homeScreen.moveToTrash')}
+        primaryActionText={t('homeScreen.move')}
         onPrimaryAction={onDeletePress}
         onDismiss={() => setIsModalVisible(false)}
         dismissable={true}
@@ -753,14 +753,14 @@ const styles = StyleSheet.create({
   },
   searchContainer: {
     paddingHorizontal: 15,
-    marginBottom: 10
+    marginBottom: 15
   },
   searchInput: {
     borderRadius: 16,
     paddingVertical: 0,
   },
   listContainer: {
-    paddingTop: STATUSBAR_HEIGHT + 105,
+    paddingTop: STATUSBAR_HEIGHT + 110,
     flexGrow: 1,
   },
   emptyItem: {

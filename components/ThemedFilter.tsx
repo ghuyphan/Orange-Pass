@@ -20,14 +20,6 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Colors } from '@/constants/Colors';
 
-// Enable LayoutAnimation for Android
-// if (
-//     Platform.OS === "android" &&
-//     UIManager.setLayoutAnimationEnabledExperimental
-// ) {
-//     UIManager.setLayoutAnimationEnabledExperimental(true);
-// }
-
 type ThemedFilterProps = {
     selectedFilter: string;
     onFilterChange: (filter: string) => void;
@@ -106,6 +98,7 @@ const FilterItem = React.memo(
                     {isSelected && (
                         <Animated.View style={animatedStyle}>
                             <ThemedText
+                            type='defaultSemiBold'
                                 style={[
                                     styles.baseTextStyle,
                                     isSelected &&
@@ -128,6 +121,8 @@ const FilterItem = React.memo(
         prevProps.isDarkMode === nextProps.isDarkMode &&
         prevProps.item.label === nextProps.item.label
 );
+
+FilterItem.displayName = 'FilterItem';
 
 const ThemedFilter = ({ selectedFilter, onFilterChange, style }: ThemedFilterProps) => {
     const { locale } = useLocale();
@@ -217,8 +212,8 @@ const styles = StyleSheet.create({
     filterButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 10,
-        paddingHorizontal: 20,
+        paddingVertical: 12,
+        paddingHorizontal: 18,
         borderRadius: 16,
         overflow: 'hidden',
     },
