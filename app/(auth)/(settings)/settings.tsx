@@ -45,29 +45,29 @@ function SettingsScreen() {
   const [avatarConfig, setAvatarConfig] = useState<AvatarConfig | null>(null);
 
   useEffect(() => {
+
     const loadAvatarConfig = async () => {
       if (!avatarConfigString) {
         setAvatarConfig(null);
         return;
       }
-  
+
       try {
         // Directly parse if it's a string, or use as-is if it's already an object
         const parsedConfig = typeof avatarConfigString === 'string'
           ? JSON.parse(avatarConfigString)
           : avatarConfigString;
-  
+
         setAvatarConfig(parsedConfig);
       } catch (error) {
         console.error("Error parsing avatar config:", error);
         setAvatarConfig(null);
       }
     };
-  
-    // Remove the unnecessary timeout
+
     loadAvatarConfig();
-  }, [avatarConfigString]);
-  
+  }, []);
+
   // const [avatarConfig, setAvatarConfig] = useState<{ [key: string]: any } | null>(null);
   const { currentTheme } = useTheme();
 
@@ -208,7 +208,7 @@ function SettingsScreen() {
           loadingLabel={t('settingsScreen.logingOut')}
           loading={isLoading}
           onPress={onLogout}
-          style={{marginTop: 10}}
+          style={{ marginTop: 10 }}
         />
       </Animated.ScrollView>
       <ThemedModal
@@ -278,8 +278,8 @@ const styles = StyleSheet.create({
   avatarContainer: {
     alignItems: 'center',
     flexDirection: 'row',
-    paddingVertical: 10,
-    paddingHorizontal: 15,
+    paddingVertical: 15,
+    paddingHorizontal: 20,
     marginBottom: 30,
     borderRadius: 16,
     gap: 0,
@@ -300,25 +300,26 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   userEmail: {
-    fontSize: 18,
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   userName: {
-    opacity: 0.5,
-    fontSize: 13.5,
+    opacity: 0.7,
+    fontSize: 14,
     width: '100%',
   },
   sectionContainer: {
     borderRadius: 16,
     backgroundColor: 'white',
     marginBottom: 20,
-    gap: 5,
+    // gap: 5,
     overflow: 'hidden',
   },
   settingsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 15,
+    paddingHorizontal: 20,
   },
   sectionTitle: {
     fontSize: 16,

@@ -90,9 +90,9 @@ const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps):
         </View>
         <View style={styles.qrContainer}>
           {metadata_type === 'qr' ? (
-            <QRCode value={metadata} size={55} />
+            <QRCode value={metadata} size={70} />
           ) : (
-            <Barcode height={55} maxWidth={100} value={metadata} format="CODE128" />
+            <Barcode height={70} maxWidth={125} value={metadata} format="CODE128" />
           )}
         </View>
       </View>
@@ -138,10 +138,11 @@ const styles = StyleSheet.create({
   cardContainer: {
     borderRadius: 16,
     // padding: 20,
-    paddingHorizontal: 20,
     paddingVertical: 15,
-    aspectRatio: 1.6,
+    paddingHorizontal: 20,
+    aspectRatio: 1.65,
     justifyContent: 'space-between',
+    elevation: 3,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -188,7 +189,7 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.7)',
     fontSize: 12,
     marginTop: 5,
-    maxWidth: 150, // Set a maximum width
+    maxWidth: 120, // Set a maximum width
     overflow: 'hidden',
   },
   qrContainer: {

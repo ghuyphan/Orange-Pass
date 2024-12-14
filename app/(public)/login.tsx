@@ -96,12 +96,12 @@ export default function LoginScreen() {
           showsVerticalScrollIndicator={false}
           scrollEnabled={isKeyboardVisible}
         >
-            <View style={styles.topContainer}>
-                <View style={styles.logoContainer}>
-                    <LOGO width={width * 0.14} height={width * 0.14} />
-                </View>
-                <ThemedText style={styles.title} type='title'>{t('onboardingScreen.title')}</ThemedText>
+          <View style={styles.topContainer}>
+            <View style={styles.logoContainer}>
+              <LOGO width={width * 0.14} height={width * 0.14} />
             </View>
+            <ThemedText style={styles.title} type='title'>{t('onboardingScreen.title')}</ThemedText>
+          </View>
           <View style={[styles.inputContainer, { backgroundColor: cardColor }]}>
             <ThemedInput
               label={t('loginScreen.email')}
@@ -173,22 +173,22 @@ const styles = StyleSheet.create({
     marginTop: 105,
     gap: 20,
     alignItems: 'center'
-},
+  },
   logoContainer: {
     backgroundColor: '#FFF5E1',
     padding: 14,
     borderRadius: 20,
     alignSelf: 'center',
-},
-title:{
-  fontSize: 28,
-},
+  },
+  title: {
+    fontSize: 28,
+  },
   inputContainer: {
     // padding: 5,
     borderRadius: 16,
     // gap: 5,
     marginBottom: 10,
-    marginTop: 20,
+    marginTop: 30,
   },
   divider: {
     height: 3,
@@ -197,13 +197,13 @@ title:{
     alignSelf: 'flex-end',
   },
   loginButton: {
-    marginTop: 20,
+    marginTop: 30,
   },
   registerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 20,
+    marginTop: 10,
   },
   toastContainer: {
     position: 'absolute',

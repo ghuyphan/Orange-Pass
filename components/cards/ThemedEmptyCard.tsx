@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
     cardHeaderContainer: {
         flexDirection: 'row',
         width: '90%',
-        paddingHorizontal: 15,
+        paddingHorizontal: 20,
         paddingTop: 15,
     },
     label: {
@@ -114,12 +114,13 @@ const styles = StyleSheet.create({
         width: 350, 
         height: 300, 
         resizeMode: 'cover',    
+        flexShrink: 1
     },
     cardFooterContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 10,
-        paddingHorizontal: 15,
+        paddingVertical: 15,
+        paddingHorizontal: 20,
         // padding: 15,
         justifyContent: 'space-between',
         backgroundColor: '#6A524E',
@@ -127,7 +128,7 @@ const styles = StyleSheet.create({
         borderBottomRightRadius: 10,
     },
     cardFooterButton: { 
-        paddingHorizontal: 25, 
+        paddingHorizontal: 20, 
         paddingVertical: 5
     }
 });

@@ -85,12 +85,12 @@ const ThemeScreen = () => {
     >
       <View style={styles.section}>
         <View style={styles.leftSectionContainer}>
-          <View style={[
+          {/* <View style={[
             styles.iconContainer,
             { backgroundColor: currentTheme === 'dark' ? Colors.dark.buttonBackground : Colors.light.buttonBackground }
-          ]}>
-            <MaterialCommunityIcons name={iconName} size={20} color={colors} />
-          </View>
+          ]}> */}
+            <MaterialCommunityIcons name={iconName} size={18} color={colors} />
+          {/* </View> */}
           <ThemedText>{t(`themeScreen.${themeName}`)}</ThemedText>
         </View>
         {isChecked && <MaterialCommunityIcons name="check" size={20} color={colors} />}
@@ -180,10 +180,10 @@ const styles = StyleSheet.create({
     descriptionContainer: {
         flexDirection: 'row',
         borderRadius: 16,
-        paddingVertical: 10,
-        paddingHorizontal: 35,
+        paddingVertical: 15,
+        paddingHorizontal: 20,
         overflow: 'hidden',
-        justifyContent: 'space-between',
+        justifyContent: 'space-around',
         alignItems: 'center',
         marginBottom: 30,
     },
@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
         fontSize: 14,
     },
     sectionContainer: {
-        gap: 5,
+        // gap: 5,
         borderRadius: 16,
         overflow: 'hidden',
     },
@@ -206,14 +206,14 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: 15,
+        paddingHorizontal: 20,
         pointerEvents: 'none',
     },
     leftSectionContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 10,
-        paddingVertical: 10,
+        paddingVertical: 15,
     },
     flagIconContainer: {
         width: 25,

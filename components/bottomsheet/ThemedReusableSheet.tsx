@@ -283,11 +283,11 @@ const styles = StyleSheet.create({
         borderTopRightRadius: 50,
     },
     handleIndicator: {
-        backgroundColor: 'gray',
+        backgroundColor: '#ccc',
     },
     contentContainer: {
         paddingHorizontal: 15,
-        paddingVertical: 10,
+        paddingVertical: 15,
         // paddingBottom: 10
     },
     headerContent: {

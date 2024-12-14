@@ -9,71 +9,98 @@ import { useTheme } from '@/context/ThemeContext';
 export function ThemedCardSkeleton({ show = true, index = 0 }) {
   const { currentTheme: colorScheme } = useTheme();
   const colorsArray = colorScheme === 'dark'
-    ? ['#604D45', '#504038', '#42332D', '#352722', '#2A1C18'] // Increased color variation
-    : ['#E3D8CD', '#E0D0C3', '#DBCABA', '#D8C3B1', '#D5BCAB']; 
-  const qrWidth = index % 2 === 0 ? 170 : 90;
+    ? [
+      '#45383A',   // Darkest brown with a red tint
+      '#5A484A',   // Slightly lighter brown with red tint
+      '#6F585A',   // Medium brown with red tint
+      '#84686A',   // Lighter brown with red tint
+      '#99787A'    // Lightest brown with red tint
+    ]
+    : [
+      '#F0E5D8',   // Light beige
+      '#E5D6C5',   // Slightly darker beige
+      '#DAC7B2',   // Medium beige
+      '#CFB89F',   // Darker beige
+      '#C4A98C'    // Lightest beige
+    ];
+  const qrWidth = index % 2 === 0 ? 100 : 55;
   return (
     <MotiView
       transition={{
         type: 'timing',
+        duration: 50,
       }}
-      style={[styles.container, styles.padded]}
+      style={[styles.cardContainer]}
       animate={{ backgroundColor: colorScheme === 'dark' ? Colors.dark.cardBackground : Colors.light.cardBackground }}
     >
       <Skeleton.Group show={show}>
-        <View style={styles.leftHeaderContainer}>
-          <Skeleton colors={colorsArray} radius="round" height={45} width={45} />
-          <View style={styles.labelContainer}>
-            <Skeleton colors={colorsArray} width={100} height={14} />
-            <Skeleton colors={colorsArray} width={150} height={14} />
+        {/* Card Header */}
+        <View style={styles.cardHeader}>
+          <View style={styles.leftHeaderContainer}>
+            <View style={styles.logoContainer}>
+              <Skeleton colors={colorsArray} radius="round" height={40} width={40} />
+            </View>
+            <Skeleton colors={colorsArray} width={100} height={16} />
           </View>
+          <Skeleton colors={colorsArray} radius="round" height={20} width={20} />
         </View>
 
-        <View style={styles.qrContainer}>
-          <Skeleton colors={colorsArray} radius={10} height={90} width={qrWidth} />
-        </View>
-
-        <View style={styles.footerContainer}>
-          <Skeleton colors={colorsArray} width={120} height={15} />
+        {/* Card Footer */}
+        <View style={styles.cardFooter}>
+          <View style={styles.footerLeft}>
+            <Skeleton colors={colorsArray} width={150} height={14} />
+            <Skeleton colors={colorsArray} width={120} height={10} />
+          </View>
+          <View style={styles.qrContainer}>
+            <Skeleton colors={colorsArray} radius={8} height={55} width={qrWidth} />
+          </View>
         </View>
       </Skeleton.Group>
     </MotiView>
   );
 }
-
 const styles = StyleSheet.create({
-  container: {
+  cardContainer: {
     borderRadius: 16,
-    marginBottom: 20,
-    overflow: 'hidden',
-  },
-  padded: {
-    padding: 15,
-  },
-  headerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    padding: 20,
+    marginBottom: 15,
+    aspectRatio: 1.6,
+    width: '100%', // This ensures the card takes full width of its container
+    alignSelf: 'stretch', // Helps maintain full width
     justifyContent: 'space-between',
-    paddingRight: 15,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   leftHeaderContainer: {
-    // marginLeft: 20,
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  labelContainer: {
-    flexDirection: 'column',
-    marginLeft: 10,
     gap: 10,
   },
-  qrContainer: {
-    alignItems: 'flex-end',
-    marginVertical: 20,
-  },
-  footerContainer: {
-    // marginLeft: 15,
-    flexDirection: 'row',
+  logoContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 25,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
     alignItems: 'center',
-    justifyContent: 'flex-start',
+  },
+  cardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+
+  },
+  footerLeft: {
+    flexDirection: 'column',
+    gap: 5,
+  },
+  cardType: {
+    marginTop: 5,
+  },
+  qrContainer: {
+    borderRadius: 8,
   },
 });

@@ -1,79 +1,83 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { StyleSheet, View, Linking, FlatList, TextInput, Pressable, Image } from 'react-native';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/store/rootReducer';
+import { useDispatch, useSelector } from 'react-redux';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useUnmountBrightness } from '@reeq/react-native-device-brightness';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import BottomSheet from '@gorhom/bottom-sheet';
+import { throttle } from 'lodash';
+
+// Local imports
+import { RootState } from '@/store/rootReducer';
 import { Colors } from '@/constants/Colors';
+import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
+import { useTheme } from '@/context/ThemeContext';
+import { t } from '@/i18n';
+import QRRecord from '@/types/qrType';
+// Components
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedButton } from '@/components/buttons/ThemedButton';
 import { ThemedPinnedCard } from '@/components/cards';
-import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
-import { t } from '@/i18n';
 import { ThemedText } from '@/components/ThemedText';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { ThemedStatusToast } from '@/components/toast/ThemedStatusToast';
+import ThemedReuseableSheet from '@/components/bottomsheet/ThemedReusableSheet';
+
+// Utilities
 import { returnItemData } from '@/utils/returnItemData';
 import { getVietQRData } from '@/utils/vietQR';
-import { ThemedStatusToast } from '@/components/toast/ThemedOfflineToast';
-import { throttle } from 'lodash';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
-import { useTheme } from '@/context/ThemeContext';
 import { getIconPath } from '@/utils/returnIcon';
 import { returnItemsByType } from '@/utils/returnItemData';
-import ThemedReuseableSheet from '@/components/bottomsheet/ThemedReusableSheet';
-import BottomSheet from '@gorhom/bottom-sheet';
-import { ThemedFilterSkeleton } from '@/components/skeletons';
-import { isLoading } from 'expo-font';
-import { baseColors } from 'moti/build/skeleton/shared';
+import { deleteQrCode, getQrCodeById, updateQrIndexes } from '@/services/localDB/qrDB';
 
-// Utility function to format the amount
-const formatAmount = (amount: string) => {
-    return amount.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-};
+// Constants
+const AMOUNT_SUGGESTIONS = ['10,000', '50,000', '100,000', '500,000', '1,000,000'];
 
-interface Item {
+// Types
+interface ItemData {
+    code: string;
+    type: 'bank' | 'store' | 'ewallet';
+    metadata: string;
+    metadata_type: 'qr' | 'barcode';
+    account_name?: string;
+    account_number?: string;
+    style?: object;
+}
+
+interface BankItem {
     code: string;
     name: string;
 }
 
-const AMOUNT_SUGGESTIONS = ['10,000', '50,000', '100,000', '500,000', '1,000,000'];
+// Utility function to format the amount
+const formatAmount = (amount: string): string =>
+    amount.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
 export default function DetailScreen() {
+    // Hooks and refs
     useUnmountBrightness(1, false);
-    const { item: encodedItem } = useLocalSearchParams();
+    const { item: encodedItem, id, user_id } = useLocalSearchParams();
+    console.log(user_id)
+    const dispatch = useDispatch();
+
     const router = useRouter();
     const { currentTheme } = useTheme();
     const isOffline = useSelector((state: RootState) => state.network.isOffline);
     const bottomSheetRef = useRef<BottomSheet>(null);
 
-    // State variables
+    // State management
     const [amount, setAmount] = useState('');
     const [isToastVisible, setIsToastVisible] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
     const [isSyncing, setIsSyncing] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
-    const [vietQRBanks, setVietQRBanks] = useState<any[]>([]);
-    const transferHeight = useSharedValue(0);
+    const [vietQRBanks, setVietQRBanks] = useState<BankItem[]>([]);
 
-    // Derived values and constants
+    // Derived values
     const cardColor = currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground;
     const iconColor = currentTheme === 'light' ? Colors.light.icon : Colors.dark.icon;
 
-    // Optimize bank loading
-    useEffect(() => {
-        setIsLoading(true);
-        const loadBanks = setTimeout(() => {
-            const banks = returnItemsByType('vietqr');
-            setVietQRBanks(banks);
-        }, 500);
-
-        setIsLoading(false);
-        return () => clearTimeout(loadBanks);
-    }, []);
-
-    // Memoized item parsing to prevent unnecessary re-renders
-    const item = useMemo(() => {
+    // Memoized item parsing
+    const item = useMemo<ItemData | null>(() => {
         if (!encodedItem) return null;
         try {
             return JSON.parse(decodeURIComponent(String(encodedItem)));
@@ -83,9 +87,61 @@ export default function DetailScreen() {
         }
     }, [encodedItem]);
 
-    const handleExpandPress: () => void = () => {
+    // Effects
+    // useEffect(() => {
+    //     const loadBanks = () => {
+    //         const banks = returnItemsByType('vietqr');
+    //         setVietQRBanks(banks);
+    //     };
+
+    //     loadBanks();
+    // }, []);
+    const reindexQrCodes = async (qrCodes: QRRecord[]) => {
+        return qrCodes.map((item, index) => ({
+          ...item,
+          qr_index: index,
+          user_id: user_id,
+          updated: new Date().toISOString(),
+        }));
+      };
+
+    // Handlers
+    const handleExpandPress = useCallback(() => {
         bottomSheetRef.current?.snapToIndex(0);
-    }
+    }, []);
+
+    const onDeletePress = useCallback(async () => {
+        if (!id) return;
+    
+        try {
+          setIsSyncing(true);
+          setIsToastVisible(true);
+          setToastMessage(t('homeScreen.deleting'));
+    
+          // Delete the specific QR code
+          await deleteQrCode(id);
+    
+          // Fetch updated data
+          const updatedLocalData = await getQrCodeById(user_id);
+    
+          // Reindex the remaining items
+          const reindexedData = await reindexQrCodes(updatedLocalData);
+    
+          // Update indexes in the database
+          await updateQrIndexes(reindexedData);
+    
+          // Update UI state
+          // setQrData(reindexedData);
+    
+          // Reset UI state
+          setIsToastVisible(false);
+        } catch (error) {
+          console.error('Error deleting QR code:', error);
+          setToastMessage(t('homeScreen.deleteError'));
+          setIsToastVisible(true);
+        } 
+      }, [id, user_id, dispatch]);
+    
 
     const openMap = useCallback(() => {
         if (!item?.type || !item?.code) return;
@@ -112,13 +168,6 @@ export default function DetailScreen() {
         });
     }, []);
 
-    // Corrected onToggleTransfer with correct dependencies
-    const onToggleTransfer = useCallback(() => {
-        if (isOffline) return;
-        transferHeight.value = transferHeight.value === 0 ? 100 : 0;
-    }, [isOffline, transferHeight]);
-
-    // Corrected transferAmount with proper dependencies
     const transferAmount = useCallback(
         throttle(async () => {
             if (!item?.type || !item?.code || !amount) return;
@@ -131,8 +180,8 @@ export default function DetailScreen() {
                 const itemName = returnItemData(item.code, item.type);
                 const message = t('detailsScreen.transferMessage') + ' ' + item.account_name;
                 const response = await getVietQRData(
-                    item.account_number,
-                    item.account_name,
+                    item.account_number ?? '',
+                    item.account_name ?? '',
                     itemName?.bin || '',
                     parseInt(amount.replace(/,/g, '')),
                     message
@@ -157,29 +206,10 @@ export default function DetailScreen() {
         [item, amount, router, t]
     );
 
-    // Animated styles for the transfer section
-    const transferStyle = useAnimatedStyle(() => ({
-        height: withTiming(transferHeight.value, {
-            duration: 300,
-            easing: Easing.bezier(0.4, 0, 0.2, 1)
-        }),
-        opacity: withTiming(transferHeight.value > 0 ? 1 : 0, {
-            duration: 250,
-            easing: Easing.out(Easing.quad)
-        }),
-        transform: [{
-            scaleY: withTiming(transferHeight.value > 0 ? 1 : 0.95, {
-                duration: 300,
-                easing: Easing.bezier(0.4, 0, 0.2, 1)
-            })
-        }],
-        overflow: 'hidden',
-        pointerEvents: transferHeight.value > 0 ? 'auto' : 'none',
-    }));
-
-    const renderSuggestionItem = useCallback(({ item }: { item: string }) => (
+    // Render helpers
+    const renderSuggestionItem = useCallback(({ item: suggestionItem }: { item: string }) => (
         <Pressable
-            onPress={() => setAmount(item)}
+            onPress={() => setAmount(suggestionItem)}
             android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
             style={[
                 styles.suggestionItem,
@@ -191,25 +221,24 @@ export default function DetailScreen() {
                 },
             ]}
         >
-            <ThemedText style={styles.suggestionText}>{item}</ThemedText>
+            <ThemedText style={styles.suggestionText}>{suggestionItem}</ThemedText>
         </Pressable>
     ), [currentTheme]);
 
-    const renderPaymentMethodItem = useCallback(({ item, onPress }: { item: Item, onPress: (bankCode: string) => void }) => (
+    const renderPaymentMethodItem = useCallback(({ item: bankItem, onPress }: { item: BankItem, onPress: (bankCode: string) => void }) => (
         <View style={styles.botSuggestionItem}>
             <Pressable
-                style={{ borderRadius: 16, overflow: 'hidden', elevation: 3, backgroundColor: '#fff', height: 55, width: 55, justifyContent: 'center', alignItems: 'center' }}
-                // onPress={onOpenPayment(item.code)}
-                onPress={() => onPress(item.code)}
+                style={styles.bankItemPressable}
+                onPress={() => onPress(bankItem.code)}
                 android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
             >
-                <Image source={getIconPath(item.code)} style={{ width: 30, height: 30 }} resizeMode='contain' />
+                <Image source={getIconPath(bankItem.code)} style={styles.bankIcon} resizeMode='contain' />
             </Pressable>
-            <ThemedText numberOfLines={1} style={{ fontSize: 12, maxWidth: 55 }}>{item.name}</ThemedText>
+            <ThemedText numberOfLines={1} style={styles.bankItemText}>{bankItem.name}</ThemedText>
         </View>
     ), []);
 
-
+    // Render guard
     if (!item) {
         return (
             <ThemedView style={styles.loadingWrapper}>
@@ -219,161 +248,151 @@ export default function DetailScreen() {
     }
 
     return (
-        <>
-            <KeyboardAwareScrollView
-                keyboardShouldPersistTaps="handled"
-                style={[{ backgroundColor: currentTheme === 'light' ? Colors.light.background : Colors.dark.background }]}
-                contentContainerStyle={styles.container}
-                extraScrollHeight={100}
-                extraHeight={200}
-                enableOnAndroid
-                showsVerticalScrollIndicator={false}
-            >
-                <View style={styles.headerWrapper}>
-                    <ThemedButton onPress={router.back} iconName="chevron-left" />
-                    <ThemedButton onPress={handleExpandPress} iconName="dots-vertical" />
-                </View>
+        <KeyboardAwareScrollView
+            keyboardShouldPersistTaps="handled"
+            style={[{ backgroundColor: currentTheme === 'light' ? Colors.light.background : Colors.dark.background }]}
+            contentContainerStyle={styles.container}
+            extraScrollHeight={100}
+            extraHeight={200}
+            enableOnAndroid
+            showsVerticalScrollIndicator={false}
+        >
+            <View style={styles.headerWrapper}>
+                <ThemedButton onPress={router.back} iconName="chevron-left" />
+                <ThemedButton onPress={handleExpandPress} iconName="dots-vertical" />
+            </View>
 
-                <ThemedPinnedCard
-                    style={styles.pinnedCardWrapper}
-                    metadata_type={item.metadata_type}
-                    code={item.code}
-                    type={item.type}
-                    metadata={item.metadata}
-                    accountName={item.account_name}
-                    accountNumber={item.account_number}
-                />
+            <ThemedPinnedCard
+                style={styles.pinnedCardWrapper}
+                metadata_type={item.metadata_type}
+                code={item.code}
+                type={item.type}
+                metadata={item.metadata}
+                accountName={item.account_name}
+                accountNumber={item.account_number}
+            />
 
-                <View style={[styles.infoWrapper, { backgroundColor: cardColor }]}>
-                    <Pressable
-                        onPress={openMap}
-                        android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', borderless: false }}
-                        style={styles.actionButton}
-                    >
-                        <MaterialCommunityIcons name="map-marker-outline" size={18} color={iconColor} />
-                        <ThemedText style={styles.labelText}>
-                            {t('detailsScreen.nearbyLocation')}
-                        </ThemedText>
-                    </Pressable>
+            <View style={[styles.infoWrapper, { backgroundColor: cardColor }]}>
+                {/* Map Action */}
+                <Pressable
+                    onPress={openMap}
+                    android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', borderless: false }}
+                    style={styles.actionButton}
+                >
+                    <MaterialCommunityIcons name="map-marker-outline" size={18} color={iconColor} />
+                    <ThemedText style={styles.labelText}>
+                        {t('detailsScreen.nearbyLocation')}
+                    </ThemedText>
+                </Pressable>
 
-                    {(item.type === 'bank' || item.type === 'ewallet') && (
-                        <View style={[styles.transferContainer, isOffline ? { opacity: 0.4, pointerEvents: 'none' } : {}]}>
-                            <Pressable
-                                onPress={onToggleTransfer}
-                                android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
-                            >
-                                <View style={styles.actionButton}>
-                                    <MaterialCommunityIcons color={iconColor} name="qrcode" size={18} selectionColor={iconColor} />
-                                    <ThemedText style={styles.labelText}>
-                                        {t('detailsScreen.createQrCode')}
-                                    </ThemedText>
-                                    {isOffline && (
-                                        <MaterialCommunityIcons name="wifi-off" size={18} color={iconColor} />
-                                    )}
-                                </View>
-                            </Pressable>
-
-                            <Animated.View style={[styles.transferSection, transferStyle]}>
-                                <View style={styles.inputWrapper}>
-                                    <TextInput
-                                        style={[styles.inputField, { color: currentTheme === 'light' ? Colors.light.text : Colors.dark.text }]}
-                                        placeholder={t('detailsScreen.receivePlaceholder')}
-                                        keyboardType="numeric"
-                                        value={amount}
-                                        placeholderTextColor={currentTheme === 'light' ? Colors.light.placeHolder : Colors.dark.placeHolder}
-                                        onChangeText={(text) => setAmount(formatAmount(text))}
-                                    />
-                                    <View style={[styles.currencyContainer, currentTheme === 'light' ? { borderColor: 'rgba(0, 0, 0, 0.2) ' } : { borderColor: 'rgba(255, 255, 255, 0.2)' }]}>
-                                        <ThemedText style={styles.currencyText}>đ</ThemedText>
-                                    </View>
-                                    <Pressable
-                                        hitSlop={{ bottom: 40, left: 30, right: 30, top: 30 }}
-                                        onPress={transferAmount}
-                                        style={[styles.transferButton, { opacity: amount ? 1 : 0.3 }]}
-                                    >
-                                        <MaterialCommunityIcons name={amount ? 'navigation' : 'navigation-outline'} size={18} color={iconColor} />
-                                    </Pressable>
-
-                                </View>
-                                <FlatList
-                                    data={AMOUNT_SUGGESTIONS}
-                                    horizontal
-                                    style={styles.suggestionList}
-                                    showsHorizontalScrollIndicator={false}
-                                    keyExtractor={(item) => item.toString()}
-                                    contentContainerStyle={styles.suggestionListContent}
-                                    renderItem={renderSuggestionItem}
-                                    initialNumToRender={3}
-                                    maxToRenderPerBatch={3}
-                                    windowSize={3}
-                                />
-                            </Animated.View>
+                {/* Transfer Section for Bank/E-Wallet */}
+                {(item.type === 'bank' || item.type === 'ewallet') && (
+                    <View style={[styles.transferContainer, isOffline ? { opacity: 0.4, pointerEvents: 'none' } : {}]}>
+                        <View style={styles.transferHeader}>
+                            <MaterialCommunityIcons name="qrcode" size={18} color={iconColor} />
+                            <ThemedText style={styles.labelText}>
+                                {t('detailsScreen.createQrCode')}
+                            </ThemedText>
                         </View>
-                    )}
-
-                    {item.type === 'store' && (
-                        <View style={[styles.bottomContainer, { backgroundColor: cardColor }]}>
-                            <View style={styles.bottomTitle}>
-                                <MaterialCommunityIcons name="bank-outline" size={18} color={iconColor} />
-                                <ThemedText>{t('detailsScreen.bankTransfer')}</ThemedText>
-                                <Image source={require('@/assets/images/vietqr.png')} style={{ height: 30, width: 70, marginLeft: -15 }} resizeMode="contain" />
+                        <View style={styles.transferSection}>
+                            <View style={styles.inputWrapper}>
+                                <TextInput
+                                    style={[styles.inputField, { color: currentTheme === 'light' ? Colors.light.text : Colors.dark.text }]}
+                                    placeholder={t('detailsScreen.receivePlaceholder')}
+                                    keyboardType="numeric"
+                                    value={amount}
+                                    placeholderTextColor={currentTheme === 'light' ? Colors.light.placeHolder : Colors.dark.placeHolder}
+                                    onChangeText={(text) => setAmount(formatAmount(text))}
+                                />
+                                {amount && (
+                                    <Pressable
+                                    hitSlop={{ bottom: 20, left: 15, right: 15, top: 20 }}
+                                        onPress={() => setAmount('')}
+                                        style={[styles.transferButton]}
+                                    >
+                                        <MaterialCommunityIcons name={'close-circle'} size={16} color={iconColor} />
+                                    </Pressable>
+                                )}
+                                <View style={[styles.currencyContainer, currentTheme === 'light' ? { borderColor: 'rgba(0, 0, 0, 0.2)' } : { borderColor: 'rgba(255, 255, 255, 0.2)' }]}>
+                                    <ThemedText style={[styles.currencyText, currentTheme === 'light' ? { color: 'rgba(0, 0, 0, 0.2)' } : { color: 'rgba(255, 255, 255, 0.2)' }]}>đ</ThemedText>
+                                </View>
+                                <Pressable
+                                    hitSlop={{ bottom: 20, left: 15, right: 15, top: 20 }}
+                                    onPress={transferAmount}
+                                    style={[styles.transferButton, { opacity: amount ? 1 : 0.3 }]}
+                                >
+                                    <MaterialCommunityIcons name={amount ? 'navigation' : 'navigation-outline'} size={16} color={iconColor} />
+                                </Pressable>
                             </View>
                             <FlatList
-                                data={vietQRBanks}
+                                data={AMOUNT_SUGGESTIONS}
                                 horizontal
-                                style={styles.botSuggestionList}
+                                style={styles.suggestionList}
                                 showsHorizontalScrollIndicator={false}
-                                keyExtractor={(item) => item.code}
-                                contentContainerStyle={styles.botSuggestionListContent}
-                                renderItem={({ item }) => (
-                                    renderPaymentMethodItem({ item: { code: item.code, name: item.name }, onPress: openBank })
-                                )}
-                                ListEmptyComponent={
-                                    <View style={{ flexDirection: 'row', gap: 25 }}>
-                                        <View style={{ flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 10 }}>
-                                            <View style={{ backgroundColor: 'red', height: 55, width: 55, borderRadius: 16 }} />
-                                            <View style={{ backgroundColor: 'blue', height: 15, width: 50, borderRadius: 16 }} />
-                                        </View>
-
-                                        <View style={{ backgroundColor: 'red', height: 55, width: 55, borderRadius: 16 }} />
-                                        <View style={{ backgroundColor: 'red', height: 55, width: 55, borderRadius: 16 }} />
-                                        <View style={{ backgroundColor: 'red', height: 55, width: 55, borderRadius: 16 }} />
-                                        <View style={{ backgroundColor: 'red', height: 55, width: 55, borderRadius: 16 }} />
-                                    </View>
-                                }
+                                keyExtractor={(item) => item}
+                                contentContainerStyle={styles.suggestionListContent}
+                                renderItem={renderSuggestionItem}
+                                initialNumToRender={3}
+                                maxToRenderPerBatch={3}
+                                windowSize={3}
                             />
                         </View>
-                    )}
-                    <ThemedStatusToast
-                        isSyncing={isSyncing}
-                        isVisible={isToastVisible}
-                        message={toastMessage}
-                        iconName="wifi-off"
-                        onDismiss={() => setIsToastVisible(false)}
-                        style={styles.toastContainer}
-                    />
-                </View>
-                <ThemedReuseableSheet
-                    ref={bottomSheetRef}
-                    title={t('homeScreen.manage')}
-                    snapPoints={['25%']}
-                    actions={[
-                        {
-                            icon: 'pencil-outline',
-                            iconLibrary: 'MaterialCommunityIcons',
-                            text: t('homeScreen.edit'),
-                            onPress: () => bottomSheetRef.current?.close(),
-                        },
-                        {
-                            icon: 'delete-outline',
-                            iconLibrary: 'MaterialCommunityIcons',
-                            text: t('homeScreen.delete'),
-                            onPress: () => {},
-                        }
-                    ]}
+                    </View>
+                )}
+
+                {/* Bank Transfer Section for Store */}
+                {item.type === 'store' && (
+                    <View style={[styles.bottomContainer, { backgroundColor: cardColor }]}>
+                        <View style={styles.bottomTitle}>
+                            <MaterialCommunityIcons name="bank-outline" size={18} color={iconColor} />
+                            <ThemedText>{t('detailsScreen.bankTransfer')}</ThemedText>
+                            <Image source={require('@/assets/images/vietqr.png')} style={styles.vietQRLogo} resizeMode="contain" />
+                        </View>
+                        <FlatList
+                            data={vietQRBanks}
+                            horizontal
+                            style={styles.botSuggestionList}
+                            showsHorizontalScrollIndicator={false}
+                            keyExtractor={(item) => item.code}
+                            contentContainerStyle={styles.botSuggestionListContent}
+                            renderItem={({ item: bankItem }) => (
+                                renderPaymentMethodItem({ item: bankItem, onPress: openBank })
+                            )}
+                        // Optional: Add a loading or empty state component
+                        />
+                    </View>
+                )}
+
+                <ThemedStatusToast
+                    isSyncing={isSyncing}
+                    isVisible={isToastVisible}
+                    message={toastMessage}
+                    iconName="wifi-off"
+                    onDismiss={() => setIsToastVisible(false)}
+                    style={styles.toastContainer}
                 />
-            </KeyboardAwareScrollView>
-        </>
+            </View>
+
+            <ThemedReuseableSheet
+                ref={bottomSheetRef}
+                title={t('homeScreen.manage')}
+                snapPoints={['25%']}
+                actions={[
+                    {
+                        icon: 'pencil-outline',
+                        iconLibrary: 'MaterialCommunityIcons',
+                        text: t('homeScreen.edit'),
+                        onPress: () => bottomSheetRef.current?.close(),
+                    },
+                    {
+                        icon: 'delete-outline',
+                        iconLibrary: 'MaterialCommunityIcons',
+                        text: t('homeScreen.delete'),
+                        onPress: () => { },
+                    }
+                ]}
+            />
+        </KeyboardAwareScrollView>
     );
 }
 
@@ -381,7 +400,7 @@ const styles = StyleSheet.create({
     container: {
         flexGrow: 1,
         paddingHorizontal: 15,
-        maxHeight: '130%',
+
     },
     headerWrapper: {
         paddingTop: STATUSBAR_HEIGHT + 45,
@@ -391,21 +410,27 @@ const styles = StyleSheet.create({
         marginBottom: 25,
     },
     pinnedCardWrapper: {
+        marginTop: 5,
         marginBottom: 30,
     },
     infoWrapper: {
+        // paddingVertical: 5,
+        paddingBottom: 15,
         borderRadius: 16,
-        gap: 5,
+        // gap: 5,
         overflow: 'hidden',
+        backgroundColor: 'red',
     },
     actionButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 15,
-        paddingVertical: 10,
+        paddingHorizontal: 20,
+        paddingVertical: 15,
+        // paddingBottom: 10,
+        // paddingTop: 20,
         gap: 10,
         borderRadius: 16,
-        overflow: 'hidden'
+        overflow: 'hidden',
     },
     loadingWrapper: {
         flex: 1,
@@ -418,6 +443,15 @@ const styles = StyleSheet.create({
     transferContainer: {
         // gap: 10,
     },
+    transferHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        paddingVertical: 15,
+        gap: 10,
+        borderRadius: 16,
+        overflow: 'hidden'
+    },
     transferSection: {
         // marginTop: 15,
         gap: 10,
@@ -425,10 +459,11 @@ const styles = StyleSheet.create({
     inputWrapper: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 15,
+        paddingHorizontal: 20,
     },
     inputField: {
-        height: 50,
+        // height: 50,
+        marginVertical: 10,
         fontSize: 16,
         // width: 290,
         overflow: 'hidden',
@@ -439,6 +474,28 @@ const styles = StyleSheet.create({
         marginLeft: 5,
         transform: [{ rotate: '90deg' }],
     },
+    bankItemPressable: {
+        borderRadius: 16,
+        overflow: 'hidden',
+        backgroundColor: 'rgba(255, 255, 255, 0.7)',
+        height: 55,
+        width: 55,
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+    bankIcon: {
+        width: 30,
+        height: 30
+    },
+    bankItemText: {
+        fontSize: 12,
+        maxWidth: 55
+    },
+    vietQRLogo: {
+        height: 30,
+        width: 70,
+        marginLeft: -15
+    },
     currencyContainer: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -447,20 +504,19 @@ const styles = StyleSheet.create({
         height: 22,
         borderRadius: 50,
         overflow: 'hidden',
-        marginRight: 10,
-        borderColor: 'rgba(255, 255, 255, 0.1)',
-        borderWidth: 1
+        marginHorizontal: 10,
+        borderWidth: 1,
     },
     currencyText: {
         fontSize: 16,
-        opacity: 0.3
+        // color: 'rgba(255, 255, 255, 0.1)',
+        // opacity: 0.3
     },
     suggestionList: {
     },
     suggestionListContent: {
         gap: 10,
-        paddingHorizontal: 15,
-        paddingBottom: 10,
+        paddingHorizontal: 20,
     },
     suggestionItem: {
         paddingHorizontal: 15,

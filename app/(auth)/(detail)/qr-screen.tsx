@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
         marginBottom: 30,
     },
     pinnedCardWrapper: {
-        marginTop: 20,
+        marginTop: 5,
         marginBottom: 30,
         
     },

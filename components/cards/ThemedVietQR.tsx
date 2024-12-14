@@ -98,7 +98,9 @@ export const ThemedVietQRCard = memo(function ThemedVietQRCard({
 const styles = StyleSheet.create({
     container: {
         borderRadius: 16,
-        padding: 20,
+        // padding: 20,
+        paddingVertical: 15,
+        paddingHorizontal: 20,
     },
     headerContainer: {
         flexDirection: 'row',
@@ -170,13 +172,13 @@ const styles = StyleSheet.create({
     },
     accountName: {
         color: 'white',
-        fontSize: 18,
+        fontSize: 19,
         fontWeight: '600',
-        marginBottom: 5,
+        // marginBottom: 5,
     },
     accountNumber: {
         color: 'rgba(255,255,255,0.7)',
-        fontSize: 14,
+        fontSize: 15,
         maxWidth: 250,
     },
 });

@@ -174,13 +174,13 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
     },
     title: {
-        marginBottom: 20,
+        marginBottom: 30,
         fontSize: 28,
         textAlign: 'center',
     },
     inputContainer: {
         borderRadius: 16,
-        marginBottom: 10
+        marginBottom: 20
     },
     divider: {
         height: 3,

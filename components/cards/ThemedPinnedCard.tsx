@@ -84,17 +84,16 @@ export const ThemedPinnedCard = memo(function ThemedPinnedCard({
         </View>
 
         <View style={styles.infoContainer}>
-          {type === 'bank' ? (
+          {type === 'bank' && (
 
               <ThemedText type="defaultSemiBold" style={styles.accountName} numberOfLines={1}>
                 {accountName}
               </ThemedText>
-          ): (
+          )}
               <ThemedText style={styles.accountNumber} numberOfLines={1}>
                 {accountNumber ? accountNumber : metadata}
               </ThemedText>
 
-          )} 
         </View>
       </View>
     </LinearGradient>
@@ -104,7 +103,9 @@ export const ThemedPinnedCard = memo(function ThemedPinnedCard({
 const styles = StyleSheet.create({
   container: {
     borderRadius: 16,
-    padding: 20,
+    // padding: 20,
+    paddingVertical: 15,
+    paddingHorizontal: 20,
     // shadowColor: '#000',
     // shadowOffset: { width: 0, height: 4 },
     // shadowOpacity: 0.1,
@@ -153,12 +154,12 @@ const styles = StyleSheet.create({
   },
   accountName: {
     color: 'white',
-    fontSize: 18,
+    fontSize: 19,
     fontWeight: '600',
   },
   accountNumber: {
     color: 'rgba(255,255,255,0.7)',
-    fontSize: 14,
+    fontSize: 15,
     maxWidth: 250,
   },
 });

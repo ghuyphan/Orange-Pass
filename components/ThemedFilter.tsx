@@ -77,7 +77,7 @@ const FilterItem = React.memo(
                 ]}
                 android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
             >
-                <View style={[styles.animatedView, isSelected ? { gap: 5 } : { gap: 0 }]}>
+                <View style={[styles.animatedView, isSelected ? { gap: 5, paddingHorizontal: 15 } : { gap: 0 }]}>
                     <MaterialCommunityIcons
                         name={
                             isSelected
@@ -98,7 +98,6 @@ const FilterItem = React.memo(
                     {isSelected && (
                         <Animated.View style={animatedStyle}>
                             <ThemedText
-                            type='defaultSemiBold'
                                 style={[
                                     styles.baseTextStyle,
                                     isSelected &&
@@ -219,6 +218,7 @@ const styles = StyleSheet.create({
     },
     baseTextStyle: {
         fontSize: 16,
+        fontWeight: '500'
     },
     selectedFilterTextLightMode: {
         color: Colors.dark.text,

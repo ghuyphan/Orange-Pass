@@ -2,59 +2,79 @@ import pb from "@/services/pocketBase";
 import UserRecord from "@/types/userType";
 import * as SecureStore from 'expo-secure-store';
 import { store } from "@/store";
+import { setQrData } from "@/store/reducers/qrSlice";
 import { setAuthData } from "@/store/reducers/authSlice";
 import { setErrorMessage } from "@/store/reducers/errorSlice";
 import { getTokenExpirationDate } from "@/utils/JWTdecode";
 import { getUserById } from '@/services/localDB/userDB';
 import { t } from '@/i18n';
+import { getQrCodesByUserId } from '@/services/localDB/qrDB'; 
 
-// Enum for more explicit error handling
-enum AuthErrorStatus {
-  Unauthorized = 401,
-  Forbidden = 403,
-  NotFound = 404,
-  ServerError = 500
-}
+// Define possible HTTP error status codes
+const AuthErrorStatus = {
+  Unauthorized: 401,
+  Forbidden: 403,
+  NotFound: 404,
+  ServerError: 500
+} as const; 
 
-// Enhanced error handling interface
+// Define a custom error type for authentication
 interface AuthError extends Error {
-  status?: number;
-  data?: {
-    status?: number;
-    message?: string;
+  status?: number; 
+  data?: { 
+    status?: number; 
+    message?: string; 
   };
 }
 
-/**
- * Maps a PocketBase record to a standardized user record
- * Provides type-safe data extraction with default values
- */
-const mapRecordToUserData = (record: Record<string, any>): UserRecord => ({
-  id: record.id ?? '',
-  username: record.username ?? '',
-  email: record.email ?? '',
-  verified: record.verified ?? false,
-  name: record.name ?? '',
-  avatar: typeof record.avatar === 'object' ? record.avatar : record.avatar ?? ''
-});
+// Helper function to convert a PocketBase record to a UserRecord type
+function mapRecordToUserData(record: Record<string, any>): UserRecord {
+  return {
+    id: record.id ?? '',
+    username: record.username ?? '',
+    email: record.email ?? '',
+    verified: record.verified ?? false,
+    name: record.name ?? '',
+    avatar: typeof record.avatar === 'object' ? record.avatar : record.avatar ?? ''
+  };
+}
 
-/**
- * Comprehensive token refresh error handler
- * Provides granular error management and user feedback
- */
-const handleTokenRefreshError = async (
-  error: AuthError, 
-  authToken: string
-): Promise<boolean> => {
-  const errorStatus = error.status ?? error.data?.status ?? AuthErrorStatus.ServerError;
+// Handle errors that occur during token refresh
+async function handleTokenRefreshError(error: AuthError, authToken: string): Promise<boolean> {
+  const errorStatus = error.status ?? error.data?.status ?? 0;
+  const userID = await SecureStore.getItemAsync('userID');
 
-  // Centralized error logging
-  console.error('Token Refresh Error:', {
-    status: errorStatus,
-    message: error.message,
-    originalError: error
+  console.error('Token Refresh Error:', { 
+    status: errorStatus, 
+    message: error.message, 
+    originalError: error 
   });
 
+  // If the server is down or there's an unknown error, try using local data
+  if (errorStatus === AuthErrorStatus.ServerError || errorStatus === 0) {
+    if (userID) {
+      try {
+        // But first, check if the token is expired
+        const expirationDate = getTokenExpirationDate(authToken);
+        if (expirationDate && expirationDate > new Date()) { 
+          const localUserData = await getUserById(userID);
+          const localQrData = await getQrCodesByUserId(userID);
+
+          if (localUserData) {
+            // If there's valid local user data, use it to keep the user logged in
+            store.dispatch(setAuthData({ token: authToken, user: localUserData }));
+            store.dispatch(setQrData(localQrData)); 
+            store.dispatch(setErrorMessage(t('authRefresh.warnings.usingOfflineData')));
+            return true;
+          }
+        }
+      } catch (localDbError) {
+        console.error('Failed to retrieve local user or QR data', localDbError);
+      }
+    }
+  }
+
+  // Handle other types of errors
   switch (errorStatus) {
     case AuthErrorStatus.Unauthorized:
     case AuthErrorStatus.Forbidden:
@@ -62,71 +82,88 @@ const handleTokenRefreshError = async (
       await SecureStore.deleteItemAsync('authToken');
       store.dispatch(setErrorMessage(t(`authRefresh.errors.${errorStatus}`)));
       return false;
-
-    case AuthErrorStatus.ServerError:
-      // Specific handling for server errors
-      store.dispatch(setErrorMessage(t('authRefresh.errors.serverUnavailable')));
-      return false;
-
     default:
       await SecureStore.deleteItemAsync('authToken');
-      store.dispatch(setErrorMessage(t('authRefresh.errors.unknown')));
+      store.dispatch(setErrorMessage(t('authRefresh.errors.unknown'))); 
       return false;
   }
-};
+}
 
-/**
- * Performs initial authentication check
- * Validates existing token and retrieves user data
- */
-const checkInitialAuth = async (): Promise<boolean> => {
+// Check if the user is already authenticated when the app starts
+async function checkInitialAuth(): Promise<boolean> {
   try {
     const { network: { isOffline } } = store.getState();
     const authToken = await SecureStore.getItemAsync('authToken');
     const userID = await SecureStore.getItemAsync('userID');
 
-    // Early exit conditions
-    if (!authToken || !userID) return false;
+    // If no token or userID is stored, the user is not authenticated
+    if (!authToken || !userID) return false; 
 
     const expirationDate = getTokenExpirationDate(authToken);
-    
-    // Token validation
+
+    // If the token is expired, try to refresh it (unless the app is offline)
     if (!expirationDate || expirationDate <= new Date()) {
-      return isOffline ? false : await refreshAuthToken(authToken);
+      return isOffline ? false : await refreshAuthToken(authToken); 
     }
 
-    // Retrieve and validate local user data
+    // If the token is valid, get the user data from the local database
     const localUserData = await getUserById(userID);
-    if (!localUserData) return false;
+    if (!localUserData) return false; 
 
-    // Update authentication state
+    // Update the authentication state in the store
     store.dispatch(setAuthData({ token: authToken, user: localUserData }));
 
-    // Background token refresh
+    // Try to refresh the token in the background (if online)
     if (!isOffline) {
+      // Existing token refresh logic
       refreshAuthToken(authToken).catch(error => {
         console.warn('Background token refresh failed', error);
       });
+    } else {
+      // When offline, explicitly fetch local QR data
+      const userID = await SecureStore.getItemAsync('userID');
+      if (userID) {
+        try {
+          const localQrData = await getQrCodesByUserId(userID);
+          store.dispatch(setQrData(localQrData));
+        } catch (localQrError) {
+          console.error('Failed to fetch local QR data in offline mode', localQrError);
+        }
+      }
     }
 
-    return true;
+    return true; 
   } catch (error) {
     console.error('Initial authentication check failed', error);
     return false;
   }
-};
+}
 
-/**
- * Refreshes authentication token with robust error handling
- * Implements retry and fallback mechanisms
- */
-const refreshAuthToken = async (
-  authToken: string, 
-  retries = 2
-): Promise<boolean> => {
+// Refresh the authentication token
+async function refreshAuthToken(authToken: string, retries = 2): Promise<boolean> {
+  const isOffline = store.getState().network.isOffline;
+  const userID = await SecureStore.getItemAsync('userID');
+
+  // Offline mode handling with early return
+  if (isOffline || !userID) {
+    try {
+      if (userID) {
+        const localQrData = await getQrCodesByUserId(userID);
+        store.dispatch(setQrData(localQrData));
+        store.dispatch(setErrorMessage(t('network.offlineMode')));
+      }
+      return userID ? true : false;
+    } catch (localQrError) {
+      console.error('Failed to fetch local QR data', localQrError);
+      store.dispatch(setErrorMessage(t('qr.localFetchFailed')));
+      return false;
+    }
+  }
+
+  // Online token refresh attempts
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
-      // Validate existing auth store
+      // Validate current token
       pb.authStore.save(authToken, null);
       if (!pb.authStore.isValid) {
         await SecureStore.deleteItemAsync('authToken');
@@ -134,7 +171,7 @@ const refreshAuthToken = async (
         return false;
       }
 
-      // Refresh authentication
+      // Attempt token refresh
       const authData = await pb.collection('users').authRefresh();
       
       // Validate refresh response
@@ -147,6 +184,10 @@ const refreshAuthToken = async (
       await SecureStore.setItemAsync('authToken', authData.token);
       pb.authStore.save(authData.token, authData.record);
 
+      // Fetch and update QR codes
+      const updatedLocalData = await getQrCodesByUserId(userData.id);
+      store.dispatch(setQrData(updatedLocalData));
+
       // Update global state
       store.dispatch(setAuthData({ 
         token: authData.token, 
@@ -154,24 +195,35 @@ const refreshAuthToken = async (
       }));
 
       return true;
+
     } catch (error) {
-      // Last attempt
+      const errorStatus = (error as AuthError).status ?? (error as AuthError).data?.status ?? 0;
+      const isOfflineOrServerError = 
+        errorStatus === AuthErrorStatus.ServerError || 
+        errorStatus === 0 || 
+        store.getState().network.isOffline;
+
+      // Attempt to use local QR data on server errors
+      if (isOfflineOrServerError && userID) {
+        try {
+          const localQrData = await getQrCodesByUserId(userID);
+          store.dispatch(setQrData(localQrData));
+        } catch (localQrError) {
+          console.error('Failed to fetch local QR data during server error', localQrError);
+        }
+      }
+
+      // Handle final error attempt
       if (attempt === retries) {
         return handleTokenRefreshError(error as AuthError, authToken);
       }
 
-      // Exponential backoff between retries
-      await new Promise(resolve => 
-        setTimeout(resolve, Math.pow(2, attempt) * 1000)
-      );
+      // Exponential backoff between retry attempts
+      await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
     }
   }
 
   return false;
-};
+}
 
-export { 
-  mapRecordToUserData, 
-  checkInitialAuth, 
-  refreshAuthToken 
-};
+export { mapRecordToUserData, checkInitialAuth, refreshAuthToken };

@@ -139,8 +139,8 @@ const styles = StyleSheet.create({
     // padding: 5,
     borderRadius: 16,
     // gap: 5,
-    marginBottom: 10,
-    marginTop: 20
+    marginBottom: 20,
+    marginTop: 30
   },
   forgotButton: {
     marginTop: 20,

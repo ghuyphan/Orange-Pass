@@ -13,8 +13,20 @@ export function ThemedFilterSkeleton({ show = true }: ThemedFilterSkeletonProps)
 
   const skeletonColors = useMemo(() => {
     return colorScheme === 'dark'
-      ? ['#604D45', '#504038', '#42332D', '#352722', '#2A1C18']
-      : ['#E3D8CD', '#E0D0C3', '#DBCABA', '#D8C3B1', '#D5BCAB'];
+      ? [
+        '#45383A',   // Darkest brown with a red tint
+        '#5A484A',   // Slightly lighter brown with red tint
+        '#6F585A',   // Medium brown with red tint
+        '#84686A',   // Lighter brown with red tint
+        '#99787A'    // Lightest brown with red tint
+      ]
+      : [
+        '#F0E5D8',   // Light beige
+        '#E5D6C5',   // Slightly darker beige
+        '#DAC7B2',   // Medium beige
+        '#CFB89F',   // Darker beige
+        '#C4A98C'    // Lightest beige
+      ];
   }, [colorScheme]);
 
   return (
@@ -28,11 +40,11 @@ export function ThemedFilterSkeleton({ show = true }: ThemedFilterSkeletonProps)
       <Skeleton.Group show={show}>
         {Array.from({ length: 4 }).map((_, index) => (
           <View key={index} style={styles.filterButton}>
-            <Skeleton 
-              colors={skeletonColors} 
-              width={100} 
-              height={40} 
-              radius={15} 
+            <Skeleton
+              colors={skeletonColors}
+              width={100}
+              height={45}
+              radius={16}
             />
           </View>
         ))}

@@ -57,14 +57,9 @@ const OnBoardScreen = () => {
     };
 
     const onOpenTOS = () => {
-        // bottomSheetRef.current?.snapToIndex(0);
-        setBottomSheetVisible(true);
+        bottomSheetRef.current?.snapToIndex(0);
+        // setBottomSheetVisible(true);
     };
-    useEffect(() => {
-        if (isBottomSheetVisible) {
-            bottomSheetRef.current?.snapToIndex(0);
-        }
-    }, [isBottomSheetVisible]);
 
     return (
         <ThemedView style={styles.container}>
@@ -133,22 +128,23 @@ const OnBoardScreen = () => {
                 />
             </View>
             <ThemedReuseableSheet
+                // isVisible={shouldRenderSheet}
                 ref={bottomSheetRef}
-                title="Manage Item"
-                description="Choose an action"
-                snapPoints={['28%']}
-                isVisible={true}
+                title={t('homeScreen.manage')}
+                // description="Choose an action"
+                snapPoints={['23%']}
                 actions={[
                     {
                         icon: 'pencil-outline',
                         iconLibrary: 'MaterialCommunityIcons',
-                        text: 'Edit',
+                        text: t('homeScreen.edit'),
                         onPress: () => bottomSheetRef.current?.close(),
                     },
                     {
                         icon: 'delete-outline',
-                        text: 'Delete',
-                        onPress: () => bottomSheetRef.current?.close(),
+                        iconLibrary: 'MaterialCommunityIcons',
+                        text: t('homeScreen.delete'),
+                        onPress: () => {},
                     }
                 ]}
             />

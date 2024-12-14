@@ -81,7 +81,7 @@ const LanguageScreen = () => {
           <ThemedText>{t(`languageScreen.${language}`)}</ThemedText>
         </View>
         {locale === localeCode && (
-          <MaterialIcons name="check" size={20} color={colors} />
+          <MaterialIcons name="check" size={18} color={colors} />
         )}
       </View>
     </Pressable>
@@ -116,14 +116,13 @@ const LanguageScreen = () => {
               <View style={styles.leftSectionContainer}>
                 <View style={[
                   styles.iconContainer,
-                  { backgroundColor: theme === 'dark' ? Colors.dark.buttonBackground : Colors.light.buttonBackground }
                 ]}>
-                  <MaterialCommunityIcons name="cog-outline" size={20} color={colors} />
+                  <MaterialCommunityIcons name="cog-outline" size={18} color={colors} />
                 </View>
                 <ThemedText>{t('languageScreen.system')}</ThemedText>
               </View>
               {locale === undefined && (
-                <MaterialIcons name="check" size={20} color={colors} />
+                <MaterialIcons name="check" size={18} color={colors} />
               )}
             </View>
           </Pressable>
@@ -176,7 +175,6 @@ const styles = StyleSheet.create({
     paddingTop: STATUSBAR_HEIGHT + 105,
   },
   sectionContainer: {
-    gap: 5,
     borderRadius: 16,
     overflow: 'hidden',
   },
@@ -184,8 +182,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 15,
-    paddingVertical: 10, 
+    paddingHorizontal: 20,
+    paddingVertical: 15, 
   },
   leftSectionContainer: {
     flexDirection: 'row',

@@ -41,7 +41,7 @@ const EmptyListItem: React.FC<EmptyListItemProps> = ({
 
 const styles = StyleSheet.create({
     scrollContainer: {
-        paddingTop: STATUSBAR_HEIGHT + 105,
+        paddingTop: STATUSBAR_HEIGHT + 110,
         flex: 1,
       },
       emptyCard: {

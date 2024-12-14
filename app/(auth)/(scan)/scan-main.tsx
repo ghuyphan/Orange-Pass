@@ -43,7 +43,7 @@ import { FocusIndicator } from '@/components/camera/FocusIndicator';
 import { ZoomControl } from '@/components/camera/ZoomControl';
 import { ThemedView } from '@/components/ThemedView';
 import ThemedSettingSheet from '@/components/bottomsheet/ThemedSettingSheet';
-import { ThemedStatusToast } from '@/components/toast/ThemedOfflineToast';
+import { ThemedStatusToast } from '@/components/toast/ThemedStatusToast';
 
 // Constants and Utils
 import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';

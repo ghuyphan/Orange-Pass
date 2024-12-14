@@ -2,7 +2,12 @@ import React, { useEffect } from 'react';
 import { StyleSheet, View, StyleProp, ViewStyle } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Modal, Portal } from 'react-native-paper';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
+import Animated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withTiming,
+  Easing
+} from 'react-native-reanimated';
 import { ThemedText } from '../ThemedText';
 import { Colors } from '@/constants/Colors';
 import { ThemedTextButton } from '../buttons/ThemedTextButton';
@@ -39,9 +44,43 @@ export function ThemedModal({
     style = {},
     dismissable = false
 }: ThemedModalProps) {
-    // const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
     const { currentTheme } = useTheme();
     const color = currentTheme === 'light' ? Colors.light.text : Colors.dark.text;
+
+    // Reanimated values for fade-in/out effect
+    const opacity = useSharedValue(0);
+    const scale = useSharedValue(0.8);
+
+    const animatedStyle = useAnimatedStyle(() => {
+        return {
+            opacity: opacity.value,
+            transform: [{ scale: scale.value }],      
+        };
+    });
+
+    useEffect(() => {
+        if (isVisible) {
+            // Animate in
+            opacity.value = withTiming(1, { 
+                duration: 300,
+                easing: Easing.out(Easing.cubic)
+            });
+            scale.value = withTiming(1, { 
+                duration: 300,
+                easing: Easing.out(Easing.cubic)
+            });
+        } else {
+            // Animate out
+            opacity.value = withTiming(0, { 
+                duration: 300,
+                easing: Easing.in(Easing.cubic)
+            });
+            scale.value = withTiming(0.8, { 
+                duration: 300,
+                easing: Easing.in(Easing.cubic)
+            });
+        }
+    }, [isVisible]);
 
     const modalStyle = [
         styles.modalContainer,
@@ -51,26 +90,15 @@ export function ThemedModal({
         style,
     ];
 
-    // Reanimated values for fade-in/out effect
-    const opacity = useSharedValue(0);
-
-    const animatedStyle = useAnimatedStyle(() => {
-        return {
-            opacity: opacity.value,
-        };
-    });
-
-    useEffect(() => {
-        if (isVisible) {
-            opacity.value = withTiming(1, { duration: 300 });
-        } else {
-            opacity.value = withTiming(0, { duration: 300 });
-        }
-    }, [isVisible, opacity]);
-
     return (
         <Portal>
-            <Modal  theme={{ colors: { backdrop: 'rgba(0, 0, 0, 0.5)' } }} dismissable = {dismissable} visible={isVisible} onDismiss={onDismiss} contentContainerStyle={styles.overlay}>
+            <Modal  
+                theme={{ colors: { backdrop: 'rgba(0, 0, 0, 0.7)' } }} 
+                dismissable={dismissable} 
+                visible={isVisible} 
+                onDismiss={onDismiss} 
+                contentContainerStyle={styles.overlay}
+            >
                 <Animated.View style={[modalStyle, animatedStyle]}>
                     {/* Icon */}
                     <MaterialIcons
@@ -92,7 +120,6 @@ export function ThemedModal({
 
                     {/* Action Buttons */}
                     <View style={styles.actions}>
-
                         <ThemedTextButton
                             onPress={onSecondaryAction ? onSecondaryAction : () => { }}
                             label={secondaryActionText ?? 'Cancel'}
@@ -118,8 +145,9 @@ const styles = StyleSheet.create({
     },
     modalContainer: {
         minWidth: '95%',
-        borderRadius: 12,
-        padding: 25,
+        borderRadius: 16,
+        paddingHorizontal: 20,
+        paddingVertical: 15,
         alignItems: 'center',
         justifyContent: 'center',
     },

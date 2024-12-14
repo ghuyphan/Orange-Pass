@@ -2,7 +2,6 @@ import { Stack } from 'expo-router';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 // import { ThemedButton } from '@/components/buttons/ThemedButton';
-import { useRouter } from 'expo-router';
 import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
 
 export default function AddLayout() {

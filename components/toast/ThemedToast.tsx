@@ -145,8 +145,8 @@ export function ThemedToast({
 const styles = StyleSheet.create({
     toastContainer: {
         borderRadius: 16,
-        paddingVertical: 10,
-        paddingHorizontal: 15,
+        paddingVertical: 15,
+        paddingHorizontal: 20,
         flexDirection: 'row',
         alignItems: 'center',
     },

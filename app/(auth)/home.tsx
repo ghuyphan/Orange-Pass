@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet, View, TextInput, FlatList, TouchableWithoutFeedback } from 'react-native';
-import { useSelector } from 'react-redux';
+import { StyleSheet, View, TextInput, FlatList } from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
 import Animated, {
   Easing,
   Extrapolation,
@@ -14,43 +14,26 @@ import Animated, {
 import { router } from 'expo-router';
 import DraggableFlatList, { ScaleDecorator } from 'react-native-draggable-flatlist';
 import { debounce, throttle } from 'lodash';
-// import { BlurView } from '@react-native-community/blur';
 import BottomSheet from '@gorhom/bottom-sheet';
 import ImagePicker from 'react-native-image-crop-picker';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 
-// Types and constants
+// 1. Types and constants
 import QRRecord from '@/types/qrType';
 import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
 import { height } from '@/constants/Constants';
 
-// Hooks and utils
-import { useThemeColor } from '@/hooks/useThemeColor';
-import { triggerHapticFeedback } from '@/utils/haptic';
-import { useLocale } from '@/context/LocaleContext';
-import { useMMKVString } from 'react-native-mmkv';
-import { storage } from '@/utils/storage';
-import { useTheme } from '@/context/ThemeContext';
-
-// Components
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import { ThemedIconInput } from '@/components/Inputs';
-import { ThemedFAB, ThemedButton } from '@/components/buttons';
-// import ThemedBottomSheet from '@/components/bottomsheet/ThemedBottomSheet';
-import ThemedReuseableSheet from '@/components/bottomsheet/ThemedReusableSheet';
-// import { ThemedEmptyCard } from '@/components/cards';
-import ThemedCardItem from '@/components/cards/ThemedCardItem';
-import { ThemedFilterSkeleton, ThemedCardSkeleton } from '@/components/skeletons';
-import { ThemedStatusToast } from '@/components/toast/ThemedOfflineToast';
-import { ThemedModal } from '@/components/modals/ThemedIconModal';
-import { ThemedBottomToast } from '@/components/toast/ThemedBottomToast';
-import ThemedFilter from '@/components/ThemedFilter';
-import EmptyListItem from '@/components/lists/EmptyListItem';
-
-// Services and store
+// 2. Services and store
 import { fetchQrData } from '@/services/auth/fetchQrData';
 import { RootState } from '@/store/rootReducer';
+import {
+  setQrData,
+  addQrData,
+  updateQrData,
+  removeQrData
+} from '@/store/reducers/qrSlice';
+
+// 2.a Local Database Services
 import {
   createTable,
   getQrCodesByUserId,
@@ -62,15 +45,53 @@ import {
   filterQrCodes,
 } from '@/services/localDB/qrDB';
 
-// Internationalization
+
+// 3. Hooks and utils
+import { useThemeColor } from '@/hooks/useThemeColor';
+import { triggerHapticFeedback } from '@/utils/haptic';
+import { useLocale } from '@/context/LocaleContext';
+import { useMMKVString } from 'react-native-mmkv';
+import { storage } from '@/utils/storage';
+import { useTheme } from '@/context/ThemeContext';
+
+// 4. Components
+import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
+// import { ThemedIconInput } from '@/components/Inputs';
+import { ThemedFAB, ThemedButton } from '@/components/buttons';
+import ThemedReuseableSheet from '@/components/bottomsheet/ThemedReusableSheet';
+import ThemedCardItem from '@/components/cards/ThemedCardItem';
+import { ThemedFilterSkeleton, ThemedCardSkeleton } from '@/components/skeletons';
+import { ThemedStatusToast } from '@/components/toast/ThemedStatusToast';
+import { ThemedModal } from '@/components/modals/ThemedIconModal';
+import { ThemedBottomToast } from '@/components/toast/ThemedBottomToast';
+import ThemedFilter from '@/components/ThemedFilter';
+import EmptyListItem from '@/components/lists/EmptyListItem';
+
+// 5. Internationalization
 import { t } from '@/i18n';
 
+
 function HomeScreen() {
+  // 1. Redux and Context
+  const dispatch = useDispatch();
+  const qrData = useSelector((state: RootState) => state.qr.qrData);
   const { updateLocale } = useLocale();
   const { currentTheme } = useTheme();
+
+  // 2. State with Persistence
   const [locale, setLocale] = useMMKVString('locale', storage);
+
+  // 3. Theme and Appearance
   const color = useThemeColor({ light: '#3A2E24', dark: '#FFF5E1' }, 'text');
+
+  // 4. Loading and Syncing
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  // 5. UI State
   const [isEmpty, setIsEmpty] = useState(false);
+  const [isActive, setIsActive] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [isToastVisible, setIsToastVisible] = useState(false);
   const [isBottomToastVisible, setIsBottomToastVisible] = useState(false);
@@ -78,46 +99,47 @@ function HomeScreen() {
   const [bottomToastIcon, setBottomToastIcon] = useState('');
   const [bottomToastMessage, setBottomToastMessage] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [isActive, setIsActive] = useState(false);
-  const [filter, setFilter] = useState('all');
-  // const [isSearching, setIsSearching] = useState(false);
-  const inputRef = useRef<TextInput>(null);
-
-  const isEmptyShared = useSharedValue(isEmpty ? 1 : 0);
-  // const isActiveShared = useSharedValue(isActive ? 1 : 0);
-
-  const [qrData, setQrData] = useState<QRRecord[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
-  const flatListRef = useRef<FlatList>(null);
-
-  const [wasOffline, setWasOffline] = useState(false);
-  const isOffline = useSelector((state: RootState) => state.network.isOffline);
-  const userId = useSelector((state: RootState) => state.auth.user?.id ?? '');
-
-  const emptyCardOffset = useSharedValue(300);
-  const scrollY = useSharedValue(0);
-
-  const bottomSheetRef = useRef<BottomSheet>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [fabOpen, setFabOpen] = useState(false);
 
+  // 6. Data and Filtering
+  const [filter, setFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
+
+  // 7.  Selected Item
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+
+  // 8. Refs 
+  // const inputRef = useRef<TextInput>(null);
+  const flatListRef = useRef<FlatList>(null);
+  const bottomSheetRef = useRef<BottomSheet>(null);
+
+  // 9. Network Status
+  const [wasOffline, setWasOffline] = useState(false);
+  const isOffline = useSelector((state: RootState) => state.network.isOffline);
+
+  // 10. User Data
+  const userId = useSelector((state: RootState) => state.auth.user?.id ?? '');
+
+  // 11. Shared Values (Reanimated)
+  const isEmptyShared = useSharedValue(isEmpty ? 1 : 0);
+  const emptyCardOffset = useSharedValue(300);
+  const scrollY = useSharedValue(0);
 
   const syncWithServer = useCallback(async (userId: string) => {
     if (isOffline || isSyncing) {
       console.log('Cannot sync while offline or another sync is in progress');
       return;
     }
+    await createTable();
 
     try {
       setBottomToastIcon('');
       setBottomToastColor('');
       setIsSyncing(true);
-      setBottomToastMessage(t('homeScreen.syncing'));
-      setIsBottomToastVisible(true);
+      setToastMessage(t('homeScreen.syncing'));
+      setIsToastVisible(true);
 
       await syncQrCodes(userId);
       const serverData = await fetchServerData(userId);
@@ -127,7 +149,7 @@ function HomeScreen() {
 
         // Update the UI with new data without triggering a full reload
         const updatedLocalData = await getQrCodesByUserId(userId);
-        setQrData(updatedLocalData);
+        dispatch(setQrData(updatedLocalData));
         setIsEmpty(updatedLocalData.length === 0);
       }
     } catch (error) {
@@ -135,12 +157,14 @@ function HomeScreen() {
       setToastMessage(t('homeScreen.syncError'));
       setIsToastVisible(true);
     } finally {
-      setIsBottomToastVisible(false);
+      setIsLoading(false);
+      setIsToastVisible(false);
       setTimeout(() => {
         setIsSyncing(false);
       }, 200);
+
     }
-  }, [isOffline, isSyncing]);
+  }, [isOffline, isSyncing, dispatch]);
 
   const fetchServerData = async (userId: string) => {
     try {
@@ -155,47 +179,16 @@ function HomeScreen() {
     } catch (error) {
       console.error('Error fetching server data:', error);
       throw error;
+    } finally {
     }
   };
-
-  const fetchLocalData = useCallback(async (userId: string) => {
-    try {
-      const localData = await getQrCodesByUserId(userId);
-      setQrData(localData);
-      setIsEmpty(localData.length === 0);
-    } catch (error) {
-      console.error('Error fetching local data:', error);
-      setToastMessage(t('homeScreen.loadError'));
-      setIsToastVisible(true);
-    }
-  }, [setQrData, setIsEmpty, setToastMessage, setIsToastVisible]);
-
-  useEffect(() => {
-    const loadLocalData = async () => {
-      try {
-        setIsLoading(true);
-        await createTable();
-        if (userId) {
-          await fetchLocalData(userId);
-        }
-      } catch (error) {
-        console.error('Error loading local data:', error);
-      } finally {
-        setTimeout(() => {
-          setIsLoading(false);
-        }, 1000);
-      }
-    };
-
-    loadLocalData();
-  }, [userId, fetchLocalData]);
 
   useEffect(() => {
     if (isOffline || !userId) return;
 
     const syncTimeout = setTimeout(() => {
-      syncWithServer(userId);
-    }, 2000);
+    syncWithServer(userId);
+    }, 1000);
 
     return () => clearTimeout(syncTimeout);
   }, [isOffline, userId]);
@@ -220,10 +213,9 @@ function HomeScreen() {
           setBottomToastMessage(t('homeScreen.online'));
           setBottomToastColor('#4caf50');
           setIsBottomToastVisible(true);
-          const timeout = setTimeout(() => {
+          setTimeout(() => {
             setIsBottomToastVisible(false);
-          }, 3000);
-          return () => clearTimeout(timeout);
+          }, 1000);
         }
         setWasOffline(false);
       }
@@ -271,30 +263,29 @@ function HomeScreen() {
     });
   };
 
-
   const titleContainerStyle = useAnimatedStyle(() => {
     const SCROLL_THRESHOLD = 130;
     const ANIMATION_RANGE = 50;
-  
+
     const opacity = interpolate(
       scrollY.value,
       [SCROLL_THRESHOLD, SCROLL_THRESHOLD + ANIMATION_RANGE],
       [1, 0],
       Extrapolation.CLAMP
     );
-  
+
     const translateY = interpolate(
       scrollY.value,
       [0, SCROLL_THRESHOLD],
       [0, -35],
       Extrapolation.CLAMP
     );
-  
-    const shouldReduceZIndex = 
-      scrollY.value > 120 || 
-      isActive || 
+
+    const shouldReduceZIndex =
+      scrollY.value > 120 ||
+      isActive ||
       isSheetOpen === true;
-  
+
     return {
       opacity,
       transform: [{ translateY }],
@@ -353,7 +344,7 @@ function HomeScreen() {
   }, []);
 
   const fabStyle = useAnimatedStyle(() => {
-    const marginBottom = withTiming(isBottomToastVisible || isToastVisible ? 40 : 10, {
+    const marginBottom = withTiming(isBottomToastVisible || isToastVisible ? isBottomToastVisible ? 50 : 80 : 10, {
       duration: 250,
       easing: Easing.bezier(0.25, 0.1, 0.25, 1),
     });
@@ -361,7 +352,7 @@ function HomeScreen() {
       marginBottom,
     };
   });
-  
+
   const emptyCardStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: emptyCardOffset.value }],
   }));
@@ -376,7 +367,8 @@ function HomeScreen() {
         pathname: `/detail`,
         params: {
           id: item.id,
-          item: encodeURIComponent(JSON.stringify(item))
+          item: encodeURIComponent(JSON.stringify(item)),
+          user_id: userId,
         },
       });
     }, 1000),
@@ -437,7 +429,8 @@ function HomeScreen() {
       }));
 
       // Update the component state with the new order
-      setQrData(updatedData);
+      // setQrData(updatedData);
+      dispatch(setQrData(updatedData));
 
       // Update the indexes and timestamps in the local database
       await updateQrIndexes(updatedData);
@@ -446,7 +439,7 @@ function HomeScreen() {
     } finally {
       setIsActive(false);
     }
-  }, []);
+  }, [dispatch]);
 
   const handleExpandPress = useCallback((id: string) => {
     setSelectedItemId(id);
@@ -463,6 +456,7 @@ function HomeScreen() {
     return qrCodes.map((item, index) => ({
       ...item,
       qr_index: index,
+      user_id: userId,
       updated: new Date().toISOString(),
     }));
   };
@@ -488,7 +482,8 @@ function HomeScreen() {
       await updateQrIndexes(reindexedData);
 
       // Update UI state
-      setQrData(reindexedData);
+      // setQrData(reindexedData);
+      dispatch(setQrData(reindexedData));
       setIsEmpty(reindexedData.length === 0);
 
       // Reset UI state
@@ -502,7 +497,7 @@ function HomeScreen() {
       setSelectedItemId(null);
       setIsSyncing(false);
     }
-  }, [selectedItemId, userId]);
+  }, [selectedItemId, userId, dispatch]);
 
   const renderItem = useCallback(
     ({ item, drag }: { item: QRRecord; drag: () => void }) => {
@@ -665,6 +660,7 @@ function HomeScreen() {
         message={toastMessage}
         onDismiss={() => setIsToastVisible(false)}
         style={styles.toastContainer}
+        isSyncing={isSyncing}
       />
       <ThemedBottomToast
         // isSyncing={isSyncing}
