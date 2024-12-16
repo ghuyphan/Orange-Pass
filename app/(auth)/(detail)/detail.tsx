@@ -1,5 +1,6 @@
+
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import { StyleSheet, View, Linking, FlatList, TextInput, Pressable, Image } from 'react-native';
+import { StyleSheet, View, Linking, FlatList, TextInput, Pressable, Image, ActivityIndicator } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -34,10 +35,9 @@ import { deleteQrCode, getQrCodeById, updateQrIndexes } from '@/services/localDB
 
 import {
     setQrData,
-    addQrData,
-    updateQrData,
-    removeQrData
+
 } from '@/store/reducers/qrSlice';
+// import { useColorScheme } from '@/hooks/useColorScheme';
 
 // Constants
 const AMOUNT_SUGGESTIONS = ['10,000', '50,000', '100,000', '500,000', '1,000,000'];
@@ -66,7 +66,7 @@ export default function DetailScreen() {
     // 1. Hooks (sorted alphabetically)
     const { currentTheme } = useTheme();
     const dispatch = useDispatch();
-    const { item: encodedItem, id, user_id } = useLocalSearchParams();
+    const { item: encodedItem, id } = useLocalSearchParams();
     const qrData = useSelector((state: RootState) => state.qr.qrData);
     const isOffline = useSelector((state: RootState) => state.network.isOffline);
     const router = useRouter();
@@ -82,6 +82,7 @@ export default function DetailScreen() {
     const [toastMessage, setToastMessage] = useState('');
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [vietQRBanks, setVietQRBanks] = useState<BankItem[]>([]);
+    const [isLoadingBanks, setIsLoadingBanks] = useState(true);
 
     // 4. Memoized values (sorted alphabetically)
     const item = useMemo<ItemData | null>(() => {
@@ -97,15 +98,21 @@ export default function DetailScreen() {
     // 5. Derived values (sorted alphabetically)
     const cardColor = currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground;
     const iconColor = currentTheme === 'light' ? Colors.light.icon : Colors.dark.icon;
+    const buttonColor = currentTheme === 'light' ? Colors.light.buttonBackground : Colors.dark.buttonBackground;
 
     // Effects
     useEffect(() => {
-        const loadBanks = () => {
-            const banks = returnItemsByType('vietqr');
-            setVietQRBanks(banks);
-        };
+        if (item?.type === 'store') {
+            const loadBanks = () => {
+                const banks = returnItemsByType('vietqr');
+                setVietQRBanks(banks);
+            };
+            setTimeout(() => {
+                loadBanks();
+            }, 500);
+            setIsLoadingBanks(false);
 
-        loadBanks();
+        }
     }, []);
 
     // Handlers
@@ -114,7 +121,7 @@ export default function DetailScreen() {
     }, []);
 
     const onDeletePress = useCallback(async () => {
-        if (!id) return;
+        if (!id || Array.isArray(id)) return;
 
         try {
             setIsSyncing(true);
@@ -167,8 +174,19 @@ export default function DetailScreen() {
     }, [item]);
 
     // const openBank = useCallback(() => {
-    const openBank = useCallback(async () => {
-        const url = `https://dl.vietqr.io/pay?app=tpb`;
+    const openBank = useCallback(async (code: string) => {
+        let lowerCaseCode = code.toLowerCase();
+
+        if (lowerCaseCode === 'vib') {
+            lowerCaseCode = 'vib-2';
+        } else if (lowerCaseCode === 'acb') {
+            lowerCaseCode = 'acb-biz';
+        }
+
+        console.log(lowerCaseCode);
+
+        // const itemName = returnItemData(code, 'bank');
+        const url = `https://dl.vietqr.io/pay?app=${lowerCaseCode}`;
         try {
             await Linking.openURL(url);
         } catch (err) {
@@ -240,9 +258,17 @@ export default function DetailScreen() {
                 onPress={() => onPress(bankItem.code)}
                 android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
             >
+
                 <Image source={getIconPath(bankItem.code)} style={styles.bankIcon} resizeMode='contain' />
+
             </Pressable>
             <ThemedText numberOfLines={1} style={styles.bankItemText}>{bankItem.name}</ThemedText>
+        </View>
+    ), []);
+
+    const renderEmptyComponent = useCallback(() => (
+        <View style={styles.loadingSkeleton}>
+              <ActivityIndicator size={25} color={iconColor}/>
         </View>
     ), []);
 
@@ -366,6 +392,7 @@ export default function DetailScreen() {
                             renderItem={({ item: bankItem }) => (
                                 renderPaymentMethodItem({ item: bankItem, onPress: openBank })
                             )}
+                            ListEmptyComponent={renderEmptyComponent}
                         // Optional: Add a loading or empty state component
                         />
                     </View>
@@ -498,18 +525,25 @@ const styles = StyleSheet.create({
         marginLeft: 5,
         transform: [{ rotate: '90deg' }],
     },
+    loadingSkeleton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flex: 1,
+        height: 75,
+    },
     bankItemPressable: {
         borderRadius: 16,
         overflow: 'hidden',
-        backgroundColor: 'rgba(255, 255, 255, 0.7)',
-        height: 55,
-        width: 55,
+        height: 50,
+        width: 50,
         justifyContent: 'center',
-        alignItems: 'center'
+        alignItems: 'center',
+        backgroundColor: 'white'
     },
     bankIcon: {
-        width: 30,
-        height: 30
+        width: 22,
+        height: 22,
     },
     bankItemText: {
         fontSize: 12,
@@ -543,7 +577,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
     },
     suggestionItem: {
-        paddingHorizontal: 15,
+        paddingHorizontal: 20,
         paddingVertical: 5,
         borderRadius: 16,
         overflow: 'hidden',
@@ -554,8 +588,9 @@ const styles = StyleSheet.create({
     botSuggestionList: {
     },
     botSuggestionListContent: {
-        gap: 25,
-        paddingHorizontal: 15,
+        gap: 15,
+        paddingHorizontal: 20,
+        flexGrow: 1
     },
     botSuggestionItem: {
         flexDirection: 'column',
@@ -577,13 +612,13 @@ const styles = StyleSheet.create({
         // marginTop: 20,
         gap: 15,
         // paddingHorizontal: 15,
-        paddingBottom: 10,
+        // paddingBottom: 10,
         borderRadius: 16
     },
     bottomTitle: {
         flexDirection: 'row',
         gap: 10,
         alignItems: 'center',
-        paddingHorizontal: 15
+        paddingHorizontal: 20
     }
 });

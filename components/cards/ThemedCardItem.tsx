@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
   qrContainer: {
     backgroundColor: 'white',
     borderRadius: 8,
-    padding: 5,
+    padding: 8,
   },
   dragHandle: {
     position: 'absolute',

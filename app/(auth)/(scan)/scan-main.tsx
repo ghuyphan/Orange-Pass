@@ -1,10 +1,9 @@
-import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import {
   StyleSheet,
   View,
   Text,
   ActivityIndicator,
-  TouchableWithoutFeedback,
   LayoutChangeEvent,
   Linking,
   SafeAreaView,
@@ -21,12 +20,10 @@ import Reanimated, {
   withTiming,
   useAnimatedProps,
 } from 'react-native-reanimated';
-import Animated from 'react-native-reanimated';
 import { useUnmountBrightness } from '@reeq/react-native-device-brightness';
 import ImagePicker from 'react-native-image-crop-picker';
 import { Redirect, useRouter } from 'expo-router';
 import { GestureDetector } from 'react-native-gesture-handler';
-import { MaterialIcons } from '@expo/vector-icons';
 import { throttle } from 'lodash';
 
 // Types
@@ -40,15 +37,14 @@ import { triggerLightHapticFeedback } from '@/utils/haptic';
 import { decodeQR } from '@/utils/decodeQR';
 
 // Components
-import { ThemedText } from '@/components/ThemedText';
 import { ThemedButton } from '@/components/buttons/ThemedButton';
 import { ScannerFrame } from '@/components/camera/ScannerFrame';
 import { FocusIndicator } from '@/components/camera/FocusIndicator';
 import { ZoomControl } from '@/components/camera/ZoomControl';
 import { QRResult } from '@/components/camera/CodeResult';
 import { ThemedView } from '@/components/ThemedView';
-import ThemedSettingSheet from '@/components/bottomsheet/ThemedSettingSheet';
 import { ThemedStatusToast } from '@/components/toast/ThemedStatusToast';
+import ThemedSettingSheet from '@/components/bottomsheet/ThemedSettingSheet';
 
 // Hooks
 import { useMMKVBoolean } from 'react-native-mmkv';
@@ -135,18 +131,18 @@ export default function ScanScreen() {
     }, 2500);
   };
 
-  // const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
 
-  // const handleExpandPress = useCallback(() => {
-  //   bottomSheetModalRef.current?.present();
-  // }, []);
+  const handleExpandPress = useCallback(() => {
+    bottomSheetModalRef.current?.present();
+  }, []);
 
 
-  // const handleOpenSecondSheet = () => {
-  //   if (bottomSheetModalRef.current) {
-  //     bottomSheetModalRef.current.presentSecondSheet();
-  //   }
-  // };
+  const handleOpenSecondSheet = () => {
+    if (bottomSheetModalRef.current) {
+      bottomSheetModalRef.current.presentSecondSheet();
+    }
+  };
 
   const onLayout = useCallback((event: LayoutChangeEvent) => {
     setLayout(event.nativeEvent.layout);
@@ -340,7 +336,7 @@ export default function ScanScreen() {
             iconName="cog"
             iconColor="white"
             underlayColor='#fff'
-            // onPress={handleExpandPress}
+            onPress={handleExpandPress}
             style={styles.bottomButton}
           />
         </View>
@@ -357,7 +353,7 @@ export default function ScanScreen() {
         style={styles.toastContainer}
       />
       <StatusBar barStyle="light-content" />
-      {/* <ThemedSettingSheet
+      <ThemedSettingSheet
         ref={bottomSheetModalRef}
         setting1Text='Quick Scan Mode'
         setting1Description='Automatically scan for QR codes and barcodes.'
@@ -371,7 +367,7 @@ export default function ScanScreen() {
         setting3Description='Automatically turn up screen brightness to improve visibility.'
         setting3Value={autoBrightness}
         onSetting3Press={toggleAutoBrightness}
-      /> */}
+      />
     </View>
   );
 }

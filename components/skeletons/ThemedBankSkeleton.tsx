@@ -22,7 +22,7 @@ export function ThemedBankSkeleton({ show = true }) {
       <Skeleton.Group show={show}>
         {Array.from({ length: 4 }).map((_, index) => (
           <View key={index} style={styles.filterButton}>
-            <Skeleton colors={colorsArray} width={100} height={40} radius={15} />
+            <Skeleton colors={colorsArray} width={100} height={40} radius={16} />
           </View>
         ))}
       </Skeleton.Group>

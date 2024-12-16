@@ -12,7 +12,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { router } from 'expo-router';
-import DraggableFlatList, { ScaleDecorator } from 'react-native-draggable-flatlist';
+import DraggableFlatList, { ScaleDecorator, ShadowDecorator } from 'react-native-draggable-flatlist';
 import { debounce, throttle } from 'lodash';
 import BottomSheet from '@gorhom/bottom-sheet';
 import ImagePicker from 'react-native-image-crop-picker';
@@ -53,6 +53,9 @@ import { useLocale } from '@/context/LocaleContext';
 import { useMMKVString } from 'react-native-mmkv';
 import { storage } from '@/utils/storage';
 import { useTheme } from '@/context/ThemeContext';
+import { decodeQR } from '@/utils/decodeQR';
+import useHandleCodeScanned from '@/hooks/useHandleCodeScanned';
+
 
 // 4. Components
 import { ThemedText } from '@/components/ThemedText';
@@ -79,6 +82,7 @@ function HomeScreen() {
   // console.log(qrData);
   const { updateLocale } = useLocale();
   const { currentTheme } = useTheme();
+  const handleCodeScanned = useHandleCodeScanned();
 
   // 2. State with Persistence
   const [locale, setLocale] = useMMKVString('locale', storage);
@@ -384,22 +388,61 @@ function HomeScreen() {
   const onNavigateToSettingsScreen = useCallback(() => {
     router.push('/settings');
   }, []);
-  const onNavigateToAddScreen = useCallback(() => {
-    router.push('/(add)/add-new');
-  }, [])
+  // const onNavigateToAddScreen = useCallback(() => {
+  //   router.push('/(add)/add-new');
+  // }, [])
+  const onNavigateToAddScreen = useCallback(
+    throttle((codeType?: number, codeValue?: string) => {
+      router.push({
+        pathname: `/(auth)/(add)/add-new`,
+        params: {
+          codeType: codeType,
+          codeValue: codeValue
+        },
+      });
+    }, 1000),
+    []
+  );
 
-  const onOpenGallery = async () => {
+  const onOpenGallery = useCallback(async () => {
     try {
-      const result = await ImagePicker.openPicker({
+      const image = await ImagePicker.openPicker({
         width: 300,
         height: 400,
         includeBase64: true,
         mediaType: 'photo',
       });
+
+      if (!image.path) {
+        return;
+      }
+
+      // decodeQRCode(image.path);
+      const decode = await decodeQR(image.path);
+
+      const result = handleCodeScanned(decode?.value ?? '', {
+        // quickScan,
+        codeFormat: decode?.format,
+        t,
+        // setIsConnecting,
+      });
+
+
+      if (result && result.codeFormat !== undefined) {
+        onNavigateToAddScreen(result.codeFormat, result.codeValue);
+        // console.log(result.codeFormat, result.codeValue);
+      } else {
+        console.log('Failed to decode QR code');
+        // showToast('Failed to decode QR code');
+      }
+
     } catch (error) {
-      console.log(error);
+      console.log('Error opening image picker:', error);
+    } finally {
+
     }
-  }
+  }, []);
+
 
   // In your existing code where you define scrollHandler
   const scrollHandler = useAnimatedScrollHandler((event) => {
@@ -508,7 +551,7 @@ function HomeScreen() {
   const renderItem = useCallback(
     ({ item, drag }: { item: QRRecord; drag: () => void }) => {
       return (
-        <ScaleDecorator activeScale={0.9}>
+        <ScaleDecorator activeScale={0.9} >
           <ThemedCardItem
             onItemPress={() => onNavigateToDetailScreen(item)}
             code={item.code}

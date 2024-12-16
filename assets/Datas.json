@@ -1,0 +1,629 @@
+{
+    "bank": [
+        {
+            "code": "ACB",
+            "name": "ACB",
+            "full_name": {
+                "en": "Asia Commercial Bank",
+                "vi": "Ngân hàng TMCP Á Châu",
+                "ru": "Азиатский коммерческий банк"
+            },
+            "bin": "970416"
+        },
+        {
+            "code": "VBA",
+            "name": "Agribank",
+            "full_name": {
+                "en": "Vietnam Bank for Agriculture and Rural Development",
+                "vi": "Ngân hàng Nông nghiệp và Phát triển Nông thôn Việt Nam",
+                "ru": "Вьетнамский банк сельского хозяйства и развития сельских районов"
+            },
+            "bin": "970405"
+        },
+        {
+            "code": "ABB",
+            "name": "ABBank",
+            "full_name": {
+                "en": "An Binh Commercial Joint Stock Bank",
+                "vi": "Ngân hàng TMCP An Bình",
+                "ru": "Коммерческий акционерный банк Ан Бинь"
+            },
+            "bin": "970425"
+        },
+        {
+            "code": "BAB",
+            "name": "Bac A Bank",
+            "full_name": {
+                "en": "North Asia Commercial Joint Stock Bank",
+                "vi": "Ngân hàng TMCP Bắc Á",
+                "ru": "Северо-Азиатский коммерческий акционерный банк"
+            },
+            "bin": "970409"
+        },
+        {
+            "code": "BVB",
+            "name": "BaoViet Bank",
+            "full_name": {
+                "en": "BaoViet Joint Stock Commercial Bank",
+                "vi": "Ngân hàng TMCP Bảo Việt",
+                "ru": "Акционерный коммерческий банк Бао Вьет"
+            },
+            "bin": "970438"
+        },
+        {
+            "code": "BIDV",
+            "name": "BIDV",
+            "full_name": {
+                "en": "Bank for Investment and Development of Vietnam",
+                "vi": "Ngân hàng Đầu tư và Phát triển Việt Nam",
+                "ru": "Банк инвестиций и развития Вьетнама"
+            },
+            "bin": "970418"
+        },
+        {
+            "code": "CAKE",
+            "name": "CAKE",
+            "full_name": {
+                "en": "Vietnam Prosperity Joint Stock Commercial Bank (VPBank) - Digital Bank CAKE by VPBank",
+                "vi": "Ngân hàng TMCP Việt Nam Thịnh Vượng (VPBank) - Ngân hàng số CAKE by VPBank",
+                "ru": "Акционерный коммерческий банк процветания Вьетнама (VPBank) - Цифровой банк CAKE от VPBank"
+            },
+            "bin": "546034"
+        },
+        {
+            "code": "CBB",
+            "name": "CBBank",
+            "full_name": {
+                "en": "Vietnam Construction Commercial Bank Limited",
+                "vi": "Ngân hàng TMCP Xây dựng Việt Nam",
+                "ru": "Вьетнамский строительный коммерческий банк"
+            },
+            "bin": "970444"
+        },
+        {
+            "code": "CIMB",
+            "name": "CIMB",
+            "full_name": {
+                "en": "CIMB Bank Vietnam Limited",
+                "vi": "Ngân hàng CIMB Việt Nam",
+                "ru": "Банк CIMB Вьетнам"
+            },
+            "bin": "422589"
+        },
+        {
+            "code": "CITIBANK",
+            "name": "CitiBank",
+            "full_name": {
+                "en": "Citibank, N.A. Hanoi",
+                "vi": "Citibank, N.A. Hà Nội",
+                "ru": "Citibank, N.A. Ханой"
+            },
+            "bin": "533948"
+        },
+        {
+            "code": "COOPBANK",
+            "name": "COOPBANK",
+            "full_name": {
+                "en": "Co-operative Bank of Vietnam",
+                "vi": "Ngân hàng Hợp tác xã Việt Nam",
+                "ru": "Кооперативный банк Вьетнама"
+            },
+            "bin": "970446"
+        },
+        {
+            "code": "DAB",
+            "name": "Dong A Bank",
+            "full_name": {
+                "en": "DongA Commercial Joint Stock Bank",
+                "vi": "Ngân hàng TMCP Đông Á",
+                "ru": "Коммерческий акционерный банк Донг А"
+            },
+            "bin": "970406"
+        },
+        {
+            "code": "EIB",
+            "name": "Eximbank",
+            "full_name": {
+                "en": "Vietnam Export-Import Commercial Joint Stock Bank",
+                "vi": "Ngân hàng TMCP Xuất Nhập khẩu Việt Nam",
+                "ru": "Вьетнамский акционерный коммерческий банк экспорта-импорта"
+            },
+            "bin": "970431"
+        },
+        {
+            "code": "GPB",
+            "name": "GPBank",
+            "full_name": {
+                "en": "Global Petro Commercial Joint Stock Bank",
+                "vi": "Ngân hàng TMCP Dầu Khí Toàn Cầu",
+                "ru": "Глобальный нефтяной коммерческий акционерный банк"
+            },
+            "bin": "970408"
+        },
+        {
+            "code": "HDB",
+            "name": "HDBank",
+            "full_name": {
+                "en": "Ho Chi Minh City Development Joint Stock Commercial Bank",
+                "vi": "Ngân hàng TMCP Phát triển TP. Hồ Chí Minh",
+                "ru": "Акционерный коммерческий банк развития города Хошимин"
+            },
+            "bin": "970437"
+        },
+        {
+            "code": "HLBVN",
+            "name": "Hong Leong Bank",
+            "full_name": {
+                "en": "Hong Leong Bank Berhad",
+                "vi": "Ngân hàng Hong Leong Berhad",
+                "ru": "Банк Hong Leong Berhad"
+            },
+            "bin": "970442"
+        },
+        {
+            "code": "HSBC",
+            "name": "HSBC",
+            "full_name": {
+                "en": "Hongkong and Shanghai Banking Corporation",
+                "vi": "Tập đoàn Ngân hàng Hồng Kông và Thượng Hải",
+                "ru": "Гонконгская и шанхайская банковская корпорация"
+            },
+            "bin": "458761"
+        },
+        {
+            "code": "IVB",
+            "name": "Indovina Bank",
+            "full_name": {
+                "en": "Indovina Bank Ltd",
+                "vi": "Ngân hàng Indovina",
+                "ru": "Банк Indovina"
+            },
+            "bin": "970434"
+        },
+        {
+            "code": "KLB",
+            "name": "Kien Long Bank",
+            "full_name": {
+                "en": "Kien Long Commercial Joint Stock Bank",
+                "vi": "Ngân hàng TMCP Kiên Long",
+                "ru": "Коммерческий акционерный банк Киен Лонг"
+            },
+            "bin": "970452"
+        },
+        {
+            "code": "KBHN",
+            "name": "Kookmin Bank Hanoi",
+            "full_name": {
+                "en": "Kookmin Bank - Hanoi Branch",
+                "vi": "Ngân hàng Kookmin - Chi nhánh Hà Nội",
+                "ru": "Банк Kookmin - филиал в Ханое"
+            },
+            "bin": "970462"
+        },
+        {
+            "code": "KEBHANAHCM",
+            "name": "KEB Hana Bank HCMC",
+            "full_name": {
+                "en": "KEB Hana Bank - HCMC Branch",
+                "vi": "Ngân hàng KEB Hana - Chi nhánh TP. Hồ Chí Minh",
+                "ru": "Банк KEB Hana - филиал в Хошимине"
+            },
+            "bin": "970466"
+        },
+        {
+            "code": "MB",
+            "name": "MB Bank",
+            "full_name": {
+                "en": "Military Commercial Joint Stock Bank",
+                "vi": "Ngân hàng TMCP Quân đội",
+                "ru": "Военный коммерческий акционерный банк"
+            },
+            "bin": "970422"
+        },
+        {
+            "code": "MSB",
+            "name": "MSB",
+            "full_name": {
+                "en": "Maritime Commercial Joint Stock Bank",
+                "vi": "Ngân hàng TMCP Hàng Hải Việt Nam",
+                "ru": "Морской коммерческий акционерный банк"
+            },
+            "bin": "970426"
+        },
+        {
+            "code": "NAB",
+            "name": "NamABank",
+            "full_name": {
+                "en": "Nam A Bank",
+                "vi": "Ngân hàng Nam Á",
+                "ru": "Банк Нам А"
+            },
+            "bin": "970428"
+        },
+        {
+            "code": "NCB",
+            "name": "NCB",
+            "full_name": {
+                "en": "National Citizen Bank",
+                "vi": "Ngân hàng Quốc Dân",
+                "ru": "Национальный гражданский банк"
+            },
+            "bin": "970419"
+        },
+        {
+            "code": "OCB",
+            "name": "OCB",
+            "full_name": {
+                "en": "Orient Commercial Joint Stock Bank",
+                "vi": "Ngân hàng TMCP Phương Đông",
+                "ru": "Восточный коммерческий акционерный банк"
+            },
+            "bin": "970448"
+        },
+        {
+            "code": "Oceanbank",
+            "name": "Oceanbank",
+            "full_name": {
+                "en": "Ocean Commercial One Member Limited Liability Bank",
+                "vi": "Ngân hàng TMCP Đại Dương",
+                "ru": "Коммерческий банк с ограниченной ответственностью Ocean"
+            },
+            "bin": "970414"
+        },
+        {
+            "code": "PGB",
+            "name": "PG Bank",
+            "full_name": {
+                "en": "Petrolimex Group Commercial Joint Stock Bank",
+                "vi": "Ngân hàng TMCP Xăng dầu Petrolimex",
+                "ru": "Коммерческий акционерный банк Petrolimex Group"
+            },
+            "bin": "970430"
+        },
+        {
+            "code": "PBVN",
+            "name": "PublicBank",
+            "full_name": {
+                "en": "Public Bank Berhad",
+                "vi": "Ngân hàng Public Berhad",
+                "ru": "Банк Public Berhad"
+            },
+            "bin": "970439"
+        },
+        {
+            "code": "PVCB",
+            "name": "PVcomBank",
+            "full_name": {
+                "en": "Vietnam Public Joint Stock Commercial Bank",
+                "vi": "Ngân hàng TMCP Đại chúng Việt Nam",
+                "ru": "Вьетнамский публичный акционерный коммерческий банк"
+            },
+            "bin": "970412"
+        },
+        {
+            "code": "SCB",
+            "name": "SCB",
+            "full_name": {
+                "en": "Saigon Commercial Joint Stock Bank",
+                "vi": "Ngân hàng TMCP Sài Gòn",
+                "ru": "Сайгонский коммерческий акционерный банк"
+            },
+            "bin": "970429"
+        },
+        {
+            "code": "SHB",
+            "name": "SHB",
+            "full_name": {
+                "en": "Saigon-Hanoi Commercial Joint Stock Bank",
+                "vi": "Ngân hàng TMCP Sài Gòn - Hà Nội",
+                "ru": "Коммерческий акционерный банк Сайгон - Ханой"
+            },
+            "bin": "970443"
+        },
+        {
+            "code": "SHBVN",
+            "name": "ShinhanBank",
+            "full_name": {
+                "en": "Shinhan Bank Vietnam Limited",
+                "vi": "Ngân hàng Shinhan Việt Nam",
+                "ru": "Банк Shinhan Вьетнам"
+            },
+            "bin": "970424"
+        },
+        {
+            "code": "SGICB",
+            "name": "SaigonBank",
+            "full_name": {
+                "en": "Saigon Bank for Industry and Trade.",
+                "vi": "Ngân hàng Sài Gòn Công Thương",
+                "ru": "Сайгонский банк промышленности и торговли"
+            },
+            "bin": "970400"
+        },
+        {
+            "code": "TCB",
+            "name": "Techcombank",
+            "full_name": {
+                "en": "Vietnam Technological and Commercial Joint Stock Bank",
+                "vi": "Ngân hàng TMCP Kỹ thương Việt Nam",
+                "ru": "Вьетнамский технологический и коммерческий акционерный банк"
+            },
+            "bin": "970407"
+        },
+        {
+            "code": "TIM",
+            "name": "Timo",
+            "full_name": {
+                "en": "Timo Digital Bank (Timo by Ban Viet Bank)",
+                "vi": "Ngân hàng số Timo (Timo by Ban Viet Bank)",
+                "ru": "Цифровой банк Timo (Timo от Ban Viet Bank)"
+            },
+            "bin": "963388"
+        },
+        {
+            "code": "TPB",
+            "name": "TPBank",
+            "full_name": {
+                "en": "Tien Phong Commercial Joint Stock Bank",
+                "vi": "Ngân hàng TMCP Tiên Phong",
+                "ru": "Коммерческий акционерный банк Тьен Фонг"
+            },
+            "bin": "970423"
+        },
+        {
+            "code": "UBB",
+            "name": "Ubank",
+            "full_name": {
+                "en": "Ubank by VPBank",
+                "vi": "Ubank by VPBank",
+                "ru": "Ubank от VPBank"
+            },
+            "bin": "546035"
+        },
+        {
+            "code": "VIB",
+            "name": "VIB",
+            "full_name": {
+                "en": "Vietnam International Bank",
+                "vi": "Ngân hàng Quốc tế Việt Nam",
+                "ru": "Вьетнамский международный банк"
+            },
+            "bin": "970441"
+        },
+        {
+            "code": "VIETBANK",
+            "name": "VietBank",
+            "full_name": {
+                "en": "Vietnam Thuong Tin Commercial Joint Stock Bank",
+                "vi": "Ngân hàng TMCP Việt Nam Thương Tín",
+                "ru": "Вьетнамский коммерческий акционерный банк Тхыонг Тинь"
+            },
+            "bin": "970433"
+        },
+        {
+            "code": "VCB",
+            "name": "Vietcombank",
+            "full_name": {
+                "en": "Joint Stock Commercial Bank for Foreign Trade of Vietnam",
+                "vi": "Ngân hàng TMCP Ngoại thương Việt Nam",
+                "ru": "Акционерный коммерческий банк внешней торговли Вьетнама"
+            },
+            "bin": "970436"
+        },
+        {
+            "code": "VAB",
+            "name": "VietABank",
+            "full_name": {
+                "en": "Vietnam-Asia Commercial Joint Stock Bank",
+                "vi": "Ngân hàng TMCP Việt Á",
+                "ru": "Вьетнамско-Азиатский коммерческий акционерный банк"
+            },
+            "bin": "970427"
+        },
+        {
+            "code": "ICB",
+            "name": "VietinBank",
+            "full_name": {
+                "en": "Vietnam Joint Stock Commercial Bank for Industry and Trade",
+                "vi": "Ngân hàng TMCP Công Thương Việt Nam",
+                "ru": "Вьетнамский акционерный коммерческий банк промышленности и торговли"
+            },
+            "bin": "970415"
+        },
+        {
+            "code": "VPB",
+            "name": "VPBank",
+            "full_name": {
+                "en": "Vietnam Prosperity Joint Stock Commercial Bank",
+                "vi": "Ngân hàng TMCP Việt Nam Thịnh Vượng",
+                "ru": "Вьетнамский акционерный коммерческий банк процветания"
+            },
+            "bin": "970432"
+        },
+        {
+            "code": "WVN",
+            "name": "Woori",
+            "full_name": {
+                "en": "Woori Bank",
+                "vi": "Ngân hàng Woori",
+                "ru": "Банк Woori"
+            },
+            "bin": "970457"
+        }
+    ],
+    "store": [
+        {
+            "code": "AEO",
+            "name": "AEON",
+            "full_name": {
+                "en": "AEON Supermarket",
+                "vi": "Siêu thị AEON",
+                "ru": "Супермаркет AEON"
+            }
+        },
+        {
+            "code": "BHX",
+            "name": "BachhoaXANH",
+            "full_name": {
+                "en": "BachhoaXANH Supermarket",
+                "vi": "Siêu thị Bách hóa XANH",
+                "ru": "Супермаркет BachhoaXANH"
+            }
+        },
+        {
+            "code": "CIR",
+            "name": "Circle K",
+            "full_name": {
+                "en": "Circle K Convenience Store",
+                "vi": "Cửa hàng tiện lợi Circle K",
+                "ru": "Магазин шаговой доступности Circle K"
+            }
+        },
+        {
+            "code": "COO",
+            "name": "Co.opmart",
+            "full_name": {
+                "en": "Co.opmart Supermarket",
+                "vi": "Siêu thị Co.opmart",
+                "ru": "Супермаркет Co.opmart"
+            }
+        },
+        {
+            "code": "EMM",
+            "name": "Emart",
+            "full_name": {
+                "en": "Emart Supermarket",
+                "vi": "Siêu thị Emart",
+                "ru": "Супермаркет Emart"
+            }
+        },
+        {
+            "code": "FMI",
+            "name": "FamilyMart",
+            "full_name": {
+                "en": "FamilyMart Convenience Store",
+                "vi": "Cửa hàng tiện lợi FamilyMart",
+                "ru": "Магазин шаговой доступности FamilyMart"
+            }
+        },
+        {
+            "code": "GOO",
+            "name": "GO",
+            "full_name": {
+                "en": "GO! Supermarket",
+                "vi": "Siêu thị GO!",
+                "ru": "Супермаркет GO!"
+            }
+        },
+        {
+            "code": "GS2",
+            "name": "GS25",
+            "full_name": {
+                "en": "GS25 Convenience Store",
+                "vi": "Cửa hàng tiện lợi GS25",
+                "ru": "Магазин шаговой доступности GS25"
+            }
+        },
+        {
+            "code": "LOT",
+            "name": "Lotte Mart",
+            "full_name": {
+                "en": "Lotte Mart Supermarket",
+                "vi": "Siêu thị Lotte Mart",
+                "ru": "Супермаркет Lotte Mart"
+            }
+        },
+        {
+            "code": "MMM",
+            "name": "MM Mega Market",
+            "full_name": {
+                "en": "MM Mega Market Supermarket",
+                "vi": "Siêu thị MM Mega Market",
+                "ru": "Супермаркет MM Mega Market"
+            }
+        },
+        {
+            "code": "MIN",
+            "name": "Ministop",
+            "full_name": {
+                "en": "Ministop Convenience Store",
+                "vi": "Cửa hàng tiện lợi Ministop",
+                "ru": "Магазин шаговой доступности Ministop"
+            }
+        },
+        {
+            "code": "SVL",
+            "name": "7-Eleven",
+            "full_name": {
+                "en": "7-Eleven Convenience Store",
+                "vi": "Cửa hàng tiện lợi 7-Eleven",
+                "ru": "Магазин шаговой доступности 7-Eleven"
+            }
+        },
+        {
+            "code": "TOP",
+            "name": "Tops Market",
+            "full_name": {
+                "en": "Tops Market Supermarket",
+                "vi": "Siêu thị Tops Market",
+                "ru": "Супермаркет Tops Market"
+            }
+        },
+        {
+            "code": "WNM",
+            "name": "WinMart",
+            "full_name": {
+                "en": "WinMart Convenience Store",
+                "vi": "Cửa hàng tiện lợi WinMart",
+                "ru": "Магазин шаговой доступности WinMart"
+            }
+        }
+    ],
+    "ewallet": [
+        {
+            "code": "MOMO",
+            "name": "Momo",
+            "full_name": {
+                "en": "Momo eWallet",
+                "vi": "Ví điện tử Momo",
+                "ru": "Электронный кошелек Momo"
+            }
+        },
+        {
+            "code": "ZLP",
+            "name": "ZaloPay",
+            "full_name": {
+                "en": "ZaloPay eWallet",
+                "vi": "Ví điện tử ZaloPay",
+                "ru": "Электронный кошелек ZaloPay"
+            }
+        },
+        {
+            "code": "SPP",
+            "name": "ShopeePay",
+            "full_name": {
+                "en": "ShopeePay eWallet",
+                "vi": "Ví điện tử ShopeePay",
+                "ru": "Электронный кошелек ShopeePay"
+            }
+        },
+        {
+            "code": "VNP",
+            "name": "VNPAY",
+            "full_name": {
+                "en": "VNPAY eWallet",
+                "vi": "Ví điện tử VNPAY",
+                "ru": "Электронный кошелек VNPAY"
+            }
+        },
+        {
+            "code": "VTP",
+            "name": "Viettel Money",
+            "full_name": {
+                "en": "Viettel Money eWallet",
+                "vi": "Ví điện tử Viettel Money",
+                "ru": "Электронный кошелек Viettel Money"
+            }
+        }
+    ]
+}

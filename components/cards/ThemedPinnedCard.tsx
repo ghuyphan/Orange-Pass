@@ -31,8 +31,8 @@ export const ThemedPinnedCard = memo(function ThemedPinnedCard({
 
   // Calculate dimensions with useMemo
   const qrSize = useMemo(() => width * 0.40, [width]);
-  const barcodeHeight = useMemo(() => width * 0.25, [width]);
-  const barcodeWidth = useMemo(() => width * 0.60, [width]);
+  const barcodeHeight = useMemo(() => width * 0.23, [width]);
+  const barcodeWidth = useMemo(() => width * 0.70, [width]);
 
   // Pre-calculate data with useMemo
   const { name, color, accent_color } = useMemo(() => returnItemData(code, type), [code, type]);
@@ -61,7 +61,7 @@ export const ThemedPinnedCard = memo(function ThemedPinnedCard({
       </View>
 
       <View style={styles.codeContainer}>
-        <View style={styles.codeWrapper}>
+        <View style={[styles.codeWrapper, metadata_type === 'barcode' ? { paddingHorizontal: 20, paddingVertical: 15 } : {}]}>
           {metadata_type === 'qr' ? (
             <QRCode
               value={metadata}
@@ -145,6 +145,8 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 8,
     marginBottom: 15,
+    // paddingVertical: 16,
+    // paddingHorizontal: 30,
     alignItems: 'center',
     justifyContent: 'center',
   },

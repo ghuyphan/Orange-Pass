@@ -24,7 +24,7 @@ export const ThemedSettingsCardItem = memo(function ThemedSettingsCardItem(props
         leftIcon = "chevron-left",
         rightIcon = "chevron-right",
         iconColor,
-        iconSize = 18,
+        iconSize = 16,
     } = props;
 
     const { currentTheme } = useTheme();

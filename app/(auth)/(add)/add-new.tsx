@@ -29,6 +29,7 @@ const AnimatedKeyboardAwareScrollView = Animated.createAnimatedComponent(Keyboar
 const AddScreen: React.FC = () => {
   const scrollY = useSharedValue(0);
   const { codeType, codeValue } = useLocalSearchParams();
+  console.log(codeType, codeValue);
   const bottomSheetRef = React.useRef<BottomSheet>(null);
   const [type, setType] = useState<'store' | 'bank' | 'ewallet'>('store');
 
@@ -122,7 +123,7 @@ const AddScreen: React.FC = () => {
         code: codeValue?.toString() || '',
         qr_index: '',
         metadata: codeValue?.toString() || '', // Initialize metadata with codeValue
-        type: codeType?.toString() || '',
+        type: type?.toString() || '',
         metadata_type: 'qr',
         account_name: '',
         account_number: '',
@@ -170,14 +171,14 @@ const AddScreen: React.FC = () => {
                 iconName='filter-variant'
                 placeholder='Category'
                 // label={t('addScreen.metadataLabel')}
-                value={values.metadata}
+                value={values.type}
                 onPress={onOpenBottomSheet}
               />
               <ThemedDisplayInput
                 iconName='format-text'
                 placeholder='Brand'
                 // label={t('addScreen.metadataLabel')}
-                value={values.metadata}
+                value={values.code}
                 onPress={onOpenBottomSheet}
               />
               <ThemedInput
@@ -191,7 +192,7 @@ const AddScreen: React.FC = () => {
               // style={{backgroundColor: sectionsColors}}
               // isError={true}
               // errorMessage='Error message'
-              // disabled={codeValue?.toString() !== ''}
+              disabled={codeValue?.toString() !== ''}
               />
 
             </ThemedView>

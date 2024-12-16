@@ -1,5 +1,5 @@
-import { useState, useRef, useCallback } from 'react';
-import { Code, CodeScannerFrame } from 'react-native-vision-camera';
+import { useState, useRef, useCallback, useEffect } from 'react';
+import { Code, CodeScannerFrame, Point } from 'react-native-vision-camera';
 import { useMMKVBoolean } from 'react-native-mmkv';
 import { storage } from '@/utils/storage';
 import useHandleCodeScanned from '@/hooks/useHandleCodeScanned';
@@ -8,10 +8,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { t } from '@/i18n';
 
 interface CameraHighlight {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
+  corners: Point[] | undefined;
 }
 
 export const useCameraScanner = () => {
@@ -28,20 +25,37 @@ export const useCameraScanner = () => {
   const [isConnecting, setIsConnecting] = useState(false);
 
   // Settings states
-  const [quickScan, setQuickScan] = useMMKVBoolean('quickScan', storage);
-  const [showIndicator, setShowIndicator] = useMMKVBoolean('showIndicator', storage);
+  const [quickScan, setQuickScan] = useState(false);
+  const [showIndicator, setShowIndicator] = useState(true);
+
+  const [quickScanMMKV, setQuickScanMMKV] = useMMKVBoolean('quickScan', storage);
+  const [showIndicatorMMKV, setShowIndicatorMMKV] = useMMKVBoolean('showIndicator', storage);
+
+  useEffect(() => {
+    if (quickScanMMKV !== undefined) {
+      setQuickScan(quickScanMMKV);
+    }
+  }, [quickScanMMKV]);
+
+  useEffect(() => {
+    if (showIndicatorMMKV !== undefined) {
+      setShowIndicator(showIndicatorMMKV);
+    }
+  }, [showIndicatorMMKV]);
 
   const handleCodeScanned = useHandleCodeScanned();
 
   const toggleQuickScan = useCallback(() => {
     setQuickScan(prev => !!!prev);
+    setQuickScanMMKV(prev => !!!prev);
     triggerLightHapticFeedback();
-  }, [setQuickScan]);
+  }, [setQuickScan, setQuickScanMMKV]);
 
   const toggleShowIndicator = useCallback(() => {
     setShowIndicator(prev => !!!prev);
+    setShowIndicatorMMKV(prev => !!!prev);
     triggerLightHapticFeedback();
-  }, [setShowIndicator]);
+  }, [setShowIndicator, setShowIndicatorMMKV]);
 
   const createCodeScannerCallback = useCallback((codes: Code[], frame: CodeScannerFrame) => {
     if (isConnecting || frameCounterRef.current++ % 4 !== 0) return;
@@ -53,17 +67,14 @@ export const useCameraScanner = () => {
 
     if (codes.length > 0) {
       const firstCode = codes[0];
-      const { value, frame: codeFrame } = firstCode;
+      const { value, corners, } = firstCode; // Extract corners directly
+
+      console.log('Code scanned:', corners);
 
       setCodeMetadata(value ?? '');
 
       if (showIndicator) {
-        setCodeScannerHighlights([{
-          height: codeFrame?.height ?? 0,
-          width: codeFrame?.width ?? 0,
-          x: codeFrame?.x ?? 0,
-          y: codeFrame?.y ?? 0,
-        }]);
+        setCodeScannerHighlights([{ corners }]); // Use corners directly
 
         timeoutRef.current = setTimeout(() => {
           setCodeScannerHighlights([]);
