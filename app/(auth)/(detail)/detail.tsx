@@ -5,6 +5,7 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useUnmountBrightness } from '@reeq/react-native-device-brightness';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { openBrowserAsync } from 'expo-web-browser';
 import BottomSheet from '@gorhom/bottom-sheet';
 import { throttle } from 'lodash';
 
@@ -21,6 +22,7 @@ import { ThemedButton } from '@/components/buttons/ThemedButton';
 import { ThemedPinnedCard } from '@/components/cards';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedStatusToast } from '@/components/toast/ThemedStatusToast';
+import { ThemedModal } from '@/components/modals/ThemedIconModal';
 import ThemedReuseableSheet from '@/components/bottomsheet/ThemedReusableSheet';
 
 // Utilities
@@ -29,6 +31,13 @@ import { getVietQRData } from '@/utils/vietQR';
 import { getIconPath } from '@/utils/returnIcon';
 import { returnItemsByType } from '@/utils/returnItemData';
 import { deleteQrCode, getQrCodeById, updateQrIndexes } from '@/services/localDB/qrDB';
+
+import {
+    setQrData,
+    addQrData,
+    updateQrData,
+    removeQrData
+} from '@/store/reducers/qrSlice';
 
 // Constants
 const AMOUNT_SUGGESTIONS = ['10,000', '50,000', '100,000', '500,000', '1,000,000'];
@@ -54,29 +63,27 @@ const formatAmount = (amount: string): string =>
     amount.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
 export default function DetailScreen() {
-    // Hooks and refs
-    useUnmountBrightness(1, false);
-    const { item: encodedItem, id, user_id } = useLocalSearchParams();
-    console.log(user_id)
-    const dispatch = useDispatch();
-
-    const router = useRouter();
+    // 1. Hooks (sorted alphabetically)
     const { currentTheme } = useTheme();
+    const dispatch = useDispatch();
+    const { item: encodedItem, id, user_id } = useLocalSearchParams();
+    const qrData = useSelector((state: RootState) => state.qr.qrData);
     const isOffline = useSelector((state: RootState) => state.network.isOffline);
+    const router = useRouter();
+    useUnmountBrightness(1, false);
+
+    // 2. Refs
     const bottomSheetRef = useRef<BottomSheet>(null);
 
-    // State management
+    // 3. State (sorted alphabetically)
     const [amount, setAmount] = useState('');
+    const [isSyncing, setIsSyncing] = useState(false);
     const [isToastVisible, setIsToastVisible] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
-    const [isSyncing, setIsSyncing] = useState(false);
+    const [isModalVisible, setIsModalVisible] = useState(false);
     const [vietQRBanks, setVietQRBanks] = useState<BankItem[]>([]);
 
-    // Derived values
-    const cardColor = currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground;
-    const iconColor = currentTheme === 'light' ? Colors.light.icon : Colors.dark.icon;
-
-    // Memoized item parsing
+    // 4. Memoized values (sorted alphabetically)
     const item = useMemo<ItemData | null>(() => {
         if (!encodedItem) return null;
         try {
@@ -87,23 +94,19 @@ export default function DetailScreen() {
         }
     }, [encodedItem]);
 
-    // Effects
-    // useEffect(() => {
-    //     const loadBanks = () => {
-    //         const banks = returnItemsByType('vietqr');
-    //         setVietQRBanks(banks);
-    //     };
+    // 5. Derived values (sorted alphabetically)
+    const cardColor = currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground;
+    const iconColor = currentTheme === 'light' ? Colors.light.icon : Colors.dark.icon;
 
-    //     loadBanks();
-    // }, []);
-    const reindexQrCodes = async (qrCodes: QRRecord[]) => {
-        return qrCodes.map((item, index) => ({
-          ...item,
-          qr_index: index,
-          user_id: user_id,
-          updated: new Date().toISOString(),
-        }));
-      };
+    // Effects
+    useEffect(() => {
+        const loadBanks = () => {
+            const banks = returnItemsByType('vietqr');
+            setVietQRBanks(banks);
+        };
+
+        loadBanks();
+    }, []);
 
     // Handlers
     const handleExpandPress = useCallback(() => {
@@ -112,36 +115,41 @@ export default function DetailScreen() {
 
     const onDeletePress = useCallback(async () => {
         if (!id) return;
-    
+
         try {
-          setIsSyncing(true);
-          setIsToastVisible(true);
-          setToastMessage(t('homeScreen.deleting'));
-    
-          // Delete the specific QR code
-          await deleteQrCode(id);
-    
-          // Fetch updated data
-          const updatedLocalData = await getQrCodeById(user_id);
-    
-          // Reindex the remaining items
-          const reindexedData = await reindexQrCodes(updatedLocalData);
-    
-          // Update indexes in the database
-          await updateQrIndexes(reindexedData);
-    
-          // Update UI state
-          // setQrData(reindexedData);
-    
-          // Reset UI state
-          setIsToastVisible(false);
+            setIsSyncing(true);
+            setIsToastVisible(true);
+            setToastMessage(t('homeScreen.deleting'));
+
+            // Delete the specific QR code from the database
+            await deleteQrCode(id);
+
+            // 1. Update Redux store directly
+            const updatedData = qrData.filter(item => item.id !== id);
+            const reindexedData = updatedData.map((item, index) => ({
+                ...item,
+                qr_index: index,
+                updated: new Date().toISOString(),
+            }));
+            dispatch(setQrData(reindexedData));
+            //   setIsEmpty(reindexedData.length === 0);
+
+            // 2. Update indexes in the database 
+            await updateQrIndexes(reindexedData);
+
+            // Reset UI state
+            setIsModalVisible(false);
+            setIsToastVisible(false);
         } catch (error) {
-          console.error('Error deleting QR code:', error);
-          setToastMessage(t('homeScreen.deleteError'));
-          setIsToastVisible(true);
-        } 
-      }, [id, user_id, dispatch]);
-    
+            setToastMessage(t('homeScreen.deleteError'));
+            setIsToastVisible(true);
+        } finally {
+            router.replace('/home');
+            //   setSelectedItemId(null);
+            setIsSyncing(false);
+        }
+    }, [id, qrData, dispatch, router]); // Include qrData in the dependency array
+
 
     const openMap = useCallback(() => {
         if (!item?.type || !item?.code) return;
@@ -158,14 +166,14 @@ export default function DetailScreen() {
         });
     }, [item]);
 
-    const openBank = useCallback(() => {
+    // const openBank = useCallback(() => {
+    const openBank = useCallback(async () => {
         const url = `https://dl.vietqr.io/pay?app=tpb`;
-
-        Linking.openURL(url).catch((err) => {
-            console.error('Failed to open bank link:', err);
-            setIsToastVisible(true);
-            setToastMessage(t('detailsScreen.failedToOpenGoogleMaps'));
-        });
+        try {
+            await Linking.openURL(url);
+        } catch (err) {
+            console.error('Failed to open URL:', err);
+        }
     }, []);
 
     const transferAmount = useCallback(
@@ -306,7 +314,7 @@ export default function DetailScreen() {
                                 />
                                 {amount && (
                                     <Pressable
-                                    hitSlop={{ bottom: 20, left: 15, right: 15, top: 20 }}
+                                        hitSlop={{ bottom: 20, left: 15, right: 15, top: 20 }}
                                         onPress={() => setAmount('')}
                                         style={[styles.transferButton]}
                                     >
@@ -388,9 +396,25 @@ export default function DetailScreen() {
                         icon: 'delete-outline',
                         iconLibrary: 'MaterialCommunityIcons',
                         text: t('homeScreen.delete'),
-                        onPress: () => { },
+                        onPress: () => {
+                            bottomSheetRef.current?.close();
+                            setIsModalVisible(true);
+                        },
                     }
                 ]}
+            />
+            <ThemedModal
+                primaryActionText={t('homeScreen.move')}
+                onPrimaryAction={onDeletePress}
+                onDismiss={() => setIsModalVisible(false)}
+                dismissable={true}
+                onSecondaryAction={() => setIsModalVisible(false)}
+                secondaryActionText={t('homeScreen.cancel')}
+                title={t('homeScreen.confirmDeleteTitle')}
+                message={t('homeScreen.confirmDeleteMessage')}
+                isVisible={isModalVisible}
+                iconName="delete-outline"
+
             />
         </KeyboardAwareScrollView>
     );

@@ -68,7 +68,7 @@ const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps):
           <View style={styles.logoContainer}>
             <Image source={iconPath} style={styles.logo} resizeMode="contain" />
           </View>
-          <Text style={styles.cardName}>{name}</Text>
+          <Text numberOfLines={1} ellipsizeMode="tail" style={styles.cardName}>{name}</Text>
         </View>
         {onMoreButtonPress && (
           <Pressable
@@ -83,7 +83,7 @@ const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps):
       {/* Card Footer */}
       <View style={styles.cardFooter}>
         <View style={styles.footerLeft}>
-          <Text style={styles.cardHolderName}>{accountName}</Text>
+          <Text numberOfLines={1} ellipsizeMode="tail" style={styles.cardHolderName}>{accountName}</Text>
           {/* {type === 'bank' && ( */}
             <Text numberOfLines={1} ellipsizeMode="tail" style={styles.cardType}>{accountNumber ? accountDisplayName : metadata}</Text>
           {/* )} */}
@@ -158,6 +158,7 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
+    maxWidth: 150, // Set a maximum width
   },
   logoContainer: {
     width: 40,
@@ -184,6 +185,7 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+    maxWidth: 150, // Set a maximum width
   },
   cardType: {
     color: 'rgba(255,255,255,0.7)',

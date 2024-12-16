@@ -77,7 +77,7 @@ const FilterItem = React.memo(
                 ]}
                 android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
             >
-                <View style={[styles.animatedView, isSelected ? { gap: 5, paddingHorizontal: 15 } : { gap: 0 }]}>
+                <View style={[styles.animatedView, isSelected ? { gap: 5, paddingHorizontal: 20 } : { gap: 0 }]}>
                     <MaterialCommunityIcons
                         name={
                             isSelected
@@ -211,8 +211,8 @@ const styles = StyleSheet.create({
     filterButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 12,
-        paddingHorizontal: 18,
+        paddingVertical: 13,
+        paddingHorizontal: 15,
         borderRadius: 16,
         overflow: 'hidden',
     },
@@ -229,10 +229,10 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
     selectedFilterLightMode: {
-        backgroundColor: Colors.dark.buttonBackground,
+        backgroundColor: Colors.light.text,
     },
     selectedFilterDarkMode: {
-        backgroundColor: Colors.light.buttonBackground,
+        backgroundColor: Colors.dark.text,
     },
     darkModeButton: {
         backgroundColor: Colors.dark.buttonBackground

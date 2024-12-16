@@ -30,6 +30,7 @@ export const ScannerFrame: React.FC<ScannerFrameProps> = ({ highlight, layout, s
     const animatedFrameStyle = useAnimatedStyle(() => ({
         position: 'absolute',
         borderRadius: 6,
+        pointerEvents: 'box-none',
         backgroundColor: frameBackgroundColor.value,
         left: frameX.value,
         top: frameY.value,
@@ -91,7 +92,7 @@ export const ScannerFrame: React.FC<ScannerFrameProps> = ({ highlight, layout, s
             frameX.value = (layout.width - FRAME_SIZE) / 2;
             frameY.value = (layout.height - FRAME_SIZE) / 2;
         }
-    }); 
+    }, [layout]); 
 
     // Check for valid layout before rendering
     if (!layout || layout.width <= 0 || layout.height <= 0) {

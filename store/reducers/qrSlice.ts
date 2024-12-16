@@ -21,6 +21,9 @@ const qrSlice = createSlice({
     },
     removeQrData: (state, action) => {
       state.qrData = state.qrData.filter(qr => qr.id !== action.payload);
+    },
+    removeAllQrData: (state) => {
+      state.qrData = []; // Simply set the qrData array to an empty array
     }
   }
 });
@@ -29,7 +32,8 @@ export const {
   setQrData, 
   addQrData, 
   updateQrData, 
-  removeQrData 
+  removeQrData,
+  removeAllQrData
 } = qrSlice.actions;
 
 export default qrSlice.reducer;

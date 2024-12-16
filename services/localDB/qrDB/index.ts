@@ -286,22 +286,20 @@ export async function insertOrUpdateQrCodes(qrDataArray: QRRecord[]): Promise<vo
       console.error('Failed to insert/update QR codes:', error);
   }
 }
-export async function filterQrCodes(
+export async function searchQrCodes(
   userId: string,
-  searchQuery: string = '',
-  filter: string = 'all'
+  searchQuery: string = ''
 ) {
   const db = await openDatabase();
   try {
     const queryParams: any[] = [userId];
     const conditions: string[] = [`user_id = ? AND is_deleted = 0`];
 
-    // Optimize search logic
     if (searchQuery) {
       const matchingCodes = returnItemCode(searchQuery);
       const searchTerms = Array.from(new Set([searchQuery, ...matchingCodes]));
-      
-      const searchConditions = searchTerms.flatMap(term => 
+
+      const searchConditions = searchTerms.flatMap(term =>
         ['code', 'metadata', 'account_name', 'account_number'].map(field => {
           queryParams.push(`%${term}%`);
           return `${field} LIKE ?`;
@@ -311,23 +309,42 @@ export async function filterQrCodes(
       conditions.push(`(${searchConditions.join(' OR ')})`);
     }
 
-    // Add type filter if specified
-    if (filter !== 'all') {
-      conditions.push('type = ?');
-      queryParams.push(filter);
-    }
-
-    // Construct final query
     const query = `
       SELECT * FROM qrcodes 
       WHERE ${conditions.join(' AND ')} 
       ORDER BY qr_index
     `;
 
-    // Execute query with optimized parameter spreading
     return await db.getAllAsync<QRRecord>(query, ...queryParams);
   } catch (error) {
-    console.error('Error filtering QR codes:', error);
+    console.error('Error searching QR codes:', error);
+    return [];
+  }
+}
+
+export async function filterQrCodesByType(
+  userId: string,
+  filter: string = 'all'
+) {
+  const db = await openDatabase();
+  try {
+    const queryParams: any[] = [userId];
+    const conditions: string[] = [`user_id = ? AND is_deleted = 0`];
+
+    if (filter !== 'all') {
+      conditions.push('type = ?');
+      queryParams.push(filter);
+    }
+
+    const query = `
+      SELECT * FROM qrcodes 
+      WHERE ${conditions.join(' AND ')} 
+      ORDER BY qr_index
+    `;
+
+    return await db.getAllAsync<QRRecord>(query, ...queryParams);
+  } catch (error) {
+    console.error('Error filtering QR codes by type:', error);
     return [];
   }
 }

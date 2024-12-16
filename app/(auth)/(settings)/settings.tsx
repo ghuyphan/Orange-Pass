@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, FlatList } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import * as SecureStore from 'expo-secure-store';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -9,7 +9,7 @@ import Animated, {
   useSharedValue,
   interpolate,
   Extrapolation,
-  useAnimatedScrollHandler
+  useAnimatedScrollHandler,
 } from 'react-native-reanimated';
 
 import { router } from 'expo-router';
@@ -32,11 +32,28 @@ import { useMMKVString } from 'react-native-mmkv';
 import { useLocale } from '@/context/LocaleContext';
 import { ActivityIndicator } from 'react-native-paper';
 import { clearErrorMessage } from '@/store/reducers/errorSlice';
-import { useTheme } from '@/context/ThemeContext'; // Import useTheme
+import { removeAllQrData } from '@/store/reducers/qrSlice';
+import { useTheme } from '@/context/ThemeContext'; 
 
-import {
-  AvatarConfig
-} from '@zamplyy/react-native-nice-avatar';
+import { AvatarConfig } from '@zamplyy/react-native-nice-avatar';
+import { MaterialIcons } from '@expo/vector-icons';
+
+// Define the type for your settings card items
+interface SettingsCardItem {
+  leftIcon?: keyof typeof MaterialIcons.glyphMap;
+  rightIcon?: keyof typeof MaterialIcons.glyphMap;
+  settingsTitle: string;
+  onPress?: () => void;
+}
+
+// Component for rendering a single settings card item
+const SettingsCardItemComponent = ({ leftIcon, settingsTitle, onPress }: SettingsCardItem) => (
+  <ThemedSettingsCardItem
+    leftIcon={leftIcon}
+    settingsTitle={settingsTitle}
+    onPress={onPress ? onPress : () => {}}
+  />
+);
 
 function SettingsScreen() {
   const { updateLocale } = useLocale();
@@ -45,7 +62,6 @@ function SettingsScreen() {
   const [avatarConfig, setAvatarConfig] = useState<AvatarConfig | null>(null);
 
   useEffect(() => {
-
     const loadAvatarConfig = async () => {
       if (!avatarConfigString) {
         setAvatarConfig(null);
@@ -53,7 +69,6 @@ function SettingsScreen() {
       }
 
       try {
-        // Directly parse if it's a string, or use as-is if it's already an object
         const parsedConfig = typeof avatarConfigString === 'string'
           ? JSON.parse(avatarConfigString)
           : avatarConfigString;
@@ -65,10 +80,12 @@ function SettingsScreen() {
       }
     };
 
-    loadAvatarConfig();
-  }, []);
+    setTimeout(() => {
+      loadAvatarConfig();
+    }, 200);
 
-  // const [avatarConfig, setAvatarConfig] = useState<{ [key: string]: any } | null>(null);
+  }, [avatarConfigString]);
+
   const { currentTheme } = useTheme();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -109,7 +126,7 @@ function SettingsScreen() {
 
   const onNavigateBack = useCallback(() => {
     router.back();
-  }, [])
+  }, []);
 
   const logout = async () => {
     try {
@@ -124,6 +141,7 @@ function SettingsScreen() {
         setIsLoading(false);
         dispatch(clearAuthData());
         dispatch(clearErrorMessage()); // Clear error on logout
+        dispatch(removeAllQrData());
         router.replace('/login');
       }, 300);
     }
@@ -131,8 +149,36 @@ function SettingsScreen() {
 
   const onLogout = useCallback(() => {
     setIsModalVisible(true);
-  }, [])
+  }, []);
 
+  const settingsData: SettingsCardItem[][] = [
+    [
+      { leftIcon: 'person-outline', settingsTitle: t('settingsScreen.editProfile') },
+      { leftIcon: 'lock-outline', settingsTitle: t('settingsScreen.changePassword') },
+      { leftIcon: 'mail-outline', settingsTitle: t('settingsScreen.changeEmail') },
+    ],
+    [
+      { leftIcon: 'info-outline', settingsTitle: t('settingsScreen.about') },
+      { 
+        leftIcon: 'translate', 
+        settingsTitle: t('settingsScreen.language'), 
+        onPress: () => router.push('/language') 
+      },
+      { 
+        leftIcon: 'contrast', 
+        settingsTitle: t('settingsScreen.appTheme'), 
+        onPress: () => router.push('/theme') 
+      },
+    ],
+  ];
+
+  const renderItem = useCallback(({ item, index }: { item: SettingsCardItem[], index: number }) => (
+    <View key={index} style={[styles.sectionContainer, { backgroundColor: sectionsColors }]}>
+      {item.map((subItem, subIndex) => (
+        <SettingsCardItemComponent key={subIndex} {...subItem} />
+      ))}
+    </View>
+  ), [sectionsColors]);
 
   return (
     <ThemedView style={styles.container}>
@@ -149,68 +195,48 @@ function SettingsScreen() {
           <ThemedText style={styles.title} type="title">{t('settingsScreen.title')}</ThemedText>
         </View>
       </Animated.View>
-      <Animated.ScrollView contentContainerStyle={styles.scrollContainer} onScroll={scrollHandler}>
-        <View style={[styles.avatarContainer, { backgroundColor: sectionsColors }]}>
-          <LinearGradient
-            colors={['#ff9a9e', '#fad0c4', '#fad0c4', '#fbc2eb', '#a18cd1']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.gradient}
-          >
-            {avatarConfig ? (
-              <Avatar size={45} {...avatarConfig} />
-            ) : (
-              <View style={styles.avatarLoadContainer}>
-                <ActivityIndicator size={10} color="white" />
-              </View>
-            )}
-          </LinearGradient>
-          <View style={styles.userContainer}>
-            <ThemedText numberOfLines={1} style={styles.userEmail}>{name ? name : '-'}</ThemedText>
-            <ThemedText numberOfLines={1} style={styles.userName}>{email ? email : '-'}</ThemedText>
+      
+      <Animated.FlatList
+        contentContainerStyle={styles.scrollContainer}
+        onScroll={scrollHandler}
+        data={settingsData}
+        renderItem={renderItem}
+        keyExtractor={(item, index) => index.toString()}
+        ListHeaderComponent={
+          <View style={[styles.avatarContainer, { backgroundColor: sectionsColors }]}>
+            <LinearGradient
+              colors={['#ff9a9e', '#fad0c4', '#fad0c4', '#fbc2eb', '#a18cd1']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.gradient}
+            >
+              {avatarConfig ? (
+                <Avatar size={45} {...avatarConfig} />
+              ) : (
+                <View style={styles.avatarLoadContainer}>
+                  <ActivityIndicator size={10} color="white" />
+                </View>
+              )}
+            </LinearGradient>
+            <View style={styles.userContainer}>
+              <ThemedText numberOfLines={1} style={styles.userEmail}>{name ? name : '-'}</ThemedText>
+              <ThemedText numberOfLines={1} style={styles.userName}>{email ? email : '-'}</ThemedText>
+            </View>
           </View>
-        </View>
+        }
+        ListFooterComponent={
+          <ThemedButton
+            iconName="logout"
+            label={t('settingsScreen.logout')}
+            loadingLabel={t('settingsScreen.logingOut')}
+            loading={isLoading}
+            onPress={onLogout}
+            style={{ marginTop: 10 }}
+          />
+        }
+        scrollEventThrottle={16} 
+      />
 
-        <View style={[styles.sectionContainer, { backgroundColor: sectionsColors }]}>
-          <ThemedSettingsCardItem
-            leftIcon='person-outline'
-            settingsTitle={t('settingsScreen.editProfile')}
-          />
-          <ThemedSettingsCardItem
-            settingsTitle={t('settingsScreen.changePassword')}
-            leftIcon='lock-outline'
-          />
-          <ThemedSettingsCardItem
-            settingsTitle={t('settingsScreen.changeEmail')}
-            leftIcon='mail-outline'
-          />
-        </View>
-
-        <View style={[styles.sectionContainer, { backgroundColor: sectionsColors }]}>
-          <ThemedSettingsCardItem
-            settingsTitle={t('settingsScreen.about')}
-            leftIcon='info-outline'
-          />
-          <ThemedSettingsCardItem
-            settingsTitle={t('settingsScreen.language')}
-            leftIcon='translate'
-            onPress={() => router.push('/language')}
-          />
-          <ThemedSettingsCardItem
-            settingsTitle={t('settingsScreen.appTheme')}
-            leftIcon='contrast'
-            onPress={() => router.push('/theme')}
-          />
-        </View>
-        <ThemedButton
-          iconName="logout"
-          label={t('settingsScreen.logout')}
-          loadingLabel={t('settingsScreen.logingOut')}
-          loading={isLoading}
-          onPress={onLogout}
-          style={{ marginTop: 10 }}
-        />
-      </Animated.ScrollView>
       <ThemedModal
         onDismiss={() => setIsModalVisible(false)}
         dismissable={true}

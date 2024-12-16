@@ -134,12 +134,10 @@ export const ZoomControl: React.FC<ZoomControlProps> = ({ zoom, minZoom , maxZoo
 
 const styles = StyleSheet.create({
   zoomControlContainer: {
-    position: 'absolute',
-    bottom: 180,
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
     borderRadius: 25,
     overflow: 'hidden',
   },

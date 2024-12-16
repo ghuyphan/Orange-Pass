@@ -42,7 +42,7 @@ import {
   getLocallyDeletedQrCodes,
   insertOrUpdateQrCodes,
   updateQrIndexes,
-  filterQrCodes,
+  filterQrCodesByType,
 } from '@/services/localDB/qrDB';
 
 
@@ -76,6 +76,7 @@ function HomeScreen() {
   // 1. Redux and Context
   const dispatch = useDispatch();
   const qrData = useSelector((state: RootState) => state.qr.qrData);
+  // console.log(qrData);
   const { updateLocale } = useLocale();
   const { currentTheme } = useTheme();
 
@@ -88,9 +89,9 @@ function HomeScreen() {
   // 4. Loading and Syncing
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isEmpty, setIsEmpty] = useState(false);
 
   // 5. UI State
-  const [isEmpty, setIsEmpty] = useState(false);
   const [isActive, setIsActive] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [isToastVisible, setIsToastVisible] = useState(false);
@@ -123,7 +124,7 @@ function HomeScreen() {
   const userId = useSelector((state: RootState) => state.auth.user?.id ?? '');
 
   // 11. Shared Values (Reanimated)
-  const isEmptyShared = useSharedValue(isEmpty ? 1 : 0);
+  const isEmptyShared = useSharedValue(qrData.length === 0 ? 1 : 0);
   const emptyCardOffset = useSharedValue(300);
   const scrollY = useSharedValue(0);
 
@@ -187,7 +188,7 @@ function HomeScreen() {
     if (isOffline || !userId) return;
 
     const syncTimeout = setTimeout(() => {
-    syncWithServer(userId);
+      syncWithServer(userId);
     }, 1000);
 
     return () => clearTimeout(syncTimeout);
@@ -229,7 +230,6 @@ function HomeScreen() {
     [debounce, setDebouncedSearchQuery] // Include debounce here
   );
 
-
   // Update debounced search query whenever searchQuery changes
   useEffect(() => {
     debouncedSetSearchQuery(searchQuery);
@@ -238,14 +238,17 @@ function HomeScreen() {
     return () => {
       debouncedSetSearchQuery.cancel();
     };
-  }, [searchQuery, debouncedSetSearchQuery]);
+  }, [searchQuery]);
 
   // Fetch filtered data from the database
-  useEffect(() => {
-    if (userId) {
-      filterQrCodes(userId, debouncedSearchQuery, filter).then(setQrData);
-    }
-  }, [userId, debouncedSearchQuery, filter]);
+  // useEffect(() => {
+  //   if (userId) { 
+  //     filterQrCodesByType(userId, filter)
+  //       .then((filteredData) => dispatch(setQrData(filteredData)));
+  //       console.log('update local data from filter funciton'); 
+  //   }
+  // }, [debouncedSearchQuery, filter, dispatch]);
+
 
   // Animate empty card when isEmpty changes
   useEffect(() => {
@@ -254,7 +257,6 @@ function HomeScreen() {
       animateEmptyCard();
     }
   }, [isEmpty, isEmptyShared]);
-
 
   const animateEmptyCard = () => {
     emptyCardOffset.value = withSpring(0, {
@@ -394,7 +396,6 @@ function HomeScreen() {
         includeBase64: true,
         mediaType: 'photo',
       });
-      console.log(result);
     } catch (error) {
       console.log(error);
     }
@@ -422,6 +423,17 @@ function HomeScreen() {
   const onDragEnd = useCallback(async ({ data }: { data: QRRecord[] }) => {
     try {
       triggerHapticFeedback();
+
+      // Check if the order has actually changed
+      const hasOrderChanged = data.some((item, index) =>
+        item.qr_index !== index
+      );
+
+      if (!hasOrderChanged) {
+        setIsActive(false);
+        return;
+      }
+
       const updatedData = data.map((item, index) => ({
         ...item,
         qr_index: index,
@@ -429,7 +441,6 @@ function HomeScreen() {
       }));
 
       // Update the component state with the new order
-      // setQrData(updatedData);
       dispatch(setQrData(updatedData));
 
       // Update the indexes and timestamps in the local database
@@ -440,6 +451,12 @@ function HomeScreen() {
       setIsActive(false);
     }
   }, [dispatch]);
+
+  const handleFilterPress = useCallback((filter: string) => {
+    setFilter(filter); // Update the filter state 
+    filterQrCodesByType(userId, filter)
+      .then(filteredData => dispatch(setQrData(filteredData)));
+  }, [userId, dispatch, setFilter]);  // Add setFilter to the dependency array
 
   const handleExpandPress = useCallback((id: string) => {
     setSelectedItemId(id);
@@ -452,15 +469,6 @@ function HomeScreen() {
     setIsModalVisible(true);
   }, []);
 
-  const reindexQrCodes = async (qrCodes: QRRecord[]) => {
-    return qrCodes.map((item, index) => ({
-      ...item,
-      qr_index: index,
-      user_id: userId,
-      updated: new Date().toISOString(),
-    }));
-  };
-
   const onDeletePress = useCallback(async () => {
     if (!selectedItemId) return;
 
@@ -469,40 +477,38 @@ function HomeScreen() {
       setIsToastVisible(true);
       setToastMessage(t('homeScreen.deleting'));
 
-      // Delete the specific QR code
+      // Delete the specific QR code from the database
       await deleteQrCode(selectedItemId);
 
-      // Fetch updated data
-      const updatedLocalData = await getQrCodesByUserId(userId);
-
-      // Reindex the remaining items
-      const reindexedData = await reindexQrCodes(updatedLocalData);
-
-      // Update indexes in the database
-      await updateQrIndexes(reindexedData);
-
-      // Update UI state
-      // setQrData(reindexedData);
+      // 1. Update Redux store directly
+      const updatedData = qrData.filter(item => item.id !== selectedItemId);
+      const reindexedData = updatedData.map((item, index) => ({
+        ...item,
+        qr_index: index,
+        updated: new Date().toISOString(),
+      }));
       dispatch(setQrData(reindexedData));
       setIsEmpty(reindexedData.length === 0);
+
+      // 2. Update indexes in the database 
+      await updateQrIndexes(reindexedData);
 
       // Reset UI state
       setIsModalVisible(false);
       setIsToastVisible(false);
     } catch (error) {
-      console.error('Error deleting QR code:', error);
       setToastMessage(t('homeScreen.deleteError'));
       setIsToastVisible(true);
     } finally {
       setSelectedItemId(null);
       setIsSyncing(false);
     }
-  }, [selectedItemId, userId, dispatch]);
+  }, [selectedItemId, qrData, dispatch]); // Include qrData in the dependency array
 
   const renderItem = useCallback(
     ({ item, drag }: { item: QRRecord; drag: () => void }) => {
       return (
-        <ScaleDecorator activeScale={1.04}>
+        <ScaleDecorator activeScale={0.9}>
           <ThemedCardItem
             onItemPress={() => onNavigateToDetailScreen(item)}
             code={item.code}
@@ -599,7 +605,7 @@ function HomeScreen() {
               {/* </Animated.View> */}
               <ThemedFilter
                 selectedFilter={filter}
-                onFilterChange={setFilter}
+                onFilterChange={handleFilterPress}
               />
             </Animated.View>
           }
@@ -630,7 +636,7 @@ function HomeScreen() {
         // pointerEvents='box-none'
         />
       )}
-      {!isLoading &&
+      {(!isLoading || qrData.length > 0) &&
 
         <ThemedFAB
           actions={[
