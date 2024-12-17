@@ -1,20 +1,20 @@
 {
-"authRefresh": {
+  "authRefresh": {
     "errors": {
-      "401": "Session expired. Please log in again to continue.",
-      "403": "You don’t have permission to perform this action.",
-      "404": "Authorization error. Please log in and try again.",
-      "500": "Something went wrong on our end. Please try again later.",
-      "localUserDataNotFound": "Can't find local user data. Please log in again.",
-      "invalidToken": "Your session token is invalid. Please log in again.",
-      "unknown": "An unknown error occurred. Please try again later."
+      "401": "Session expired. Please log in again.",
+      "403": "You do not have permission to do this.",
+      "404": "Authorization error. Please log in.",
+      "500": "Something went wrong. Please try again later.",
+      "localUserDataNotFound": "User data not found. Please log in again.",
+      "invalidToken": "Invalid session token. Please log in again.",
+      "unknown": "An error occurred. Please try again later."
     },
     "warnings": {
-      "usingOfflineData": "You're working offline. Some features may not be available.",
-      "network.offlineMode": "You're offline. Authentication is limited to local data."
+      "usingOfflineData": "You're offline. Some features may be unavailable.",
+      "network.offlineMode": "You're offline. Authentication is limited."
     },
     "info": {
-      "qr.localFetchFailed": "Failed to retrieve QR data locally. Some features may not be available."
+      "qr.localFetchFailed": "QR data not found. Some features may be unavailable."
     }
   },
   "loginScreen": {
@@ -151,18 +151,28 @@
   },
   "onboardingScreen": {
     "title": "Orange⁺",
-    "title1": "Your QR Code Manager",
-    "subtitle1": "Organize and store QR codes for your bank accounts, loyalty cards, and e-wallets.",
-    "title2": "Cloud Sync",
-    "subtitle2": "Your QR codes are securely backed up and synced to the cloud.",
-    "title3": "Always Accessible",
-    "subtitle3": "Access and manage your QR codes anytime, anywhere.",
+    "title1": "Your QR Code Sidekick",
+    "subtitle1": "Collect, organize, and store QR codes for bank accounts, loyalty cards, and digital wallets with ease.",
+    "title2": "Cloud Magic",
+    "subtitle2": "Seamlessly backup and sync your QR codes across all your devices.",
+    "title3": "Always Within Reach",
+    "subtitle3": "Access your digital collection anytime, anywhere - no wifi, no worries!",
     "finishButton": "Get Started",
     "termsOfService": {
-      "agreementPrefix": "By continuing, you're agree to our",
+      "agreementPrefix": "By tapping continue, you're cool with our",
       "termsOfServiceLink": "Simple Rules",
-      "privacyPolicyPrefix": "and have read our",
-      "privacyPolicyLink": "Privacy Stuff"
+      "privacyPolicyPrefix": "and you've peeked at our",
+      "privacyPolicyLink": "Privacy Stuff",
+      "termsOfServiceSheetTitle": "Some Simple Rules",
+      "termsOfServiceTitle": "Welcome to Orange⁺",
+      "termsOfServiceDescription": "Our Community Guidelines",
+      "termsOfServiceContent1": "To make sure everyone has a positive experience with our QR code saving app, we have a few ground rules. These rules help ensure responsible use and protect our community.",
+      "termsOfServiceContent2": "Here's our friendly ask:\n*Keep it legal and kind. No harmful or inappropriate content allowed.\n* Respect privacy. Always get consent before sharing someone's QR codes.\n* Keep your account secure. No sharing, no worries!",
+      "privacyPolicySheetTitle": "Privacy Stuff",
+      "privacyPolicyTitle": "Your Data, Your Trust",
+      "privacyPolicyDescription": "Our Privacy Promise",
+      "privacyPolicyContent1": "We value your privacy. We collect minimal information to provide and improve our services. This includes your name and email address for account personalization and communication.",
+      "privacyPolicyContent2": "\n*Your data stays with us. No third-party sharing without your go-ahead.\n* Top-notch security measures to keep your info safe and sound.\n* Full control. Delete your account anytime you want."
     }
   },
   "detailsScreen": {

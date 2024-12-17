@@ -105,7 +105,7 @@ export function ThemedButton({
             ) : (
                 <>
                     {iconName && <MaterialCommunityIcons name={iconName} size={iconSize} color={iconColor ? iconColor : icon} />}
-                    {label && <ThemedText style={[styles.label, { color }]} type='defaultSemiBold'>{label}</ThemedText>}
+                    {label && <ThemedText style={[styles.label, { color: icon }]} type='defaultSemiBold'>{label}</ThemedText>}
                 </>
             )}
         </AnimatedPressable>

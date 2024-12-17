@@ -24,12 +24,16 @@ type Feature = {
     subtitle: string;
 };
 
+// Type for bottom sheet types
+type SheetType = 'tos' | 'privacy' | null;
+
 const OnBoardScreen = () => {
     const router = useRouter();
     const { currentTheme } = useTheme();
     const iconColor = useThemeColor({ light: Colors.light.icon, dark: Colors.dark.icon }, 'buttonBackground');
+    const cardColor = useThemeColor({ light: Colors.light.cardBackground, dark: Colors.dark.cardBackground }, 'buttonBackground');
     const bottomSheetRef = useRef<BottomSheet>(null);
-    const [isBottomSheetVisible, setBottomSheetVisible] = useState(false);
+    const [sheetType, setSheetType] = useState<SheetType>(null);
 
     // Array of features to display
     const features: Feature[] = [
@@ -56,9 +60,81 @@ const OnBoardScreen = () => {
         router.replace('/login');
     };
 
-    const onOpenTOS = () => {
+    const onOpenSheet = (type: SheetType) => {
+        setSheetType(type);
         bottomSheetRef.current?.snapToIndex(0);
-        // setBottomSheetVisible(true);
+    };
+
+    const onCloseSheet = () => {
+        bottomSheetRef.current?.close();
+        setSheetType(null);
+    };
+
+    const renderSheetContent = () => {
+        switch (sheetType) {
+            case 'tos':
+                return (
+                    <View style={styles.sheetContentContainer}>
+                        <View style={[styles.sectionContainer, { backgroundColor: cardColor }]}>
+                            <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
+                                {t('onboardingScreen.termsOfService.termsOfServiceTitle')} 🚀
+                            </ThemedText>
+                            <ThemedText style={styles.sectionText}>
+                                {t('onboardingScreen.termsOfService.termsOfServiceContent1')}
+                            </ThemedText>
+                        </View>
+                        <View style={[styles.sectionContainer, { backgroundColor: cardColor }]}>
+                            <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
+                                {t('onboardingScreen.termsOfService.termsOfServiceDescription')} 📋
+                            </ThemedText>
+                            <View style={styles.bulletContainer}>
+                                {t('onboardingScreen.termsOfService.termsOfServiceContent2').split('\n').map((bullet, index) => (
+                                    bullet.trim().startsWith('*') && (
+                                        <View key={index} style={styles.bulletPoint}>
+                                            <ThemedText style={styles.bulletIcon}>•</ThemedText>
+                                            <ThemedText style={styles.bulletText}>
+                                                {bullet.replace('*', '').trim()}
+                                            </ThemedText>
+                                        </View>
+                                    )
+                                ))}
+                            </View>
+                        </View>
+                    </View>
+                );
+            case 'privacy':
+                return (
+                    <View style={styles.sheetContentContainer}>
+                        <View style={[styles.sectionContainer, { backgroundColor: cardColor }]}>
+                            <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
+                                {t('onboardingScreen.termsOfService.privacyPolicyTitle')} 🔒
+                            </ThemedText>
+                            <ThemedText style={styles.sectionText}>
+                                {t('onboardingScreen.termsOfService.privacyPolicyContent1')}
+                            </ThemedText>
+                        </View>
+                        <View style={[styles.sectionContainer, { backgroundColor: cardColor }]}>
+                            <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
+                                {t('onboardingScreen.termsOfService.privacyPolicyDescription')} 🤝
+                            </ThemedText>
+                            <View style={styles.bulletContainer}>
+                                {t('onboardingScreen.termsOfService.privacyPolicyContent2').split('\n').map((bullet, index) => (
+                                    bullet.trim().startsWith('*') && (
+                                        <View key={index} style={styles.bulletPoint}>
+                                            <ThemedText style={styles.bulletIcon}>•</ThemedText>
+                                            <ThemedText style={styles.bulletText}>
+                                                {bullet.replace('*', '').trim()}
+                                            </ThemedText>
+                                        </View>
+                                    )
+                                ))}
+                            </View>
+                        </View>
+                    </View>
+                );
+            default:
+                return null;
+        }
     };
 
     return (
@@ -105,7 +181,10 @@ const OnBoardScreen = () => {
                         <ThemedText style={styles.termsText}>
                             {t('onboardingScreen.termsOfService.agreementPrefix')}
                         </ThemedText>
-                        <TouchableWithoutFeedback hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} onPress={onOpenTOS}>
+                        <TouchableWithoutFeedback
+                            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                            onPress={() => onOpenSheet('tos')}
+                        >
                             <ThemedText style={[styles.termsText, styles.highlightText]}>
                                 {t('onboardingScreen.termsOfService.termsOfServiceLink')}
                             </ThemedText>
@@ -115,9 +194,14 @@ const OnBoardScreen = () => {
                         <ThemedText style={styles.termsText}>
                             {t('onboardingScreen.termsOfService.privacyPolicyPrefix')}
                         </ThemedText>
-                        <ThemedText style={[styles.termsText, styles.highlightText]}>
-                            {t('onboardingScreen.termsOfService.privacyPolicyLink')}
-                        </ThemedText>
+                        <TouchableWithoutFeedback
+                            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                            onPress={() => onOpenSheet('privacy')}
+                        >
+                            <ThemedText style={[styles.termsText, styles.highlightText]}>
+                                {t('onboardingScreen.termsOfService.privacyPolicyLink')}
+                            </ThemedText>
+                        </TouchableWithoutFeedback>
                     </View>
                 </View>
 
@@ -128,25 +212,24 @@ const OnBoardScreen = () => {
                 />
             </View>
             <ThemedReuseableSheet
-                // isVisible={shouldRenderSheet}
                 ref={bottomSheetRef}
-                title={t('homeScreen.manage')}
-                // description="Choose an action"
-                snapPoints={['23%']}
-                actions={[
-                    {
-                        icon: 'pencil-outline',
-                        iconLibrary: 'MaterialCommunityIcons',
-                        text: t('homeScreen.edit'),
-                        onPress: () => bottomSheetRef.current?.close(),
-                    },
-                    {
-                        icon: 'delete-outline',
-                        iconLibrary: 'MaterialCommunityIcons',
-                        text: t('homeScreen.delete'),
-                        onPress: () => {},
-                    }
-                ]}
+                title={
+                    sheetType === 'tos'
+                        ? t('onboardingScreen.termsOfService.termsOfServiceSheetTitle')
+                        : t('onboardingScreen.termsOfService.privacyPolicySheetTitle')
+                }
+                // description={
+                //     sheetType === 'tos'
+                //         ? t('onboardingScreen.termsOfService.termsOfServiceDescription')
+                //         : t('onboardingScreen.termsOfService.privacyPolicyDescription')
+                // }
+                contentType="scroll"
+                enableDynamicSizing={true}
+                customContent={
+                    <View>
+                        {renderSheetContent()}
+                    </View>
+                }
             />
         </ThemedView>
     );
@@ -168,7 +251,6 @@ const styles = StyleSheet.create({
     },
     contentContainer: {
         flex: 1,
-        // marginTop: 60,
         justifyContent: 'center',
         gap: 40
     },
@@ -225,10 +307,53 @@ const styles = StyleSheet.create({
         color: '#FFC107',
         fontSize: 12,
         letterSpacing: 0.5,
-        // fontWeight: 'bold'
         lineHeight: 20
     },
     button: {},
+    sheetContentContainer: {
+        // paddingHorizontal: 20,
+        // paddingBottom: 20,
+    },
+    sectionContainer: {
+        marginBottom: 20,
+        borderRadius: 16,
+        paddingVertical: 15,
+        paddingHorizontal: 20,
+        // shadowColor: '#000',
+        // shadowOffset: { width: 0, height: 2 },
+        // shadowOpacity: 0.1,
+        // shadowRadius: 4,
+        // elevation: 3,
+    },
+    sectionTitle: {
+        fontSize: 16,
+        marginBottom: 10,
+        // color: '#FF6B00', // Orange accent color
+    },
+    sectionText: {
+        fontSize: 14,
+        lineHeight: 22,
+        // color: '#333',
+    },
+    bulletContainer: {
+        marginTop: 10,
+    },
+    bulletPoint: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        marginBottom: 10,
+    },
+    bulletIcon: {
+        fontSize: 20,
+        // color: '#FF6B00',
+        marginRight: 10,
+    },
+    bulletText: {
+        flex: 1,
+        fontSize: 14,
+        lineHeight: 22,
+        // color: '#333',
+    },
 });
 
 export default OnBoardScreen;

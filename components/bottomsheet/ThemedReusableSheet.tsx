@@ -45,7 +45,8 @@ interface ReuseableSheetProps extends Partial<BottomSheetProps> {
     dynamicSnapPoints?: boolean;
     minHeight?: string | number;
     maxHeight?: string | number;
-    onClose?: () => void; // New prop to handle close events
+    onClose?: () => void;
+    showCloseButton?: boolean; // New optional prop
 }
 
 const ThemedReuseableSheet = forwardRef<BottomSheet, ReuseableSheetProps>(
@@ -66,6 +67,7 @@ const ThemedReuseableSheet = forwardRef<BottomSheet, ReuseableSheetProps>(
         minHeight = '30%',
         maxHeight = '90%',
         onClose,
+        showCloseButton = false, // Default to false
         ...bottomSheetProps
     }, ref) => {
         const { currentTheme } = useTheme();
@@ -77,7 +79,7 @@ const ThemedReuseableSheet = forwardRef<BottomSheet, ReuseableSheetProps>(
             collapse: () => bottomSheetRef.current?.collapse(),
             close: () => {
                 bottomSheetRef.current?.close();
-                onClose?.(); // Call onClose if provided
+                onClose?.();
             },
             snapToIndex: (index: number) => bottomSheetRef.current?.snapToIndex(index),
             snapToPosition: (position: string | number) => bottomSheetRef.current?.snapToPosition(position),
@@ -108,6 +110,35 @@ const ThemedReuseableSheet = forwardRef<BottomSheet, ReuseableSheetProps>(
                     size={iconSize}
                     color={iconColor}
                 />
+            );
+        };
+
+        const renderCloseButton = () => {
+            if (!showCloseButton) return null;
+
+            const iconColor = currentTheme === 'light' ? Colors.light.icon : Colors.dark.icon;
+
+            return (
+                <Pressable
+                    onPress={() => {
+                        bottomSheetRef.current?.close();
+                        onClose?.();
+                    }}
+                    style={styles.closeButton}
+                    android_ripple={{
+                        color: currentTheme === 'light'
+                            ? 'rgba(0, 0, 0, 0.2)'
+                            : 'rgba(255, 255, 255, 0.2)',
+                        foreground: true,
+                        borderless: true
+                    }}
+                >
+                    <MaterialCommunityIcons 
+                        name="close" 
+                        size={16} 
+                        color={iconColor} 
+                    />
+                </Pressable>
             );
         };
 
@@ -150,6 +181,9 @@ const ThemedReuseableSheet = forwardRef<BottomSheet, ReuseableSheetProps>(
         // Render main content body
         const renderContentBody = () => (
             <>
+                {/* Close button at the top right */}
+                {renderCloseButton()}
+
                 {/* Custom Header */}
                 {customHeader}
 
@@ -236,8 +270,8 @@ const ThemedReuseableSheet = forwardRef<BottomSheet, ReuseableSheetProps>(
                     styles.background,
                     {
                         backgroundColor: currentTheme === 'light'
-                            ? Colors.light.cardBackground
-                            : Colors.dark.cardBackground,
+                            ? Colors.light.background
+                            : Colors.dark.background,
                     },
                     customStyles.container
                 ]}
@@ -245,8 +279,8 @@ const ThemedReuseableSheet = forwardRef<BottomSheet, ReuseableSheetProps>(
                     styles.handle,
                     {
                         backgroundColor: currentTheme === 'light'
-                            ? Colors.light.cardBackground
-                            : Colors.dark.cardBackground,
+                            ? Colors.light.background
+                            : Colors.dark.background,
                     },
                     customStyles.header
                 ]}
@@ -261,7 +295,7 @@ const ThemedReuseableSheet = forwardRef<BottomSheet, ReuseableSheetProps>(
                         onPress={closeOnBackdropPress 
                             ? () => {
                                 bottomSheetRef.current?.close();
-                                onClose?.(); // Call onClose when backdrop is pressed
+                                onClose?.(); 
                             } 
                             : undefined}
                     />
@@ -290,16 +324,16 @@ const styles = StyleSheet.create({
     contentContainer: {
         paddingHorizontal: 15,
         paddingVertical: 15,
-        // paddingBottom: 10
     },
     headerContent: {
-        marginBottom: 10,
+        marginBottom: 15,
+        position: 'relative',
     },
     title: {
         fontSize: 18,
+        marginBottom: 5,
         fontWeight: 'bold',
         textAlign: 'center',
-        marginBottom: 8,
     },
     description: {
         fontSize: 14,
@@ -328,6 +362,14 @@ const styles = StyleSheet.create({
     },
     disabledButtonText: {
         color: 'gray',
+    },
+    closeButton: {
+        position: 'absolute',
+        top: 5,
+        right: 15,
+        borderRadius: 20,
+        padding: 5,
+        zIndex: 1,
     },
 });
 

@@ -142,7 +142,8 @@ const styles = StyleSheet.create({
         width: width,
         alignItems: 'center',
         justifyContent: 'center',
-        paddingHorizontal: 15,
+        paddingHorizontal: 20,
+        flexShrink: 1,
         // paddingTop: 45,
     },
     iconContainer: {
@@ -160,6 +161,7 @@ const styles = StyleSheet.create({
     subtitle: {
         textAlign: 'center',
         fontSize: 18,
+        lineHeight: 25,
     },
     bottomContainer: {
         paddingBottom: 40,

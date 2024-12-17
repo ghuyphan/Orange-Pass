@@ -16,7 +16,7 @@ export const Colors = {
     buttonBackground: '#e8dcd3', 
     buttonHighlight: '#FFECB3', 
     cardBackground: '#fcf1eb',
-    cardFooter: '#EADFD7', 
+    cardFooter: '#F2EAE2', 
     logoIcon: '#FF8A65', 
   },
   dark: {
@@ -33,7 +33,7 @@ export const Colors = {
     buttonBackground: '#45383A',
     buttonHighlight: '#6A4F4B', 
     cardBackground: '#2E282A',
-    cardFooter: '#604D45',
+    cardFooter: '#231D1F',
     logoIcon: '#FF9800',
   },
 };

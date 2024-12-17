@@ -91,6 +91,16 @@ export default function RegisterScreen() {
                         <ThemedText style={styles.title} type='title'>{t('registerScreen.registerNewAccount')}</ThemedText>
                     </View>
                     <View style={[styles.inputContainer, { backgroundColor: cardColor }]}>
+                    <ThemedInput
+                            label={t('registerScreen.email')}
+                            placeholder={t('registerScreen.emailPlaceholder')}
+                            onChangeText={handleChange('email')}
+                            isError={touched.email && errors.email ? true : false}
+                            onBlur={handleBlur('email')}
+                            value={values.email}
+                            errorMessage={touched.email && errors.email ? t(`registerScreen.errors.${errors.email}`) : ''}
+                        />
+                        <ThemedView style={styles.divider} />
                         <ThemedInput
                             label={t('registerScreen.fullName')}
                             placeholder={t('registerScreen.fullNamePlaceholder')}
@@ -99,16 +109,6 @@ export default function RegisterScreen() {
                             onBlur={handleBlur('fullName')}
                             value={values.fullName}
                             errorMessage={touched.fullName && errors.fullName ? t(`registerScreen.errors.${errors.fullName}`) : ''}
-                        />
-                        <ThemedView style={styles.divider} />
-                        <ThemedInput
-                            label={t('registerScreen.email')}
-                            placeholder={t('registerScreen.emailPlaceholder')}
-                            onChangeText={handleChange('email')}
-                            isError={touched.email && errors.email ? true : false}
-                            onBlur={handleBlur('email')}
-                            value={values.email}
-                            errorMessage={touched.email && errors.email ? t(`registerScreen.errors.${errors.email}`) : ''}
                         />
                         <ThemedView style={styles.divider} />
                         <ThemedInput
