@@ -11,6 +11,7 @@ interface ScanResult {
   iconName: MaterialIconsIconName;
   codeValue: string;
   codeFormat?: number;
+  bin?: string; // Add bin property to ScanResult
 }
 
 interface Pattern {
@@ -40,6 +41,7 @@ const useHandleCodeScanned = () => {
       ): ScanResult => {
         const { quickScan, t, setIsConnecting, codeFormat } = options;
         const format = options.codeFormat;
+        console.log(codeMetadata);
 
         const patterns: { [key: string]: Pattern } = {
           WIFI: {
@@ -97,19 +99,26 @@ const useHandleCodeScanned = () => {
           VietQR: {
             pattern: /^000201010211/,
             handler: (codeMetadata, { t }) => {
+              const binMatch = codeMetadata.match(/27\d{8}(\d{6})/);
+              const bin = binMatch ? binMatch[1] : 'Unknown BIN';
+              console.log(bin);
+              
               let result: ScanResult = {
                 codeType: 'card',
                 iconName: 'qr-code',
                 codeValue: codeMetadata,
                 codeFormat: format,
+                bin: bin, // Include bin in the result
               };
 
               if (codeMetadata.includes('MOMO')) {
                 result = {
                   codeType: 'ewallet',
                   iconName: 'qr-code',
-                  codeValue: `${t('scanScreen.momoPayment')}`,
+                  // codeValue: `${t('scanScreen.momoPayment')}`,
+                  codeValue: codeMetadata,
                   codeFormat: format,
+                  bin: bin, // Include bin in the result
                 };
               } else if (codeMetadata.includes('zalopay')) {
                 result = {
@@ -117,6 +126,7 @@ const useHandleCodeScanned = () => {
                   iconName: 'qr-code',
                   codeValue: `${t('scanScreen.zalopayPayment')}`,
                   codeFormat: format,
+                  bin: bin, // Include bin in the result
                 };
               }
 

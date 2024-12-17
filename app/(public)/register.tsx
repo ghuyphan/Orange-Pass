@@ -98,7 +98,7 @@ export default function RegisterScreen() {
                             isError={touched.fullName && errors.fullName ? true : false}
                             onBlur={handleBlur('fullName')}
                             value={values.fullName}
-                            errorMessage={touched.fullName && errors.fullName ? errors.fullName : ''}
+                            errorMessage={touched.fullName && errors.fullName ? t(`registerScreen.errors.${errors.fullName}`) : ''}
                         />
                         <ThemedView style={styles.divider} />
                         <ThemedInput
@@ -108,7 +108,7 @@ export default function RegisterScreen() {
                             isError={touched.email && errors.email ? true : false}
                             onBlur={handleBlur('email')}
                             value={values.email}
-                            errorMessage={touched.email && errors.email ? errors.email : ''}
+                            errorMessage={touched.email && errors.email ? t(`registerScreen.errors.${errors.email}`) : ''}
                         />
                         <ThemedView style={styles.divider} />
                         <ThemedInput
@@ -119,7 +119,7 @@ export default function RegisterScreen() {
                             isError={touched.password && errors.password ? true : false}
                             onBlur={handleBlur('password')}
                             value={values.password}
-                            errorMessage={touched.password && errors.password ? errors.password : ''}
+                            errorMessage={touched.password && errors.password ? t(`registerScreen.errors.${errors.password}`) : ''}
                         />
                         <ThemedView style={styles.divider} />
                         <ThemedInput
@@ -128,9 +128,9 @@ export default function RegisterScreen() {
                             secureTextEntry={true}
                             onChangeText={handleChange('confirmPassword')}
                             isError={touched.confirmPassword && errors.confirmPassword ? true : false}
-                            onBlur={handleBlur('registerScreen.confirmPassword')}
+                            onBlur={handleBlur('confirmPassword')}
                             value={values.confirmPassword}
-                            errorMessage={touched.confirmPassword && errors.confirmPassword ? errors.confirmPassword : ''}
+                            errorMessage={touched.confirmPassword && errors.confirmPassword ? t(`registerScreen.errors.${errors.confirmPassword}`) : ''}
                         />
                     </View>
                     <ThemedButton

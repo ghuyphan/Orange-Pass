@@ -89,7 +89,7 @@ export default function ForgotPasswordScreen() {
             isError={touched.email && errors.email ? true : false}
             onBlur={handleBlur('email')}
             value={values.email}
-            errorMessage={touched.email && errors.email ? errors.email : ''}
+            errorMessage={touched.email && errors.email ? t(`forgotPasswordScreen.errors.${errors.email}`) : ''}
           />
           </View>
           <ThemedButton

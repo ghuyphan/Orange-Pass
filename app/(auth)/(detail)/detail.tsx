@@ -6,7 +6,6 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useUnmountBrightness } from '@reeq/react-native-device-brightness';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { openBrowserAsync } from 'expo-web-browser';
 import BottomSheet from '@gorhom/bottom-sheet';
 import { throttle } from 'lodash';
 
@@ -16,7 +15,6 @@ import { Colors } from '@/constants/Colors';
 import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
 import { useTheme } from '@/context/ThemeContext';
 import { t } from '@/i18n';
-import QRRecord from '@/types/qrType';
 // Components
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedButton } from '@/components/buttons/ThemedButton';
@@ -31,7 +29,7 @@ import { returnItemData } from '@/utils/returnItemData';
 import { getVietQRData } from '@/utils/vietQR';
 import { getIconPath } from '@/utils/returnIcon';
 import { returnItemsByType } from '@/utils/returnItemData';
-import { deleteQrCode, getQrCodeById, updateQrIndexes } from '@/services/localDB/qrDB';
+import { deleteQrCode, updateQrIndexes } from '@/services/localDB/qrDB';
 
 import {
     setQrData,
@@ -98,13 +96,12 @@ export default function DetailScreen() {
     // 5. Derived values (sorted alphabetically)
     const cardColor = currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground;
     const iconColor = currentTheme === 'light' ? Colors.light.icon : Colors.dark.icon;
-    const buttonColor = currentTheme === 'light' ? Colors.light.buttonBackground : Colors.dark.buttonBackground;
 
     // Effects
     useEffect(() => {
         if (item?.type === 'store') {
             const loadBanks = () => {
-                const banks = returnItemsByType('vietqr');
+                const banks = returnItemsByType('bank');
                 setVietQRBanks(banks);
             };
             setTimeout(() => {
@@ -268,7 +265,7 @@ export default function DetailScreen() {
 
     const renderEmptyComponent = useCallback(() => (
         <View style={styles.loadingSkeleton}>
-              <ActivityIndicator size={25} color={iconColor}/>
+            <ActivityIndicator size={25} color={iconColor} />
         </View>
     ), []);
 
@@ -313,17 +310,20 @@ export default function DetailScreen() {
                     android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', borderless: false }}
                     style={styles.actionButton}
                 >
-                    <MaterialCommunityIcons name="map-marker-outline" size={18} color={iconColor} />
-                    <ThemedText style={styles.labelText}>
-                        {t('detailsScreen.nearbyLocation')}
-                    </ThemedText>
+                    <View style={styles.actionHeader}>
+                        <MaterialCommunityIcons name="map-marker-outline" size={16} color={iconColor} />
+                        <ThemedText style={styles.labelText}>
+                            {t('detailsScreen.nearbyLocation')}
+                        </ThemedText>
+                    </View>
+                    <MaterialCommunityIcons name="chevron-right" size={16} color={iconColor} />
                 </Pressable>
 
                 {/* Transfer Section for Bank/E-Wallet */}
                 {(item.type === 'bank' || item.type === 'ewallet') && (
                     <View style={[styles.transferContainer, isOffline ? { opacity: 0.4, pointerEvents: 'none' } : {}]}>
                         <View style={styles.transferHeader}>
-                            <MaterialCommunityIcons name="qrcode" size={18} color={iconColor} />
+                            <MaterialCommunityIcons name="qrcode" size={16} color={iconColor} />
                             <ThemedText style={styles.labelText}>
                                 {t('detailsScreen.createQrCode')}
                             </ThemedText>
@@ -355,7 +355,7 @@ export default function DetailScreen() {
                                     onPress={transferAmount}
                                     style={[styles.transferButton, { opacity: amount ? 1 : 0.3 }]}
                                 >
-                                    <MaterialCommunityIcons name={amount ? 'navigation' : 'navigation-outline'} size={16} color={iconColor} />
+                                    <MaterialCommunityIcons name={amount ? 'chevron-right' : 'chevron-right'} size={16} color={iconColor} />
                                 </Pressable>
                             </View>
                             <FlatList
@@ -411,7 +411,7 @@ export default function DetailScreen() {
             <ThemedReuseableSheet
                 ref={bottomSheetRef}
                 title={t('homeScreen.manage')}
-                snapPoints={['25%']}
+                enableDynamicSizing={true}
                 actions={[
                     {
                         icon: 'pencil-outline',
@@ -475,6 +475,7 @@ const styles = StyleSheet.create({
     actionButton: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'space-between',
         paddingHorizontal: 20,
         paddingVertical: 15,
         // paddingBottom: 10,
@@ -482,6 +483,11 @@ const styles = StyleSheet.create({
         gap: 10,
         borderRadius: 16,
         overflow: 'hidden',
+    },
+    actionHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10
     },
     loadingWrapper: {
         flex: 1,
@@ -523,7 +529,7 @@ const styles = StyleSheet.create({
     },
     transferButton: {
         marginLeft: 5,
-        transform: [{ rotate: '90deg' }],
+        // transform: [{ rotate: '90deg' }],
     },
     loadingSkeleton: {
         flexDirection: 'row',
@@ -562,7 +568,7 @@ const styles = StyleSheet.create({
         height: 22,
         borderRadius: 50,
         overflow: 'hidden',
-        marginHorizontal: 10,
+        marginHorizontal: 12,
         borderWidth: 1,
     },
     currencyText: {

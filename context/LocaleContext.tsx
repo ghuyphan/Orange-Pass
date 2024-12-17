@@ -1,9 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
 import { i18n, changeLocale } from '@/i18n';
-import { MMKV } from 'react-native-mmkv'; // Assuming you're using MMKV for storage
-
-// Create a storage instance
-const storage = new MMKV();
+import { storage } from '@/utils/storage';
+import { useMMKVString } from 'react-native-mmkv';
 
 interface LocaleContextProps {
   locale: string | undefined;
@@ -17,24 +15,16 @@ interface LocaleProviderProps {
 }
 
 export const LocaleProvider: React.FC<LocaleProviderProps> = ({ children }) => {
-  // Retrieve initial locale from persistent storage
-  const [locale, setLocale] = useState<string | undefined>(() => {
-    // Try to get the stored locale, fallback to i18n.locale if not found
-    const storedLocale = storage.getString('app_locale');
-    return storedLocale || i18n.locale;
-  });
+  const [locale, setLocale] = useMMKVString('locale', storage);
 
   // Memoized update locale function
   const updateLocale = useCallback((newLocale: string | undefined) => {
-    // Update locale in state
-    setLocale(newLocale);
-
     // Persist the locale in storage
     if (newLocale) {
-      storage.set('app_locale', newLocale);
+      // storage.set('app_locale', newLocale);
+      setLocale(newLocale);
     } else {
-      // Remove the stored locale if undefined
-      storage.delete('app_locale');
+      setLocale(undefined);
     }
   }, []);
 

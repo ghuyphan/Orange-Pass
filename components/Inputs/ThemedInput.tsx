@@ -13,6 +13,7 @@ import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
 import { useTheme } from '@/context/ThemeContext';
+import { useLocale } from '@/context/LocaleContext';
 import { Colors } from '@/constants/Colors';
 import { Tooltip } from 'react-native-paper';
 
@@ -67,6 +68,7 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(({
     backgroundColor
 }, ref) => {
     const { currentTheme } = useTheme();
+  const { locale } = useLocale();
     const [localValue, setLocalValue] = useState(value);
     const [isSecure, setIsSecure] = useState(secureTextEntry);
     const [isErrorModalVisible, setIsErrorModalVisible] = useState(false);

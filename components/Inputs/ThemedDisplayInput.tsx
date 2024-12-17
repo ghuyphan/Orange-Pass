@@ -6,7 +6,8 @@ import {
     View,
     Pressable,
     Modal,
-    TouchableWithoutFeedback
+    TouchableWithoutFeedback,
+    Image
 } from 'react-native';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { ThemedText } from '../ThemedText';
@@ -14,10 +15,13 @@ import { ThemedView } from '../ThemedView';
 import { useTheme } from '@/context/ThemeContext';
 import { Colors } from '@/constants/Colors';
 import { Tooltip } from 'react-native-paper';
+import { getIconPath } from '@/utils/returnIcon';
 
 export type ThemedDisplayInputProps = {
     /** The name of the icon to display on the input */
     iconName?: keyof typeof MaterialCommunityIcons.glyphMap;
+    /** The code of the logo to display on the input */
+    logoCode?: string;
     /** Label to display on the input */
     label?: string;
     /** The value of the input */
@@ -42,6 +46,7 @@ export type ThemedDisplayInputProps = {
 
 export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(({
     iconName,
+    logoCode,
     label,
     placeholder,
     value = '',
@@ -60,6 +65,8 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(({
     const color = currentTheme === 'light' ? Colors.light.text : Colors.dark.text;
     const placeholderColor = currentTheme === 'light' ? Colors.light.placeHolder : Colors.dark.placeHolder;
     const errorColor = currentTheme === 'light' ? Colors.light.error : Colors.dark.error;
+    // const iconPath = useMemo(() => getIconPath(logoCode ?? ''), [logoCode]);
+
 
     const inputContainerStyle = useMemo(() => ([
         styles.inputContainer,
@@ -117,6 +124,11 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(({
                                 color={placeholderColor}
                             />
                         )}
+                        {/* {logoCode && (
+                            <View style={[styles.logoContainer, { marginLeft: iconName ? 10 : 0}]}>
+                                <Image source={iconPath} style={styles.logo} resizeMode="contain" />
+                            </View>
+                        )} */}
                         <ThemedText
                             style={[
                                 styles.input,
@@ -150,7 +162,7 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(({
 
                             {/* Error Icon */}
                             {isError && errorMessage && (
-                                <Tooltip 
+                                <Tooltip
                                     title={errorMessage}
                                     enterTouchDelay={0}
                                     leaveTouchDelay={1500}
@@ -196,6 +208,19 @@ const styles = StyleSheet.create({
     },
     label: {
         fontSize: 13,
+    },
+    logoContainer: {
+        width: 25,
+        height: 25,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'white',
+        borderRadius: 25,
+        marginRight: 5,
+    },
+    logo: {
+        width: '55%',
+        height: '55%',
     },
     inputRow: {
         flexDirection: 'row',

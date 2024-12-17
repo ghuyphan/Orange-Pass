@@ -60,8 +60,9 @@ const ThemedReuseableSheet = forwardRef<BottomSheet, ReuseableSheetProps>(
         contentType = 'scroll',
         contentProps = {},
         closeOnBackdropPress = true,
-        snapPoints = ['50%', '90%'],
+        snapPoints = [],
         dynamicSnapPoints = false,
+        enableDynamicSizing = false,
         minHeight = '30%',
         maxHeight = '90%',
         onClose,
@@ -230,6 +231,7 @@ const ThemedReuseableSheet = forwardRef<BottomSheet, ReuseableSheetProps>(
                 animateOnMount={true}
                 onClose={handleClose} 
                 containerStyle={{zIndex: 10}}
+                enableDynamicSizing={enableDynamicSizing}
                 backgroundStyle={[
                     styles.background,
                     {

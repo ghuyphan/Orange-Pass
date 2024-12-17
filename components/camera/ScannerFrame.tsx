@@ -1,10 +1,12 @@
 import React, { useEffect, useMemo, useLayoutEffect } from 'react';
 import { StyleSheet } from 'react-native';
 import Animated, { useAnimatedStyle, withSpring, withTiming, useSharedValue } from 'react-native-reanimated';
-import { Point } from 'react-native-vision-camera';
 
 interface CameraHighlight {
-    corners: Point[] | undefined;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
 }
 
 interface ScannerFrameProps {
@@ -53,23 +55,17 @@ export const ScannerFrame: React.FC<ScannerFrameProps> = ({ highlight, layout, s
 
     // useEffect to handle highlight changes
     useEffect(() => {
-        if (highlight && highlight.corners && scanFrame && layout.width > 0 && layout.height > 0) {
-            // Calculate the bounding box from the corners
-            const minX = Math.min(...highlight.corners.map(p => p.x));
-            const maxX = Math.max(...highlight.corners.map(p => p.x));
-            const minY = Math.min(...highlight.corners.map(p => p.y));
-            const maxY = Math.max(...highlight.corners.map(p => p.y));
-
+        if (highlight && scanFrame && layout.width > 0 && layout.height > 0) {
             // Calculate scales and adjusted values
             const xScale = layout.width / scanFrame.height - 0.025;
             const yScale = layout.height / scanFrame.width - 0.01;
             const widthScale = layout.height / scanFrame.width + 0.1;
             const heightScale = layout.width / scanFrame.height + 0.15;
 
-            const adjustedX = minX * xScale;
-            const adjustedY = minY * yScale;
-            const adjustedWidth = (maxX - minX) * widthScale;
-            const adjustedHeight = (maxY - minY) * heightScale;
+            const adjustedX = highlight.x * xScale;
+            const adjustedY = highlight.y * yScale;
+            const adjustedWidth = highlight.width * widthScale;
+            const adjustedHeight = highlight.height * heightScale;
 
             // Animate to the new highlight area
             frameX.value = withSpring(adjustedX, { stiffness: 200, damping: 16 });

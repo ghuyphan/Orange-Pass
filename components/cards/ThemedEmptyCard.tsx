@@ -54,7 +54,7 @@ export function ThemedEmptyCard({
     const { currentTheme: colorScheme } = useTheme();
     // const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
     const color = colorScheme === 'light' ? Colors.light.text : Colors.dark.text;
-    const buttoncolor = colorScheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground;
+    const buttoncolor = colorScheme === 'light' ? Colors.light.buttonBackground : Colors.dark.buttonBackground;
     // const colorScheme = useColorScheme();
 
     const cardContainerStyle = useMemo(() => ([

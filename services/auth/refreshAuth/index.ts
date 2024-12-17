@@ -166,13 +166,13 @@ async function refreshAuthToken(authToken: string, maxRetries = 5, maxTimeout = 
       }
       return userID ? true : false;
     } catch (localQrError) {
-      store.dispatch(setErrorMessage(t('qr.localFetchFailed')));
+      store.dispatch(setErrorMessage(t('authRefresh.errors.info.qr.localFetchFailed')));
       return false;
     }
   }
 
   if (isRefreshing) {
-    console.warn('Token refresh already in progress.');
+    // console.warn('Token refresh already in progress.');
     return false;
   }
 

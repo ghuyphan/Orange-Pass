@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet, View, TextInput, FlatList } from 'react-native';
+import { StyleSheet, View, FlatList } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import Animated, {
   Easing,
@@ -12,7 +12,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { router } from 'expo-router';
-import DraggableFlatList, { ScaleDecorator, ShadowDecorator } from 'react-native-draggable-flatlist';
+import DraggableFlatList, { ScaleDecorator } from 'react-native-draggable-flatlist';
 import { debounce, throttle } from 'lodash';
 import BottomSheet from '@gorhom/bottom-sheet';
 import ImagePicker from 'react-native-image-crop-picker';
@@ -155,7 +155,10 @@ function HomeScreen() {
         // Update the UI with new data without triggering a full reload
         const updatedLocalData = await getQrCodesByUserId(userId);
         dispatch(setQrData(updatedLocalData));
+        // console.log('Updated local data:', updatedLocalData.length);
         setIsEmpty(updatedLocalData.length === 0);
+      } else {
+        setIsEmpty(true);
       }
     } catch (error) {
       console.error('Error syncing QR codes:', error);
@@ -243,15 +246,6 @@ function HomeScreen() {
       debouncedSetSearchQuery.cancel();
     };
   }, [searchQuery]);
-
-  // Fetch filtered data from the database
-  // useEffect(() => {
-  //   if (userId) { 
-  //     filterQrCodesByType(userId, filter)
-  //       .then((filteredData) => dispatch(setQrData(filteredData)));
-  //       console.log('update local data from filter funciton'); 
-  //   }
-  // }, [debouncedSearchQuery, filter, dispatch]);
 
 
   // Animate empty card when isEmpty changes
@@ -392,12 +386,13 @@ function HomeScreen() {
   //   router.push('/(add)/add-new');
   // }, [])
   const onNavigateToAddScreen = useCallback(
-    throttle((codeType?: number, codeValue?: string) => {
+    throttle((codeType?: number, codeValue?: string, bin?: string) => {
       router.push({
         pathname: `/(auth)/(add)/add-new`,
         params: {
           codeType: codeType,
-          codeValue: codeValue
+          codeValue: codeValue,
+          codeBin: bin
         },
       });
     }, 1000),
@@ -429,7 +424,7 @@ function HomeScreen() {
 
 
       if (result && result.codeFormat !== undefined) {
-        onNavigateToAddScreen(result.codeFormat, result.codeValue);
+        onNavigateToAddScreen(result.codeFormat, result.codeValue, result.bin);
         // console.log(result.codeFormat, result.codeValue);
       } else {
         console.log('Failed to decode QR code');
@@ -504,7 +499,7 @@ function HomeScreen() {
   const handleExpandPress = useCallback((id: string) => {
     setSelectedItemId(id);
     setIsSheetOpen(true);
-    bottomSheetRef.current?.expand();
+    bottomSheetRef.current?.snapToIndex(0);
   }, [setSelectedItemId, bottomSheetRef, setIsSheetOpen]);
 
   const onDeleteSheetPress = useCallback(() => {
@@ -570,7 +565,7 @@ function HomeScreen() {
   );
 
   const paddingValues = useMemo(() => {
-    return [0, height * 0.74, height * 0.44, height * 0.20];
+    return [0, height * 0.70, height * 0.40, height * 0.20];
   }, []);
 
   const listContainerPadding = useMemo(() => {
@@ -598,11 +593,13 @@ function HomeScreen() {
               iconName="qrcode-scan"
               style={styles.titleButton}
               onPress={onNavigateToScanScreen}
+              disabled={isLoading}
             />
             <ThemedButton
               iconName="cog"
               style={styles.titleButton}
               onPress={onNavigateToSettingsScreen}
+              disabled={isLoading}
             />
           </View>
         </View>
@@ -679,7 +676,7 @@ function HomeScreen() {
         // pointerEvents='box-none'
         />
       )}
-      {(!isLoading || qrData.length > 0) &&
+      {(!isLoading && qrData.length > 0) &&
 
         <ThemedFAB
           actions={[
@@ -712,7 +709,6 @@ function HomeScreen() {
         isSyncing={isSyncing}
       />
       <ThemedBottomToast
-        // isSyncing={isSyncing}
         isVisible={isBottomToastVisible}
         message={bottomToastMessage}
         iconName={bottomToastIcon as keyof typeof MaterialCommunityIcons.glyphMap}
@@ -721,16 +717,15 @@ function HomeScreen() {
 
       />
       <ThemedReuseableSheet
-        // isVisible={shouldRenderSheet}
         ref={bottomSheetRef}
         title={t('homeScreen.manage')}
-        // description="Choose an action"
         onClose={() => {
           setTimeout(() => {
             setIsSheetOpen(false)
           }, 50);
         }}
-        snapPoints={['25%']}
+        // snapPoints={['25%']}}
+        enableDynamicSizing={true}
         actions={[
           {
             icon: 'pencil-outline',

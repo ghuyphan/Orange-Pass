@@ -1,11 +1,20 @@
 {
-  "authRefresh": {
+"authRefresh": {
     "errors": {
       "401": "Session expired. Please log in again to continue.",
       "403": "You don’t have permission to perform this action.",
       "404": "Authorization error. Please log in and try again.",
       "500": "Something went wrong on our end. Please try again later.",
-      "localUserDataNotFound": "Can't find local user data. Please log in again."
+      "localUserDataNotFound": "Can't find local user data. Please log in again.",
+      "invalidToken": "Your session token is invalid. Please log in again.",
+      "unknown": "An unknown error occurred. Please try again later."
+    },
+    "warnings": {
+      "usingOfflineData": "You're working offline. Some features may not be available.",
+      "network.offlineMode": "You're offline. Authentication is limited to local data."
+    },
+    "info": {
+      "qr.localFetchFailed": "Failed to retrieve QR data locally. Some features may not be available."
     }
   },
   "loginScreen": {

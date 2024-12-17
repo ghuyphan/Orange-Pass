@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo } from 'react';
 import { StyleSheet, View, Pressable } from 'react-native';
+import { getLocales } from "expo-localization";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -71,7 +72,7 @@ const LanguageScreen = () => {
     <Pressable
       android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
       onPress={() => handleLanguageChange(localeCode)}
-      key={localeCode} 
+      key={localeCode}
     >
       <View style={styles.section}>
         <View style={styles.leftSectionContainer}>
@@ -183,7 +184,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingVertical: 15, 
+    paddingVertical: 15,
   },
   leftSectionContainer: {
     flexDirection: 'row',

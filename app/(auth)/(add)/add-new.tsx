@@ -1,44 +1,52 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Keyboard, StyleSheet, View } from 'react-native';
 import Animated, {
+  Extrapolation,
+  interpolate,
+  useAnimatedScrollHandler,
   useAnimatedStyle,
   useSharedValue,
-  interpolate,
-  Extrapolation,
-  useAnimatedScrollHandler
 } from 'react-native-reanimated';
+
+import BottomSheet from '@gorhom/bottom-sheet';
+import { Formik } from 'formik';
 import { router } from 'expo-router';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import { ThemedButton } from '@/components/buttons/ThemedButton';
-import { t } from '@/i18n';
+import { useLocalSearchParams } from 'expo-router';
+
 import { Colors } from '@/constants/Colors';
 import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
-import { useTheme } from '@/context/ThemeContext';
-import { useLocalSearchParams } from 'expo-router';
-import { ThemedInput, ThemedDisplayInput } from '@/components/Inputs';
-import { Formik } from 'formik';
-import { qrCodeSchema } from '@/utils/validationSchemas';
+import { ThemedButton } from '@/components/buttons/ThemedButton';
 import ThemedCardItem from '@/components/cards/ThemedCardItem';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { ThemedInput, ThemedDisplayInput } from '@/components/Inputs';
+import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
 import ThemedReuseableSheet from '@/components/bottomsheet/ThemedReusableSheet';
-import BottomSheet from '@gorhom/bottom-sheet';
-
+import { useTheme } from '@/context/ThemeContext';
+import { t } from '@/i18n';
+import { qrCodeSchema } from '@/utils/validationSchemas';
+import { returnItemCodeByBin, returnItemData, returnItemsByType } from '@/utils/returnItemData';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 const AnimatedKeyboardAwareScrollView = Animated.createAnimatedComponent(KeyboardAwareScrollView);
 
 const AddScreen: React.FC = () => {
-  const scrollY = useSharedValue(0);
-  const { codeType, codeValue } = useLocalSearchParams();
-  console.log(codeType, codeValue);
-  const bottomSheetRef = React.useRef<BottomSheet>(null);
-  const [type, setType] = useState<'store' | 'bank' | 'ewallet'>('store');
-
   const { currentTheme: theme } = useTheme();
+
   const colors = useMemo(() => (theme === 'light' ? Colors.light.text : Colors.dark.text), [theme]);
+  const sectionsColors = useMemo(() => (theme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground), [theme]);
+
+  const [type, setType] = useState<'store' | 'bank' | 'ewallet'>('store');
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const sectionsColors = useMemo(() => (
-    theme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground
-  ), [theme]);
+
+  // Important: This ref is likely used for controlling the bottom sheet
+  const bottomSheetRef = useRef<BottomSheet>(null);
+
+  const scrollY = useSharedValue(0);
+
+  const { codeType, codeValue, codeBin } = useLocalSearchParams();
+  const bankCode = useMemo(() => returnItemCodeByBin(codeBin), [codeBin]);
+  const { name, full_name, color, accent_color } = useMemo(() => returnItemData(bankCode, "bank"), [bankCode, "bank"]);
+  console.log(full_name.vi);
+
 
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
@@ -104,11 +112,22 @@ const AddScreen: React.FC = () => {
     }
   }, [])
 
+  useEffect(() => {
+    const loadBanks = () => {
+      const banks = returnItemsByType('bank');
+    };
+    setTimeout(() => {
+      loadBanks();
+    }, 500);
+    // setIsLoadingBanks(false);
+
+  }, []);
+
   const renderCardItem = (metadata: string) => {
 
     return (
       <ThemedCardItem
-        code=''
+        code={bankCode || ''}
         type={'bank'}
         metadata={metadata || '1234'} // Use the metadata passed from Formik
         metadata_type={codeType === '256' ? 'qr' : 'barcode'}
@@ -120,7 +139,7 @@ const AddScreen: React.FC = () => {
   return (
     <Formik
       initialValues={{
-        code: codeValue?.toString() || '',
+        code: bankCode?.toString() || '',
         qr_index: '',
         metadata: codeValue?.toString() || '', // Initialize metadata with codeValue
         type: type?.toString() || '',
@@ -167,7 +186,7 @@ const AddScreen: React.FC = () => {
             {renderCardItem(values.metadata)}
 
             <ThemedView style={{ justifyContent: 'center', backgroundColor: sectionsColors, borderRadius: 16 }}>
-            <ThemedDisplayInput
+              <ThemedDisplayInput
                 iconName='filter-variant'
                 placeholder='Category'
                 // label={t('addScreen.metadataLabel')}
@@ -177,8 +196,9 @@ const AddScreen: React.FC = () => {
               <ThemedDisplayInput
                 iconName='format-text'
                 placeholder='Brand'
+                logoCode={values.code}
                 // label={t('addScreen.metadataLabel')}
-                value={values.code}
+                value={name}
                 onPress={onOpenBottomSheet}
               />
               <ThemedInput
@@ -189,10 +209,10 @@ const AddScreen: React.FC = () => {
                 onChangeText={handleChange('metadata')}
                 onBlur={handleBlur('metadata')}
                 backgroundColor={sectionsColors}
-              // style={{backgroundColor: sectionsColors}}
-              // isError={true}
-              // errorMessage='Error message'
-              disabled={codeValue?.toString() !== ''}
+                // style={{backgroundColor: sectionsColors}}
+                // isError={true}
+                // errorMessage='Error message'
+                disabled={true}
               />
 
             </ThemedView>
@@ -206,27 +226,14 @@ const AddScreen: React.FC = () => {
           </AnimatedKeyboardAwareScrollView>
           <ThemedReuseableSheet
             ref={bottomSheetRef}
-            title={t('homeScreen.manage')}
+            title='Category'
             snapPoints={['25%']}
             onClose={() => {
               setTimeout(() => {
                 setIsSheetOpen(false)
               }, 50);
             }}
-            actions={[
-              {
-                icon: 'pencil-outline',
-                iconLibrary: 'MaterialCommunityIcons',
-                text: t('homeScreen.edit'),
-                onPress: () => bottomSheetRef.current?.close(),
-              },
-              {
-                icon: 'delete-outline',
-                iconLibrary: 'MaterialCommunityIcons',
-                text: t('homeScreen.delete'),
-                onPress: () => { },
-              }
-            ]}
+            contentType='flat'
           />
         </ThemedView>
       )}

@@ -378,7 +378,7 @@ const styles = StyleSheet.create({
   },
   cameraContainer: {
     marginTop: STATUSBAR_HEIGHT + 10,
-    flex: 2.5,
+    flex: 1.75,
     backgroundColor: 'black',
     borderRadius: 16,
     overflow: 'hidden',

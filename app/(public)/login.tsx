@@ -110,7 +110,7 @@ export default function LoginScreen() {
               isError={touched.email && errors.email ? true : false}
               onBlur={handleBlur('email')}
               value={values.email}
-              errorMessage={touched.email && errors.email ? errors.email : ''}
+              errorMessage={touched.email && errors.email ? t(`loginScreen.errors.${errors.email}`) : ''}
             // style={{ marginBottom: 10 }}
             />
             <ThemedView style={styles.divider} />
@@ -122,7 +122,7 @@ export default function LoginScreen() {
               isError={touched.password && errors.password ? true : false}
               onBlur={handleBlur('password')}
               value={values.password}
-              errorMessage={touched.password && errors.password ? errors.password : ''}
+              errorMessage={touched.password && errors.password ? t(`loginScreen.errors.${errors.password}`) : ''}
             // style={{ marginBottom: 10 }}
             />
           </View>
