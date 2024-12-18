@@ -1,6 +1,5 @@
 import React, { useCallback, useMemo } from 'react';
 import { StyleSheet, View, Pressable } from 'react-native';
-import { getLocales } from "expo-localization";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,

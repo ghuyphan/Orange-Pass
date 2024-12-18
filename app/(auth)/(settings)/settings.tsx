@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { StyleSheet, View, FlatList } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import * as SecureStore from 'expo-secure-store';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -33,9 +33,8 @@ import { useLocale } from '@/context/LocaleContext';
 import { ActivityIndicator } from 'react-native-paper';
 import { clearErrorMessage } from '@/store/reducers/errorSlice';
 import { removeAllQrData } from '@/store/reducers/qrSlice';
-import { useTheme } from '@/context/ThemeContext'; 
+import { useTheme } from '@/context/ThemeContext';
 
-import { AvatarConfig } from '@zamplyy/react-native-nice-avatar';
 import { MaterialIcons } from '@expo/vector-icons';
 
 // Define the type for your settings card items
@@ -51,41 +50,15 @@ const SettingsCardItemComponent = ({ leftIcon, settingsTitle, onPress }: Setting
   <ThemedSettingsCardItem
     leftIcon={leftIcon}
     settingsTitle={settingsTitle}
-    onPress={onPress ? onPress : () => {}}
+    onPress={onPress ? onPress : () => { }}
   />
 );
 
 function SettingsScreen() {
   const { updateLocale } = useLocale();
   const [locale, setLocale] = useMMKVString('locale', storage);
-  const avatarConfigString = useSelector((state: RootState) => state.auth.user?.avatar ?? '');
-  const [avatarConfig, setAvatarConfig] = useState<AvatarConfig | null>(null);
-
-  useEffect(() => {
-    const loadAvatarConfig = async () => {
-      if (!avatarConfigString) {
-        setAvatarConfig(null);
-        return;
-      }
-
-      try {
-        const parsedConfig = typeof avatarConfigString === 'string'
-          ? JSON.parse(avatarConfigString)
-          : avatarConfigString;
-
-        setAvatarConfig(parsedConfig);
-      } catch (error) {
-        console.error("Error parsing avatar config:", error);
-        setAvatarConfig(null);
-      }
-    };
-
-    setTimeout(() => {
-      loadAvatarConfig();
-    }, 200);
-
-  }, [avatarConfigString]);
-
+  const avatarConfig = useSelector((state: RootState) => state.auth.avatarConfig);
+  
   const { currentTheme } = useTheme();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -159,15 +132,15 @@ function SettingsScreen() {
     ],
     [
       { leftIcon: 'info-outline', settingsTitle: t('settingsScreen.about') },
-      { 
-        leftIcon: 'translate', 
-        settingsTitle: t('settingsScreen.language'), 
-        onPress: () => router.push('/language') 
+      {
+        leftIcon: 'translate',
+        settingsTitle: t('settingsScreen.language'),
+        onPress: () => router.push('/language')
       },
-      { 
-        leftIcon: 'contrast', 
-        settingsTitle: t('settingsScreen.appTheme'), 
-        onPress: () => router.push('/theme') 
+      {
+        leftIcon: 'contrast',
+        settingsTitle: t('settingsScreen.appTheme'),
+        onPress: () => router.push('/theme')
       },
     ],
   ];
@@ -195,7 +168,7 @@ function SettingsScreen() {
           <ThemedText style={styles.title} type="title">{t('settingsScreen.title')}</ThemedText>
         </View>
       </Animated.View>
-      
+
       <Animated.FlatList
         contentContainerStyle={styles.scrollContainer}
         onScroll={scrollHandler}
@@ -234,7 +207,7 @@ function SettingsScreen() {
             style={{ marginTop: 10 }}
           />
         }
-        scrollEventThrottle={16} 
+        scrollEventThrottle={16}
       />
 
       <ThemedModal

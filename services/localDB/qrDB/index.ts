@@ -1,9 +1,10 @@
 import pb from "@/services/pocketBase";
 import { openDatabase } from '../userDB';
 import QRRecord from '@/types/qrType';
+import ServerRecord from "@/types/serverDataTypes";
 import { returnItemCode } from '@/utils/returnItemData';
-
-export async function createTable() {
+  
+export async function createQrTable() {
     const db = await openDatabase();
     try {
         await db.execAsync(`
@@ -109,74 +110,74 @@ export async function insertQrCodesBulk(qrDataArray: QRRecord[]): Promise<void> 
     }
 }
 export async function syncQrCodes(userId: string) {
-  const db = await openDatabase();
+    const db = await openDatabase();
 
-  try {
-    // Get all unsynced local QR codes
-    const unsyncedQrCodes = await getUnsyncedQrCodes(userId);
-    if (unsyncedQrCodes.length === 0) return; // No unsynced QR codes, exit early
+    try {
+        // 1. Get all unsynced local QR codes (including deleted ones)
+        const unsyncedQrCodes = await getUnsyncedQrCodes(userId);
 
-    // Construct the filter expression using logical OR
-    const filterExpression = unsyncedQrCodes
-      .map(qr => `id='${qr.id}'`)
-      .join(' || ');
+        // 2. Separate locally deleted QR codes
+        const locallyDeletedQrCodes = unsyncedQrCodes.filter(qr => qr.is_deleted);
+        const locallyModifiedQrCodes = unsyncedQrCodes.filter(qr => !qr.is_deleted);
 
-    // Fetch existing records from the server in bulk, only getting 'id' and 'updated' fields
-    const serverRecords = await pb.collection('qr').getFullList({
-      filter: filterExpression,
-      fields: 'id,updated',
-    });
-
-    const serverRecordMap = new Map(serverRecords.map(rec => [rec.id, rec.updated]));
-
-    const recordsToCreate = [];
-    const recordsToUpdate = [];
-
-    // Determine which records need to be created or updated
-    for (const qrCode of unsyncedQrCodes) {
-      const serverUpdated = serverRecordMap.get(qrCode.id);
-
-      if (serverUpdated) {
-        // If server record exists, update if local is more recent
-        if (new Date(qrCode.updated) > new Date(serverUpdated)) {
-          recordsToUpdate.push({ id: qrCode.id, data: qrCode });
+        // 3. Handle deletions on the server (if any)
+        if (locallyDeletedQrCodes.length > 0) {
+            const deletePromises = locallyDeletedQrCodes.map(qr =>
+                pb.collection('qr').delete(qr.id)
+            );
+            await Promise.all(deletePromises);
         }
-      } else {
-        // If no server record, create new
-        recordsToCreate.push(qrCode);
-      }
+
+        // 4. Construct filter for modified QR codes
+        const filterExpression = locallyModifiedQrCodes
+            .map(qr => `id='${qr.id}'`)
+            .join(' || ');
+
+        // 5. Fetch server records for modified QR codes (if any)
+        let serverRecords: ServerRecord[] = []; 
+        if (filterExpression) {
+            serverRecords = await pb.collection('qr').getFullList({
+                filter: filterExpression,
+                fields: 'id,updated',
+            });
+        }
+
+        const serverRecordMap = new Map(serverRecords.map(rec => [rec.id, rec.updated]));
+
+        // 6. Determine records to create/update
+        const recordsToCreate = [];
+        const recordsToUpdate = [];
+        for (const qrCode of locallyModifiedQrCodes) {
+            const serverUpdated = serverRecordMap.get(qrCode.id);
+            if (serverUpdated) {
+                if (new Date(qrCode.updated) > new Date(serverUpdated)) {
+                    recordsToUpdate.push({ id: qrCode.id, data: qrCode });
+                }
+            } else {
+                recordsToCreate.push(qrCode);
+            }
+        }
+
+        // 7. Perform batch create/update
+        if (recordsToCreate.length > 0) {
+            await Promise.all(recordsToCreate.map(record => pb.collection('qr').create(record)));
+        }
+        if (recordsToUpdate.length > 0) {
+            await Promise.all(recordsToUpdate.map(({ id, data }) => pb.collection('qr').update(id, data)));
+        }
+
+        // 8. Mark all unsynced QR codes as synced (including deleted ones)
+        const idsToUpdate = unsyncedQrCodes.map(qr => qr.id);
+        if (idsToUpdate.length > 0) {
+            await db.runAsync(
+                `UPDATE qrcodes SET is_synced = 1 WHERE id IN (${idsToUpdate.map(() => '?').join(',')})`,
+                ...idsToUpdate
+            );
+        }
+    } catch (error) {
+        console.error('Error during sync:', error);
+        throw error; // Re-throw for caller to handle
     }
-
-    // Perform batch create and update operations
-    const createPromises = [];
-    const updatePromises = [];
-
-    if (recordsToCreate.length > 0) {
-      createPromises.push(pb.collection('qr').create(recordsToCreate));
-    }
-
-    if (recordsToUpdate.length > 0) {
-      updatePromises.push(
-        ...recordsToUpdate.map(({ id, data }) =>
-          pb.collection('qr').update(id, data)
-        )
-      );
-    }
-
-    // Wait for all create and update operations to finish
-    await Promise.all([...createPromises, ...updatePromises]);
-
-    // Mark all QR codes as synced in the local database
-    const idsToUpdate = unsyncedQrCodes.map(qr => qr.id);
-    if (idsToUpdate.length > 0) {
-      await db.runAsync(
-        `UPDATE qrcodes SET is_synced = 1 WHERE id IN (${idsToUpdate.map(() => '?').join(',')})`,
-        ...idsToUpdate
-      );
-    }
-  } catch (error) {
-    console.error('Error during sync:', error);
-  }
 }
 
 export async function getUnsyncedQrCodes(userId: string) {
@@ -191,177 +192,212 @@ export async function getUnsyncedQrCodes(userId: string) {
         return [];
     }
 }
-// Function to retrieve locally deleted QR codes by user ID
+
 export async function getLocallyDeletedQrCodes(userId: string) {
     const db = await openDatabase();
     try {
-        return await db.getAllAsync<QRRecord>('SELECT * FROM qrcodes WHERE user_id = ? AND is_deleted = 1', userId);
+        return await db.getAllAsync<QRRecord>('SELECT id FROM qrcodes WHERE user_id = ? AND is_deleted = 1', userId);
     } catch (error) {
         console.error('Error retrieving locally deleted QR codes:', error);
         return [];
     }
 }
 
+export async function fetchServerData(userId: string) {
+    try {
+        // 1. Get locally deleted QR code IDs
+        const locallyDeletedQrCodes = await getLocallyDeletedQrCodes(userId);
+        const deletedIds = locallyDeletedQrCodes.map(item => item.id);
+
+        // 2. Get the latest updated timestamp from local data
+        const db = await openDatabase();
+        const latestLocalUpdateResult = await db.getFirstAsync<{ updated: string }>(
+            'SELECT MAX(updated) as updated FROM qrcodes WHERE user_id = ?',
+            userId
+        );
+        const latestLocalUpdate = latestLocalUpdateResult?.updated || null;
+
+        // 3. Construct filter to exclude deleted items and filter by timestamp
+        let filter = `user_id = '${userId}'`;
+        if (deletedIds.length > 0) {
+            filter += ` && id != '${deletedIds.join("' && id != '")}'`;
+        }
+        if (latestLocalUpdate) {
+            filter += ` && updated > '${latestLocalUpdate}'`;
+        }
+
+        // 4. Fetch data from the server with the combined filter
+        const serverData = await pb.collection('qr').getList(1, 30, {
+            filter,
+            sort: 'updated', // Sort by updated to get the latest changes
+        });
+
+        return serverData.items;
+    } catch (error) {
+        console.error('Error fetching server data:', error);
+        throw error;
+    }
+}
+
 // Function to insert or update QR codes based on their existence in the local DB
 export async function insertOrUpdateQrCodes(qrDataArray: QRRecord[]): Promise<void> {
-  const db = await openDatabase();
+    const db = await openDatabase();
 
-  try {
-      // Begin transaction
-      await db.runAsync('BEGIN TRANSACTION');
+    try {
+        // Begin transaction
+        await db.runAsync('BEGIN TRANSACTION');
+        // Fetch existing IDs in bulk
+        const existingRecords = await db.getAllAsync<{ id: string; updated: string }>(
+            `SELECT id, updated FROM qrcodes WHERE id IN (${qrDataArray.map(() => '?').join(',')})`,
+            ...qrDataArray.map(qr => qr.id)
+        );
+        const existingRecordMap = new Map(existingRecords.map(rec => [rec.id, rec.updated]));
 
-      // Fetch existing IDs in bulk
-      const existingRecords = await db.getAllAsync<{ id: string; updated: string }>(
-          `SELECT id, updated FROM qrcodes WHERE id IN (${qrDataArray.map(() => '?').join(',')})`,
-          ...qrDataArray.map(qr => qr.id)
-      );
-      const existingRecordMap = new Map(existingRecords.map(rec => [rec.id, rec.updated]));
+        // Prepare arrays for bulk insert and update
+        const recordsToInsert: QRRecord[] = [];
+        const recordsToUpdate: QRRecord[] = [];
 
-      // Prepare arrays for bulk insert and update
-      const recordsToInsert: QRRecord[] = [];
-      const recordsToUpdate: QRRecord[] = [];
+        for (const qrData of qrDataArray) {
+            const existingUpdated = existingRecordMap.get(qrData.id);
+            if (existingUpdated) {
+                if (new Date(qrData.updated) > new Date(existingUpdated)) {
+                    recordsToUpdate.push(qrData);
+                }
+            } else {
+                recordsToInsert.push(qrData);
+            }
+        }
 
-      for (const qrData of qrDataArray) {
-          const existingUpdated = existingRecordMap.get(qrData.id);
-          if (existingUpdated) {
-              if (new Date(qrData.updated) > new Date(existingUpdated)) {
-                  recordsToUpdate.push(qrData);
-              }
-          } else {
-              recordsToInsert.push(qrData);
-          }
-      }
+        // Bulk insert
+        if (recordsToInsert.length > 0) {
+            const placeholders = recordsToInsert.map(() => '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').join(', ');
+            const values = recordsToInsert.flatMap(qrData => [
+                qrData.id,
+                qrData.qr_index,
+                qrData.user_id,
+                qrData.code,
+                qrData.metadata,
+                qrData.metadata_type,
+                qrData.account_name || '',
+                qrData.account_number || '',
+                qrData.type,
+                qrData.created,
+                qrData.updated,
+                qrData.is_deleted ? 1 : 0,
+                qrData.is_synced ? 1 : 0,
+            ]);
 
-      // Bulk insert
-      if (recordsToInsert.length > 0) {
-          const placeholders = recordsToInsert.map(() => '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').join(', ');
-          const values = recordsToInsert.flatMap(qrData => [
-              qrData.id,
-              qrData.qr_index,
-              qrData.user_id,
-              qrData.code,
-              qrData.metadata,
-              qrData.metadata_type,
-              qrData.account_name || '',
-              qrData.account_number || '',
-              qrData.type,
-              qrData.created,
-              qrData.updated,
-              qrData.is_deleted ? 1 : 0,
-              qrData.is_synced ? 1 : 0,
-          ]);
-
-          await db.runAsync(
-              `INSERT INTO qrcodes 
+            await db.runAsync(
+                `INSERT INTO qrcodes 
               (id, qr_index, user_id, code, metadata, metadata_type, account_name, account_number, type, created, updated, is_deleted, is_synced) 
               VALUES ${placeholders}`,
-              values
-          );
-      }
+                values
+            );
+        }
 
-      // Bulk update
-      for (const qrData of recordsToUpdate) {
-          await db.runAsync(
-              `UPDATE qrcodes 
+        // Bulk update
+        for (const qrData of recordsToUpdate) {
+            await db.runAsync(
+                `UPDATE qrcodes 
               SET qr_index = ?, code = ?, metadata = ?, metadata_type = ?, account_name = ?, account_number = ?, type = ?, updated = ?, is_synced = ?, is_deleted = ?
               WHERE id = ?`,
-              qrData.qr_index,
-              qrData.code,
-              qrData.metadata,
-              qrData.metadata_type,
-              qrData.account_name || '',
-              qrData.account_number || '',
-              qrData.type,
-              qrData.updated,
-              qrData.is_synced ? 1 : 0,
-              qrData.is_deleted ? 1 : 0,
-              qrData.id
-          );
-      }
+                qrData.qr_index,
+                qrData.code,
+                qrData.metadata,
+                qrData.metadata_type,
+                qrData.account_name || '',
+                qrData.account_number || '',
+                qrData.type,
+                qrData.updated,
+                qrData.is_synced ? 1 : 0,
+                qrData.is_deleted ? 1 : 0,
+                qrData.id
+            );
+        }
 
-      // Commit transaction
-      await db.runAsync('COMMIT');
-  } catch (error) {
-      await db.runAsync('ROLLBACK');
-      console.error('Failed to insert/update QR codes:', error);
-  }
+        // Commit transaction
+        await db.runAsync('COMMIT');
+    } catch (error) {
+        await db.runAsync('ROLLBACK');
+        console.error('Failed to insert/update QR codes:', error);
+    }
 }
 export async function searchQrCodes(
-  userId: string,
-  searchQuery: string = ''
+    userId: string,
+    searchQuery: string = ''
 ) {
-  const db = await openDatabase();
-  try {
-    const queryParams: any[] = [userId];
-    const conditions: string[] = [`user_id = ? AND is_deleted = 0`];
+    const db = await openDatabase();
+    try {
+        const queryParams: any[] = [userId];
+        const conditions: string[] = [`user_id = ? AND is_deleted = 0`];
 
-    if (searchQuery) {
-      const matchingCodes = returnItemCode(searchQuery);
-      const searchTerms = Array.from(new Set([searchQuery, ...matchingCodes]));
+        if (searchQuery) {
+            const matchingCodes = returnItemCode(searchQuery);
+            const searchTerms = Array.from(new Set([searchQuery, ...matchingCodes]));
 
-      const searchConditions = searchTerms.flatMap(term =>
-        ['code', 'metadata', 'account_name', 'account_number'].map(field => {
-          queryParams.push(`%${term}%`);
-          return `${field} LIKE ?`;
-        })
-      );
+            const searchConditions = searchTerms.flatMap(term =>
+                ['code', 'metadata', 'account_name', 'account_number'].map(field => {
+                    queryParams.push(`%${term}%`);
+                    return `${field} LIKE ?`;
+                })
+            );
 
-      conditions.push(`(${searchConditions.join(' OR ')})`);
-    }
+            conditions.push(`(${searchConditions.join(' OR ')})`);
+        }
 
-    const query = `
+        const query = `
       SELECT * FROM qrcodes 
       WHERE ${conditions.join(' AND ')} 
       ORDER BY qr_index
     `;
 
-    return await db.getAllAsync<QRRecord>(query, ...queryParams);
-  } catch (error) {
-    console.error('Error searching QR codes:', error);
-    return [];
-  }
+        return await db.getAllAsync<QRRecord>(query, ...queryParams);
+    } catch (error) {
+        console.error('Error searching QR codes:', error);
+        return [];
+    }
 }
 
 export async function filterQrCodesByType(
-  userId: string,
-  filter: string = 'all'
+    userId: string,
+    filter: string = 'all'
 ) {
-  const db = await openDatabase();
-  try {
-    const queryParams: any[] = [userId];
-    const conditions: string[] = [`user_id = ? AND is_deleted = 0`];
+    const db = await openDatabase();
+    try {
+        const queryParams: any[] = [userId];
+        const conditions: string[] = [`user_id = ? AND is_deleted = 0`];
 
-    if (filter !== 'all') {
-      conditions.push('type = ?');
-      queryParams.push(filter);
-    }
+        if (filter !== 'all') {
+            conditions.push('type = ?');
+            queryParams.push(filter);
+        }
 
-    const query = `
+        const query = `
       SELECT * FROM qrcodes 
       WHERE ${conditions.join(' AND ')} 
       ORDER BY qr_index
     `;
 
-    return await db.getAllAsync<QRRecord>(query, ...queryParams);
-  } catch (error) {
-    console.error('Error filtering QR codes by type:', error);
-    return [];
-  }
+        return await db.getAllAsync<QRRecord>(query, ...queryParams);
+    } catch (error) {
+        console.error('Error filtering QR codes by type:', error);
+        return [];
+    }
 }
 
 // Function to update the qr_index and updated timestamp of QR codes in bulk
 export async function updateQrIndexes(qrDataArray: QRRecord[]): Promise<void> {
-  const db = await openDatabase();
-  const updatedAt = new Date().toISOString();
+    const db = await openDatabase();
+    const updatedAt = new Date().toISOString();
 
-  try {
-      await db.runAsync('BEGIN TRANSACTION');
+    try {
+        await db.runAsync('BEGIN TRANSACTION');
 
-      const ids = qrDataArray.map(qr => qr.id);
-      const qrIndexCases = qrDataArray.map(qr => `WHEN '${qr.id}' THEN ${qr.qr_index}`).join(' ');
-      const updatedAtCases = qrDataArray.map(qr => `WHEN '${qr.id}' THEN '${updatedAt}'`).join(' ');
+        const ids = qrDataArray.map(qr => qr.id);
+        const qrIndexCases = qrDataArray.map(qr => `WHEN '${qr.id}' THEN ${qr.qr_index}`).join(' ');
+        const updatedAtCases = qrDataArray.map(qr => `WHEN '${qr.id}' THEN '${updatedAt}'`).join(' ');
 
-      const query = `
+        const query = `
           UPDATE qrcodes
           SET
               qr_index = CASE id ${qrIndexCases} END,
@@ -370,13 +406,13 @@ export async function updateQrIndexes(qrDataArray: QRRecord[]): Promise<void> {
           WHERE id IN (${ids.map(() => '?').join(',')})
       `;
 
-      await db.runAsync(query, ...ids);
+        await db.runAsync(query, ...ids);
 
-      await db.runAsync('COMMIT');
-  } catch (error) {
-      await db.runAsync('ROLLBACK');
-      console.error('Failed to update QR indexes and timestamps:', error);
-  }
+        await db.runAsync('COMMIT');
+    } catch (error) {
+        await db.runAsync('ROLLBACK');
+        console.error('Failed to update QR indexes and timestamps:', error);
+    }
 }
 
 

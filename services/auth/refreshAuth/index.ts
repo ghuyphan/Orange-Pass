@@ -137,7 +137,6 @@ async function checkInitialAuth(): Promise<boolean> {
         try {
           const localQrData = await getQrCodesByUserId(userID);
           store.dispatch(setQrData(localQrData));
-          console.log('update local qrdata from auth refresh');
         } catch (localQrError) {
           console.error('Failed to fetch local QR data in offline mode', localQrError);
         }

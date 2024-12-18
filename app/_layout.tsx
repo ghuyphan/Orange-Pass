@@ -10,6 +10,7 @@ import { PaperProvider } from 'react-native-paper';
 // Import core services and providers
 import { store } from '@/store';
 import { createTable } from '@/services/localDB/userDB';
+import { createQrTable } from '@/services/localDB/qrDB';
 import { checkInitialAuth } from '@/services/auth';
 import { checkOfflineStatus } from '@/services/network';
 import { storage } from '@/utils/storage';
@@ -71,6 +72,8 @@ export default function RootLayout() {
       try {
         // Create local database table
         await createTable();
+
+        await createQrTable();
 
         // Check onboarding status
         const onboardingStatus = storage.getBoolean('hasSeenOnboarding') ?? false;
