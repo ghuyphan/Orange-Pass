@@ -1,6 +1,7 @@
 import tinycolor from 'tinycolor2';
 import Datas from '@/assets/Datas.json';
 import colorConfig from '@/assets/color-config.json';
+import vietQRBanksData from '@/assets/vietQRBanks.json'; // Import the JSON data
 
 interface ColorInfo {
   color: { light: string };
@@ -13,7 +14,7 @@ interface ItemType {
   full_name: Record<string, string>;
   normalized_name: string;
   normalized_full_name: string;
-  bin?: string; // Bin is optional since it's only for bank items
+  bin?: string;
   color: { light: string; dark: string };
   accent_color: { light: string; dark: string };
 }
@@ -45,86 +46,7 @@ function getDarkModeColor(lightColor: string): string {
   return tinycolor({ h, s, l }).toHexString();
 }
 
-const processDataItems = (
-  type: DataType,
-  locale: string,
-  searchIndex: Record<DataType, Map<string, Set<string>>>,
-  dataByCode: Record<DataType, Record<string, ItemType>>
-): void => {
-  const items = Datas[type];
-  if (!items) return;
-
-  for (const item of items) {
-    const { code, name } = item;
-    const full_name = item.full_name[locale];
-    const normalizedFullName = normalizeText(full_name); // Normalize once
-
-    const colorData = (colorConfig as Record<string, ColorInfo>)[code] || {
-      color: { light: '' },
-      accent_color: { light: '' }
-    };
-
-    const darkColor = getDarkModeColor(colorData.color.light); // Calculate dark color once
-    const darkAccentColor = getDarkModeColor(colorData.accent_color.light); // Calculate dark accent color once
-
-    dataByCode[type][code] = {
-      ...item,
-      full_name: item.full_name,
-      normalized_name: normalizeText(name),
-      normalized_full_name: normalizedFullName, // Reuse normalized value
-      color: {
-        light: colorData.color.light,
-        dark: darkColor 
-      },
-      accent_color: {
-        light: colorData.accent_color.light,
-        dark: darkAccentColor 
-      }
-    };
-
-    for (const localeKey in item.full_name) {
-      const normalizedLocaleName = normalizeText(item.full_name[localeKey]);
-      addSearchTerms(type, code, searchIndex, normalizedLocaleName);
-    }
-  }
-};
-
-const processVietQRBanksItems = (
-  locale: string,
-  searchIndex: Record<DataType, Map<string, Set<string>>>,
-  dataByCode: Record<DataType, Record<string, ItemType>>
-): void => {
-  const items = Datas['vietqr'];
-  if (!items) return;
-
-  const defaultDarkColor = getDarkModeColor('#1E90FF'); // Calculate once
-  const defaultColor = { light: '#1E90FF', dark: defaultDarkColor };
-
-  for (const item of items) {
-    const { code, name } = item;
-    const full_name = item.full_name[locale];
-    const normalizedName = normalizeText(name);
-    const normalizedFullName = normalizeText(full_name); 
-
-    dataByCode['vietqr'][code] = {
-      ...item,
-      full_name: item.full_name,
-      normalized_name: normalizedName,
-      normalized_full_name: normalizedFullName,
-      color: defaultColor,
-      accent_color: {
-        light: defaultColor.light,
-        dark: defaultDarkColor // Reuse value
-      }
-    };
-
-    for (const localeKey in item.full_name) {
-      const normalizedLocaleName = normalizeText(item.full_name[localeKey]);
-      addSearchTerms('vietqr', code, searchIndex, normalizedLocaleName);
-    }
-  }
-};
-
+// No need for processVietQRBanksItems anymore
 
 const addSearchTerms = (
   type: DataType,
@@ -155,33 +77,125 @@ const createDataManager = (locale: string = 'en') => {
   };
 
   const initializeData = (): void => {
-    const dataTypes: DataType[] = ['bank', 'store', 'ewallet', 'vietqr'];
+    const dataTypes: DataType[] = ['bank', 'store', 'ewallet']; // No need to process 'vietqr' here
     for (const type of dataTypes) {
       processDataItems(type, locale, searchIndex, dataByCode);
     }
-    processVietQRBanksItems(locale, searchIndex, dataByCode);
+    // Removed processVietQRBanksItems call
+  
+    // Add VietQR banks data directly
+    vietQRBanksData.banks.forEach(bank => {
+      const defaultColor = { light: '#1E90FF', dark: getDarkModeColor('#1E90FF') };
+      dataByCode['vietqr'][bank.code] = {
+        ...bank,
+        full_name: {
+          en: bank.full_name, // Assuming you want to use the full_name from the JSON
+          vi: bank.full_name,
+          ru: bank.full_name
+        },
+        normalized_name: normalizeText(bank.name),
+        normalized_full_name: normalizeText(bank.full_name),
+        color: defaultColor,
+        accent_color: {
+          light: defaultColor.light,
+          dark: defaultColor.dark
+        }
+      };
+  
+      // Add search terms for VietQR banks
+      addSearchTerms('vietqr', bank.code, searchIndex, normalizeText(bank.full_name), normalizeText(bank.name));
+    });
   };
+  
+  
+  
+  const processDataItems = (
+    type: DataType,
+    locale: string,
+    searchIndex: Record<DataType, Map<string, Set<string>>>,
+    dataByCode: Record<DataType, Record<string, ItemType>>
+  ): void => {
+    const items = Datas[type];
+    if (!items) return;
+  
+    for (const item of items) {
+      const { code, name } = item;
+      const full_name = item.full_name[locale];
+      const normalizedFullName = normalizeText(full_name);
+  
+      const colorData = (colorConfig as Record<string, ColorInfo>)[code] || {
+        color: { light: '' },
+        accent_color: { light: '' }
+      };
+  
+      const darkColor = getDarkModeColor(colorData.color.light);
+      const darkAccentColor = getDarkModeColor(colorData.accent_color.light);
+  
+      dataByCode[type][code] = {
+        ...item,
+        full_name: item.full_name,
+        normalized_name: normalizeText(name),
+        normalized_full_name: normalizedFullName,
+        color: {
+          light: colorData.color.light,
+          dark: darkColor
+        },
+        accent_color: {
+          light: colorData.accent_color.light,
+          dark: darkAccentColor
+        }
+      };
+  
+      for (const localeKey in item.full_name) {
+        const normalizedLocaleName = normalizeText(item.full_name[localeKey]);
+        addSearchTerms(type, code, searchIndex, normalizedLocaleName);
+      }
+    }
+  };
+  
 
   initializeData();
 
-  const getItemData = (code: string, type?: DataType): ItemType => {
-    const itemData = (type && dataByCode[type]?.[code]) || { // Check if type is provided and exists
-      code: '',
-      name: '',
-      full_name: { en: '', vi: '', ru: '' },
-      normalized_name: '',
-      normalized_full_name: '',
-      bin: '', // Default empty string for bin
-      color: { light: '', dark: '' },
-      accent_color: { light: '', dark: '' }
-    };
-    return {
-      ...itemData,
-      full_name: itemData.full_name
-    };
-  };
+const getItemData = (code: string, type?: DataType): ItemType => {
+    for (const currentType of ['bank', 'store', 'ewallet', 'vietqr']) {
+        if (dataByCode[currentType as DataType]?.[code]) {
+            const itemData = dataByCode[currentType as DataType]?.[code];
+            return {
+                ...itemData,
+                full_name: itemData.full_name
+            };
+        }
+    }
 
-const getItemsByType = (type: DataType): ItemType[] => {
+    // Default return if no item is found
+    return {
+        code: '',
+        name: '',
+        full_name: { en: '', vi: '', ru: '' },
+        normalized_name: '',
+        normalized_full_name: '',
+        bin: '',
+        color: { light: '', dark: '' },
+        accent_color: { light: '', dark: '' }
+    };
+};
+
+  const getItemsByType = (type: DataType): ItemType[] => {
+    // For 'vietqr', directly return the data from vietQRBanksData
+    if (type === 'vietqr') {
+      return vietQRBanksData.banks.map(bank => ({
+        ...bank,
+        full_name: {
+          en: bank.full_name,
+          vi: bank.full_name,
+          ru: bank.full_name
+        },
+        normalized_name: normalizeText(bank.name),
+        normalized_full_name: normalizeText(bank.full_name),
+        color: { light: '#1E90FF', dark: getDarkModeColor('#1E90FF') },
+        accent_color: { light: '#1E90FF', dark: getDarkModeColor('#1E90FF') }
+      }));
+    }
     return Object.values(dataByCode[type]);
   };
 
@@ -210,7 +224,7 @@ const getItemsByType = (type: DataType): ItemType[] => {
   };
 
   const getItemCodeByBin = (bin: string): string | null => {
-    const items = getItemsByType('bank'); // Only search bank items
+    const items = getItemsByType('bank');
     const foundItem = items.find(item => item.bin === bin);
     return foundItem ? foundItem.code : null;
   };
@@ -222,7 +236,6 @@ const getItemsByType = (type: DataType): ItemType[] => {
     getItemCodeByBin
   };
 };
-
 
 const dataManager = createDataManager('vi');
 

@@ -35,7 +35,8 @@ export const ThemedPinnedCard = memo(function ThemedPinnedCard({
   const barcodeWidth = useMemo(() => width * 0.70, [width]);
 
   // Pre-calculate data with useMemo
-  const { name, color, accent_color } = useMemo(() => returnItemData(code, type), [code, type]);
+  const itemData = useMemo(() => returnItemData(code), [code]);
+  const { name, color, accent_color } = itemData;
   const iconPath = useMemo(() => getIconPath(code), [code]);
 
   return (

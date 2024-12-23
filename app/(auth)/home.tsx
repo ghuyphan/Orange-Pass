@@ -15,7 +15,6 @@ import { router } from 'expo-router';
 import DraggableFlatList, { ScaleDecorator } from 'react-native-draggable-flatlist';
 import { throttle } from 'lodash';
 import BottomSheet from '@gorhom/bottom-sheet';
-import ImagePicker from 'react-native-image-crop-picker';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 
 // 1. Types and constants
@@ -46,8 +45,8 @@ import {
 // 3. Hooks and utils
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { triggerHapticFeedback } from '@/utils/haptic';
-import { decodeQR } from '@/utils/decodeQR';
-import useHandleCodeScanned from '@/hooks/useHandleCodeScanned';
+import { useGalleryPicker } from '@/hooks/useGalleryPicker';
+import SheetType from '@/types/sheetType';
 
 
 // 4. Components
@@ -66,18 +65,17 @@ import EmptyListItem from '@/components/lists/EmptyListItem';
 // 5. Internationalization
 import { t } from '@/i18n';
 
+
 function HomeScreen() {
   // 1. Redux and Context
   const dispatch = useDispatch();
   const qrData = useSelector((state: RootState) => state.qr.qrData);
 
-  const handleCodeScanned = useHandleCodeScanned();
-
   // 3. Theme and Appearance
   const color = useThemeColor({ light: '#3A2E24', dark: '#FFF5E1' }, 'text');
 
   // 4. Loading and Syncing
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isEmpty, setIsEmpty] = useState(false);
 
@@ -92,6 +90,7 @@ function HomeScreen() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [fabOpen, setFabOpen] = useState(false);
+  const [sheetType, setSheetType] = useState<SheetType>(null);
 
   // 6. Data and Filtering
   const [filter, setFilter] = useState('all');
@@ -164,17 +163,19 @@ function HomeScreen() {
     const initializeData = async () => {
       const unSyncedData = await getUnsyncedQrCodes(userId);
       if (unSyncedData.length > 0 || qrData.length === 0) {
+        console.log('Initial sync required.');
+        setIsLoading(true);
         await syncWithServer(userId).catch(error => {
           console.error('Error during initial sync:', error);
         });
       } else {
         setIsEmpty(qrData.length === 0);
-        setIsLoading(false);
+        // setIsLoading(false);
       }
     };
 
     initializeData();
-  }, [userId, qrData]);
+  }, [userId]);
 
   useEffect(() => {
     // Only show online/offline toast if there's an actual change in network state
@@ -340,62 +341,55 @@ function HomeScreen() {
   const onNavigateToSettingsScreen = useCallback(() => {
     router.push('/settings');
   }, []);
-  // const onNavigateToAddScreen = useCallback(() => {
-  // router.push('/(add)/add-new');
-  // }, [])
+
   const onNavigateToAddScreen = useCallback(
-    throttle((codeType?: number, codeValue?: string, bin?: string) => {
-      router.push({
-        pathname: `/(auth)/(add)/add-new`,
-        params: {
-          codeType: codeType,
-          codeValue: codeValue,
-          codeBin: bin
-        },
-      });
-    }, 1000),
-    []
+    throttle(
+      (
+        codeFormat?: number,
+        codeValue?: string,
+        bin?: string,
+        codeType?: string,
+        codeProvider?: string // Add codeProvider parameter
+      ) => {
+        router.push({
+          pathname: `/(auth)/(add)/add-new`,
+          params: {
+            codeFormat: codeFormat,
+            codeValue: codeValue,
+            codeBin: bin,
+            codeType: codeType,
+            codeProvider: codeProvider, // Pass codeProvider
+          },
+        });
+      },
+      1000
+    ), []
   );
 
-  const onOpenGallery = useCallback(async () => {
-    try {
-      const image = await ImagePicker.openPicker({
-        width: 300,
-        height: 400,
-        includeBase64: true,
-        mediaType: 'photo',
-      });
-
-      if (!image.path) {
-        return;
-      }
-
-      // decodeQRCode(image.path);
-      const decode = await decodeQR(image.path);
-
-      const result = handleCodeScanned(decode?.value ?? '', {
-        // quickScan,
-        codeFormat: decode?.format,
-        t,
-        // setIsConnecting,
-      });
-
-
-      if (result && result.codeFormat !== undefined) {
-        onNavigateToAddScreen(result.codeFormat, result.codeValue, result.bin);
-        // console.log(result.codeFormat, result.codeValue);
-      } else {
-        console.log('Failed to decode QR code');
-        // showToast('Failed to decode QR code');
-      }
-
-    } catch (error) {
-      console.log('Error opening image picker:', error);
-    } finally {
-
+  const onOpenSheet = (type: SheetType, id?: string) => {
+    setSheetType(type);
+    setIsSheetOpen(true);
+    switch (type) {
+      case 'wifi':
+        bottomSheetRef.current?.snapToIndex(0);
+        break;
+      case 'linking':
+        bottomSheetRef.current?.snapToIndex(0);
+        break;
+      case 'setting':
+        if (!id) return;
+        setSelectedItemId(id);
+        bottomSheetRef.current?.snapToIndex(0);
+        break;
+      default:
     }
-  }, []);
+    bottomSheetRef.current?.snapToIndex(0);
+  };
 
+  const onOpenGallery = useGalleryPicker({
+    onOpenSheet,
+    onNavigateToAddScreen,
+  });
 
   // In your existing code where you define scrollHandler
   const scrollHandler = useAnimatedScrollHandler((event) => {
@@ -454,6 +448,7 @@ function HomeScreen() {
       .then(filteredData => dispatch(setQrData(filteredData)));
   }, [userId, dispatch, setFilter]); // Add setFilter to the dependency array
 
+
   const handleExpandPress = useCallback((id: string) => {
     setSelectedItemId(id);
     setIsSheetOpen(true);
@@ -505,10 +500,11 @@ function HomeScreen() {
   }, [selectedItemId, qrData, dispatch]); // Include qrData in the dependency array
 
   const renderItem = useCallback(
-    ({ item, drag }: { item: QRRecord; drag: () => void }) => {
+    ({ item, drag, isActive }: { item: QRRecord; drag: () => void, isActive: boolean }) => {
       return (
         <ScaleDecorator activeScale={0.9} >
           <ThemedCardItem
+            isActive={isActive}
             onItemPress={() => onNavigateToDetailScreen(item)}
             code={item.code}
             type={item.type}
@@ -532,6 +528,31 @@ function HomeScreen() {
   const listContainerPadding = useMemo(() => {
     return paddingValues[qrData.length] || 100;
   }, [qrData.length, paddingValues]);
+
+  const renderSheetContent = () => {
+    switch (sheetType) {
+      case 'wifi':
+        return (
+          <View>
+            <ThemedText>Wifi</ThemedText>
+          </View>
+        );
+      case 'linking':
+        return (
+          <View>
+            <ThemedText>Linking</ThemedText>
+          </View>
+        );
+      case 'setting':
+        return (
+          <View>
+            <ThemedText>Setting</ThemedText>
+          </View>
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
     <ThemedView style={styles.container}>
@@ -615,7 +636,6 @@ function HomeScreen() {
           onDragBegin={onDragBegin}
           onDragEnd={onDragEnd}
           dragItemOverflow={false}
-          activationDistance={10}
           onScrollOffsetChange={onScrollOffsetChange}
           decelerationRate={'fast'}
           scrollEnabled={!fabOpen}
@@ -671,20 +691,25 @@ function HomeScreen() {
         }}
         // snapPoints={['25%']}}
         enableDynamicSizing={true}
-        actions={[
-          {
-            icon: 'pencil-outline',
-            iconLibrary: 'MaterialCommunityIcons',
-            text: t('homeScreen.edit'),
-            onPress: () => bottomSheetRef.current?.close(),
-          },
-          {
-            icon: 'delete-outline',
-            iconLibrary: 'MaterialCommunityIcons',
-            text: t('homeScreen.delete'),
-            onPress: () => onDeleteSheetPress(),
-          }
-        ]}
+        customContent={
+          <View>
+            {renderSheetContent()}
+          </View>
+        }
+      actions={[
+        {
+          icon: 'pencil-outline',
+          iconLibrary: 'MaterialCommunityIcons',
+          text: t('homeScreen.edit'),
+          onPress: () => bottomSheetRef.current?.close(),
+        },
+        {
+          icon: 'delete-outline',
+          iconLibrary: 'MaterialCommunityIcons',
+          text: t('homeScreen.delete'),
+          onPress: () => onDeleteSheetPress(),
+        }
+      ]}
       />
       <ThemedModal
         primaryActionText={t('homeScreen.move')}

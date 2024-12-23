@@ -218,11 +218,6 @@ const OnBoardScreen = () => {
                         ? t('onboardingScreen.termsOfService.termsOfServiceSheetTitle')
                         : t('onboardingScreen.termsOfService.privacyPolicySheetTitle')
                 }
-                // description={
-                //     sheetType === 'tos'
-                //         ? t('onboardingScreen.termsOfService.termsOfServiceDescription')
-                //         : t('onboardingScreen.termsOfService.privacyPolicyDescription')
-                // }
                 contentType="scroll"
                 enableDynamicSizing={true}
                 customContent={

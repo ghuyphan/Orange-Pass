@@ -22,6 +22,7 @@ type QRResultProps = {
 
 export const QRResult: React.FC<QRResultProps> = ({ codeValue, codeType, iconName, animatedStyle }) => {
     const onResultTap = useCallback(() => {
+        console.log('onResultTap', codeValue, codeType);
         switch (codeType) {
             case 'URL':
                 // Linking.openURL(codeValue);

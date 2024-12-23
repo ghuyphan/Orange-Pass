@@ -3,7 +3,7 @@ import { openDatabase } from '../userDB';
 import QRRecord from '@/types/qrType';
 import ServerRecord from "@/types/serverDataTypes";
 import { returnItemCode } from '@/utils/returnItemData';
-  
+
 export async function createQrTable() {
     const db = await openDatabase();
     try {
@@ -55,6 +55,25 @@ export async function getQrCodesByUserId(userId: string) {
         return [];
     }
 }
+
+export async function hasLocalData(userId: string): Promise<boolean> {
+    const db = await openDatabase();
+    try {
+        const result = await db.getFirstAsync<{ count: number }>(
+            'SELECT COUNT(*) as count FROM qrcodes WHERE user_id = ?',
+            userId
+        );
+        if (result !== null) {
+            return result.count > 0;
+        } else {
+            return false;
+        }
+    } catch (error) {
+        console.error('Error checking for local data:', error);
+        return false; // Assume no data on error
+    }
+}
+
 
 // Optimized delete function to mark as deleted
 export async function deleteQrCode(id: string) {
@@ -134,7 +153,7 @@ export async function syncQrCodes(userId: string) {
             .join(' || ');
 
         // 5. Fetch server records for modified QR codes (if any)
-        let serverRecords: ServerRecord[] = []; 
+        let serverRecords: ServerRecord[] = [];
         if (filterExpression) {
             serverRecords = await pb.collection('qr').getFullList({
                 filter: filterExpression,

@@ -487,6 +487,14 @@
             "light": "#A5B5CC"
         }
     },
+    "MOMO": {
+        "color": {
+            "light": "#D82D88"
+        },
+        "accent_color": {
+            "light": "#f5a6c7"
+        }
+    },
     "AEO": {
         "color": {
             "light": "#DFC9ED"

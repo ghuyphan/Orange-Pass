@@ -10,6 +10,7 @@ import { returnItemData } from '@/utils/returnItemData';
 import { returnMidpointColors } from '@/utils/returnMidpointColor';
 
 export type ThemedCardItemProps = {
+  isActive?: boolean;
   code: string;
   type: 'bank' | 'store' | 'ewallet';
   metadata: string;
@@ -25,6 +26,7 @@ export type ThemedCardItemProps = {
 
 const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps): JSX.Element {
   const {
+    isActive,
     code,
     type,
     metadata,
@@ -38,7 +40,9 @@ const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps):
     onDrag,
   } = props;
 
-  const { name, color, accent_color } = useMemo(() => returnItemData(code, type), [code, type]);
+  // Simplified useMemo - only depends on `code`
+  const itemData = useMemo(() => returnItemData(code), [code]);
+  const { name, color, accent_color } = itemData;
   const iconPath = useMemo(() => getIconPath(code), [code]);
 
   const accountDisplayName = useMemo(() => {
@@ -51,13 +55,8 @@ const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps):
 
   const renderContent = () => (
     <LinearGradient
-    colors={
-      returnMidpointColors(
-        color?.light || '#FAF3E7',
-        accent_color?.light || '#D6C4AF',
-        6
-      ) || ['#FAF3E7', '#D6C4AF']
-    }
+      // Directly use color.light and accent_color.light
+      colors={returnMidpointColors(color.light, accent_color.light, 6) || ['#FAF3E7', '#D6C4AF']}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={styles.cardContainer}
@@ -84,9 +83,11 @@ const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps):
       <View style={styles.cardFooter}>
         <View style={styles.footerLeft}>
           <Text numberOfLines={1} ellipsizeMode="tail" style={styles.cardHolderName}>{accountName}</Text>
-          {/* {type === 'bank' && ( */}
-            <Text numberOfLines={1} ellipsizeMode="tail" style={styles.cardType}>{accountNumber ? accountDisplayName : metadata}</Text>
-          {/* )} */}
+          {type === 'bank' ? (
+            <Text numberOfLines={1} ellipsizeMode="tail" style={styles.cardType}>{accountDisplayName}</Text>
+          ) : (
+            <Text numberOfLines={1} ellipsizeMode="tail" style={styles.cardType}>{metadata}</Text>
+          )}
         </View>
         <View style={styles.qrContainer}>
           {metadata_type === 'qr' ? (
@@ -111,9 +112,10 @@ const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps):
       <Animated.View style={[animatedStyle, style]}>
         {onItemPress ? (
           <Pressable
+            disabled={isActive}
             onPress={onItemPress}
             onLongPress={onDrag}
-            delayLongPress={150}
+            delayLongPress={250}
             android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
             style={styles.pressableContainer}
           >

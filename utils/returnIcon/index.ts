@@ -81,7 +81,7 @@ export function getIconPath(key: string): any {
       'TOP': require('@/assets/images/logoIcons/TOP.png'),
       'WNM': require('@/assets/images/logoIcons/WNM.png'),
       'MOMO': require('@/assets/images/logoIcons/MOMO.png'),
-      'ZLP': require('@/assets/images/logoIcons/ZLP.png'),
+      'ZALOPAY': require('@/assets/images/logoIcons/ZLP.png'),
       'SPP': require('@/assets/images/logoIcons/SPP.png'),
       'VNP': require('@/assets/images/logoIcons/VNP.png'),
       'VTP': require('@/assets/images/logoIcons/VTP.png')

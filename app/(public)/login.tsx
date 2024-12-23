@@ -17,7 +17,7 @@ import { RootState } from '@/store/rootReducer';
 import { t } from '@/i18n';
 import { loginSchema } from '@/utils/validationSchemas';
 import { login } from '@/services/auth';
-import { width, height } from '@/constants/Constants';
+import { width } from '@/constants/Constants';
 import { useLocale } from '@/context/LocaleContext';
 import LOGO from '@/assets/svgs/orange-logo.svg';
 import { useTheme } from '@/context/ThemeContext';

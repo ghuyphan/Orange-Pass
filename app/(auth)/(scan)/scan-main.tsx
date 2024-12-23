@@ -25,6 +25,7 @@ import ImagePicker from 'react-native-image-crop-picker';
 import { Redirect, useRouter } from 'expo-router';
 import { GestureDetector } from 'react-native-gesture-handler';
 import { throttle } from 'lodash';
+import BottomSheet from '@gorhom/bottom-sheet';
 
 // Types
 import { t } from '@/i18n';
@@ -45,6 +46,7 @@ import { QRResult } from '@/components/camera/CodeResult';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedStatusToast } from '@/components/toast/ThemedStatusToast';
 import ThemedSettingSheet from '@/components/bottomsheet/ThemedSettingSheet';
+import ThemedReuseableSheet from '@/components/bottomsheet/ThemedReusableSheet';
 
 // Hooks
 import { useMMKVBoolean } from 'react-native-mmkv';
@@ -54,6 +56,7 @@ import { useCameraScanner } from '@/hooks/useCameraScanner';
 import { useCameraSetup } from '@/hooks/useCameraSetup';
 import { useFocusGesture } from '@/hooks/useFocusGesture';
 import { width } from '@/constants/Constants';
+
 
 
 const ReanimatedCamera = Reanimated.createAnimatedComponent(Camera);
@@ -131,10 +134,11 @@ export default function ScanScreen() {
     }, 2500);
   };
 
+  const bottomSheetRef = useRef<BottomSheet>(null);
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
 
   const handleExpandPress = useCallback(() => {
-    bottomSheetModalRef.current?.present();
+    bottomSheetRef.current?.snapToIndex(0);
   }, []);
 
 
@@ -148,7 +152,7 @@ export default function ScanScreen() {
     setLayout(event.nativeEvent.layout);
   }, []);
 
-  useUnmountBrightness(0.8, true);
+  useUnmountBrightness(1, true);
 
   const codeScanner = useCodeScanner({
     codeTypes: ['qr', 'code-128', 'code-39', 'ean-13', 'ean-8', 'upc-a', 'upc-e', 'data-matrix'],
@@ -353,7 +357,7 @@ export default function ScanScreen() {
         style={styles.toastContainer}
       />
       <StatusBar barStyle="light-content" />
-      <ThemedSettingSheet
+      {/* <ThemedSettingSheet
         ref={bottomSheetModalRef}
         setting1Text='Quick Scan Mode'
         setting1Description='Automatically scan for QR codes and barcodes.'
@@ -367,6 +371,30 @@ export default function ScanScreen() {
         setting3Description='Automatically turn up screen brightness to improve visibility.'
         setting3Value={autoBrightness}
         onSetting3Press={toggleAutoBrightness}
+      /> */}
+      <ThemedReuseableSheet
+        ref={bottomSheetRef}
+        title={t('homeScreen.manage')}
+        // snapPoints={['25%']}}
+        enableDynamicSizing={true}
+        // actions={[
+        //   {
+        //     icon: 'pencil-outline',
+        //     iconLibrary: 'MaterialCommunityIcons',
+        //     text: t('homeScreen.edit'),
+        //     onPress: () => bottomSheetRef.current?.close(),
+        //   },
+        //   {
+        //     icon: 'delete-outline',
+        //     iconLibrary: 'MaterialCommunityIcons',
+        //     text: t('homeScreen.delete'),
+        //     onPress: () => {},
+        //   }
+        // ]}
+        contentType='scroll'
+        customContent={
+          <View style={{ flex: 1, backgroundColor: 'black' }} />
+        }
       />
     </View>
   );
@@ -417,9 +445,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    width: width*0.8,
+    width: width * 0.8,
     flexGrow: 0.8,
-    
+
     // marginTop: 15,
   },
   bottomButton: {

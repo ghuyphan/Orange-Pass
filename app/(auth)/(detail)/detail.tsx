@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { StyleSheet, View, Linking, FlatList, TextInput, Pressable, Image, ActivityIndicator } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
@@ -31,17 +30,14 @@ import { getIconPath } from '@/utils/returnIcon';
 import { returnItemsByType } from '@/utils/returnItemData';
 import { deleteQrCode, updateQrIndexes } from '@/services/localDB/qrDB';
 
-import {
-    setQrData,
-
-} from '@/store/reducers/qrSlice';
-// import { useColorScheme } from '@/hooks/useColorScheme';
+import { setQrData } from '@/store/reducers/qrSlice';
 
 // Constants
 const AMOUNT_SUGGESTIONS = ['10,000', '50,000', '100,000', '500,000', '1,000,000'];
 
 // Types
 interface ItemData {
+    id: string;
     code: string;
     type: 'bank' | 'store' | 'ewallet';
     metadata: string;
@@ -60,8 +56,8 @@ interface BankItem {
 const formatAmount = (amount: string): string =>
     amount.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
-export default function DetailScreen() {
-    // 1. Hooks (sorted alphabetically)
+
+const DetailScreen = () => {
     const { currentTheme } = useTheme();
     const dispatch = useDispatch();
     const { item: encodedItem, id } = useLocalSearchParams();
@@ -70,10 +66,8 @@ export default function DetailScreen() {
     const router = useRouter();
     useUnmountBrightness(1, false);
 
-    // 2. Refs
     const bottomSheetRef = useRef<BottomSheet>(null);
 
-    // 3. State (sorted alphabetically)
     const [amount, setAmount] = useState('');
     const [isSyncing, setIsSyncing] = useState(false);
     const [isToastVisible, setIsToastVisible] = useState(false);
@@ -82,7 +76,6 @@ export default function DetailScreen() {
     const [vietQRBanks, setVietQRBanks] = useState<BankItem[]>([]);
     const [isLoadingBanks, setIsLoadingBanks] = useState(true);
 
-    // 4. Memoized values (sorted alphabetically)
     const item = useMemo<ItemData | null>(() => {
         if (!encodedItem) return null;
         try {
@@ -93,31 +86,32 @@ export default function DetailScreen() {
         }
     }, [encodedItem]);
 
-    // 5. Derived values (sorted alphabetically)
-    const cardColor = currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground;
-    const iconColor = currentTheme === 'light' ? Colors.light.icon : Colors.dark.icon;
+    const cardColor = useMemo(() => currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground, [currentTheme]);
+    const buttonColor = useMemo(() => currentTheme === 'light' ? Colors.light.buttonBackground : Colors.dark.buttonBackground, [currentTheme]);
+    const buttonTextColor = useMemo(() => currentTheme === 'light' ? Colors.light.icon : Colors.dark.icon, [currentTheme]);
+    const iconColor = useMemo(() => currentTheme === 'light' ? Colors.light.icon : Colors.dark.icon, [currentTheme]);
 
-    // Effects
     useEffect(() => {
-        if (item?.type === 'store') {
-            const loadBanks = () => {
-                const banks = returnItemsByType('bank');
+        const loadBanks = async () => {
+            if (item?.type === 'store') {
+                const banks = returnItemsByType('vietqr');
                 setVietQRBanks(banks);
-            };
-            setTimeout(() => {
-                loadBanks();
-            }, 500);
-            setIsLoadingBanks(false);
+                setIsLoadingBanks(false);
+            }
+        };
 
-        }
-    }, []);
+        setTimeout(() => {
+            loadBanks();
+        }, 300);
+    }, [item?.type]);
 
-    // Handlers
+
+
     const handleExpandPress = useCallback(() => {
         bottomSheetRef.current?.snapToIndex(0);
     }, []);
 
-    const onDeletePress = useCallback(async () => {
+    const handleDeletePress = useCallback(async () => {
         if (!id || Array.isArray(id)) return;
 
         try {
@@ -125,38 +119,32 @@ export default function DetailScreen() {
             setIsToastVisible(true);
             setToastMessage(t('homeScreen.deleting'));
 
-            // Delete the specific QR code from the database
             await deleteQrCode(id);
 
-            // 1. Update Redux store directly
-            const updatedData = qrData.filter(item => item.id !== id);
-            const reindexedData = updatedData.map((item, index) => ({
-                ...item,
+            const updatedData = qrData.filter(qrItem => qrItem.id !== id);
+            const reindexedData = updatedData.map((qrItem, index) => ({
+                ...qrItem,
                 qr_index: index,
                 updated: new Date().toISOString(),
             }));
             dispatch(setQrData(reindexedData));
-            //   setIsEmpty(reindexedData.length === 0);
 
-            // 2. Update indexes in the database 
             await updateQrIndexes(reindexedData);
 
-            // Reset UI state
             setIsModalVisible(false);
             setIsToastVisible(false);
+            router.replace('/home');
         } catch (error) {
+            console.error('Error deleting QR code:', error)
             setToastMessage(t('homeScreen.deleteError'));
             setIsToastVisible(true);
         } finally {
-            router.replace('/home');
-            //   setSelectedItemId(null);
             setIsSyncing(false);
         }
-    }, [id, qrData, dispatch, router]); // Include qrData in the dependency array
+    }, [id, qrData, dispatch, router]);
 
-
-    const openMap = useCallback(() => {
-        if (!item?.type || !item?.code) return;
+    const handleOpenMap = useCallback(() => {
+        if (!item) return;
 
         const itemName = returnItemData(item.code, item.type);
         if (!itemName?.name) return;
@@ -170,8 +158,7 @@ export default function DetailScreen() {
         });
     }, [item]);
 
-    // const openBank = useCallback(() => {
-    const openBank = useCallback(async (code: string) => {
+    const handleOpenBank = useCallback(async (code: string) => {
         let lowerCaseCode = code.toLowerCase();
 
         if (lowerCaseCode === 'vib') {
@@ -180,9 +167,6 @@ export default function DetailScreen() {
             lowerCaseCode = 'acb-biz';
         }
 
-        console.log(lowerCaseCode);
-
-        // const itemName = returnItemData(code, 'bank');
         const url = `https://dl.vietqr.io/pay?app=${lowerCaseCode}`;
         try {
             await Linking.openURL(url);
@@ -191,9 +175,9 @@ export default function DetailScreen() {
         }
     }, []);
 
-    const transferAmount = useCallback(
+    const handleTransferAmount = useCallback(
         throttle(async () => {
-            if (!item?.type || !item?.code || !amount) return;
+            if (!item || !amount) return;
 
             setIsSyncing(true);
             setIsToastVisible(true);
@@ -201,7 +185,7 @@ export default function DetailScreen() {
 
             try {
                 const itemName = returnItemData(item.code, item.type);
-                const message = t('detailsScreen.transferMessage') + ' ' + item.account_name;
+                const message = `${t('detailsScreen.transferMessage')} ${item.account_name}`;
                 const response = await getVietQRData(
                     item.account_number ?? '',
                     item.account_name ?? '',
@@ -221,15 +205,16 @@ export default function DetailScreen() {
                 });
             } catch (error) {
                 console.error('Error generating QR code:', error);
+                setIsToastVisible(true);
+                setToastMessage(t('detailsScreen.generateError'));
             } finally {
                 setIsSyncing(false);
-                setIsToastVisible(false);
+                // setIsToastVisible(false);
             }
         }, 500),
-        [item, amount, router, t]
+        [item, amount, router]
     );
 
-    // Render helpers
     const renderSuggestionItem = useCallback(({ item: suggestionItem }: { item: string }) => (
         <Pressable
             onPress={() => setAmount(suggestionItem)}
@@ -248,28 +233,25 @@ export default function DetailScreen() {
         </Pressable>
     ), [currentTheme]);
 
-    const renderPaymentMethodItem = useCallback(({ item: bankItem, onPress }: { item: BankItem, onPress: (bankCode: string) => void }) => (
-        <View style={styles.botSuggestionItem}>
-            <Pressable
-                style={styles.bankItemPressable}
-                onPress={() => onPress(bankItem.code)}
-                android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
-            >
-
+    const renderPaymentMethodItem = useCallback(({ item: bankItem }: { item: BankItem }) => (
+        <Pressable
+            style={[styles.bankItemPressable, { backgroundColor: buttonColor }]}
+            onPress={() => handleOpenBank(bankItem.code)}
+            android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
+        >
+            <View style={styles.bankIconContainer}>
                 <Image source={getIconPath(bankItem.code)} style={styles.bankIcon} resizeMode='contain' />
-
-            </Pressable>
-            <ThemedText numberOfLines={1} style={styles.bankItemText}>{bankItem.name}</ThemedText>
-        </View>
-    ), []);
+            </View>
+            <ThemedText numberOfLines={1} style={[styles.bankItemText, { color: buttonTextColor }]}>{bankItem.name}</ThemedText>
+        </Pressable>
+    ), [handleOpenBank]);
 
     const renderEmptyComponent = useCallback(() => (
         <View style={styles.loadingSkeleton}>
             <ActivityIndicator size={25} color={iconColor} />
         </View>
-    ), []);
+    ), [iconColor]);
 
-    // Render guard
     if (!item) {
         return (
             <ThemedView style={styles.loadingWrapper}>
@@ -306,7 +288,7 @@ export default function DetailScreen() {
             <View style={[styles.infoWrapper, { backgroundColor: cardColor }]}>
                 {/* Map Action */}
                 <Pressable
-                    onPress={openMap}
+                    onPress={handleOpenMap}
                     android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', borderless: false }}
                     style={styles.actionButton}
                 >
@@ -352,7 +334,7 @@ export default function DetailScreen() {
                                 </View>
                                 <Pressable
                                     hitSlop={{ bottom: 20, left: 15, right: 15, top: 20 }}
-                                    onPress={transferAmount}
+                                    onPress={handleTransferAmount}
                                     style={[styles.transferButton, { opacity: amount ? 1 : 0.3 }]}
                                 >
                                     <MaterialCommunityIcons name={amount ? 'chevron-right' : 'chevron-right'} size={16} color={iconColor} />
@@ -385,15 +367,12 @@ export default function DetailScreen() {
                         <FlatList
                             data={vietQRBanks}
                             horizontal
-                            style={styles.botSuggestionList}
+                            style={styles.bankList}
                             showsHorizontalScrollIndicator={false}
                             keyExtractor={(item) => item.code}
-                            contentContainerStyle={styles.botSuggestionListContent}
-                            renderItem={({ item: bankItem }) => (
-                                renderPaymentMethodItem({ item: bankItem, onPress: openBank })
-                            )}
+                            contentContainerStyle={styles.bankListContent}
+                            renderItem={renderPaymentMethodItem}
                             ListEmptyComponent={renderEmptyComponent}
-                        // Optional: Add a loading or empty state component
                         />
                     </View>
                 )}
@@ -430,9 +409,10 @@ export default function DetailScreen() {
                     }
                 ]}
             />
+
             <ThemedModal
                 primaryActionText={t('homeScreen.move')}
-                onPrimaryAction={onDeletePress}
+                onPrimaryAction={handleDeletePress}
                 onDismiss={() => setIsModalVisible(false)}
                 dismissable={true}
                 onSecondaryAction={() => setIsModalVisible(false)}
@@ -441,7 +421,6 @@ export default function DetailScreen() {
                 message={t('homeScreen.confirmDeleteMessage')}
                 isVisible={isModalVisible}
                 iconName="delete-outline"
-
             />
         </KeyboardAwareScrollView>
     );
@@ -451,7 +430,6 @@ const styles = StyleSheet.create({
     container: {
         flexGrow: 1,
         paddingHorizontal: 15,
-
     },
     headerWrapper: {
         paddingTop: STATUSBAR_HEIGHT + 45,
@@ -465,12 +443,9 @@ const styles = StyleSheet.create({
         marginBottom: 30,
     },
     infoWrapper: {
-        // paddingVertical: 5,
         paddingBottom: 15,
         borderRadius: 16,
-        // gap: 5,
         overflow: 'hidden',
-        backgroundColor: 'red',
     },
     actionButton: {
         flexDirection: 'row',
@@ -478,8 +453,6 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingHorizontal: 20,
         paddingVertical: 15,
-        // paddingBottom: 10,
-        // paddingTop: 20,
         gap: 10,
         borderRadius: 16,
         overflow: 'hidden',
@@ -498,7 +471,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
     transferContainer: {
-        // gap: 10,
+        // No changes needed here
     },
     transferHeader: {
         flexDirection: 'row',
@@ -510,7 +483,6 @@ const styles = StyleSheet.create({
         overflow: 'hidden'
     },
     transferSection: {
-        // marginTop: 15,
         gap: 10,
     },
     inputWrapper: {
@@ -519,17 +491,13 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
     },
     inputField: {
-        // height: 50,
         marginVertical: 10,
         fontSize: 16,
-        // width: 290,
-        overflow: 'hidden',
         flexGrow: 1,
         flexShrink: 1
     },
     transferButton: {
         marginLeft: 5,
-        // transform: [{ rotate: '90deg' }],
     },
     loadingSkeleton: {
         flexDirection: 'row',
@@ -541,19 +509,31 @@ const styles = StyleSheet.create({
     bankItemPressable: {
         borderRadius: 16,
         overflow: 'hidden',
-        height: 50,
-        width: 50,
+        height: 75,
+        width: 70,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'white'
+        // backgroundColor: Colors.light.toastBackground,
+        flexDirection: 'column',
+        gap: 3
     },
     bankIcon: {
-        width: 22,
-        height: 22,
+        width: '55%',
+        height: '55%',
+    },
+    bankIconContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: 35,
+        height: 35,
+        backgroundColor: 'white',
+        borderRadius: 50,
+        overflow: 'hidden',
     },
     bankItemText: {
         fontSize: 12,
-        maxWidth: 55
+        maxWidth: 60,
+        textAlign: 'center'
     },
     vietQRLogo: {
         height: 30,
@@ -573,10 +553,9 @@ const styles = StyleSheet.create({
     },
     currencyText: {
         fontSize: 16,
-        // color: 'rgba(255, 255, 255, 0.1)',
-        // opacity: 0.3
     },
     suggestionList: {
+        // No changes needed here
     },
     suggestionListContent: {
         gap: 10,
@@ -591,21 +570,13 @@ const styles = StyleSheet.create({
     suggestionText: {
         fontSize: 16,
     },
-    botSuggestionList: {
+    bankList: {
+        // No changes needed here
     },
-    botSuggestionListContent: {
+    bankListContent: {
         gap: 15,
         paddingHorizontal: 20,
         flexGrow: 1
-    },
-    botSuggestionItem: {
-        flexDirection: 'column',
-        gap: 5,
-        alignItems: 'center',
-        justifyContent: 'center'
-    },
-    botSuggestionText: {
-        fontSize: 16,
     },
     toastContainer: {
         position: 'absolute',
@@ -615,10 +586,7 @@ const styles = StyleSheet.create({
     },
     bottomContainer: {
         flexDirection: 'column',
-        // marginTop: 20,
         gap: 15,
-        // paddingHorizontal: 15,
-        // paddingBottom: 10,
         borderRadius: 16
     },
     bottomTitle: {
@@ -628,3 +596,5 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20
     }
 });
+
+export default DetailScreen;

@@ -1,9 +1,8 @@
-import React, { useState, useCallback } from 'react';
-import { StyleSheet, View } from 'react-native';
+import React, { useState, useCallback, useMemo } from 'react';
+import { StyleSheet, View, FlatList, ActivityIndicator } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import * as SecureStore from 'expo-secure-store';
 import { LinearGradient } from 'expo-linear-gradient';
-
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -11,65 +10,46 @@ import Animated, {
   Extrapolation,
   useAnimatedScrollHandler,
 } from 'react-native-reanimated';
-
 import { router } from 'expo-router';
-
 import { RootState } from '@/store/rootReducer';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { ThemedButton } from '@/components/buttons/ThemedButton';
-import Avatar from '@zamplyy/react-native-nice-avatar';
+import { ThemedButton } from '@/components/buttons';
 import { ThemedSettingsCardItem } from '@/components/cards/ThemedSettingsCard';
 import { ThemedModal } from '@/components/modals/ThemedIconModal';
-
+import Avatar from '@zamplyy/react-native-nice-avatar';
 import { t } from '@/i18n';
 import { storage } from '@/utils/storage';
 import { Colors } from '@/constants/Colors';
 import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
 import { clearAuthData } from '@/store/reducers/authSlice';
+import { removeAllQrData } from '@/store/reducers/qrSlice';
 import pb from '@/services/pocketBase';
 import { useMMKVString } from 'react-native-mmkv';
 import { useLocale } from '@/context/LocaleContext';
-import { ActivityIndicator } from 'react-native-paper';
-import { clearErrorMessage } from '@/store/reducers/errorSlice';
-import { removeAllQrData } from '@/store/reducers/qrSlice';
 import { useTheme } from '@/context/ThemeContext';
-
 import { MaterialIcons } from '@expo/vector-icons';
 
 // Define the type for your settings card items
 interface SettingsCardItem {
-  leftIcon?: keyof typeof MaterialIcons.glyphMap;
-  rightIcon?: keyof typeof MaterialIcons.glyphMap;
+  leftIcon: keyof typeof MaterialIcons.glyphMap;
   settingsTitle: string;
-  onPress?: () => void;
+  onPress: () => void;
 }
-
-// Component for rendering a single settings card item
-const SettingsCardItemComponent = ({ leftIcon, settingsTitle, onPress }: SettingsCardItem) => (
-  <ThemedSettingsCardItem
-    leftIcon={leftIcon}
-    settingsTitle={settingsTitle}
-    onPress={onPress ? onPress : () => { }}
-  />
-);
 
 function SettingsScreen() {
   const { updateLocale } = useLocale();
   const [locale, setLocale] = useMMKVString('locale', storage);
   const avatarConfig = useSelector((state: RootState) => state.auth.avatarConfig);
-  
   const { currentTheme } = useTheme();
-
   const [isLoading, setIsLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const dispatch = useDispatch();
-
   const scrollY = useSharedValue(0);
   const email = useSelector((state: RootState) => state.auth.user?.email ?? '-');
   const name = useSelector((state: RootState) => state.auth.user?.name ?? '-');
 
-  const sectionsColors = currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground
+  const sectionsColors = useMemo(() => currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground, [currentTheme]);
 
   const scrollHandler = useAnimatedScrollHandler((event) => {
     scrollY.value = event.contentOffset.y;
@@ -82,7 +62,6 @@ function SettingsScreen() {
       [1, 0],
       Extrapolation.CLAMP
     );
-
     const translateY = interpolate(
       scrollY.value,
       [0, 150],
@@ -101,54 +80,46 @@ function SettingsScreen() {
     router.back();
   }, []);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       setIsModalVisible(false);
       setIsLoading(true);
       await SecureStore.deleteItemAsync('authToken');
       pb.authStore.clear();
     } catch (error) {
-      console.log(error);
+      console.error("Logout error:", error);
     } finally {
       setTimeout(() => {
         setIsLoading(false);
         dispatch(clearAuthData());
-        dispatch(clearErrorMessage()); // Clear error on logout
+        dispatch(clearErrorMessage());
         dispatch(removeAllQrData());
         router.replace('/login');
       }, 300);
     }
-  };
+  }, [dispatch]);
 
   const onLogout = useCallback(() => {
     setIsModalVisible(true);
   }, []);
 
-  const settingsData: SettingsCardItem[][] = [
+  const settingsData: SettingsCardItem[][] = useMemo(() => [
     [
-      { leftIcon: 'person-outline', settingsTitle: t('settingsScreen.editProfile') },
-      { leftIcon: 'lock-outline', settingsTitle: t('settingsScreen.changePassword') },
-      { leftIcon: 'mail-outline', settingsTitle: t('settingsScreen.changeEmail') },
+      { leftIcon: 'person-outline', settingsTitle: t('settingsScreen.editProfile'), onPress: () => {} },
+      { leftIcon: 'lock-outline', settingsTitle: t('settingsScreen.changePassword'), onPress: () => {} },
+      { leftIcon: 'mail-outline', settingsTitle: t('settingsScreen.changeEmail'), onPress: () => {} },
     ],
     [
-      { leftIcon: 'info-outline', settingsTitle: t('settingsScreen.about') },
-      {
-        leftIcon: 'translate',
-        settingsTitle: t('settingsScreen.language'),
-        onPress: () => router.push('/language')
-      },
-      {
-        leftIcon: 'contrast',
-        settingsTitle: t('settingsScreen.appTheme'),
-        onPress: () => router.push('/theme')
-      },
+      { leftIcon: 'info-outline', settingsTitle: t('settingsScreen.about'), onPress: () => {} },
+      { leftIcon: 'translate', settingsTitle: t('settingsScreen.language'), onPress: () => router.push('/language') },
+      { leftIcon: 'contrast', settingsTitle: t('settingsScreen.appTheme'), onPress: () => router.push('/theme') },
     ],
-  ];
+  ], []);
 
   const renderItem = useCallback(({ item, index }: { item: SettingsCardItem[], index: number }) => (
     <View key={index} style={[styles.sectionContainer, { backgroundColor: sectionsColors }]}>
-      {item.map((subItem, subIndex) => (
-        <SettingsCardItemComponent key={subIndex} {...subItem} />
+      {item.map((subItem) => (
+        <ThemedSettingsCardItem key={subItem.settingsTitle} {...subItem} />
       ))}
     </View>
   ), [sectionsColors]);
@@ -156,6 +127,7 @@ function SettingsScreen() {
   return (
     <ThemedView style={styles.container}>
       <ThemedView style={styles.blurContainer} />
+
       <Animated.View style={[styles.titleContainer, titleContainerStyle]} pointerEvents="auto">
         <View style={styles.headerContainer}>
           <View style={styles.titleButtonContainer}>
@@ -174,7 +146,7 @@ function SettingsScreen() {
         onScroll={scrollHandler}
         data={settingsData}
         renderItem={renderItem}
-        keyExtractor={(item, index) => index.toString()}
+        keyExtractor={(_, index) => index.toString()}
         ListHeaderComponent={
           <View style={[styles.avatarContainer, { backgroundColor: sectionsColors }]}>
             <LinearGradient
@@ -192,8 +164,8 @@ function SettingsScreen() {
               )}
             </LinearGradient>
             <View style={styles.userContainer}>
-              <ThemedText numberOfLines={1} style={styles.userEmail}>{name ? name : '-'}</ThemedText>
-              <ThemedText numberOfLines={1} style={styles.userName}>{email ? email : '-'}</ThemedText>
+              <ThemedText numberOfLines={1} style={styles.userEmail}>{name}</ThemedText>
+              <ThemedText numberOfLines={1} style={styles.userName}>{email}</ThemedText>
             </View>
           </View>
         }
@@ -269,10 +241,10 @@ const styles = StyleSheet.create({
     paddingTop: STATUSBAR_HEIGHT + 105,
   },
   gradient: {
-    borderRadius: 50, // Make it circular
+    borderRadius: 50,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 5, // Optional: Add padding if needed
+    padding: 5,
   },
   avatarContainer: {
     alignItems: 'center',
@@ -309,28 +281,7 @@ const styles = StyleSheet.create({
   },
   sectionContainer: {
     borderRadius: 16,
-    backgroundColor: 'white',
     marginBottom: 20,
-    // gap: 5,
     overflow: 'hidden',
-  },
-  settingsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    paddingVertical: 15,
-  },
-  settingsText: {
-    fontSize: 16,
-    opacity: 0.7,
-  },
-  languageContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
   },
 });
