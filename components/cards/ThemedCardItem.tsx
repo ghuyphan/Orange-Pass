@@ -40,22 +40,42 @@ const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps):
     onDrag,
   } = props;
 
-  // Simplified useMemo - only depends on `code`
   const itemData = useMemo(() => returnItemData(code), [code]);
-  const { name, color, accent_color } = itemData;
+  const { name, color, accent_color, type: itemDataType } = itemData;
+
+  // Determine if we should use the default metadata value
+  const isDefaultCode = useMemo(() => code === 'N/A', [code]); // Or whatever your default code is
+
+  // Determine the type based on priority:
+  // 1. Explicitly set type in props
+  // 2. Type derived from itemData
+  // 3. Default to 'bank' if it's the default code, otherwise 'store'
+  const cardType = useMemo(() => {
+    if (type) return type;
+    if (itemDataType) return itemDataType;
+    return isDefaultCode ? 'bank' : 'store';
+  }, [type, itemDataType, isDefaultCode]);
+
   const iconPath = useMemo(() => getIconPath(code), [code]);
 
   const accountDisplayName = useMemo(() => {
-    if (type === 'bank' && accountNumber) {
+    if (cardType === 'bank' && accountNumber) {
       const maskedLength = Math.max(0, accountNumber.length - 4);
       return `${'*'.repeat(maskedLength)}${accountNumber.slice(-4)}`;
     }
     return accountName;
-  }, [type, accountNumber, accountName]);
+  }, [cardType, accountNumber, accountName]);
+
+  // Use a placeholder or an empty string if metadata is not available or if it's the default code
+  const displayMetadata = useMemo(() => {
+    if (isDefaultCode || !metadata) {
+      return ''; // Or a placeholder string like 'N/A' if you prefer
+    }
+    return metadata;
+  }, [metadata, isDefaultCode]);
 
   const renderContent = () => (
     <LinearGradient
-      // Directly use color.light and accent_color.light
       colors={returnMidpointColors(color.light, accent_color.light, 6) || ['#FAF3E7', '#D6C4AF']}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
@@ -83,17 +103,22 @@ const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps):
       <View style={styles.cardFooter}>
         <View style={styles.footerLeft}>
           <Text numberOfLines={1} ellipsizeMode="tail" style={styles.cardHolderName}>{accountName}</Text>
-          {type === 'bank' ? (
+          {cardType === 'bank' ? (
             <Text numberOfLines={1} ellipsizeMode="tail" style={styles.cardType}>{accountDisplayName}</Text>
           ) : (
-            <Text numberOfLines={1} ellipsizeMode="tail" style={styles.cardType}>{metadata}</Text>
+            <Text numberOfLines={1} ellipsizeMode="tail" style={styles.cardType}>{displayMetadata}</Text>
           )}
         </View>
         <View style={styles.qrContainer}>
-          {metadata_type === 'qr' ? (
-            <QRCode value={metadata} size={70} />
+          {/* Conditionally render QR/Barcode based on displayMetadata */}
+          {displayMetadata ? (
+            metadata_type === 'qr' ? (
+              <QRCode value={displayMetadata} size={70} />
+            ) : (
+              <Barcode height={70} maxWidth={125} value={displayMetadata} format="CODE128" />
+            )
           ) : (
-            <Barcode height={70} maxWidth={125} value={metadata} format="CODE128" />
+            <View style={styles.qrPlaceholder}/>
           )}
         </View>
       </View>
@@ -197,6 +222,13 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   qrContainer: {
+    backgroundColor: 'white',
+    borderRadius: 8,
+    padding: 8,
+  },
+  qrPlaceholder: {
+    width: 70,
+    height: 70,
     backgroundColor: 'white',
     borderRadius: 8,
     padding: 8,

@@ -7,6 +7,7 @@ import { useUnmountBrightness } from '@reeq/react-native-device-brightness';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import BottomSheet from '@gorhom/bottom-sheet';
 import { throttle } from 'lodash';
+import { MMKV } from 'react-native-mmkv';
 
 // Local imports
 import { RootState } from '@/store/rootReducer';
@@ -34,6 +35,7 @@ import { setQrData } from '@/store/reducers/qrSlice';
 
 // Constants
 const AMOUNT_SUGGESTIONS = ['10,000', '50,000', '100,000', '500,000', '1,000,000'];
+const LAST_USED_BANK_KEY = 'lastUsedBank';
 
 // Types
 interface ItemData {
@@ -51,6 +53,9 @@ interface BankItem {
     code: string;
     name: string;
 }
+
+// MMKV instance
+const storage = new MMKV();
 
 // Utility function to format the amount
 const formatAmount = (amount: string): string =>
@@ -93,19 +98,27 @@ const DetailScreen = () => {
 
     useEffect(() => {
         const loadBanks = async () => {
-            if (item?.type === 'store') {
-                const banks = returnItemsByType('vietqr');
-                setVietQRBanks(banks);
-                setIsLoadingBanks(false);
+            if (item?.type !== 'store') return;
+    
+            const lastUsedBankCode = storage.getString(LAST_USED_BANK_KEY);
+            let banks = returnItemsByType('vietqr');
+    
+            if (lastUsedBankCode) {
+                const lastUsedBankIndex = banks.findIndex(bank => bank.code === lastUsedBankCode);
+                if (lastUsedBankIndex !== -1) {
+                    const lastUsedBank = banks.splice(lastUsedBankIndex, 1)[0];
+                    banks.unshift(lastUsedBank);
+                }
             }
+    
+            setVietQRBanks(banks);
+            setIsLoadingBanks(false);
         };
-
+    
         setTimeout(() => {
             loadBanks();
         }, 300);
     }, [item?.type]);
-
-
 
     const handleExpandPress = useCallback(() => {
         bottomSheetRef.current?.snapToIndex(0);
@@ -160,20 +173,32 @@ const DetailScreen = () => {
 
     const handleOpenBank = useCallback(async (code: string) => {
         let lowerCaseCode = code.toLowerCase();
-
+    
         if (lowerCaseCode === 'vib') {
             lowerCaseCode = 'vib-2';
         } else if (lowerCaseCode === 'acb') {
             lowerCaseCode = 'acb-biz';
         }
-
+    
         const url = `https://dl.vietqr.io/pay?app=${lowerCaseCode}`;
         try {
             await Linking.openURL(url);
+            storage.set(LAST_USED_BANK_KEY, code); 
+
+            if (item?.type === 'store') {
+                const updatedBanks = [...vietQRBanks];
+                const bankIndex = updatedBanks.findIndex(bank => bank.code === code);
+                if (bankIndex !== -1) {
+                    const selectedBank = updatedBanks.splice(bankIndex, 1)[0];
+                    updatedBanks.unshift(selectedBank);
+                    setVietQRBanks(updatedBanks);
+                }
+            }
         } catch (err) {
             console.error('Failed to open URL:', err);
         }
-    }, []);
+    }, [vietQRBanks, item?.type]);
+    
 
     const handleTransferAmount = useCallback(
         throttle(async () => {
@@ -244,7 +269,7 @@ const DetailScreen = () => {
             </View>
             <ThemedText numberOfLines={1} style={[styles.bankItemText, { color: buttonTextColor }]}>{bankItem.name}</ThemedText>
         </Pressable>
-    ), [handleOpenBank]);
+    ), [handleOpenBank, buttonColor, buttonTextColor]);
 
     const renderEmptyComponent = useCallback(() => (
         <View style={styles.loadingSkeleton}>
@@ -520,6 +545,7 @@ const styles = StyleSheet.create({
     bankIcon: {
         width: '55%',
         height: '55%',
+        pointerEvents: 'none'
     },
     bankIconContainer: {
         alignItems: 'center',
@@ -529,11 +555,13 @@ const styles = StyleSheet.create({
         backgroundColor: 'white',
         borderRadius: 50,
         overflow: 'hidden',
+        pointerEvents: 'none'
     },
     bankItemText: {
         fontSize: 12,
         maxWidth: 60,
-        textAlign: 'center'
+        textAlign: 'center',
+        pointerEvents: 'none'
     },
     vietQRLogo: {
         height: 30,
@@ -586,14 +614,16 @@ const styles = StyleSheet.create({
     },
     bottomContainer: {
         flexDirection: 'column',
-        gap: 15,
+        // gap: 15,
+
         borderRadius: 16
     },
     bottomTitle: {
         flexDirection: 'row',
         gap: 10,
         alignItems: 'center',
-        paddingHorizontal: 20
+        paddingHorizontal: 20,
+        paddingVertical: 15,
     }
 });
 

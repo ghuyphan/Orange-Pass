@@ -67,7 +67,7 @@ export function getIconPath(key: string): any {
       'SGICB': require('@/assets/images/logoIcons/SGICB.png'),
       'WVN': require('@/assets/images/logoIcons/WVN.png'),
       'AEO': require('@/assets/images/logoIcons/AEO.png'),
-      'BAX': require('@/assets/images/logoIcons/BAX.png'),
+      'BHX': require('@/assets/images/logoIcons/BAX.png'),
       'CIR': require('@/assets/images/logoIcons/CIR.png'),
       'COO': require('@/assets/images/logoIcons/COO.png'),
       'EMM': require('@/assets/images/logoIcons/EMM.png'),
