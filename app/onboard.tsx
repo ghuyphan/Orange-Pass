@@ -75,7 +75,7 @@ const OnBoardScreen = () => {
             case 'tos':
                 return (
                     <View style={styles.sheetContentContainer}>
-                        <View style={[styles.sectionContainer, { backgroundColor: cardColor }]}>
+                        <View style={[styles.sectionContainer, { backgroundColor: cardColor, marginBottom: 20 }]}>
                             <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
                                 {t('onboardingScreen.termsOfService.termsOfServiceTitle')} 🚀
                             </ThemedText>
@@ -310,7 +310,7 @@ const styles = StyleSheet.create({
         // paddingBottom: 20,
     },
     sectionContainer: {
-        marginBottom: 20,
+        // marginBottom: 20,
         borderRadius: 16,
         paddingVertical: 15,
         paddingHorizontal: 20,
@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
     },
     sectionTitle: {
         fontSize: 16,
-        marginBottom: 10,
+        marginBottom: 4,
         // color: '#FF6B00', // Orange accent color
     },
     sectionText: {

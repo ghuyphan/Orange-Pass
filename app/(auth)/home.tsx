@@ -61,6 +61,7 @@ import { ThemedModal } from '@/components/modals/ThemedIconModal';
 import { ThemedBottomToast } from '@/components/toast/ThemedBottomToast';
 import ThemedFilter from '@/components/ThemedFilter';
 import EmptyListItem from '@/components/lists/EmptyListItem';
+import LinkingSheetContent from '@/components/bottomsheet/LinkingSheetContent';
 
 // 5. Internationalization
 import { t } from '@/i18n';
@@ -91,6 +92,7 @@ function HomeScreen() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [fabOpen, setFabOpen] = useState(false);
   const [sheetType, setSheetType] = useState<SheetType>(null);
+  const [linkingUrl, setLinkingUrl] = useState<string | null>(null);
 
   // 6. Data and Filtering
   const [filter, setFilter] = useState('all');
@@ -366,25 +368,27 @@ function HomeScreen() {
     ), []
   );
 
-  const onOpenSheet = (type: SheetType, id?: string) => {
+  const onOpenSheet = (type: SheetType, id?: string, url?: string, ssid?: string) => {
     setSheetType(type);
     setIsSheetOpen(true);
+    setSelectedItemId(id || null); // Set selectedItemId only if id is provided
+
     switch (type) {
-      case 'wifi':
-        bottomSheetRef.current?.snapToIndex(0);
-        break;
-      case 'linking':
-        bottomSheetRef.current?.snapToIndex(0);
-        break;
-      case 'setting':
-        if (!id) return;
-        setSelectedItemId(id);
-        bottomSheetRef.current?.snapToIndex(0);
-        break;
-      default:
+        case 'wifi':
+        case 'setting':
+            if (!id) return;
+            bottomSheetRef.current?.snapToIndex(0);
+            break;
+        case 'linking':
+            bottomSheetRef.current?.snapToIndex(0);
+            if (url) {
+                // Store the URL in a state variable
+                setLinkingUrl(url);
+            }
+            break;
+        default:
     }
-    bottomSheetRef.current?.snapToIndex(0);
-  };
+};
 
   const onOpenGallery = useGalleryPicker({
     onOpenSheet,
@@ -449,11 +453,11 @@ function HomeScreen() {
   }, [userId, dispatch, setFilter]); // Add setFilter to the dependency array
 
 
-  const handleExpandPress = useCallback((id: string) => {
-    setSelectedItemId(id);
-    setIsSheetOpen(true);
-    bottomSheetRef.current?.snapToIndex(0);
-  }, [setSelectedItemId, bottomSheetRef, setIsSheetOpen]);
+  // const handleExpandPress = useCallback((id: string) => {
+  //   setSelectedItemId(id);
+  //   setIsSheetOpen(true);
+  //   bottomSheetRef.current?.snapToIndex(0);
+  // }, [setSelectedItemId, bottomSheetRef, setIsSheetOpen]);
 
   const onDeleteSheetPress = useCallback(() => {
     bottomSheetRef.current?.close();
@@ -510,7 +514,7 @@ function HomeScreen() {
             type={item.type}
             metadata={item.metadata}
             metadata_type={item.metadata_type}
-            onMoreButtonPress={() => handleExpandPress(item.id)}
+            onMoreButtonPress={() => onOpenSheet('setting', item.id)}
             accountName={item.account_name}
             accountNumber={item.account_number}
             onDrag={drag}
@@ -518,7 +522,7 @@ function HomeScreen() {
         </ScaleDecorator>
       );
     },
-    [onNavigateToDetailScreen, handleExpandPress]
+    [onNavigateToDetailScreen, onOpenSheet]
   );
 
   const paddingValues = useMemo(() => {
@@ -539,9 +543,9 @@ function HomeScreen() {
         );
       case 'linking':
         return (
-          <View>
-            <ThemedText>Linking</ThemedText>
-          </View>
+          <>
+            <LinkingSheetContent url={linkingUrl} />
+          </>
         );
       case 'setting':
         return (
@@ -696,20 +700,20 @@ function HomeScreen() {
             {renderSheetContent()}
           </View>
         }
-      actions={[
-        {
-          icon: 'pencil-outline',
-          iconLibrary: 'MaterialCommunityIcons',
-          text: t('homeScreen.edit'),
-          onPress: () => bottomSheetRef.current?.close(),
-        },
-        {
-          icon: 'delete-outline',
-          iconLibrary: 'MaterialCommunityIcons',
-          text: t('homeScreen.delete'),
-          onPress: () => onDeleteSheetPress(),
-        }
-      ]}
+      // actions={[
+      //   {
+      //     icon: 'pencil-outline',
+      //     iconLibrary: 'MaterialCommunityIcons',
+      //     text: t('homeScreen.edit'),
+      //     onPress: () => bottomSheetRef.current?.close(),
+      //   },
+      //   {
+      //     icon: 'delete-outline',
+      //     iconLibrary: 'MaterialCommunityIcons',
+      //     text: t('homeScreen.delete'),
+      //     onPress: () => onDeleteSheetPress(),
+      //   }
+      // ]}
       />
       <ThemedModal
         primaryActionText={t('homeScreen.move')}

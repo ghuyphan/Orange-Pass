@@ -36,6 +36,7 @@ import { MAX_ZOOM_FACTOR } from '@/constants/Constants';
 import { storage } from '@/utils/storage';
 import { triggerLightHapticFeedback } from '@/utils/haptic';
 import { decodeQR } from '@/utils/decodeQR';
+import SheetType from '@/types/sheetType';
 
 // Components
 import { ThemedButton } from '@/components/buttons/ThemedButton';
@@ -56,11 +57,15 @@ import { useCameraScanner } from '@/hooks/useCameraScanner';
 import { useCameraSetup } from '@/hooks/useCameraSetup';
 import { useFocusGesture } from '@/hooks/useFocusGesture';
 import { width } from '@/constants/Constants';
-
-
+import { useGalleryPicker } from '@/hooks/useGalleryPicker';
 
 const ReanimatedCamera = Reanimated.createAnimatedComponent(Camera);
 Reanimated.addWhitelistedNativeProps({ zoom: true });
+
+type SheetType = {
+  type: SheetType;
+  id?: string;
+};
 
 // Main component
 export default function ScanScreen() {
@@ -159,58 +164,39 @@ export default function ScanScreen() {
     onCodeScanned: createCodeScannerCallback,
   });
 
-  const onOpenGallery = useCallback(async () => {
-    try {
-      const image = await ImagePicker.openPicker({
-        width: 300,
-        height: 400,
-        includeBase64: true,
-        mediaType: 'photo',
-      });
-
-      if (!image.path) {
-        return;
-      }
-
-      // decodeQRCode(image.path);
-      const decode = await decodeQR(image.path);
-
-      const result = handleCodeScanned(decode?.value ?? '', {
-        quickScan,
-        codeFormat: decode?.format,
-        t,
-        setIsConnecting,
-      });
-
-
-      if (result && result.codeFormat !== undefined) {
-        onNavigateToAddScreen(result.codeFormat, result.codeValue);
-      } else {
-        // console.log('Failed to decode QR code');
-        showToast('Failed to decode QR code');
-      }
-
-    } catch (error) {
-      console.log('Error opening image picker:', error);
-    } finally {
-
-    }
-  }, []);
-
   const onNavigateToAddScreen = useCallback(
-    throttle((codeType: number, codeValue: string) => {
-      router.push({
-        pathname: `/(auth)/(add)/add-new`,
-        params: {
-          codeType: codeType,
-          codeValue: codeValue
-        },
-      });
-    }, 1000),
-    []
+    throttle(
+      (
+        codeFormat?: number,
+        codeValue?: string,
+        bin?: string,
+        codeType?: string,
+        codeProvider?: string // Add codeProvider parameter
+      ) => {
+        router.push({
+          pathname: `/(auth)/(add)/add-new`,
+          params: {
+            codeFormat: codeFormat,
+            codeValue: codeValue,
+            codeBin: bin,
+            codeType: codeType,
+            codeProvider: codeProvider, // Pass codeProvider
+          },
+        });
+      },
+      1000
+    ), []
   );
+  
+  const onOpenSheet = (type: SheetType) => {
+    setSheetType(type);
+    bottomSheetRef.current?.snapToIndex(0);
+  };
 
-  // Utility function for showing toast messages
+   const onOpenGallery = useGalleryPicker({
+     onOpenSheet,
+     onNavigateToAddScreen,
+   });
 
   useEffect(() => {
     return () => {

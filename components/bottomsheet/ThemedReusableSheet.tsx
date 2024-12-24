@@ -189,7 +189,7 @@ const ThemedReuseableSheet = forwardRef<BottomSheet, ReuseableSheetProps>(
 
                 {/* Default Header Content */}
                 {(title || description) && (
-                    <View style={[styles.headerContent, { marginBottom: description ? 5 : 15 }]}>
+                    <View style={styles.headerContent}>
                         {title && (
                             <ThemedText
                                 style={[
@@ -323,10 +323,12 @@ const styles = StyleSheet.create({
     },
     contentContainer: {
         paddingHorizontal: 15,
-        paddingVertical: 15,
+        // paddingVertical: 15,
+        paddingBottom: 15,
+        paddingTop: 5,
     },
     headerContent: {
-        marginBottom: 15,
+        marginBottom: 20,
         position: 'relative',
     },
     title: {

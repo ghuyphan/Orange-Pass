@@ -3,19 +3,15 @@ import { throttle } from 'lodash';
 import WifiManager from 'react-native-wifi-reborn';
 import { MaterialIcons } from '@expo/vector-icons';
 
-// Define the type for MaterialIcons glyphs (icon names)
 type MaterialIconsIconName = keyof typeof MaterialIcons.glyphMap;
-
-// --- Interfaces for ScanResult ---
 
 interface BaseScanResult {
   codeType: string;
   iconName: MaterialIconsIconName;
   codeFormat?: number;
-  rawCodeValue: string; // Store the raw scanned value
+  rawCodeValue: string;
 }
 
-// Specific ScanResult types
 interface WifiScanResult extends BaseScanResult {
   codeType: 'WIFI';
   ssid: string;
@@ -31,7 +27,14 @@ interface URLScanResult extends BaseScanResult {
 interface VietQRScanResult extends BaseScanResult {
   codeType: 'bank' | 'ewallet';
   bin: string;
-  provider?: string; // To identify e-wallets like Momo, ZaloPay
+  provider?: string;
+  merchantId?: string;
+  amount?: string;
+  additionalData?: {
+    billNumber?: string;
+    reference?: string;
+    merchantName?: string;
+  };
 }
 
 interface AlphanumericScanResult extends BaseScanResult {
@@ -42,15 +45,12 @@ interface UnknownScanResult extends BaseScanResult {
   codeType: 'unknown';
 }
 
-// Union type for ScanResult
 type ScanResult =
   | WifiScanResult
   | URLScanResult
   | VietQRScanResult
   | AlphanumericScanResult
   | UnknownScanResult;
-
-// --- Pattern Interface ---
 
 interface Pattern {
   pattern: RegExp;
@@ -65,17 +65,85 @@ interface Pattern {
   ) => ScanResult;
 }
 
-// --- E-wallet Identifiers ---
-const ewalletIdentifiers = {
-  MOMO: 'MOMO',
-  ZALOPAY: 'zalopay', // Updated to match the actual identifier in the data
-  // Add more identifiers as needed:
-  // VNPAY: 'VNPAYQR',
-  // SHOPEEPAY: 'SHOPEEPAY',
-  // VIETTELPAY: 'VIETTELPAY',
+const PROVIDERS = {
+  MOMO: {
+    id: 'MOMO',
+    bin: '970454',
+    identifiers: ['MM', 'MOMOW2W'],
+    extractMerchantId: (data: { [key: string]: string }) => {
+      const merchantData = data['27'] || '';
+      const match = merchantData.match(/970454(\d+)/);
+      return match?.[1];
+    }
+  },
+  ZALOPAY: {
+    id: 'ZALOPAY',
+    bin: '970454',
+    identifiers: ['ZP', 'vn.zalopay'],
+    extractMerchantId: (data: { [key: string]: string }) => {
+      const merchantData = data['27'] || '';
+      const match = merchantData.match(/970454(\d+)/);
+      return match?.[1];
+    }
+  }
+} as const;
+
+// Helper function to parse EMV QR code fields
+const parseEMVQR = (qrData: string) => {
+  const fields: { [key: string]: string } = {};
+  let position = 0;
+
+  while (position < qrData.length) {
+    try {
+      const id = qrData.substr(position, 2);
+      const length = parseInt(qrData.substr(position + 2, 2));
+      if (isNaN(length)) break;
+      const value = qrData.substr(position + 4, length);
+      fields[id] = value;
+      position += 4 + length;
+    } catch (e) {
+      console.error('Error parsing EMV QR code field:', e);
+      break;
+    }
+  }
+
+  return fields;
 };
 
-// --- Main Hook ---
+// Helper function to detect provider
+const detectProvider = (qrData: string, fields: { [key: string]: string }): string | undefined => {
+  // First check for e-wallet providers
+  for (const [key, provider] of Object.entries(PROVIDERS)) {
+    if (provider.identifiers.some(id => qrData.includes(id))) {
+      return provider.id;
+    }
+  }
+
+  // Check merchant info fields (26-45) for provider identifiers
+  for (let i = 26; i <= 45; i++) {
+    const field = fields[i.toString()];
+    if (field) {
+      for (const [key, provider] of Object.entries(PROVIDERS)) {
+        if (provider.identifiers.some(id => field.includes(id))) {
+          return provider.id;
+        }
+      }
+    }
+  }
+
+  return undefined;
+};
+
+// Helper function to extract BIN
+const extractBIN = (merchantInfo: string): string => {
+  // Try standard BIN extraction first
+  const binMatch = merchantInfo.match(/(?:27|38)\d{8}(\d{6})/);
+  if (binMatch) return binMatch[1];
+
+  // Try alternative BIN patterns
+  const altBinMatch = merchantInfo.match(/\d{6}/);
+  return altBinMatch ? altBinMatch[0] : 'Unknown BIN';
+};
 
 const useHandleCodeScanned = () => {
   const handleCodeScanned = useCallback(
@@ -85,7 +153,7 @@ const useHandleCodeScanned = () => {
         options: {
           quickScan?: boolean;
           codeFormat?: number;
-          t: (key: string) => string; // Translation function
+          t: (key: string) => string;
           setIsConnecting?: (connecting: boolean) => void;
         }
       ): ScanResult => {
@@ -94,96 +162,87 @@ const useHandleCodeScanned = () => {
         const patterns: { [key: string]: Pattern } = {
           WIFI: {
             pattern: /^WIFI:/,
-            handler: (
-              codeMetadata,
-              { quickScan, t, setIsConnecting, codeFormat }
-            ) => {
+            handler: (codeMetadata, { quickScan, t, setIsConnecting, codeFormat }) => {
               const ssidMatch = codeMetadata.match(/S:([^;]*)/);
               const passMatch = codeMetadata.match(/P:([^;]*)/);
               const isWepMatch = codeMetadata.match(/T:([^;]*)/);
 
-              const ssid = ssidMatch ? ssidMatch[1] : 'Unknown';
-              const pass = passMatch ? passMatch[1] : '';
-              const isWep = isWepMatch
-                ? isWepMatch[1] === 'WEP'
-                : undefined;
-
-              const result: WifiScanResult = {
+              return {
                 codeType: 'WIFI',
                 iconName: 'wifi',
                 codeFormat: codeFormat,
                 rawCodeValue: codeMetadata,
-                ssid: ssid,
-                pass: pass,
-                isWep: isWep,
+                ssid: ssidMatch ? ssidMatch[1] : 'Unknown',
+                pass: passMatch ? passMatch[1] : '',
+                isWep: isWepMatch ? isWepMatch[1] === 'WEP' : undefined,
               };
-
-              if (quickScan && setIsConnecting) {
-                setIsConnecting(true);
-                WifiManager.connectToProtectedWifiSSID({
-                  ssid: ssid,
-                  password: pass,
-                  isWEP: isWep,
-                }).then(
-                  () => {
-                    console.log('Connected successfully!');
-                    setIsConnecting(false);
-                  },
-                  (error) => {
-                    console.log('Connection failed!', error);
-                    setIsConnecting(false);
-                  }
-                );
-              }
-
-              return result;
             },
           },
 
           URL: {
             pattern: /^(https:\/\/|http:\/\/)/,
             handler: (codeMetadata, { t, codeFormat }) => {
-              const url = codeMetadata.replace(/^https?:\/\//, '');
               return {
                 codeType: 'URL',
                 iconName: 'explore',
                 codeFormat: codeFormat,
                 rawCodeValue: codeMetadata,
-                url: url,
+                url: codeMetadata.replace(/^https?:\/\//, ''),
               };
             },
           },
 
           VietQR: {
-            pattern: /^0002010102\d{2}/, // Updated pattern to match more VietQR versions
+            pattern: /^0002010102/,
             handler: (codeMetadata, { t, codeFormat }) => {
-              const binMatch = codeMetadata.match(/(?:27|38)\d{8}(\d{6})/); // Updated regex
-              const bin = binMatch ? binMatch[1] : 'Unknown BIN';
-
-              // **Improved E-wallet Identification:**
-              let provider = undefined;
-              // Extract the relevant part of the QR code for e-wallet detection (after "vn.")
-              const ewalletSectionMatch = codeMetadata.match(/vn\.(.*?)(?:\d{2}|$)/);
-              // console.log('ewalletSectionMatch:', ewalletSectionMatch);
-              if (ewalletSectionMatch) {
-                const ewalletSection = ewalletSectionMatch[1];
-                console.log('ewalletSection:', ewalletSection);
-                for (const key in ewalletIdentifiers) {
-                  if (ewalletSection.includes(ewalletIdentifiers[key as keyof typeof ewalletIdentifiers])) {
-                    provider = key;
-                    console.log('Detected e-wallet provider:', provider);
-                    break;
-                  }
-                }
+              const fields = parseEMVQR(codeMetadata);
+              
+              // Get merchant information from either field 38 or 27
+              const merchantInfo = fields['38'] || fields['27'] || '';
+              
+              // Detect provider (e-wallet or bank)
+              const provider = detectProvider(codeMetadata, fields);
+              const providerConfig = provider ? PROVIDERS[provider as keyof typeof PROVIDERS] : undefined;
+              
+              // Extract merchant ID and BIN
+              let merchantId;
+              let bin;
+              
+              if (providerConfig) {
+                // E-wallet case
+                merchantId = providerConfig.extractMerchantId(fields);
+                bin = providerConfig.bin;
+              } else {
+                // Bank case
+                bin = extractBIN(merchantInfo);
+                const bankMerchantMatch = merchantInfo.match(/\d{6,}/);
+                merchantId = bankMerchantMatch ? bankMerchantMatch[0] : undefined;
+              }
+              
+              // Extract amount (field 54)
+              const amount = fields['54'];
+              
+              // Extract additional data
+              let additionalData;
+              const field62 = fields['62'];
+              if (field62) {
+                additionalData = {
+                  billNumber: field62.match(/01(\d+)/)?.[1],
+                  reference: field62.match(/05(\d+)/)?.[1],
+                  merchantName: field62.match(/08([^]+)/)?.[1],
+                };
               }
 
               const result: VietQRScanResult = {
-                codeType: provider ? 'ewallet' : 'bank', // Set codeType based on provider
+                codeType: provider ? 'ewallet' : 'bank',
                 iconName: 'qr-code',
                 codeFormat: codeFormat,
-                rawCodeValue: codeMetadata, // Store the raw QR code data
-                bin: bin,
-                provider: provider, // Store the e-wallet provider (Momo, ZaloPay, etc.)
+                rawCodeValue: codeMetadata,
+                bin: bin || 'Unknown',
+                provider: provider,
+                merchantId: merchantId,
+                amount: amount,
+                additionalData: additionalData
               };
 
               return result;
@@ -203,7 +262,6 @@ const useHandleCodeScanned = () => {
           },
         };
 
-        // --- Pattern Matching ---
         for (const key in patterns) {
           const { pattern, handler } = patterns[key];
           if (pattern.test(codeMetadata)) {
@@ -211,14 +269,13 @@ const useHandleCodeScanned = () => {
           }
         }
 
-        // --- Unknown Code Handling ---
-        return { // Default result for unknown code types
+        return {
           codeType: 'unknown',
           iconName: 'help',
           rawCodeValue: codeMetadata,
         };
       },
-      500 // Throttle time in milliseconds
+      500
     ),
     []
   );

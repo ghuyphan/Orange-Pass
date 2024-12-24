@@ -68,7 +68,7 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(({
     backgroundColor
 }, ref) => {
     const { currentTheme } = useTheme();
-  const { locale } = useLocale();
+    const { locale } = useLocale();
     const [localValue, setLocalValue] = useState(value);
     const [isSecure, setIsSecure] = useState(secureTextEntry);
     const [isErrorModalVisible, setIsErrorModalVisible] = useState(false);

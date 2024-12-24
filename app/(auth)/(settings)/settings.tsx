@@ -103,7 +103,7 @@ function SettingsScreen() {
     setIsModalVisible(true);
   }, []);
 
-  const settingsData: SettingsCardItem[][] = useMemo(() => [
+  const settingsData: SettingsCardItem[][] = [
     [
       { leftIcon: 'person-outline', settingsTitle: t('settingsScreen.editProfile'), onPress: () => {} },
       { leftIcon: 'lock-outline', settingsTitle: t('settingsScreen.changePassword'), onPress: () => {} },
@@ -114,7 +114,7 @@ function SettingsScreen() {
       { leftIcon: 'translate', settingsTitle: t('settingsScreen.language'), onPress: () => router.push('/language') },
       { leftIcon: 'contrast', settingsTitle: t('settingsScreen.appTheme'), onPress: () => router.push('/theme') },
     ],
-  ], []);
+  ];
 
   const renderItem = useCallback(({ item, index }: { item: SettingsCardItem[], index: number }) => (
     <View key={index} style={[styles.sectionContainer, { backgroundColor: sectionsColors }]}>
