@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { StyleSheet, View, FlatList, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, ActivityIndicator } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import * as SecureStore from 'expo-secure-store';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -24,6 +24,7 @@ import { Colors } from '@/constants/Colors';
 import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
 import { clearAuthData } from '@/store/reducers/authSlice';
 import { removeAllQrData } from '@/store/reducers/qrSlice';
+import { clearErrorMessage } from '@/store/reducers/errorSlice';
 import pb from '@/services/pocketBase';
 import { useMMKVString } from 'react-native-mmkv';
 import { useLocale } from '@/context/LocaleContext';
@@ -176,7 +177,7 @@ function SettingsScreen() {
             loadingLabel={t('settingsScreen.logingOut')}
             loading={isLoading}
             onPress={onLogout}
-            style={{ marginTop: 10 }}
+            style={{ marginTop: 15 }}
           />
         }
         scrollEventThrottle={16}
@@ -281,7 +282,7 @@ const styles = StyleSheet.create({
   },
   sectionContainer: {
     borderRadius: 16,
-    marginBottom: 20,
+    marginBottom: 15,
     overflow: 'hidden',
   },
 });

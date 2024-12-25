@@ -151,7 +151,7 @@ const OnBoardScreen = () => {
                     <View key={index} style={styles.featureContainer}>
                         <MaterialCommunityIcons
                             name={feature.icon as any}
-                            size={40}
+                            size={35}
                             color={iconColor}
                         />
                         <View style={styles.featureTextContainer}>

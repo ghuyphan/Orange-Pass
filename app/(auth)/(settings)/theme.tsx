@@ -67,7 +67,6 @@ const ThemeScreen = () => {
   }
   const renderThemeOption = (themeName: string, iconName: string, isChecked: boolean) => (
     <Pressable
-      android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
       onPress={() => {
         switch(themeName) {
           case 'light':

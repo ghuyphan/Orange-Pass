@@ -125,13 +125,13 @@ const ThemedReuseableSheet = forwardRef<BottomSheet, ReuseableSheetProps>(
                         onClose?.();
                     }}
                     style={styles.closeButton}
-                    android_ripple={{
-                        color: currentTheme === 'light'
-                            ? 'rgba(0, 0, 0, 0.2)'
-                            : 'rgba(255, 255, 255, 0.2)',
-                        foreground: true,
-                        borderless: true
-                    }}
+                    // android_ripple={{
+                    //     color: currentTheme === 'light'
+                    //         ? 'rgba(0, 0, 0, 0.2)'
+                    //         : 'rgba(255, 255, 255, 0.2)',
+                    //     foreground: true,
+                    //     borderless: true
+                    // }}
                 >
                     <MaterialCommunityIcons 
                         name="close" 
@@ -229,13 +229,13 @@ const ThemedReuseableSheet = forwardRef<BottomSheet, ReuseableSheetProps>(
                                     action.style,
                                     action.disabled && styles.disabledButton
                                 ]}
-                                android_ripple={{
-                                    color: currentTheme === 'light'
-                                        ? 'rgba(0, 0, 0, 0.2)'
-                                        : 'rgba(255, 255, 255, 0.2)',
-                                    foreground: true,
-                                    borderless: false
-                                }}
+                                // android_ripple={{
+                                //     color: currentTheme === 'light'
+                                //         ? 'rgba(0, 0, 0, 0.2)'
+                                //         : 'rgba(255, 255, 255, 0.2)',
+                                //     foreground: true,
+                                //     borderless: false
+                                // }}
                             >
                                 {action.icon && renderIcon(action)}
                                 <ThemedText

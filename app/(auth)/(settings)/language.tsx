@@ -69,7 +69,6 @@ const LanguageScreen = () => {
 
   const renderLanguageOption = (language: string, flag: React.ReactNode, localeCode: string) => (
     <Pressable
-      android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
       onPress={() => handleLanguageChange(localeCode)}
       key={localeCode}
     >
@@ -109,7 +108,6 @@ const LanguageScreen = () => {
           {renderLanguageOption('english', <GB width={35} height={35} />, 'en')}
 
           <Pressable
-            android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
             onPress={handleSystemLocale}
           >
             <View style={styles.section}>
@@ -183,7 +181,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingVertical: 15,
+    paddingVertical: 10,
   },
   leftSectionContainer: {
     flexDirection: 'row',
@@ -191,7 +189,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   flagIconContainer: {
-    width: 25,
+    width: 20,
     aspectRatio: 1,
     borderRadius: 50,
     justifyContent: 'center',
@@ -199,7 +197,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   iconContainer: {
-    width: 25,
+    width: 20,
     aspectRatio: 1,
     borderRadius: 50,
     overflow: 'hidden',

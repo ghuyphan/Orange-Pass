@@ -1,134 +1,154 @@
 import { useMemo } from 'react';
-import { StyleSheet, View, Pressable, Image } from 'react-native';
+import { StyleSheet, View, Pressable, Image, Dimensions } from 'react-native';
 import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
 import { ThemedButton } from '../buttons/ThemedButton';
-// import { useThemeColor } from '@/hooks/useThemeColor';
-// import { useColorScheme } from '@/hooks/useColorScheme';
 import { useTheme } from '@/context/ThemeContext';
 import { Colors } from '@/constants/Colors';
-// import CARD from '@/assets/svgs/card.svg';
 
 export type ThemedEmptyCardProps = {
-    /** Light color theme for the card text */
-    lightColor?: string;
-    /** Dark color theme for the card text */
-    darkColor?: string;
-    /** Header Label to display on the card */
-    headerLabel: string;
-    /** Footer Label to display on the card */
-    footerLabel: string;
-    /** Foot Button Label to display on the card */
-    footButtonLabel: string;
-    /** Function to call when the card is pressed */
-    cardOnPress: () => void;
-    /** Function to call when the button is pressed */
-    buttonOnPress: () => void;
-    /** Custom styles for the card */
-    style?: object;
-    /** Custom styles for the card footer */
-    footerStyle?: object
-    paddingTop?: number
+  /** Light color theme for the card text */
+  lightColor?: string;
+  /** Dark color theme for the card text */
+  darkColor?: string;
+  /** Header Label to display on the card */
+  headerLabel: string;
+  /** Footer Label to display on the card */
+  footerLabel: string;
+  /** Foot Button Label to display on the card */
+  footButtonLabel: string;
+  /** Function to call when the card is pressed */
+  cardOnPress: () => void;
+  /** Function to call when the button is pressed */
+  buttonOnPress: () => void;
+  /** Custom styles for the card */
+  style?: object;
+  /** Custom styles for the card footer */
+  footerStyle?: object;
+  /** Vertical padding for the header */
+  paddingTop?: number;
+  /** Image to display inside the card */
+  image?: any;
 };
 
-/**
- * ThemedCardEmpty is a reusable input component that adapts to the current theme.
- * It supports light and dark color themes, displays an optional icon, and handles
- * value changes with customizable styles.
- *
- * @param {ThemedEmptyCard} props - The properties for the ThemedInput component.
- * @returns {JSX.Element} The ThemedInput component.
- */
 export function ThemedEmptyCard({
-    lightColor,
-    darkColor,
-    headerLabel,
-    footerLabel,
-    footButtonLabel,
-    cardOnPress,
-    buttonOnPress,
-    style,
-    footerStyle,
-    paddingTop,
+  lightColor,
+  darkColor,
+  headerLabel,
+  footerLabel,
+  footButtonLabel,
+  cardOnPress,
+  buttonOnPress,
+  style,
+  footerStyle,
+  paddingTop,
+  image = require('@/assets/images/card.png'),
 }: ThemedEmptyCardProps) {
-    const { currentTheme: colorScheme } = useTheme();
-    // const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
-    const color = colorScheme === 'light' ? Colors.light.text : Colors.dark.text;
-    const buttoncolor = colorScheme === 'light' ? Colors.light.buttonBackground : Colors.dark.buttonBackground;
-    // const colorScheme = useColorScheme();
+  const { currentTheme: colorScheme } = useTheme();
+  const color = colorScheme === 'light' ? Colors.light.text : Colors.dark.text;
+  const buttoncolor =
+    colorScheme === 'light'
+      ? Colors.light.buttonBackground
+      : Colors.dark.buttonBackground;
 
-    const cardContainerStyle = useMemo(() => ([
-        {
-            backgroundColor: colorScheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground,
-            borderRadius: 16,
+  const windowWidth = Dimensions.get('window').width;
+  const windowHeight = Dimensions.get('window').height;
+
+  const cardContainerStyle = useMemo(
+    () => [
+      {
+        backgroundColor:
+          colorScheme === 'light'
+            ? Colors.light.cardBackground
+            : Colors.dark.cardBackground,
+        borderRadius: 16,
+        // paddingHorizontal: 20, // Consistent horizontal padding
+      },
+      style,
+    ],
+    [colorScheme, style, windowWidth],
+  );
+
+  const footerBackground = useMemo(
+    () => ({
+      backgroundColor:
+        colorScheme === 'light'
+          ? Colors.light.cardFooter
+          : Colors.dark.cardFooter,
+    }),
+    [colorScheme],
+  );
+
+  const dynamicStyles = useMemo(
+    () =>
+      StyleSheet.create({
+        cardHeaderContainer: {
+          flexDirection: 'row',
+          width: '100%', // Take full available width within padding
+          paddingTop: paddingTop || windowHeight * 0.02, // Relative padding
+          paddingHorizontal: 20,
         },
-        style,
-    ]), [colorScheme, style]);
+        label: {
+          fontSize: windowWidth > 360 ? 28 : 24,
+          lineHeight: windowWidth > 360 ? 38 : 32,
+        },
+        cardImageContainer: {
+          alignItems: 'center',
+          height: windowHeight * 0.3, // Relative height
+          justifyContent: 'center',
+          paddingBottom: windowHeight * 0.03, // Relative padding
+        },
+        image: {
+          width: windowWidth * 0.85, // 80% of screen width
+          height: windowHeight * 0.5, // 25% of screen height
+          resizeMode: 'contain', // Maintain aspect ratio
+        },
+        cardFooterContainer: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          paddingVertical: windowHeight * 0.02, // Relative padding
+          paddingHorizontal: 20,
+          justifyContent: 'space-between',
+          borderBottomLeftRadius: 16,
+          borderBottomRightRadius: 16,
+        },
+        cardFooterButton: {
+          paddingHorizontal: windowWidth * 0.05, // Relative padding
+          paddingVertical: windowHeight * 0.01, // Relative padding
+        },
+      }),
+    [windowWidth, windowHeight, paddingTop],
+  );
 
-    const footerBackground = useMemo(() => ({
-        backgroundColor: colorScheme === 'light' ? Colors.light.cardFooter : Colors.dark.cardFooter
-    }), [colorScheme]);
-
-    return (
-            <Pressable style={cardContainerStyle} onPress={cardOnPress}>
-                <ThemedView style={cardContainerStyle}>
-                    <View style={styles.cardHeaderContainer}>
-                        <ThemedText style={[styles.label, { color, paddingTop }]} type='title'>
-                            {headerLabel}
-                        </ThemedText>
-                    </View>
-                    <View style={styles.cardImageContainer}>
-                        <Image
-                            source={require('@/assets/images/card.png')}
-                            style={styles.image}
-                        />
-                        {/* <CARD width={320} height={320} /> */}
-                    </View>
-                    <View style={[styles.cardFooterContainer, footerBackground, footerStyle]}>
-                        <ThemedText>{footerLabel}</ThemedText>
-                        <ThemedButton label={footButtonLabel} onPress={buttonOnPress} style={[styles.cardFooterButton, { backgroundColor: buttoncolor }]} />
-                    </View>
-                </ThemedView>
-            </Pressable>
-    );
+  return (
+    <Pressable style={cardContainerStyle} onPress={cardOnPress}>
+      <ThemedView style={cardContainerStyle}>
+        <View style={dynamicStyles.cardHeaderContainer}>
+          <ThemedText style={[dynamicStyles.label, { color }]} type="title">
+            {headerLabel}
+          </ThemedText>
+        </View>
+        <View style={dynamicStyles.cardImageContainer}>
+          <Image source={image} style={dynamicStyles.image} />
+        </View>
+        <View
+          style={[
+            dynamicStyles.cardFooterContainer,
+            footerBackground,
+            footerStyle,
+          ]}
+        >
+          <ThemedText>{footerLabel}</ThemedText>
+          <ThemedButton
+            label={footButtonLabel}
+            onPress={buttonOnPress}
+            style={[
+              dynamicStyles.cardFooterButton,
+              { backgroundColor: buttoncolor },
+            ]}
+          />
+        </View>
+      </ThemedView>
+    </Pressable>
+  );
 }
-
-const styles = StyleSheet.create({
-    cardHeaderContainer: {
-        flexDirection: 'row',
-        width: '90%',
-        paddingHorizontal: 20,
-        paddingTop: 15,
-    },
-    label: {
-        fontSize: 28,
-        lineHeight: 38,
-    },
-    cardImageContainer: {
-        alignItems: 'center',
-        height: 230,
-        justifyContent: 'center',
-        paddingBottom: 20
-    },
-    image: {
-        width: 350, 
-        height: 300, 
-        resizeMode: 'cover',    
-        flexShrink: 1
-    },
-    cardFooterContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 15,
-        paddingHorizontal: 20,
-        // padding: 15,
-        justifyContent: 'space-between',
-        backgroundColor: '#6A524E',
-        borderBottomLeftRadius: 10,
-        borderBottomRightRadius: 10,
-    },
-    cardFooterButton: { 
-        paddingHorizontal: 20, 
-        paddingVertical: 5
-    }
-});

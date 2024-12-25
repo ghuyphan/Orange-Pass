@@ -38,29 +38,29 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
     fontWeight: '400',
-    // fontFamily: 'HelveticaNeue-Regular',
+    fontFamily: 'OpenSans-Regular',
   },
   defaultSemiBold: {
     fontSize: 16,
     lineHeight: 24,
     fontWeight: '600',
-    // fontFamily: 'SFProDisplay-SemiBold'
+    fontFamily: 'OpenSans-Regular',
   },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
     lineHeight: 32,
-    // fontFamily: 'HelveticaNeue-Bold',
+    fontFamily: 'OpenSans-Regular',
   },
   subtitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    // fontFamily: 'SFProDisplay-Regular',
+    fontFamily: 'OpenSans-Regular',
   },
   link: {
     lineHeight: 30,
     fontSize: 16,
     color: '#0a7ea4',
-    // fontFamily: 'SFProDisplay-Regular',
+    fontFamily: 'OpenSans-Regular',
   },
 });

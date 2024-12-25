@@ -249,7 +249,6 @@ const AddScreen: React.FC = () => {
         key={categoryItem.value}
         onPress={onPress}
         style={[styles.sheetItem, isSelected && styles.selectedItem]}
-        android_ripple={{ /* ... */ }}
       >
         <MaterialCommunityIcons
           color={iconColors}
@@ -275,7 +274,6 @@ const AddScreen: React.FC = () => {
         key={brandItem.code}
         onPress={onPress}
         style={[styles.sheetItem, isSelected && styles.selectedItem]}
-        android_ripple={{ /* ... */ }}
       >
         <View style={styles.brandIconContainer}>
           <Image source={getIconPath(brandItem.code)} style={styles.brandIcon} />
@@ -297,7 +295,6 @@ const AddScreen: React.FC = () => {
         key={metadataTypeItem.value}
         onPress={onPress}
         style={[styles.sheetItem, isSelected && styles.selectedItem]}
-        android_ripple={{ /* ... */ }}
       >
         <MaterialCommunityIcons
           color={iconColors}

@@ -150,7 +150,7 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(({
                                     onPress={onClear}
                                     style={styles.iconTouchable}
                                     hitSlop={{ top: 5, bottom: 5, left: 5, right: 5 }}
-                                    android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', borderless: false, radius: 10 }}
+                                    // android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', borderless: false, radius: 10 }}
                                 >
                                     <MaterialIcons
                                         name={'cancel'}

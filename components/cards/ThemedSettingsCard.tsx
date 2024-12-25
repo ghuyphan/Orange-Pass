@@ -35,7 +35,9 @@ export const ThemedSettingsCardItem = memo(function ThemedSettingsCardItem(props
     // const iconsColor = useThemeColor({ light: Colors.light.logoIcon, dark: Colors.dark.buttonBackground }, 'icon');
 
     return (
-        <Pressable onPress={onPress} android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}>
+        <Pressable onPress={onPress} 
+        // android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
+        >
             <View style={styles.settingsCardContainer}>
                 <View style={styles.leftContainer}>
                     <MaterialIcons name={leftIcon} size={iconSize} color={iconColor || colors} />
@@ -56,7 +58,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 20,
-        paddingVertical: 15,
+        paddingVertical: 10,
         overflow: 'hidden',
         borderRadius: 16,
     },

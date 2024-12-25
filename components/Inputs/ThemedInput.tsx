@@ -172,7 +172,7 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(({
                                 onPress={onClearValue}
                                 style={styles.iconTouchable}
                                 hitSlop={{ top: 5, bottom: 5, left: 5, right: 5 }}
-                                android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', borderless: false, radius: 10 }}
+                                // android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', borderless: false, radius: 10 }}
                             >
                                 <MaterialIcons
                                     name={'cancel'}
@@ -191,7 +191,7 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(({
                                     // secureTextEntry ? { marginLeft: 15 } : { marginRight: 0 }
                                 ]}
                                 hitSlop={{ top: 5, bottom: 5, left: 5, right: 5 }}
-                                android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', borderless: false, radius: 10 }}
+                                // android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', borderless: false, radius: 10 }}
                             >
                                 <MaterialIcons
                                     name={isSecure ? 'visibility' : 'visibility-off'}

@@ -70,7 +70,7 @@ export function ThemedTextButton({
                 accessibilityLabel={label}
                 accessibilityRole="button"
                 accessibilityHint={`Press to ${label}`}
-                android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
+                // android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
                 hitSlop={{bottom: 10, left: 10, right: 10, top: 10}}
                 style={buttonStyle}
 

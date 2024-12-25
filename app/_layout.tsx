@@ -36,7 +36,8 @@ export default function RootLayout() {
   // Font loading
   const [fontsLoaded, fontError] = useFonts({
     'HelveticaNeue-Bold': require('../assets/fonts/HelveticaNeueBold.ttf'),
-    // Add more custom fonts here
+    'OpenSans-Regular': require('../assets/fonts/OpenSans-VariableFont_wdth,wght.ttf'),
+    'OpenSans-Italic': require('../assets/fonts/OpenSans-Italic-VariableFont_wdth,wght.ttf'),
   });
 
   // App initialization state

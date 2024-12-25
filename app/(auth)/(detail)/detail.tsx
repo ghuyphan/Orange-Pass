@@ -243,7 +243,6 @@ const DetailScreen = () => {
     const renderSuggestionItem = useCallback(({ item: suggestionItem }: { item: string }) => (
         <Pressable
             onPress={() => setAmount(suggestionItem)}
-            android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
             style={[
                 styles.suggestionItem,
                 {
@@ -262,7 +261,6 @@ const DetailScreen = () => {
         <Pressable
             style={[styles.bankItemPressable, { backgroundColor: buttonColor }]}
             onPress={() => handleOpenBank(bankItem.code)}
-            android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
         >
             <View style={styles.bankIconContainer}>
                 <Image source={getIconPath(bankItem.code)} style={styles.bankIcon} resizeMode='contain' />
@@ -314,7 +312,6 @@ const DetailScreen = () => {
                 {/* Map Action */}
                 <Pressable
                     onPress={handleOpenMap}
-                    android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', borderless: false }}
                     style={styles.actionButton}
                 >
                     <View style={styles.actionHeader}>
@@ -477,7 +474,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 20,
-        paddingVertical: 15,
+        paddingVertical: 10,
         gap: 10,
         borderRadius: 16,
         overflow: 'hidden',
@@ -502,7 +499,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: 20,
-        paddingVertical: 15,
+        paddingVertical: 10,
         gap: 10,
         borderRadius: 16,
         overflow: 'hidden'
@@ -572,15 +569,17 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        width: 22,
-        height: 22,
-        borderRadius: 50,
+        width: 24, 
+        height: 24, 
+        borderRadius: 12,
         overflow: 'hidden',
         marginHorizontal: 12,
         borderWidth: 1,
     },
     currencyText: {
         fontSize: 16,
+        alignSelf: 'center',
+        marginRight: 1,
     },
     suggestionList: {
         // No changes needed here
@@ -623,7 +622,7 @@ const styles = StyleSheet.create({
         gap: 10,
         alignItems: 'center',
         paddingHorizontal: 20,
-        paddingVertical: 15,
+        paddingVertical: 10,
     }
 });
 

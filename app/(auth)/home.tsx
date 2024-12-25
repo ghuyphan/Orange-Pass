@@ -39,6 +39,7 @@ import {
   insertOrUpdateQrCodes,
   updateQrIndexes,
   filterQrCodesByType,
+  hasLocalData
 } from '@/services/localDB/qrDB';
 
 
@@ -78,7 +79,7 @@ function HomeScreen() {
   // 4. Loading and Syncing
   const [isLoading, setIsLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
-  const [isEmpty, setIsEmpty] = useState(false);
+  const [isEmpty, setIsEmpty] = useState(true);
 
   // 5. UI State
   const [isActive, setIsActive] = useState(false);
@@ -116,16 +117,35 @@ function HomeScreen() {
   const emptyCardOffset = useSharedValue(300);
   const scrollY = useSharedValue(0);
 
+  const shouldSyncInitially = useCallback(async (userId: string) => {
+    if (!userId) return false;
+
+    const hasLocal = await hasLocalData(userId);
+    if (hasLocal) return true;
+
+    if (!isOffline) {
+      try {
+        const serverData: ServerRecord[] = await fetchServerData(userId);
+        if (serverData.length > 0) return true;
+      } catch (error) {
+        console.error('Error checking server data for initial sync:', error);
+        return true; // Assume sync needed on error
+      }
+    }
+
+    return false;
+  }, [isOffline, userId]);
+
   const syncWithServer = useCallback(async (userId: string) => {
     if (isOffline) {
-      setIsEmpty(qrData.length === 0);
+      // If offline, update isEmpty based on local data only
+      const hasLocal = await hasLocalData(userId);
+      setIsEmpty(!hasLocal);
       setIsLoading(false);
       return;
     }
 
-    if (isSyncing) {
-      return;
-    }
+    if (isSyncing) return;
 
     try {
       setIsSyncing(true);
@@ -136,48 +156,55 @@ function HomeScreen() {
       await syncQrCodes(userId);
 
       // 2. Fetch Server Data and Update Local DB
-      const serverData: ServerRecord[] = await fetchServerData(userId); // Type serverData
+      const serverData: ServerRecord[] = await fetchServerData(userId);
       if (serverData.length > 0) {
         await insertOrUpdateQrCodes(serverData);
       }
 
-      // 3. Update UI (if needed)
-      const localData = await getQrCodesByUserId(userId);
+      // 3. Update UI
+      const localData = await getQrCodesByUserId(userId); // Still needed to get the full data for the UI
       dispatch(setQrData(localData));
-      setIsEmpty(localData.length === 0);
+
+      // Update isEmpty based on the potentially updated local data
+      const hasLocal = await hasLocalData(userId); 
+      setIsEmpty(!hasLocal);
 
     } catch (error) {
       console.error('Error syncing QR codes:', error);
       setToastMessage(t('homeScreen.syncError'));
       setIsToastVisible(true);
-      setIsEmpty(qrData.length === 0);
+      // On error, rely on hasLocalData to determine isEmpty
+      const hasLocal = await hasLocalData(userId);
+      setIsEmpty(!hasLocal);
     } finally {
-      // Reset isSyncing only after the entire operation is complete
       setIsLoading(false);
       setIsToastVisible(false);
       setIsSyncing(false);
     }
-  }, [isOffline, isSyncing, dispatch, qrData, userId]); // Include userId in dependencies
+  }, [isOffline, isSyncing, dispatch, userId]);
 
   useEffect(() => {
     if (!userId) return;
 
     const initializeData = async () => {
-      const unSyncedData = await getUnsyncedQrCodes(userId);
-      if (unSyncedData.length > 0 || qrData.length === 0) {
+      const needsInitialSync = await shouldSyncInitially(userId);
+      if (needsInitialSync) {
         console.log('Initial sync required.');
-        setIsLoading(true);
+        // setIsLoading(true); // Already true initially
         await syncWithServer(userId).catch(error => {
           console.error('Error during initial sync:', error);
         });
       } else {
-        setIsEmpty(qrData.length === 0);
-        // setIsLoading(false);
+        console.log('No initial sync needed.');
+        setIsEmpty(true); // Update isEmpty correctly
       }
+
+      // Set isLoading to false only after initial sync or check
+      setIsLoading(false);
     };
 
     initializeData();
-  }, [userId]);
+  }, [userId, shouldSyncInitially]);
 
   useEffect(() => {
     // Only show online/offline toast if there's an actual change in network state
