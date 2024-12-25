@@ -1,10 +1,11 @@
-import { useMemo } from 'react';
-import { StyleSheet, View, Pressable, Image, Dimensions } from 'react-native';
+import React, { useMemo } from 'react';
+import { Image, StyleSheet, View, Pressable } from 'react-native';
 import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
 import { ThemedButton } from '../buttons/ThemedButton';
 import { useTheme } from '@/context/ThemeContext';
 import { Colors } from '@/constants/Colors';
+import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
 
 export type ThemedEmptyCardProps = {
   /** Light color theme for the card text */
@@ -47,36 +48,25 @@ export function ThemedEmptyCard({
   const { currentTheme: colorScheme } = useTheme();
   const color = colorScheme === 'light' ? Colors.light.text : Colors.dark.text;
   const buttoncolor =
-    colorScheme === 'light'
-      ? Colors.light.buttonBackground
-      : Colors.dark.buttonBackground;
-
-  const windowWidth = Dimensions.get('window').width;
-  const windowHeight = Dimensions.get('window').height;
+    colorScheme === 'light' ? Colors.light.buttonBackground : Colors.dark.buttonBackground;
 
   const cardContainerStyle = useMemo(
     () => [
       {
         backgroundColor:
-          colorScheme === 'light'
-            ? Colors.light.cardBackground
-            : Colors.dark.cardBackground,
-        borderRadius: 16,
-        // paddingHorizontal: 20, // Consistent horizontal padding
+          colorScheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground,
+        borderRadius: getResponsiveWidth(4),
       },
       style,
     ],
-    [colorScheme, style, windowWidth],
+    [colorScheme, style]
   );
 
   const footerBackground = useMemo(
     () => ({
-      backgroundColor:
-        colorScheme === 'light'
-          ? Colors.light.cardFooter
-          : Colors.dark.cardFooter,
+      backgroundColor: colorScheme === 'light' ? Colors.light.cardFooter : Colors.dark.cardFooter,
     }),
-    [colorScheme],
+    [colorScheme]
   );
 
   const dynamicStyles = useMemo(
@@ -85,39 +75,39 @@ export function ThemedEmptyCard({
         cardHeaderContainer: {
           flexDirection: 'row',
           width: '100%', // Take full available width within padding
-          paddingTop: paddingTop || windowHeight * 0.02, // Relative padding
-          paddingHorizontal: 20,
+          paddingTop: paddingTop || getResponsiveHeight(2), // Responsive padding
+          paddingHorizontal: getResponsiveWidth(4.8),
         },
         label: {
-          fontSize: windowWidth > 360 ? 28 : 24,
-          lineHeight: windowWidth > 360 ? 38 : 32,
+          fontSize: getResponsiveFontSize(28),
+          lineHeight: getResponsiveFontSize(38),
         },
         cardImageContainer: {
           alignItems: 'center',
-          height: windowHeight * 0.3, // Relative height
+          height: getResponsiveHeight(30), // Responsive height
           justifyContent: 'center',
-          paddingBottom: windowHeight * 0.03, // Relative padding
+          paddingBottom: getResponsiveHeight(3), // Responsive padding
         },
         image: {
-          width: windowWidth * 0.85, // 80% of screen width
-          height: windowHeight * 0.5, // 25% of screen height
+          width: getResponsiveWidth(90), // 85% of screen width
+          height: getResponsiveHeight(38), // 30% of screen height
           resizeMode: 'contain', // Maintain aspect ratio
         },
         cardFooterContainer: {
           flexDirection: 'row',
           alignItems: 'center',
-          paddingVertical: windowHeight * 0.02, // Relative padding
-          paddingHorizontal: 20,
+          paddingVertical: getResponsiveHeight(1.8),
+          paddingHorizontal: getResponsiveWidth(4.8),
           justifyContent: 'space-between',
-          borderBottomLeftRadius: 16,
-          borderBottomRightRadius: 16,
+          borderBottomLeftRadius: getResponsiveWidth(4),
+          borderBottomRightRadius: getResponsiveWidth(4),
         },
         cardFooterButton: {
-          paddingHorizontal: windowWidth * 0.05, // Relative padding
-          paddingVertical: windowHeight * 0.01, // Relative padding
+          paddingHorizontal: getResponsiveWidth(5), // Responsive padding
+          paddingVertical: getResponsiveHeight(1), // Responsive padding
         },
       }),
-    [windowWidth, windowHeight, paddingTop],
+    [paddingTop]
   );
 
   return (
@@ -132,20 +122,13 @@ export function ThemedEmptyCard({
           <Image source={image} style={dynamicStyles.image} />
         </View>
         <View
-          style={[
-            dynamicStyles.cardFooterContainer,
-            footerBackground,
-            footerStyle,
-          ]}
+          style={[dynamicStyles.cardFooterContainer, footerBackground, footerStyle]}
         >
           <ThemedText>{footerLabel}</ThemedText>
           <ThemedButton
             label={footButtonLabel}
             onPress={buttonOnPress}
-            style={[
-              dynamicStyles.cardFooterButton,
-              { backgroundColor: buttoncolor },
-            ]}
+            style={[dynamicStyles.cardFooterButton, { backgroundColor: buttoncolor }]}
           />
         </View>
       </ThemedView>

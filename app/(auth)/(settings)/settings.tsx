@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { memo, useCallback, useMemo, useState } from 'react';
 import { StyleSheet, View, ActivityIndicator } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import * as SecureStore from 'expo-secure-store';
@@ -30,6 +30,7 @@ import { useMMKVString } from 'react-native-mmkv';
 import { useLocale } from '@/context/LocaleContext';
 import { useTheme } from '@/context/ThemeContext';
 import { MaterialIcons } from '@expo/vector-icons';
+import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
 
 // Define the type for your settings card items
 interface SettingsCardItem {
@@ -50,25 +51,19 @@ function SettingsScreen() {
   const email = useSelector((state: RootState) => state.auth.user?.email ?? '-');
   const name = useSelector((state: RootState) => state.auth.user?.name ?? '-');
 
-  const sectionsColors = useMemo(() => currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground, [currentTheme]);
+  const sectionsColors = useMemo(
+    () =>
+      currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground,
+    [currentTheme]
+  );
 
   const scrollHandler = useAnimatedScrollHandler((event) => {
     scrollY.value = event.contentOffset.y;
   });
 
   const titleContainerStyle = useAnimatedStyle(() => {
-    const opacity = interpolate(
-      scrollY.value,
-      [40, 70],
-      [1, 0],
-      Extrapolation.CLAMP
-    );
-    const translateY = interpolate(
-      scrollY.value,
-      [0, 150],
-      [0, -35],
-      Extrapolation.CLAMP
-    );
+    const opacity = interpolate(scrollY.value, [40, 70], [1, 0], Extrapolation.CLAMP);
+    const translateY = interpolate(scrollY.value, [0, 150], [0, -35], Extrapolation.CLAMP);
 
     return {
       opacity,
@@ -88,7 +83,7 @@ function SettingsScreen() {
       await SecureStore.deleteItemAsync('authToken');
       pb.authStore.clear();
     } catch (error) {
-      console.error("Logout error:", error);
+      console.error('Logout error:', error);
     } finally {
       setTimeout(() => {
         setIsLoading(false);
@@ -106,24 +101,50 @@ function SettingsScreen() {
 
   const settingsData: SettingsCardItem[][] = [
     [
-      { leftIcon: 'person-outline', settingsTitle: t('settingsScreen.editProfile'), onPress: () => {} },
-      { leftIcon: 'lock-outline', settingsTitle: t('settingsScreen.changePassword'), onPress: () => {} },
-      { leftIcon: 'mail-outline', settingsTitle: t('settingsScreen.changeEmail'), onPress: () => {} },
+      {
+        leftIcon: 'person-outline',
+        settingsTitle: t('settingsScreen.editProfile'),
+        onPress: () => {},
+      },
+      {
+        leftIcon: 'lock-outline',
+        settingsTitle: t('settingsScreen.changePassword'),
+        onPress: () => {},
+      },
+      {
+        leftIcon: 'mail-outline',
+        settingsTitle: t('settingsScreen.changeEmail'),
+        onPress: () => {},
+      },
     ],
     [
       { leftIcon: 'info-outline', settingsTitle: t('settingsScreen.about'), onPress: () => {} },
-      { leftIcon: 'translate', settingsTitle: t('settingsScreen.language'), onPress: () => router.push('/language') },
-      { leftIcon: 'contrast', settingsTitle: t('settingsScreen.appTheme'), onPress: () => router.push('/theme') },
+      {
+        leftIcon: 'translate',
+        settingsTitle: t('settingsScreen.language'),
+        onPress: () => router.push('/language'),
+      },
+      {
+        leftIcon: 'contrast',
+        settingsTitle: t('settingsScreen.appTheme'),
+        onPress: () => router.push('/theme'),
+      },
     ],
   ];
 
-  const renderItem = useCallback(({ item, index }: { item: SettingsCardItem[], index: number }) => (
-    <View key={index} style={[styles.sectionContainer, { backgroundColor: sectionsColors }]}>
-      {item.map((subItem) => (
-        <ThemedSettingsCardItem key={subItem.settingsTitle} {...subItem} />
-      ))}
-    </View>
-  ), [sectionsColors]);
+  const renderItem = useCallback(
+    ({ item, index }: { item: SettingsCardItem[]; index: number }) => (
+      <View
+        key={index}
+        style={[styles.sectionContainer, { backgroundColor: sectionsColors }]}
+      >
+        {item.map((subItem) => (
+          <ThemedSettingsCardItem key={subItem.settingsTitle} {...subItem} />
+        ))}
+      </View>
+    ),
+    [sectionsColors]
+  );
 
   return (
     <ThemedView style={styles.container}>
@@ -138,7 +159,9 @@ function SettingsScreen() {
               onPress={onNavigateBack}
             />
           </View>
-          <ThemedText style={styles.title} type="title">{t('settingsScreen.title')}</ThemedText>
+          <ThemedText style={styles.title} type="title">
+            {t('settingsScreen.title')}
+          </ThemedText>
         </View>
       </Animated.View>
 
@@ -157,16 +180,20 @@ function SettingsScreen() {
               style={styles.gradient}
             >
               {avatarConfig ? (
-                <Avatar size={45} {...avatarConfig} />
+                <Avatar size={getResponsiveWidth(11)} {...avatarConfig} />
               ) : (
                 <View style={styles.avatarLoadContainer}>
-                  <ActivityIndicator size={10} color="white" />
+                  <ActivityIndicator size={getResponsiveFontSize(10)} color="white" />
                 </View>
               )}
             </LinearGradient>
             <View style={styles.userContainer}>
-              <ThemedText numberOfLines={1} style={styles.userEmail}>{name}</ThemedText>
-              <ThemedText numberOfLines={1} style={styles.userName}>{email}</ThemedText>
+              <ThemedText numberOfLines={1} style={styles.userEmail}>
+                {name}
+              </ThemedText>
+              <ThemedText numberOfLines={1} style={styles.userName}>
+                {email}
+              </ThemedText>
             </View>
           </View>
         }
@@ -177,7 +204,7 @@ function SettingsScreen() {
             loadingLabel={t('settingsScreen.logingOut')}
             loading={isLoading}
             onPress={onLogout}
-            style={{ marginTop: 15 }}
+            style={{ marginTop: getResponsiveHeight(1.8) }}
           />
         }
         scrollEventThrottle={16}
@@ -207,26 +234,26 @@ const styles = StyleSheet.create({
   },
   titleContainer: {
     position: 'absolute',
-    top: STATUSBAR_HEIGHT + 45,
+    top: getResponsiveHeight(10),
     left: 0,
     right: 0,
   },
   headerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 15,
-    gap: 15,
+    paddingHorizontal: getResponsiveWidth(3.6),
+    gap: getResponsiveWidth(3.6),
   },
   titleButtonContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 15,
+    gap: getResponsiveWidth(3.6),
   },
   titleButton: {
     zIndex: 11,
   },
   title: {
-    fontSize: 28,
+    fontSize: getResponsiveFontSize(28),
   },
   blurContainer: {
     position: 'absolute',
@@ -238,51 +265,51 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flexGrow: 1,
-    paddingHorizontal: 15,
-    paddingTop: STATUSBAR_HEIGHT + 105,
+    paddingHorizontal: getResponsiveWidth(3.6),
+    paddingTop: getResponsiveHeight(18),
   },
   gradient: {
-    borderRadius: 50,
+    borderRadius: getResponsiveWidth(12),
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 5,
+    padding: getResponsiveWidth(1.2),
   },
   avatarContainer: {
     alignItems: 'center',
     flexDirection: 'row',
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    marginBottom: 30,
-    borderRadius: 16,
+    paddingVertical: getResponsiveHeight(1.8),
+    paddingHorizontal: getResponsiveWidth(4.8),
+    marginBottom: getResponsiveHeight(3.6),
+    borderRadius: getResponsiveWidth(4),
     gap: 0,
   },
   avatarLoadContainer: {
-    width: 45,
+    width: getResponsiveWidth(11),
     aspectRatio: 1,
-    borderRadius: 50,
+    borderRadius: getResponsiveWidth(12),
     justifyContent: 'center',
     alignItems: 'center',
   },
   userContainer: {
     justifyContent: 'center',
     flexDirection: 'column',
-    paddingHorizontal: 15,
-    borderRadius: 16,
+    paddingHorizontal: getResponsiveWidth(3.6),
+    borderRadius: getResponsiveWidth(4),
     maxWidth: '80%',
     overflow: 'hidden',
   },
   userEmail: {
-    fontSize: 16,
+    fontSize: getResponsiveFontSize(16),
     fontWeight: 'bold',
   },
   userName: {
     opacity: 0.7,
-    fontSize: 14,
+    fontSize: getResponsiveFontSize(14),
     width: '100%',
   },
   sectionContainer: {
-    borderRadius: 16,
-    marginBottom: 15,
+    borderRadius: getResponsiveWidth(4),
+    marginBottom: getResponsiveHeight(1.8),
     overflow: 'hidden',
   },
 });

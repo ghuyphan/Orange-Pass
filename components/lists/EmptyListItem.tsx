@@ -4,8 +4,8 @@ import Animated from 'react-native-reanimated';
 import { ThemedEmptyCard } from '@/components/cards';
 import { t } from '@/i18n';
 import { AnimatedStyle } from 'react-native-reanimated';
-import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
 import { NativeScrollEvent, NativeSyntheticEvent, StyleSheet } from 'react-native';
+import { getResponsiveHeight, getResponsiveWidth } from '@/utils/responsive';
 
 interface EmptyListItemProps {
     scrollHandler: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
@@ -41,11 +41,11 @@ const EmptyListItem: React.FC<EmptyListItemProps> = ({
 
 const styles = StyleSheet.create({
     scrollContainer: {
-        paddingTop: STATUSBAR_HEIGHT + 110,
+        paddingTop: getResponsiveHeight(18),
         flex: 1,
       },
       emptyCard: {
-        marginHorizontal: 15,
+        marginHorizontal: getResponsiveWidth(3.6),
       },
 })
 export default EmptyListItem;

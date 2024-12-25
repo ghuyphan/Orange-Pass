@@ -13,14 +13,13 @@ import { Colors } from '@/constants/Colors';
 import { t } from '@/i18n';
 import { registrationSchema } from '@/utils/validationSchemas';
 import { register } from '@/services/auth';
-import { width, height } from '@/constants/Constants';
-import { useLocale } from "@/context/LocaleContext";
+import { useLocale } from '@/context/LocaleContext';
 import { genConfig } from '@zamplyy/react-native-nice-avatar';
 import LOGO from '@/assets/svgs/orange-logo.svg';
 import { useTheme } from '@/context/ThemeContext';
+import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
 
 export default function RegisterScreen() {
-    // const colorScheme = useColorScheme();
     const { currentTheme } = useTheme();
     const { locale } = useLocale();
     const [isToastVisible, setIsToastVisible] = useState(false);
@@ -55,7 +54,7 @@ export default function RegisterScreen() {
                 try {
                     const avatarConfig = genConfig({
                         bgColor: '#FAFAFA',
-                        hatStyle: "none",
+                        hatStyle: 'none',
                         faceColor: '#F9C9B6',
                     });
                     const avatar = JSON.stringify(avatarConfig);
@@ -77,28 +76,37 @@ export default function RegisterScreen() {
             {({ handleChange, handleBlur, handleSubmit, values, errors, touched, isSubmitting }) => (
                 <KeyboardAwareScrollView
                     keyboardShouldPersistTaps="handled"
-                    style={[{ backgroundColor: currentTheme === 'light' ? Colors.light.background : Colors.dark.background }]}
+                    style={[
+                        {
+                            backgroundColor:
+                                currentTheme === 'light' ? Colors.light.background : Colors.dark.background,
+                        },
+                    ]}
                     contentContainerStyle={styles.container}
-                    extraScrollHeight={100}
+                    extraScrollHeight={getResponsiveHeight(12)}
                     scrollEnabled={isKeyboardVisible}
                     showsVerticalScrollIndicator={false}
                     enableOnAndroid
                 >
                     <View style={styles.topContainer}>
                         <View style={styles.logoContainer}>
-                            <LOGO width={width * 0.14} height={width * 0.14} />
+                            <LOGO width={getResponsiveWidth(14)} height={getResponsiveWidth(14)} />
                         </View>
-                        <ThemedText style={styles.title} type='title'>{t('registerScreen.registerNewAccount')}</ThemedText>
+                        <ThemedText style={styles.title} type="title">
+                            {t('registerScreen.registerNewAccount')}
+                        </ThemedText>
                     </View>
                     <View style={[styles.inputContainer, { backgroundColor: cardColor }]}>
-                    <ThemedInput
+                        <ThemedInput
                             label={t('registerScreen.email')}
                             placeholder={t('registerScreen.emailPlaceholder')}
                             onChangeText={handleChange('email')}
                             isError={touched.email && errors.email ? true : false}
                             onBlur={handleBlur('email')}
                             value={values.email}
-                            errorMessage={touched.email && errors.email ? t(`registerScreen.errors.${errors.email}`) : ''}
+                            errorMessage={
+                                touched.email && errors.email ? t(`registerScreen.errors.${errors.email}`) : ''
+                            }
                         />
                         <ThemedView style={styles.divider} />
                         <ThemedInput
@@ -108,7 +116,11 @@ export default function RegisterScreen() {
                             isError={touched.fullName && errors.fullName ? true : false}
                             onBlur={handleBlur('fullName')}
                             value={values.fullName}
-                            errorMessage={touched.fullName && errors.fullName ? t(`registerScreen.errors.${errors.fullName}`) : ''}
+                            errorMessage={
+                                touched.fullName && errors.fullName
+                                    ? t(`registerScreen.errors.${errors.fullName}`)
+                                    : ''
+                            }
                         />
                         <ThemedView style={styles.divider} />
                         <ThemedInput
@@ -119,7 +131,11 @@ export default function RegisterScreen() {
                             isError={touched.password && errors.password ? true : false}
                             onBlur={handleBlur('password')}
                             value={values.password}
-                            errorMessage={touched.password && errors.password ? t(`registerScreen.errors.${errors.password}`) : ''}
+                            errorMessage={
+                                touched.password && errors.password
+                                    ? t(`registerScreen.errors.${errors.password}`)
+                                    : ''
+                            }
                         />
                         <ThemedView style={styles.divider} />
                         <ThemedInput
@@ -130,7 +146,11 @@ export default function RegisterScreen() {
                             isError={touched.confirmPassword && errors.confirmPassword ? true : false}
                             onBlur={handleBlur('confirmPassword')}
                             value={values.confirmPassword}
-                            errorMessage={touched.confirmPassword && errors.confirmPassword ? t(`registerScreen.errors.${errors.confirmPassword}`) : ''}
+                            errorMessage={
+                                touched.confirmPassword && errors.confirmPassword
+                                    ? t(`registerScreen.errors.${errors.confirmPassword}`)
+                                    : ''
+                            }
                         />
                     </View>
                     <ThemedButton
@@ -146,9 +166,8 @@ export default function RegisterScreen() {
                         style={styles.toastContainer}
                         onDismiss={onDismissToast}
                         onVisibilityToggle={setIsToastVisible}
-                        iconName='error'
+                        iconName="error"
                     />
-
                 </KeyboardAwareScrollView>
             )}
         </Formik>
@@ -157,48 +176,46 @@ export default function RegisterScreen() {
 
 const styles = StyleSheet.create({
     container: {
-        // flex: 1,
         flexGrow: 1,
-        marginHorizontal: 15,
-        maxHeight: '150%',
+        marginHorizontal: getResponsiveWidth(3.6),
     },
     topContainer: {
-        marginTop: 105,
-        gap: 20,
-        alignItems: 'center'
+        marginTop: getResponsiveHeight(10),
+        gap: getResponsiveHeight(2.4),
+        alignItems: 'center',
     },
     logoContainer: {
         backgroundColor: '#FFF5E1',
-        padding: 14,
-        borderRadius: 20,
+        padding: getResponsiveWidth(3.5),
+        borderRadius: getResponsiveWidth(5),
         alignSelf: 'center',
     },
     title: {
-        marginBottom: 30,
-        fontSize: 28,
+        marginBottom: getResponsiveHeight(3.6),
+        fontSize: getResponsiveFontSize(25),
         textAlign: 'center',
     },
     inputContainer: {
-        borderRadius: 16,
-        marginBottom: 20
+        borderRadius: getResponsiveWidth(4),
+        marginBottom: getResponsiveHeight(2.4),
     },
     divider: {
-        height: 3,
+        height: getResponsiveHeight(0.3),
     },
     registerButton: {
-        marginTop: 20,
+        marginTop: getResponsiveHeight(2.4),
     },
     registerContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        marginTop: 20,
+        marginTop: getResponsiveHeight(2.4),
     },
     toastContainer: {
         position: 'absolute',
-        bottom: 30,
+        bottom: getResponsiveHeight(3.6),
         left: 0,
         right: 0,
-        marginHorizontal: 15,
-    }
+        marginHorizontal: getResponsiveWidth(3.6),
+    },
 });

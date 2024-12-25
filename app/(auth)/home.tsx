@@ -63,6 +63,7 @@ import { ThemedBottomToast } from '@/components/toast/ThemedBottomToast';
 import ThemedFilter from '@/components/ThemedFilter';
 import EmptyListItem from '@/components/lists/EmptyListItem';
 import LinkingSheetContent from '@/components/bottomsheet/LinkingSheetContent';
+import { getResponsiveHeight } from '@/utils/responsive';
 
 // 5. Internationalization
 import { t } from '@/i18n';
@@ -79,7 +80,7 @@ function HomeScreen() {
   // 4. Loading and Syncing
   const [isLoading, setIsLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
-  const [isEmpty, setIsEmpty] = useState(true);
+  const [isEmpty, setIsEmpty] = useState(false);
 
   // 5. UI State
   const [isActive, setIsActive] = useState(false);
@@ -134,7 +135,7 @@ function HomeScreen() {
     }
 
     return false;
-  }, [isOffline, userId]);
+  }, [isOffline]);
 
   const syncWithServer = useCallback(async (userId: string) => {
     if (isOffline) {
@@ -181,31 +182,32 @@ function HomeScreen() {
       setIsToastVisible(false);
       setIsSyncing(false);
     }
-  }, [isOffline, isSyncing, dispatch, userId]);
+  }, [isOffline, isSyncing, dispatch]);
 
   useEffect(() => {
     if (!userId) return;
-
+  
     const initializeData = async () => {
+      setIsLoading(true); // Start with loading state
+  
       const needsInitialSync = await shouldSyncInitially(userId);
       if (needsInitialSync) {
         console.log('Initial sync required.');
-        // setIsLoading(true); // Already true initially
         await syncWithServer(userId).catch(error => {
           console.error('Error during initial sync:', error);
-        });
+        }); 
       } else {
         console.log('No initial sync needed.');
-        setIsEmpty(true); // Update isEmpty correctly
+        const hasLocal = await hasLocalData(userId); // Check local data
+        setIsEmpty(!hasLocal); // Set isEmpty based on local data
       }
-
-      // Set isLoading to false only after initial sync or check
-      setIsLoading(false);
+  
+      setIsLoading(false); // Set isLoading to false after checks
     };
-
+  
     initializeData();
   }, [userId, shouldSyncInitially]);
-
+  
   useEffect(() => {
     // Only show online/offline toast if there's an actual change in network state
     if (isOffline) {
@@ -395,10 +397,10 @@ function HomeScreen() {
     ), []
   );
 
-  const onOpenSheet = (type: SheetType, id?: string, url?: string, ssid?: string) => {
+  const onOpenSheet = useCallback((type: SheetType, id?: string, url?: string, ssid?: string) => {
     setSheetType(type);
     setIsSheetOpen(true);
-    setSelectedItemId(id || null); // Set selectedItemId only if id is provided
+    setSelectedItemId(id || null);
 
     switch (type) {
         case 'wifi':
@@ -409,18 +411,18 @@ function HomeScreen() {
         case 'linking':
             bottomSheetRef.current?.snapToIndex(0);
             if (url) {
-                // Store the URL in a state variable
                 setLinkingUrl(url);
             }
             break;
         default:
     }
-};
+}, [bottomSheetRef, setSheetType, setIsSheetOpen, setSelectedItemId, setLinkingUrl]);
 
-  const onOpenGallery = useGalleryPicker({
+// Update the onOpenGallery usage to use the memoized onOpenSheet
+const onOpenGallery = useGalleryPicker({
     onOpenSheet,
     onNavigateToAddScreen,
-  });
+});
 
   // In your existing code where you define scrollHandler
   const scrollHandler = useAnimatedScrollHandler((event) => {
@@ -768,7 +770,7 @@ const styles = StyleSheet.create({
   },
   titleContainer: {
     position: 'absolute',
-    top: STATUSBAR_HEIGHT + 45,
+    top: getResponsiveHeight(10),
     left: 0,
     right: 0,
     flexDirection: 'column',

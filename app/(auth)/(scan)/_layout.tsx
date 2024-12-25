@@ -6,6 +6,7 @@ import { useRouter, Redirect } from 'expo-router';
 import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
 import { ThemedView } from '@/components/ThemedView';
 import { useCameraPermission } from 'react-native-vision-camera';
+import { getResponsiveHeight } from '@/utils/responsive';
 
 export default function ScanLayout() {
   const segments = useSegments().toString();
@@ -53,7 +54,7 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     position: 'absolute',
-    top: STATUSBAR_HEIGHT + 45,
+    top: getResponsiveHeight(10),
     left: 15,
     zIndex: 10,
   },

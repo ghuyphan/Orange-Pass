@@ -8,6 +8,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { getIconPath } from '@/utils/returnIcon';
 import { returnItemData } from '@/utils/returnItemData';
 import { returnMidpointColors } from '@/utils/returnMidpointColor';
+import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
 
 export type ThemedCardItemProps = {
   isActive?: boolean;
@@ -87,14 +88,29 @@ const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps):
           <View style={styles.logoContainer}>
             <Image source={iconPath} style={styles.logo} resizeMode="contain" />
           </View>
-          <Text numberOfLines={1} ellipsizeMode="tail" style={styles.cardName}>{name}</Text>
+          <Text
+            numberOfLines={1}
+            ellipsizeMode="tail"
+            style={styles.cardName}
+          >
+            {name}
+          </Text>
         </View>
         {onMoreButtonPress && (
           <Pressable
             onPress={onMoreButtonPress}
-            hitSlop={{ bottom: 40, left: 30, right: 30, top: 30 }}
+            hitSlop={{
+              bottom: getResponsiveHeight(4.8),
+              left: getResponsiveWidth(7.2),
+              right: getResponsiveWidth(7.2),
+              top: getResponsiveHeight(3.6),
+            }}
           >
-            <MaterialCommunityIcons name="dots-vertical" size={20} color="white" />
+            <MaterialCommunityIcons
+              name="dots-vertical"
+              size={getResponsiveFontSize(20)}
+              color="white"
+            />
           </Pressable>
         )}
       </View>
@@ -102,23 +118,46 @@ const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps):
       {/* Card Footer */}
       <View style={styles.cardFooter}>
         <View style={styles.footerLeft}>
-          <Text numberOfLines={1} ellipsizeMode="tail" style={styles.cardHolderName}>{accountName}</Text>
+          <Text
+            numberOfLines={1}
+            ellipsizeMode="tail"
+            style={styles.cardHolderName}
+          >
+            {accountName}
+          </Text>
           {cardType === 'bank' ? (
-            <Text numberOfLines={1} ellipsizeMode="tail" style={styles.cardType}>{accountDisplayName}</Text>
+            <Text
+              numberOfLines={1}
+              ellipsizeMode="tail"
+              style={styles.cardType}
+            >
+              {accountDisplayName}
+            </Text>
           ) : (
-            <Text numberOfLines={1} ellipsizeMode="tail" style={styles.cardType}>{displayMetadata}</Text>
+            <Text
+              numberOfLines={1}
+              ellipsizeMode="tail"
+              style={styles.cardType}
+            >
+              {displayMetadata}
+            </Text>
           )}
         </View>
         <View style={styles.qrContainer}>
           {/* Conditionally render QR/Barcode based on displayMetadata */}
           {displayMetadata ? (
             metadata_type === 'qr' ? (
-              <QRCode value={displayMetadata} size={70} />
+              <QRCode value={displayMetadata} size={getResponsiveWidth(17)} />
             ) : (
-              <Barcode height={70} maxWidth={125} value={displayMetadata} format="CODE128" />
+              <Barcode
+                height={getResponsiveHeight(8.4)}
+                maxWidth={getResponsiveWidth(30)}
+                value={displayMetadata}
+                format="CODE128"
+              />
             )
           ) : (
-            <View style={styles.qrPlaceholder}/>
+            <View style={styles.qrPlaceholder} />
           )}
         </View>
       </View>
@@ -126,14 +165,23 @@ const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps):
       {/* Drag Handle */}
       {onDrag && (
         <View style={styles.dragHandle}>
-          <MaterialCommunityIcons name="drag-horizontal" size={20} color="rgba(255,255,255,0.5)" />
+          <MaterialCommunityIcons
+            name="drag-horizontal"
+            size={getResponsiveFontSize(20)}
+            color="rgba(255,255,255,0.5)"
+          />
         </View>
       )}
     </LinearGradient>
   );
 
   return (
-    <View style={[styles.outerContainer, { marginHorizontal: 15, marginBottom: 15 }]}>
+    <View
+      style={[
+        styles.outerContainer,
+        { marginHorizontal: getResponsiveWidth(3.6), marginBottom: getResponsiveHeight(1.8) },
+      ]}
+    >
       <Animated.View style={[animatedStyle, style]}>
         {onItemPress ? (
           <Pressable
@@ -156,17 +204,16 @@ const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps):
 
 const styles = StyleSheet.create({
   outerContainer: {
-    shadowColor: '#000',
+    // shadowColor: '#000',
     // shadowOffset: { width: 0, height: 4 },
     // shadowOpacity: 0.1,
     // shadowRadius: 6,
     // elevation: 5,
   },
   cardContainer: {
-    borderRadius: 16,
-    // padding: 20,
-    paddingVertical: 15,
-    paddingHorizontal: 20,
+    borderRadius: getResponsiveWidth(4),
+    paddingVertical: getResponsiveHeight(1.8),
+    paddingHorizontal: getResponsiveWidth(4.8),
     aspectRatio: 1.65,
     justifyContent: 'space-between',
     elevation: 3,
@@ -179,18 +226,18 @@ const styles = StyleSheet.create({
   leftHeaderContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: getResponsiveWidth(2.4),
   },
   cardName: {
     color: 'white',
-    fontSize: 16,
+    fontSize: getResponsiveFontSize(16),
     fontWeight: 'bold',
-    maxWidth: 150, // Set a maximum width
+    maxWidth: getResponsiveWidth(36), // Set a maximum width
   },
   logoContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 25,
+    width: getResponsiveWidth(9.6),
+    height: getResponsiveWidth(9.6),
+    borderRadius: getResponsiveWidth(6),
     backgroundColor: 'white',
     justifyContent: 'center',
     alignItems: 'center',
@@ -210,28 +257,28 @@ const styles = StyleSheet.create({
   },
   cardHolderName: {
     color: 'white',
-    fontSize: 16,
+    fontSize: getResponsiveFontSize(16),
     fontWeight: '600',
-    maxWidth: 150, // Set a maximum width
+    maxWidth: getResponsiveWidth(45), // Set a maximum width
   },
   cardType: {
     color: 'rgba(255,255,255,0.7)',
-    fontSize: 12,
-    marginTop: 5,
-    maxWidth: 120, // Set a maximum width
+    fontSize: getResponsiveFontSize(12),
+    marginTop: getResponsiveHeight(0.6),
+    maxWidth: getResponsiveWidth(28.8), // Set a maximum width
     overflow: 'hidden',
   },
   qrContainer: {
     backgroundColor: 'white',
-    borderRadius: 8,
-    padding: 8,
+    borderRadius: getResponsiveWidth(2),
+    padding: getResponsiveWidth(2),
   },
   qrPlaceholder: {
-    width: 70,
-    height: 70,
+    width: getResponsiveWidth(16.8),
+    height: getResponsiveWidth(16.8),
     backgroundColor: 'white',
-    borderRadius: 8,
-    padding: 8,
+    borderRadius: getResponsiveWidth(2),
+    padding: getResponsiveWidth(2),
   },
   dragHandle: {
     position: 'absolute',
@@ -242,7 +289,7 @@ const styles = StyleSheet.create({
     pointerEvents: 'none',
   },
   pressableContainer: {
-    borderRadius: 20,
+    borderRadius: getResponsiveWidth(5),
     overflow: 'hidden',
   },
 });

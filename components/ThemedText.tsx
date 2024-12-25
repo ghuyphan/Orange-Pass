@@ -37,30 +37,31 @@ const styles = StyleSheet.create({
   default: {
     fontSize: 16,
     lineHeight: 24,
-    fontWeight: '400',
-    fontFamily: 'OpenSans-Regular',
+    // fontWeight: '400',
+    fontFamily: 'Roboto-Regular', // Use Roboto-Regular
   },
   defaultSemiBold: {
     fontSize: 16,
     lineHeight: 24,
-    fontWeight: '600',
-    fontFamily: 'OpenSans-Regular',
+    // fontWeight: '600',
+    fontWeight: 'medium',
+    fontFamily: 'Roboto-Medium', // Use Roboto-Medium
   },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
     lineHeight: 32,
-    fontFamily: 'OpenSans-Regular',
+    fontFamily: 'Roboto-Bold', // Use Roboto-Bold
   },
   subtitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    fontFamily: 'OpenSans-Regular',
+    fontFamily: 'Roboto-Bold', // Use Roboto-Bold
   },
   link: {
     lineHeight: 30,
     fontSize: 16,
     color: '#0a7ea4',
-    fontFamily: 'OpenSans-Regular',
+    fontFamily: 'Roboto-Regular', // Use Roboto-Regular
   },
 });

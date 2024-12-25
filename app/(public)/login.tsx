@@ -10,24 +10,22 @@ import { ThemedInput } from '@/components/Inputs/ThemedInput';
 import { ThemedButton } from '@/components/buttons/ThemedButton';
 import { ThemedTextButton } from '@/components/buttons/ThemedTextButton';
 import { ThemedToast } from '@/components/toast/ThemedToast';
-// import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store/rootReducer';
 import { t } from '@/i18n';
 import { loginSchema } from '@/utils/validationSchemas';
 import { login } from '@/services/auth';
-import { width } from '@/constants/Constants';
 import { useLocale } from '@/context/LocaleContext';
 import LOGO from '@/assets/svgs/orange-logo.svg';
 import { useTheme } from '@/context/ThemeContext';
+import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
 
 export default function LoginScreen() {
   const { locale } = useLocale();
-  // const colorScheme = useColorScheme();
   const { currentTheme } = useTheme();
   const cardColor = currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground;
-  const authRefreshError = useSelector((state: RootState) => state.error.message)
+  const authRefreshError = useSelector((state: RootState) => state.error.message);
   const [isToastVisible, setIsToastVisible] = useState(false);
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -51,7 +49,7 @@ export default function LoginScreen() {
       setIsToastVisible(true);
       setErrorMessage(authRefreshError);
     }
-  }, [authRefreshError])
+  }, [authRefreshError]);
 
   const onDismissToast = () => {
     setIsToastVisible(false);
@@ -64,8 +62,8 @@ export default function LoginScreen() {
 
   const onNavigateToForgot = () => {
     Keyboard.dismiss();
-    router.push('/forgot-password')
-  }
+    router.push('/forgot-password');
+  };
 
   return (
     <Formik
@@ -90,17 +88,19 @@ export default function LoginScreen() {
           keyboardShouldPersistTaps="handled"
           style={[{ backgroundColor: currentTheme === 'light' ? Colors.light.background : Colors.dark.background }]}
           contentContainerStyle={styles.container}
-          extraScrollHeight={70}
-          extraHeight={200}
+          extraScrollHeight={getResponsiveHeight(8.5)}
+          extraHeight={getResponsiveHeight(24)}
           enableOnAndroid={true}
           showsVerticalScrollIndicator={false}
           scrollEnabled={isKeyboardVisible}
         >
           <View style={styles.topContainer}>
             <View style={styles.logoContainer}>
-              <LOGO width={width * 0.14} height={width * 0.14} />
+              <LOGO width={getResponsiveWidth(14)} height={getResponsiveWidth(14)} />
             </View>
-            <ThemedText style={styles.title} type='title'>{t('onboardingScreen.title')}</ThemedText>
+            <ThemedText style={styles.title} type="title">
+              {t('onboardingScreen.title')}
+            </ThemedText>
           </View>
           <View style={[styles.inputContainer, { backgroundColor: cardColor }]}>
             <ThemedInput
@@ -111,7 +111,6 @@ export default function LoginScreen() {
               onBlur={handleBlur('email')}
               value={values.email}
               errorMessage={touched.email && errors.email ? t(`loginScreen.errors.${errors.email}`) : ''}
-            // style={{ marginBottom: 10 }}
             />
             <ThemedView style={styles.divider} />
             <ThemedInput
@@ -123,17 +122,13 @@ export default function LoginScreen() {
               onBlur={handleBlur('password')}
               value={values.password}
               errorMessage={touched.password && errors.password ? t(`loginScreen.errors.${errors.password}`) : ''}
-            // style={{ marginBottom: 10 }}
             />
           </View>
           <View style={styles.forgotButton}>
-            <ThemedTextButton
-              label={t('loginScreen.forgotPassword')}
-              onPress={onNavigateToForgot}
-            />
+            <ThemedTextButton label={t('loginScreen.forgotPassword')} onPress={onNavigateToForgot} />
           </View>
           <ThemedButton
-            iconName='login'
+            iconName="login"
             label={t('loginScreen.login')}
             style={styles.loginButton}
             onPress={handleSubmit}
@@ -142,10 +137,7 @@ export default function LoginScreen() {
           />
           <ThemedView style={styles.registerContainer}>
             <ThemedText>{t('loginScreen.dontHaveAnAccount')}</ThemedText>
-            <ThemedTextButton
-              label={t('loginScreen.registerNow')}
-              onPress={onNavigateToRegister}
-            />
+            <ThemedTextButton label={t('loginScreen.registerNow')} onPress={onNavigateToRegister} />
           </ThemedView>
           <ThemedToast
             duration={5000}
@@ -154,62 +146,58 @@ export default function LoginScreen() {
             style={styles.toastContainer}
             onDismiss={onDismissToast}
             onVisibilityToggle={setIsToastVisible}
-            iconName='error'
+            iconName="error"
           />
         </KeyboardAwareScrollView>
       )}
-    </Formik >
+    </Formik>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    // flex: 1,
     flexGrow: 1,
-    marginHorizontal: 15,
-    maxHeight: '120%',
+    marginHorizontal: getResponsiveWidth(3.6),
   },
   topContainer: {
-    marginTop: 105,
-    gap: 20,
-    alignItems: 'center'
+    marginTop: getResponsiveHeight(10),
+    gap: getResponsiveHeight(2.4),
+    alignItems: 'center',
   },
   logoContainer: {
     backgroundColor: '#FFF5E1',
-    padding: 14,
-    borderRadius: 20,
+    padding: getResponsiveWidth(3.5),
+    borderRadius: getResponsiveWidth(5),
     alignSelf: 'center',
   },
   title: {
-    fontSize: 28,
+    fontSize: getResponsiveFontSize(25),
   },
   inputContainer: {
-    // padding: 5,
-    borderRadius: 16,
-    // gap: 5,
-    marginBottom: 10,
-    marginTop: 30,
+    borderRadius: getResponsiveWidth(4),
+    marginBottom: getResponsiveHeight(1.2),
+    marginTop: getResponsiveHeight(3.6),
   },
   divider: {
-    height: 3,
+    height: getResponsiveHeight(0.3),
   },
   forgotButton: {
     alignSelf: 'flex-end',
   },
   loginButton: {
-    marginTop: 30,
+    marginTop: getResponsiveHeight(3.6),
   },
   registerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 10,
+    marginTop: getResponsiveHeight(1.2),
   },
   toastContainer: {
     position: 'absolute',
-    bottom: 15,
+    bottom: getResponsiveHeight(1.8),
     left: 0,
     right: 0,
-    marginHorizontal: 15,
-  }
+    marginHorizontal: getResponsiveWidth(3.6),
+  },
 });

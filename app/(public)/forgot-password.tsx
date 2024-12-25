@@ -7,19 +7,17 @@ import { ThemedView } from '@/components/ThemedView';
 import { ThemedInput } from '@/components/Inputs/ThemedInput';
 import { ThemedButton } from '@/components/buttons/ThemedButton';
 import { ThemedToast } from '@/components/toast/ThemedToast';
-// import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { t } from '@/i18n';
 import { forgotPasswordSchema } from '@/utils/validationSchemas';
 import { forgot } from '@/services/auth';
 import { ThemedText } from '@/components/ThemedText';
-import { width, height } from '@/constants/Constants';
 import { useLocale } from '@/context/LocaleContext';
 import LOGO from '@/assets/svgs/orange-logo.svg';
 import { useTheme } from '@/context/ThemeContext';
+import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
 
 export default function ForgotPasswordScreen() {
-  // const colorScheme = useColorScheme();
   const { currentTheme } = useTheme();
   const [isToastVisible, setIsToastVisible] = useState(false);
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
@@ -67,30 +65,39 @@ export default function ForgotPasswordScreen() {
       {({ handleChange, handleBlur, handleSubmit, values, errors, touched, isSubmitting }) => (
         <KeyboardAwareScrollView
           keyboardShouldPersistTaps="handled"
-          style={[{ backgroundColor: currentTheme === 'light' ? Colors.light.background : Colors.dark.background }]}
+          style={[
+            {
+              backgroundColor:
+                currentTheme === 'light' ? Colors.light.background : Colors.dark.background,
+            },
+          ]}
           contentContainerStyle={styles.container}
-          extraScrollHeight={70}
-          extraHeight={100}
+          extraScrollHeight={getResponsiveHeight(8.5)}
+          extraHeight={getResponsiveHeight(12)}
           enableOnAndroid
           showsVerticalScrollIndicator={false}
           scrollEnabled={isKeyboardVisible}
         >
-            <View style={styles.topContainer}>
-                <View style={styles.logoContainer}>
-                    <LOGO width={width * 0.14} height={width * 0.14} />
-                </View>
-                <ThemedText style={styles.title} type='title'>{t('forgotPasswordScreen.forgotPassword')}</ThemedText>
+          <View style={styles.topContainer}>
+            <View style={styles.logoContainer}>
+              <LOGO width={getResponsiveWidth(14)} height={getResponsiveWidth(14)} />
             </View>
+            <ThemedText style={styles.title} type="title">
+              {t('forgotPasswordScreen.forgotPassword')}
+            </ThemedText>
+          </View>
           <View style={styles.inputContainer}>
-          <ThemedInput
-            label={t('forgotPasswordScreen.email')}
-            placeholder={t('forgotPasswordScreen.emailPlaceholder')}
-            onChangeText={handleChange('email')}
-            isError={touched.email && errors.email ? true : false}
-            onBlur={handleBlur('email')}
-            value={values.email}
-            errorMessage={touched.email && errors.email ? t(`forgotPasswordScreen.errors.${errors.email}`) : ''}
-          />
+            <ThemedInput
+              label={t('forgotPasswordScreen.email')}
+              placeholder={t('forgotPasswordScreen.emailPlaceholder')}
+              onChangeText={handleChange('email')}
+              isError={touched.email && errors.email ? true : false}
+              onBlur={handleBlur('email')}
+              value={values.email}
+              errorMessage={
+                touched.email && errors.email ? t(`forgotPasswordScreen.errors.${errors.email}`) : ''
+              }
+            />
           </View>
           <ThemedButton
             label={t('forgotPasswordScreen.sendResetLink')}
@@ -105,56 +112,53 @@ export default function ForgotPasswordScreen() {
             style={styles.toastContainer}
             onDismiss={onDismissToast}
             onVisibilityToggle={setIsToastVisible}
-            iconName='info'
+            iconName="info"
           />
         </KeyboardAwareScrollView>
       )}
-    </Formik >
+    </Formik>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    marginHorizontal: 15,
-    maxHeight: '130%',
+    marginHorizontal: getResponsiveWidth(3.6),
   },
   topContainer: {
-    marginTop: 105,
-    gap: 20,
-    alignItems: 'center'
-},
+    marginTop: getResponsiveHeight(10),
+    gap: getResponsiveHeight(2.4),
+    alignItems: 'center',
+  },
   logoContainer: {
     backgroundColor: '#FFF5E1',
-    padding: 14,
-    borderRadius: 20,
+    padding: getResponsiveWidth(3.5),
+    borderRadius: getResponsiveWidth(5),
     alignSelf: 'center',
-},
+  },
   title: {
-    // marginBottom: 20,
-    fontSize: 28,
+    fontSize: getResponsiveFontSize(25),
     textAlign: 'center',
   },
-  inputContainer:{
-    // padding: 5,
-    borderRadius: 16,
-    // gap: 5,
-    marginBottom: 20,
-    marginTop: 30
+  inputContainer: {
+    borderRadius: getResponsiveWidth(4),
+    marginBottom: getResponsiveHeight(2.4),
+    marginTop: getResponsiveHeight(3.6),
   },
   forgotButton: {
-    marginTop: 20,
+    marginTop: getResponsiveHeight(2.4),
   },
   registerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 20,
+    marginTop: getResponsiveHeight(2.4),
   },
   toastContainer: {
     position: 'absolute',
-    bottom: 15,
+    bottom: getResponsiveHeight(1.8),
     left: 0,
     right: 0,
-  }
+    marginHorizontal: getResponsiveWidth(3.6),
+  },
 });

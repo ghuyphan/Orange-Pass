@@ -1,5 +1,5 @@
-import React, { memo, useMemo } from 'react';
-import { Image, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { useMemo } from 'react';
+import { Image, StyleSheet, View } from 'react-native';
 import { ThemedText } from '../ThemedText';
 import QRCode from 'react-native-qrcode-svg';
 import Barcode from 'react-native-barcode-svg';
@@ -7,6 +7,7 @@ import { getIconPath } from '@/utils/returnIcon';
 import { returnItemData } from '@/utils/returnItemData';
 import { returnMidpointColors } from '@/utils/returnMidpointColor';
 import { LinearGradient } from 'expo-linear-gradient';
+import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
 
 export type ThemedPinnedCardProps = {
   code: string;
@@ -18,7 +19,7 @@ export type ThemedPinnedCardProps = {
   style?: object;
 };
 
-export const ThemedPinnedCard = memo(function ThemedPinnedCard({
+export const ThemedPinnedCard = ({
   code,
   type,
   metadata,
@@ -26,13 +27,11 @@ export const ThemedPinnedCard = memo(function ThemedPinnedCard({
   accountName,
   accountNumber,
   style,
-}: ThemedPinnedCardProps): JSX.Element {
-  const { width } = useWindowDimensions();
-
+}: ThemedPinnedCardProps): JSX.Element => {
   // Calculate dimensions with useMemo
-  const qrSize = useMemo(() => width * 0.40, [width]);
-  const barcodeHeight = useMemo(() => width * 0.23, [width]);
-  const barcodeWidth = useMemo(() => width * 0.70, [width]);
+  const qrSize = useMemo(() => getResponsiveWidth(40), []);
+  const barcodeHeight = useMemo(() => getResponsiveHeight(11), []);
+  const barcodeWidth = useMemo(() => getResponsiveWidth(70), []);
 
   // Pre-calculate data with useMemo
   const itemData = useMemo(() => returnItemData(code), [code]);
@@ -56,13 +55,21 @@ export const ThemedPinnedCard = memo(function ThemedPinnedCard({
         <View style={styles.logoContainer}>
           <Image source={iconPath} style={styles.logo} resizeMode="contain" />
         </View>
-        <ThemedText style={styles.companyName}>
-          {name}
-        </ThemedText>
+        <ThemedText style={styles.companyName}>{name}</ThemedText>
       </View>
 
       <View style={styles.codeContainer}>
-        <View style={[styles.codeWrapper, metadata_type === 'barcode' ? { paddingHorizontal: 20, paddingVertical: 15 } : {}]}>
+        <View
+          style={[
+            styles.codeWrapper,
+            metadata_type === 'barcode'
+              ? {
+                  paddingHorizontal: getResponsiveWidth(4.8),
+                  paddingVertical: getResponsiveHeight(1.8),
+                }
+              : {},
+          ]}
+        >
           {metadata_type === 'qr' ? (
             <QRCode
               value={metadata}
@@ -72,7 +79,7 @@ export const ThemedPinnedCard = memo(function ThemedPinnedCard({
               // logoBackgroundColor="white"
               // logoBorderRadius={50}
               // logoMargin={5}
-              quietZone={3}
+              quietZone={getResponsiveWidth(0.8)}
             />
           ) : (
             <Barcode
@@ -86,43 +93,35 @@ export const ThemedPinnedCard = memo(function ThemedPinnedCard({
 
         <View style={styles.infoContainer}>
           {type === 'bank' && (
-
-              <ThemedText type="defaultSemiBold" style={styles.accountName} numberOfLines={1}>
-                {accountName}
-              </ThemedText>
+            <ThemedText type="defaultSemiBold" style={styles.accountName} numberOfLines={1}>
+              {accountName}
+            </ThemedText>
           )}
-              <ThemedText style={styles.accountNumber} numberOfLines={1}>
-                {accountNumber ? accountNumber : metadata}
-              </ThemedText>
-
+          <ThemedText style={styles.accountNumber} numberOfLines={1}>
+            {accountNumber ? accountNumber : metadata}
+          </ThemedText>
         </View>
       </View>
     </LinearGradient>
   );
-});
+};
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 16,
-    // padding: 20,
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    // shadowColor: '#000',
-    // shadowOffset: { width: 0, height: 4 },
-    // shadowOpacity: 0.1,
-    // shadowRadius: 6,
-    // elevation: 5,
+    borderRadius: getResponsiveWidth(4),
+    paddingVertical: getResponsiveHeight(1.8),
+    paddingHorizontal: getResponsiveWidth(4.8),
   },
   headerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
-    gap: 15,
+    marginBottom: getResponsiveHeight(2.4),
+    gap: getResponsiveWidth(3.6),
   },
   logoContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 25,
+    width: getResponsiveWidth(9.6),
+    height: getResponsiveWidth(9.6),
+    borderRadius: getResponsiveWidth(6),
     backgroundColor: 'white',
     justifyContent: 'center',
     alignItems: 'center',
@@ -133,7 +132,7 @@ const styles = StyleSheet.create({
   },
   companyName: {
     color: 'white',
-    fontSize: 16,
+    fontSize: getResponsiveFontSize(16),
     fontWeight: 'bold',
     flex: 1,
   },
@@ -143,11 +142,9 @@ const styles = StyleSheet.create({
   },
   codeWrapper: {
     backgroundColor: 'white',
-    borderRadius: 16,
-    padding: 8,
-    marginBottom: 15,
-    // paddingVertical: 16,
-    // paddingHorizontal: 30,
+    borderRadius: getResponsiveWidth(4),
+    padding: getResponsiveWidth(2),
+    marginBottom: getResponsiveHeight(1.8),
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -157,13 +154,13 @@ const styles = StyleSheet.create({
   },
   accountName: {
     color: 'white',
-    fontSize: 19,
+    fontSize: getResponsiveFontSize(19),
     fontWeight: '600',
   },
   accountNumber: {
     color: 'rgba(255,255,255,0.7)',
-    fontSize: 15,
-    maxWidth: 250,
+    fontSize: getResponsiveFontSize(15),
+    maxWidth: getResponsiveWidth(60),
   },
 });
 
