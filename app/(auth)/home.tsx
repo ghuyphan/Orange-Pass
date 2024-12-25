@@ -207,7 +207,7 @@ function HomeScreen() {
   
     initializeData();
   }, [userId, shouldSyncInitially]);
-  
+
   useEffect(() => {
     // Only show online/offline toast if there's an actual change in network state
     if (isOffline) {
@@ -803,7 +803,7 @@ const styles = StyleSheet.create({
     paddingVertical: 0,
   },
   listContainer: {
-    paddingTop: STATUSBAR_HEIGHT + 110,
+    paddingTop: getResponsiveHeight(17.2),
     flexGrow: 1,
   },
   emptyItem: {
