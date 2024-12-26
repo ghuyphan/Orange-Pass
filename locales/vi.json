@@ -129,7 +129,22 @@
     "qr": "Mã QR",
     "barcode": "Mã vạch",
     "image": "Hình ảnh",
-    "saveButton": "Lưu"
+    "saveButton": "Lưu",
+    "categoryTitle": "Loại thẻ",
+    "categoryPlaceholder": "Nhập loại thẻ",
+    "storeCategory": "Cửa hàng",
+    "ewalletCategory": "Ví tiền",
+    "bankCategory": "Ngân hàng",
+    "nameTitle": "Tên thẻ",
+    "namePlaceholder": "Nhập tên thẻ",
+    "qrCodeTitle": "Mã QR",
+    "qrCodePlaceholder": "Nhập mã QR",
+    "barcodeTitle": "Mã vạch",
+    "barcodePlaceholder": "Nhập mã vạch",
+    "imageTitle": "Hình ảnh",
+    "errors": {
+      
+    }
   },
   "scanScreen": {
     "join": "Kết nối",

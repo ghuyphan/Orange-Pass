@@ -1,9 +1,10 @@
 import React, { useMemo, useState, useEffect, forwardRef } from 'react';
 import { FAB } from 'react-native-paper';
-import { StyleProp, ViewStyle, View, StyleSheet, TextStyle, TouchableWithoutFeedback } from 'react-native';
-import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import { StyleProp, ViewStyle, View, StyleSheet, TextStyle, TouchableWithoutFeedback, BackHandler } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
 import { useTheme } from '@/context/ThemeContext';
+import { useFocusEffect } from '@react-navigation/native';
 import Animated, {
   useAnimatedStyle,
   withTiming,
@@ -40,6 +41,22 @@ export const ThemedFAB = forwardRef<View, ThemedFABProps>(({
   const [closing, setClosing] = useState(false);
   const isAnimating = useSharedValue(false);
 
+  // Handle back button press
+  useFocusEffect(
+    React.useCallback(() => {
+      const onBackPress = () => {
+        if (open) {
+          handleFABPress();
+          return true; // Prevent default back action
+        }
+        return false; // Let default back action happen
+      };
+
+      BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => BackHandler.removeEventListener('hardwareBackPress', onBackPress);
+    }, [open])
+  );
+
   // Memoize color calculations to prevent unnecessary re-renders
   const colors = useMemo(() => {
     const isLightTheme = currentTheme === 'light';
@@ -60,7 +77,6 @@ export const ThemedFAB = forwardRef<View, ThemedFABProps>(({
   }), []);
 
   // Backdrop opacity animation
-  // const backdropOpacity = useSharedValue(0);
   const backdropAnimatedStyle = useAnimatedStyle(() => ({
     opacity: withTiming(open ? 0.7 : 0, animationConfig)
   }), [open, animationConfig]);
@@ -77,7 +93,6 @@ export const ThemedFAB = forwardRef<View, ThemedFABProps>(({
 
   // Create custom hooks for animation styles to resolve hook rule errors
   const useButtonAnimationStyle = (delay: number) => {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
     return useAnimatedStyle(() => ({
       elevation: withDelay(delay, withTiming(open ? 5 : 0, animationConfig)),
       opacity: withDelay(
@@ -100,7 +115,6 @@ export const ThemedFAB = forwardRef<View, ThemedFABProps>(({
   };
 
   const useTextAnimationStyle = (delay: number) => {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
     return useAnimatedStyle(() => ({
       opacity: withDelay(
         delay,
@@ -124,12 +138,12 @@ export const ThemedFAB = forwardRef<View, ThemedFABProps>(({
   // Dynamically generate animation styles based on number of actions
   const buttonStyles = actions.map((_, index) => {
     const delay = (index + 1) * 50;
-    return useButtonAnimationStyle(delay); // Call the custom hook directly
+    return useButtonAnimationStyle(delay);
   });
 
   const textStyles = actions.map((_, index) => {
     const delay = (index + 1) * 50;
-    return useTextAnimationStyle(delay); // Call the custom hook directly
+    return useTextAnimationStyle(delay);
   });
 
   // useEffect to handle closing animation
@@ -187,7 +201,7 @@ export const ThemedFAB = forwardRef<View, ThemedFABProps>(({
       )}
       
       <Animated.View style={[style, animatedStyle, styles.container]} ref={ref}>
-        {(open || closing) && ( // Render while open or closing
+        {(open || closing) && (
           <Animated.View style={translateY}>
             <View style={styles.buttonsWrapper}>
               {actions.map((action, index) => (
@@ -226,7 +240,6 @@ export const ThemedFAB = forwardRef<View, ThemedFABProps>(({
   );
 });
 
-// Add display name explicitly
 ThemedFAB.displayName = 'ThemedFAB';
 
 const styles = StyleSheet.create({

@@ -561,11 +561,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: getResponsiveWidth(3.6),
   },
   headerWrapper: {
-    paddingTop: STATUSBAR_HEIGHT + getResponsiveHeight(4.5),
+    paddingTop: getResponsiveHeight(10),
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: getResponsiveHeight(3),
+    marginBottom: getResponsiveHeight(3.6),
   },
   pinnedCardWrapper: {
     marginTop: getResponsiveHeight(0.6),

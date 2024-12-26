@@ -167,7 +167,7 @@ function HomeScreen() {
       dispatch(setQrData(localData));
 
       // Update isEmpty based on the potentially updated local data
-      const hasLocal = await hasLocalData(userId); 
+      const hasLocal = await hasLocalData(userId);
       setIsEmpty(!hasLocal);
 
     } catch (error) {
@@ -186,25 +186,25 @@ function HomeScreen() {
 
   useEffect(() => {
     if (!userId) return;
-  
+
     const initializeData = async () => {
       setIsLoading(true); // Start with loading state
-  
+
       const needsInitialSync = await shouldSyncInitially(userId);
       if (needsInitialSync) {
         console.log('Initial sync required.');
         await syncWithServer(userId).catch(error => {
           console.error('Error during initial sync:', error);
-        }); 
+        });
       } else {
         console.log('No initial sync needed.');
         const hasLocal = await hasLocalData(userId); // Check local data
         setIsEmpty(!hasLocal); // Set isEmpty based on local data
       }
-  
+
       setIsLoading(false); // Set isLoading to false after checks
     };
-  
+
     initializeData();
   }, [userId, shouldSyncInitially]);
 
@@ -249,8 +249,8 @@ function HomeScreen() {
   };
 
   const titleContainerStyle = useAnimatedStyle(() => {
-    const SCROLL_THRESHOLD = 130;
-    const ANIMATION_RANGE = 50;
+    const SCROLL_THRESHOLD = 120;
+    const ANIMATION_RANGE = 90;
 
     const opacity = interpolate(
       scrollY.value,
@@ -403,26 +403,26 @@ function HomeScreen() {
     setSelectedItemId(id || null);
 
     switch (type) {
-        case 'wifi':
-        case 'setting':
-            if (!id) return;
-            bottomSheetRef.current?.snapToIndex(0);
-            break;
-        case 'linking':
-            bottomSheetRef.current?.snapToIndex(0);
-            if (url) {
-                setLinkingUrl(url);
-            }
-            break;
-        default:
+      case 'wifi':
+      case 'setting':
+        if (!id) return;
+        bottomSheetRef.current?.snapToIndex(0);
+        break;
+      case 'linking':
+        bottomSheetRef.current?.snapToIndex(0);
+        if (url) {
+          setLinkingUrl(url);
+        }
+        break;
+      default:
     }
-}, [bottomSheetRef, setSheetType, setIsSheetOpen, setSelectedItemId, setLinkingUrl]);
+  }, [bottomSheetRef, setSheetType, setIsSheetOpen, setSelectedItemId, setLinkingUrl]);
 
-// Update the onOpenGallery usage to use the memoized onOpenSheet
-const onOpenGallery = useGalleryPicker({
+  // Update the onOpenGallery usage to use the memoized onOpenSheet
+  const onOpenGallery = useGalleryPicker({
     onOpenSheet,
     onNavigateToAddScreen,
-});
+  });
 
   // In your existing code where you define scrollHandler
   const scrollHandler = useAnimatedScrollHandler((event) => {
@@ -641,7 +641,7 @@ const onOpenGallery = useGalleryPicker({
           bounces={true}
           ListHeaderComponent={
             <Animated.View
-              style={[listHeaderStyle, { marginBottom: 30 }]}
+              style={[listHeaderStyle, { marginBottom: getResponsiveHeight(3.6), }]}
             >
               <ThemedFilter
                 selectedFilter={filter}
@@ -803,7 +803,7 @@ const styles = StyleSheet.create({
     paddingVertical: 0,
   },
   listContainer: {
-    paddingTop: getResponsiveHeight(17.2),
+    paddingTop: getResponsiveHeight(18),
     flexGrow: 1,
   },
   emptyItem: {

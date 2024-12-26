@@ -2,7 +2,6 @@ import { useCallback } from 'react';
 import ImagePicker from 'react-native-image-crop-picker';
 import { decodeQR } from '@/utils/decodeQR';
 import useHandleCodeScanned from '@/hooks/useHandleCodeScanned';
-import { router } from 'expo-router';
 
 import SheetType from '@/types/sheetType';
 
@@ -17,6 +16,15 @@ type GalleryPickerOptions = {
     ) => void;
 };
 
+// Define a custom type for your scan result that includes the extra properties
+type ExtendedScanResult = {
+    codeFormat?: number;
+    rawCodeValue: string;
+    codeType: string;
+    bin?: string;
+    provider?: string;
+};
+
 export const useGalleryPicker = ({
     onOpenSheet,
     onNavigateToAddScreen,
@@ -29,7 +37,6 @@ export const useGalleryPicker = ({
                 const image = await ImagePicker.openPicker({
                     width: 300,
                     height: 400,
-                    includeBase64: true,
                     mediaType: 'photo',
                 });
 
@@ -38,39 +45,29 @@ export const useGalleryPicker = ({
                 }
 
                 const decode = await decodeQR(image.path);
+                const codeValue = decode?.value ?? '';
+                const codeFormat = decode?.format;
 
-                const result = handleCodeScanned(decode?.value ?? '', {
+                const result: ExtendedScanResult | null = handleCodeScanned(codeValue, {
                     t: (key) => key, // Replace with your actual translation function
-                    codeFormat: decode?.format,
+                    codeFormat: codeFormat,
                 });
 
                 console.log('Decoded QR code:', result);
 
                 if (result) {
-                    switch (result.codeType) {
-                        case 'WIFI':
-                            onOpenSheet('wifi');
-                            break;
-                        case 'URL':
-                            onOpenSheet('linking', undefined, result.rawCodeValue);
-                            break;
-                        case 'bank':
-                        case 'ewallet':
-                            onNavigateToAddScreen(
-                                result.codeFormat,
-                                result.rawCodeValue,
-                                result.bin,
-                                result.codeType,
-                                result.provider
-                            );
-                            break;
-                        case 'alphanumeric':
-                            // Handle alphanumeric
-                            break;
-                        case 'unknown':
-                            console.log('Unknown code format:', result.rawCodeValue);
-                            break;
-                    }
+                    const actionMap: Record<string, () => void> = {
+                        'WIFI': () => onOpenSheet('wifi'),
+                        'URL': () => onOpenSheet('linking', undefined, result.rawCodeValue),
+                        // Handle bank and ewallet, passing bin and provider if they exist
+                        'bank': () => onNavigateToAddScreen(result.codeFormat, result.rawCodeValue, result.bin, result.codeType, result.provider),
+                        'ewallet': () => onNavigateToAddScreen(result.codeFormat, result.rawCodeValue, result.bin, result.codeType, result.provider),
+                        'alphanumeric': () => { /* Handle alphanumeric */ },
+                        'unknown': () => console.log('Unknown code format:', result.rawCodeValue),
+                    };
+
+                    const action = actionMap[result.codeType] || actionMap['unknown'];
+                    action();
                 } else {
                     console.log('Failed to decode QR code');
                 }

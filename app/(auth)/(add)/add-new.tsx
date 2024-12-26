@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet, View, Pressable, Image, Keyboard } from 'react-native';
+import { StyleSheet, View, Keyboard } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { Formik } from 'formik';
@@ -13,13 +13,12 @@ import Animated, {
   useSharedValue,
 } from 'react-native-reanimated';
 import BottomSheet from '@gorhom/bottom-sheet';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 // Local imports
 import { RootState } from '@/store/rootReducer';
 import { Colors } from '@/constants/Colors';
-import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
 import { useTheme } from '@/context/ThemeContext';
+
 import { t } from '@/i18n';
 // Components
 import { ThemedButton } from '@/components/buttons/ThemedButton';
@@ -28,6 +27,7 @@ import { ThemedInput, ThemedDisplayInput } from '@/components/Inputs';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import ThemedReuseableSheet from '@/components/bottomsheet/ThemedReusableSheet';
+import { CategorySheetItem, BrandSheetItem, MetadataTypeSheetItem } from '@/components/bottomsheet/SheetItem';
 
 // Utilities
 import { qrCodeSchema } from '@/utils/validationSchemas';
@@ -36,7 +36,6 @@ import {
   returnItemData,
   returnItemsByType,
 } from '@/utils/returnItemData';
-import { getIconPath } from '@/utils/returnIcon';
 import { useLocale } from '@/context/LocaleContext';
 import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
 
@@ -180,8 +179,8 @@ const AddScreen: React.FC = () => {
   const animationRange = getResponsiveHeight(5);
   const translateYValue = -getResponsiveHeight(3);
   const scaleValue = 0.6;
-  const marginBottomValue = getResponsiveHeight(1.8);
-  const marginBottomValue2 = -getResponsiveHeight(1.8);
+  // const marginBottomValue = getResponsiveHeight(1.8);
+  // const marginBottomValue2 = -getResponsiveHeight(1.8);
 
 
   const titleContainerStyle = useAnimatedStyle(() => {
@@ -273,102 +272,12 @@ const AddScreen: React.FC = () => {
     );
   };
 
-  const CategorySheetItem: React.FC<SheetItemProps> = ({ item, isSelected, onPress }) => {
-    const categoryItem = item as CategoryItem;
-    return (
-      <Pressable
-        key={categoryItem.value}
-        onPress={onPress}
-        style={[styles.sheetItem, isSelected && styles.selectedItem]}
-      >
-        <MaterialCommunityIcons
-          color={iconColors}
-          size={getResponsiveFontSize(18)}
-          name={
-            categoryItem.value === 'store'
-              ? 'store-outline'
-              : categoryItem.value === 'bank'
-                ? 'bank-outline'
-                : 'wallet-outline'
-          }
-        />
-        <ThemedText style={styles.sheetItemText}>{categoryItem.display}</ThemedText>
-        {isSelected && (
-          <MaterialCommunityIcons
-            name="check"
-            size={getResponsiveFontSize(20)}
-            color={colors}
-            style={styles.checkIcon}
-          />
-        )}
-      </Pressable>
-    );
-  };
-
-  const BrandSheetItem: React.FC<SheetItemProps> = ({ item, isSelected, onPress }) => {
-    const brandItem = item as BrandItem;
-    return (
-      <Pressable
-        key={brandItem.code}
-        onPress={onPress}
-        style={[styles.sheetItem, isSelected && styles.selectedItem]}
-      >
-        <View style={styles.brandIconContainer}>
-          <Image source={getIconPath(brandItem.code)} style={styles.brandIcon} />
-        </View>
-        <View style={{ flexDirection: 'column', flexShrink: 1 }}>
-          <ThemedText type="defaultSemiBold" style={styles.brandText}>
-            {brandItem.name}
-          </ThemedText>
-          <ThemedText numberOfLines={1} style={styles.brandFullName}>
-            {brandItem.full_name}
-          </ThemedText>
-        </View>
-        {isSelected && (
-          <MaterialCommunityIcons
-            name="check"
-            size={getResponsiveFontSize(20)}
-            color={colors}
-            style={styles.checkIcon}
-          />
-        )}
-      </Pressable>
-    );
-  };
-
-  const MetadataTypeSheetItem: React.FC<SheetItemProps> = ({ item, isSelected, onPress }) => {
-    const metadataTypeItem = item as MetadataTypeItem;
-    return (
-      <Pressable
-        key={metadataTypeItem.value}
-        onPress={onPress}
-        style={[styles.sheetItem, isSelected && styles.selectedItem]}
-      >
-        <MaterialCommunityIcons
-          color={iconColors}
-          size={getResponsiveFontSize(18)}
-          name={metadataTypeItem.value === 'qr' ? 'qrcode-scan' : 'barcode-scan'}
-        />
-        <ThemedText style={styles.sheetItemText}>{metadataTypeItem.display}</ThemedText>
-        {isSelected && (
-          <MaterialCommunityIcons
-            name="check"
-            size={getResponsiveFontSize(20)}
-            color={colors}
-            style={styles.checkIcon}
-          />
-        )}
-      </Pressable>
-    );
-  };
-
   const renderSheetItem = useCallback(
     (item: CategoryItem | BrandItem | MetadataTypeItem) => {
-      const isCategory =
-        'value' in item && (item.value === 'store' || item.value === 'bank' || item.value === 'ewallet');
+      const isCategory = 'value' in item && (item.value === 'store' || item.value === 'bank' || item.value === 'ewallet');
       const isMetadataType = 'value' in item && (item.value === 'qr' || item.value === 'barcode');
       const isBrand = 'code' in item;
-
+  
       const isSelected = isCategory
         ? category?.value === item.value
         : isBrand
@@ -376,46 +285,54 @@ const AddScreen: React.FC = () => {
           : isMetadataType
             ? metadataType?.value === item.value
             : false;
-
-      const getItemComponent = () => {
-        if (isCategory) {
-          return CategorySheetItem;
-        } else if (isBrand) {
-          return BrandSheetItem;
-        } else if (isMetadataType) {
-          return MetadataTypeSheetItem;
-        }
-        return null;
-      };
-
-      const ItemComponent = getItemComponent();
-
-      if (!ItemComponent) {
-        return null;
-      }
-
-      return (
-        <ItemComponent
-          item={item}
-          isSelected={isSelected}
-          onPress={() => {
-            if (isCategory) {
+  
+      if (isCategory) {
+        return (
+          <CategorySheetItem
+            item={item}
+            isSelected={isSelected}
+            onPress={() => {
               setCategory(item as CategoryItem);
               setBrand(null);
-            } else if (isBrand) {
+              bottomSheetRef.current?.close();
+              setTimeout(() => setIsSheetOpen(false), 50);
+            }}
+            iconColors={iconColors}
+            textColors={colors}
+          />
+        );
+      } else if (isBrand) {
+        return (
+          <BrandSheetItem
+            item={item}
+            isSelected={isSelected}
+            onPress={() => {
               setBrand(item as BrandItem);
-            } else if (isMetadataType) {
+              bottomSheetRef.current?.close();
+              setTimeout(() => setIsSheetOpen(false), 50);
+            }}
+            iconColors={iconColors}
+            textColors={colors}
+          />
+        );
+      } else if (isMetadataType) {
+        return (
+          <MetadataTypeSheetItem
+            item={item}
+            isSelected={isSelected}
+            onPress={() => {
               setMetadataType(item as MetadataTypeItem);
-            }
-            bottomSheetRef.current?.close();
-            setTimeout(() => {
-              setIsSheetOpen(false);
-            }, 50);
-          }}
-        />
-      );
+              bottomSheetRef.current?.close();
+              setTimeout(() => setIsSheetOpen(false), 50);
+            }}
+            iconColors={iconColors}
+            textColors={colors}
+          />
+        );
+      }
+      return null;
     },
-    [category, brand, metadataType, theme, iconColors, colors]
+    [category, brand, metadataType, iconColors, colors]
   );
 
   const categoryData: CategoryItem[] = [
@@ -509,6 +426,7 @@ const AddScreen: React.FC = () => {
                 value={metadataType?.display}
                 onPress={() => onOpenSheet('metadataType')}
                 onClear={handleClearMetadataType}
+                showClearButton={false}
               />
             </ThemedView>
 
@@ -531,15 +449,7 @@ const AddScreen: React.FC = () => {
                     ? t('addScreen.metadataTypeTitle')
                     : ''
             }
-            snapPoints={
-              sheetType === 'category'
-                ? [getResponsiveHeight(25)]
-                : sheetType === 'brand'
-                  ? ['90%']
-                  : sheetType === 'metadataType'
-                    ? [getResponsiveHeight(25)]
-                    : [getResponsiveHeight(50)]
-            }
+            enableDynamicSizing={true}
             onClose={() => {
               setTimeout(() => {
                 setIsSheetOpen(false);
@@ -585,11 +495,11 @@ const styles = StyleSheet.create({
   scrollViewContent: {
     flexGrow: 1,
     paddingHorizontal: getResponsiveWidth(3.6),
-    paddingTop: STATUSBAR_HEIGHT + getResponsiveHeight(8.5),
+    paddingTop: getResponsiveHeight(15.6),
   },
   titleContainer: {
     position: 'absolute',
-    top: STATUSBAR_HEIGHT + getResponsiveHeight(4.5),
+    top: getResponsiveHeight(10),
     left: 0,
     right: 0,
   },
@@ -615,45 +525,6 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     marginTop: getResponsiveHeight(2.4),
-  },
-  sheetItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: getResponsiveWidth(3.6),
-    paddingVertical: getResponsiveHeight(1.2),
-    paddingHorizontal: getResponsiveWidth(2.4),
-    borderRadius: getResponsiveWidth(4),
-    overflow: 'hidden',
-  },
-  selectedItem: {
-    // backgroundColor: theme === 'light' ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.1)',
-  },
-  brandIconContainer: {
-    width: getResponsiveWidth(9.6),
-    height: getResponsiveWidth(9.6),
-    borderRadius: getResponsiveWidth(12),
-    overflow: 'hidden',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'white',
-  },
-  brandIcon: {
-    width: '60%',
-    height: '60%',
-    resizeMode: 'contain',
-  },
-  brandText: {
-    fontSize: getResponsiveFontSize(14),
-  },
-  brandFullName: {
-    fontSize: getResponsiveFontSize(12),
-    opacity: 0.6,
-  },
-  checkIcon: {
-    marginLeft: 'auto',
-  },
-  sheetItemText: {
-    fontSize: getResponsiveFontSize(16),
   },
 });
 

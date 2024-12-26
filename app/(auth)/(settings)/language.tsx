@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { StyleSheet, View, Pressable } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -24,6 +24,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useMMKVString } from 'react-native-mmkv';
 import { useTheme } from '@/context/ThemeContext';
+import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
 
 const LanguageScreen = () => {
   const { updateLocale } = useLocale();
@@ -31,10 +32,14 @@ const LanguageScreen = () => {
   const scrollY = useSharedValue(0);
 
   const { currentTheme: theme } = useTheme();
-  const colors = useMemo(() => (theme === 'light' ? Colors.light.icon : Colors.dark.icon), [theme]);
-  const sectionsColors = useMemo(() => (
-    theme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground
-  ), [theme]);
+  const colors = useMemo(
+    () => (theme === 'light' ? Colors.light.icon : Colors.dark.icon),
+    [theme]
+  );
+  const sectionsColors = useMemo(
+    () => (theme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground),
+    [theme]
+  );
 
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
@@ -42,16 +47,25 @@ const LanguageScreen = () => {
     },
   });
 
+  // Calculate these outside of the animated style
+  const scrollThreshold = getResponsiveHeight(7);
+  const translateYValue = -getResponsiveHeight(3.5);
+
   const titleContainerStyle = useAnimatedStyle(() => {
-    const translateY = interpolate(scrollY.value, [0, 140], [0, -35], Extrapolation.CLAMP);
-    const opacity = withTiming(scrollY.value > 70 ? 0 : 1, {
+    const translateY = interpolate(
+      scrollY.value,
+      [0, scrollThreshold],
+      [0, translateYValue],
+      Extrapolation.CLAMP
+    );
+    const opacity = withTiming(scrollY.value > scrollThreshold * 0.85 ? 0 : 1, {
       duration: 300,
       easing: Easing.out(Easing.ease),
     });
     return {
       opacity,
       transform: [{ translateY }],
-      zIndex: scrollY.value > 50 ? 0 : 20,
+      zIndex: scrollY.value > scrollThreshold * 0.75 ? 0 : 20,
     };
   });
 
@@ -59,32 +73,30 @@ const LanguageScreen = () => {
     router.back();
   }, []);
 
-  const handleLanguageChange = useCallback((newLocale: string) => {
-    updateLocale(newLocale);
-  }, [updateLocale]);
+  const handleLanguageChange = useCallback(
+    (newLocale: string) => {
+      updateLocale(newLocale);
+    },
+    [updateLocale]
+  );
 
   const handleSystemLocale = useCallback(() => {
     updateLocale(undefined);
   }, [updateLocale]);
 
-  const renderLanguageOption = (language: string, flag: React.ReactNode, localeCode: string) => (
-    <Pressable
-      onPress={() => handleLanguageChange(localeCode)}
-      key={localeCode}
-    >
+  const renderLanguageOption = useCallback((language: string, flag: React.ReactNode, localeCode: string) => (
+    <Pressable onPress={() => handleLanguageChange(localeCode)} key={localeCode}>
       <View style={styles.section}>
         <View style={styles.leftSectionContainer}>
-          <View style={styles.flagIconContainer}>
-            {flag}
-          </View>
+          <View style={styles.flagIconContainer}>{flag}</View>
           <ThemedText>{t(`languageScreen.${language}`)}</ThemedText>
         </View>
         {locale === localeCode && (
-          <MaterialIcons name="check" size={18} color={colors} />
+          <MaterialIcons name="check" size={getResponsiveFontSize(18)} color={colors} />
         )}
       </View>
     </Pressable>
-  );
+  ), [locale, colors, handleLanguageChange]);
 
   return (
     <ThemedView style={styles.container}>
@@ -98,29 +110,35 @@ const LanguageScreen = () => {
               onPress={onNavigateBack}
             />
           </View>
-          <ThemedText style={styles.title} type="title">{t('languageScreen.title')}</ThemedText>
+          <ThemedText style={styles.title} type="title">
+            {t('languageScreen.title')}
+          </ThemedText>
         </View>
       </Animated.View>
-      <Animated.ScrollView style={styles.scrollContainer} onScroll={scrollHandler}>
+      <Animated.ScrollView
+        style={styles.scrollContainer}
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
+      >
         <View style={[styles.sectionContainer, { backgroundColor: sectionsColors }]}>
-          {renderLanguageOption('vietnamese', <VN width={35} height={35} />, 'vi')}
-          {renderLanguageOption('russian', <RU width={35} height={35} />, 'ru')}
-          {renderLanguageOption('english', <GB width={35} height={35} />, 'en')}
+          {renderLanguageOption('vietnamese', <VN width={getResponsiveWidth(7.2)} height={getResponsiveHeight(3)} />, 'vi')}
+          {renderLanguageOption('russian', <RU width={getResponsiveWidth(7.2)} height={getResponsiveHeight(3)} />, 'ru')}
+          {renderLanguageOption('english', <GB width={getResponsiveWidth(7.2)} height={getResponsiveHeight(3)} />, 'en')}
 
-          <Pressable
-            onPress={handleSystemLocale}
-          >
+          <Pressable onPress={handleSystemLocale}>
             <View style={styles.section}>
               <View style={styles.leftSectionContainer}>
-                <View style={[
-                  styles.iconContainer,
-                ]}>
-                  <MaterialCommunityIcons name="cog-outline" size={18} color={colors} />
+                <View style={[styles.iconContainer]}>
+                  <MaterialCommunityIcons
+                    name="cog-outline"
+                    size={getResponsiveFontSize(18)}
+                    color={colors}
+                  />
                 </View>
                 <ThemedText>{t('languageScreen.system')}</ThemedText>
               </View>
               {locale === undefined && (
-                <MaterialIcons name="check" size={18} color={colors} />
+                <MaterialIcons name="check" size={getResponsiveFontSize(18)} color={colors} />
               )}
             </View>
           </Pressable>
@@ -138,23 +156,23 @@ const styles = StyleSheet.create({
   },
   titleContainer: {
     position: 'absolute',
-    top: STATUSBAR_HEIGHT + 45,
+    top: getResponsiveHeight(10),
     left: 0,
     right: 0,
   },
   headerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 15,
-    gap: 15,
+    paddingHorizontal: getResponsiveWidth(3.6),
+    gap: getResponsiveWidth(3.6),
   },
   titleButtonContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 15,
+    gap: getResponsiveWidth(3.6),
   },
   title: {
-    fontSize: 28,
+    fontSize: getResponsiveFontSize(28),
   },
   titleButton: {
     zIndex: 11,
@@ -169,37 +187,37 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flexGrow: 1,
-    paddingHorizontal: 15,
-    paddingTop: STATUSBAR_HEIGHT + 105,
+    paddingHorizontal: getResponsiveWidth(3.6),
+    paddingTop: getResponsiveHeight(18),
   },
   sectionContainer: {
-    borderRadius: 16,
+    borderRadius: getResponsiveWidth(4),
     overflow: 'hidden',
   },
   section: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingVertical: getResponsiveHeight(1.8),
+    paddingHorizontal: getResponsiveWidth(4.8),
   },
   leftSectionContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: getResponsiveWidth(2.4),
   },
   flagIconContainer: {
-    width: 20,
+    width: getResponsiveWidth(4.8),
     aspectRatio: 1,
-    borderRadius: 50,
+    borderRadius: getResponsiveWidth(12),
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
   },
   iconContainer: {
-    width: 20,
+    width: getResponsiveWidth(4.8),
     aspectRatio: 1,
-    borderRadius: 50,
+    borderRadius: getResponsiveWidth(12),
     overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',

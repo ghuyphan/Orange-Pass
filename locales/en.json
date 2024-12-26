@@ -215,7 +215,7 @@
     "title": "Appearance",
     "light": "Light mode",
     "dark": "Dark mode",
-    "system": "Follow system settings",
+    "system": "Follow system",
     "successMessage": "Please restart the app to see the changes."
   }
 }
