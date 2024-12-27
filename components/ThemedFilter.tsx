@@ -77,7 +77,7 @@ const FilterItem = React.memo(
         <View
           style={[
             styles.animatedView,
-            isSelected ? { gap: getResponsiveWidth(1.2), paddingHorizontal: getResponsiveWidth(3.6) } : { gap: 0 },
+            isSelected ? { gap: getResponsiveWidth(1.2), paddingHorizontal: getResponsiveWidth(4.8) } : { gap: 0 },
           ]}
         >
           <MaterialCommunityIcons
@@ -205,14 +205,14 @@ const styles = StyleSheet.create({
   filterContainer: {
     flexDirection: 'row',
     gap: getResponsiveWidth(2),
-    paddingHorizontal: getResponsiveWidth(3.6),
+    paddingHorizontal: getResponsiveWidth(4.8),
     // justifyContent: 'space-evenly',
   },
   filterButton: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: getResponsiveHeight(1.2),
-    paddingHorizontal: getResponsiveWidth(3.6),
+    paddingHorizontal: getResponsiveWidth(4.8),
     borderRadius: getResponsiveWidth(4),
     overflow: 'hidden',
   },
@@ -245,14 +245,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-start',
     overflow: 'hidden',
-    borderRadius: getResponsiveWidth(3.6),
+    borderRadius: getResponsiveWidth(4.8),
     flex: 1,
   },
   animatedView: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: getResponsiveWidth(3.6),
+    paddingHorizontal: getResponsiveWidth(4.8),
   },
 });
 

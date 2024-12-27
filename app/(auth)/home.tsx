@@ -169,7 +169,7 @@ function HomeScreen() {
       setIsToastVisible(false);
       setIsSyncing(false);
     }
-  }, [isOffline, isSyncing, dispatch, userId]);
+  }, [isOffline, isSyncing, dispatch]);
   
   useEffect(() => {
     if (!userId) return; // Guard clause: Exit if no userId
@@ -187,15 +187,14 @@ function HomeScreen() {
           } else {
               const unSyncedData = await getUnsyncedQrCodes(userId);
               if (unSyncedData.length > 0) {
-                  console.log('Syncing unsynced data.');
                   await syncWithServer(userId);
               } else {
-                  console.log('No initial sync needed.');
                   setIsEmpty(!hasLocal);
               }
           }
       } catch (error) {
           console.error('Error during data initialization:', error);
+
           // Handle initialization error (e.g., set an error state, retry mechanism)
       } finally {
           setIsLoading(false); // Ensure loading is reset

@@ -222,9 +222,14 @@ const ThemedReuseableSheet = forwardRef<BottomSheet, ReuseableSheetProps>(
             <BottomSheetFlatList
               style={[customStyles.flatList]}
               contentContainerStyle={[
-                styles.contentContainer,
-                customStyles.container,
-                customStyles.flatListContent,
+                {backgroundColor: 'red',
+                  // padding: 20,
+                  marginHorizontal: 20,
+                  paddingHorizontal: 20,
+                }
+                // styles.contentContainer,
+                // customStyles.container,
+                // customStyles.flatListContent,
               ]}
               {...contentProps.flatListProps}
               renderItem={contentProps.flatListProps?.renderItem}
@@ -375,8 +380,8 @@ const styles = StyleSheet.create({
     height: getResponsiveHeight(0.6),
   },
   contentContainer: {
+    paddingVertical: getResponsiveHeight(1.8),
     paddingHorizontal: getResponsiveWidth(3.6),
-    paddingBottom: getResponsiveHeight(1.8),
     paddingTop: getResponsiveHeight(0.6),
   },
   headerContent: {

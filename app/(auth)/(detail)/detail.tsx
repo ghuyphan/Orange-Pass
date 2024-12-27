@@ -581,7 +581,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: getResponsiveWidth(4.8),
-    paddingVertical: getResponsiveHeight(1.2),
+    paddingVertical: getResponsiveHeight(1.8),
     gap: getResponsiveWidth(2.4),
     borderRadius: getResponsiveWidth(4),
     overflow: 'hidden',
@@ -606,7 +606,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: getResponsiveWidth(4.8),
-    paddingVertical: getResponsiveHeight(1.2),
+    paddingVertical: getResponsiveHeight(1.8),
     gap: getResponsiveWidth(2.4),
     borderRadius: getResponsiveWidth(4),
     overflow: 'hidden',
@@ -620,7 +620,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: getResponsiveWidth(4.8),
   },
   inputField: {
-    marginVertical: getResponsiveHeight(1.2),
+    marginVertical: getResponsiveHeight(1.8),
     fontSize: getResponsiveFontSize(16),
     flexGrow: 1,
     flexShrink: 1,
@@ -692,10 +692,10 @@ const styles = StyleSheet.create({
   },
   suggestionListContent: {
     gap: getResponsiveWidth(2.4),
-    paddingHorizontal: getResponsiveWidth(4.8),
+    paddingHorizontal: getResponsiveWidth(3.6),
   },
   suggestionItem: {
-    paddingHorizontal: getResponsiveWidth(4.8),
+    paddingHorizontal: getResponsiveWidth(3.6),
     paddingVertical: getResponsiveHeight(0.6),
     borderRadius: getResponsiveWidth(4),
     overflow: 'hidden',
@@ -726,7 +726,7 @@ const styles = StyleSheet.create({
     gap: getResponsiveWidth(2.4),
     alignItems: 'center',
     paddingHorizontal: getResponsiveWidth(4.8),
-    paddingVertical: getResponsiveHeight(1.2),
+    paddingVertical: getResponsiveHeight(1.8),
   },
 });
 

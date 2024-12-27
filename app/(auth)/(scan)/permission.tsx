@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
         width: Dimensions.get('window').width,
         alignItems: 'center',
         justifyContent: 'center',
-        paddingHorizontal: getResponsiveWidth(4.8),
+        paddingHorizontal: getResponsiveWidth(3.6),
         flexShrink: 1,
     },
     iconContainer: {

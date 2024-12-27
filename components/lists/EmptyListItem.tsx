@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
         flex: 1,
       },
       emptyCard: {
-        marginHorizontal: getResponsiveWidth(3.6),
+        marginHorizontal: getResponsiveWidth(4.8),
       },
 })
 export default EmptyListItem;

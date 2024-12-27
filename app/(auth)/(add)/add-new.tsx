@@ -65,11 +65,31 @@ const metadataTypeData: MetadataTypeItem[] = [
   { display: 'Barcode', value: 'barcode' },
 ];
 
-interface SheetItemProps {
-  item: CategoryItem | BrandItem | MetadataTypeItem;
-  isSelected: boolean;
-  onPress: () => void;
-}
+// Memoized helper functions (outside the component)
+const memoizedReturnItemsByType = (type: string, locale: string) => {
+  console.log("Calculating items for type:", type); // Log when calculation happens
+  const items = returnItemsByType(type);
+  return items.map((item) => ({
+    code: item.code,
+    name: item.name,
+    full_name: item.full_name[locale],
+    type: type,
+  }));
+};
+
+const memoizedReturnItemData = (itemCode: string, locale: string) => {
+  console.log("Fetching data for itemCode:", itemCode); // Log when fetching happens
+  const itemData = returnItemData(itemCode);
+  if (itemData) {
+    return {
+      code: itemCode,
+      name: itemData.name,
+      full_name: itemData.full_name[locale],
+      type: 'store', // Default type
+    };
+  }
+  return null;
+};
 
 const AddScreen: React.FC = () => {
   const { currentTheme: theme } = useTheme();
@@ -124,53 +144,51 @@ const AddScreen: React.FC = () => {
     return { bankCode: bankCodeResult, itemCode: itemCodeResult };
   }, [codeBin, codeType, codeProvider]);
 
-  // Optimize brands update
+  // Optimized State Initialization and Updates
   useEffect(() => {
-    if (!category) {
-      setBrands([]);
-      return;
-    }
-
-    const items = returnItemsByType(category.value);
-    setBrands(
-      items.map((item) => ({
-        code: item.code,
-        name: item.name,
-        full_name: item.full_name[locale],
-        type: category.value,
-      }))
-    );
-  }, [category, locale]);
-
-  // Optimize category initialization
-  useEffect(() => {
-    if (!codeType) return;
-
-    const categoryMap: { [key: string]: CategoryItem } = {
+    const categoryMap = {
       store: { display: t('addScreen.storeCategory'), value: 'store' },
       bank: { display: t('addScreen.bankCategory'), value: 'bank' },
       ewallet: { display: t('addScreen.ewalletCategory'), value: 'ewallet' },
     };
-    const newCategory = categoryMap[codeType.toString().toLowerCase()];
-    if (newCategory) {
-      setCategory(newCategory);
-    }
-  }, [codeType]);
 
-  // Optimize brand initialization
+    // 1. Initialize category based on codeType (only if codeType is valid)
+    let initialCategory = null;
+    if (
+      codeType &&
+      (codeType === 'store' || codeType === 'bank' || codeType === 'ewallet')
+    ) {
+      initialCategory = categoryMap[codeType];
+      setCategory(initialCategory);
+    }
+
+    // 2. Initialize brand based on itemCode (only if itemCode is valid and category is set or default type)
+    if (itemCode) {
+      const itemData = memoizedReturnItemData(itemCode, locale);
+      if (itemData) {
+        setBrand({
+          ...itemData,
+          type: initialCategory ? initialCategory.value : 'store', // Use category type if available, otherwise default
+        });
+      }
+    }
+
+    // 3. Initialize brands based on initialCategory (only if category is set)
+    if (initialCategory) {
+      const initialBrands = memoizedReturnItemsByType(initialCategory.value, locale);
+      setBrands(initialBrands);
+    }
+  }, [codeType, itemCode, locale]); // Run only when codeType, itemCode, or locale changes
+
+  // Update brands when category changes
   useEffect(() => {
-    if (!itemCode) return;
-
-    const itemData = returnItemData(itemCode);
-    if (itemData) {
-      setBrand({
-        code: itemCode,
-        name: itemData.name,
-        full_name: itemData.full_name[locale],
-        type: category?.value || 'store', // default type can be adjusted if needed
-      });
+    if (category) {
+      const updatedBrands = memoizedReturnItemsByType(category.value, locale);
+      setBrands(updatedBrands);
+    } else {
+      setBrands([]); // Clear brands if category is null
     }
-  }, [itemCode, category, locale]);
+  }, [category, locale]);
 
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
@@ -182,9 +200,6 @@ const AddScreen: React.FC = () => {
   const animationRange = getResponsiveHeight(5);
   const translateYValue = -getResponsiveHeight(3);
   const scaleValue = 0.6;
-  // const marginBottomValue = getResponsiveHeight(1.8);
-  // const marginBottomValue2 = -getResponsiveHeight(1.8);
-
 
   const titleContainerStyle = useAnimatedStyle(() => {
     const opacity = interpolate(
@@ -216,16 +231,8 @@ const AddScreen: React.FC = () => {
       Extrapolation.CLAMP
     );
 
-    // const marginBottom = interpolate(
-    //   scrollY.value,
-    //   [0, scrollThreshold],
-    //   [marginBottomValue, marginBottomValue2],
-    //   Extrapolation.CLAMP
-    // );
-
     return {
       transform: [{ scale }],
-      // marginBottom,
     };
   });
 
@@ -235,14 +242,13 @@ const AddScreen: React.FC = () => {
 
   const onOpenSheet = useCallback(
     (type: SheetType) => {
-      setIsSheetOpen(true);
       if (type === 'brand' && !category) {
-        // Don't open brand sheet if no category is selected
+        console.warn("Category is not selected. Cannot open brand sheet.");
         return;
       }
       setIsSheetOpen(true);
       setSheetType(type);
-      bottomSheetRef.current?.snapToIndex(0);
+      bottomSheetRef.current?.snapToIndex(0); // Assuming 0 is the desired snap point index
       if (Keyboard.isVisible()) {
         Keyboard.dismiss();
       }
@@ -262,18 +268,20 @@ const AddScreen: React.FC = () => {
   const handleClearMetadataType = useCallback(() => {
     setMetadataType(metadataTypeData[0]);
   }, []);
-
   const renderCardItem = useCallback((metadata: string) => {
+    // Derive data from local state instead of relying solely on itemCode from route params
+    const cardItemCode = brand?.code || (category && returnItemCodeByBin(category.value)) || '';
+
     return (
       <ThemedCardItem
-        code={brand?.code?.toString() || itemCode?.toString() || ''}
-        type={category?.value || 'store'} // default type can be adjusted if needed
+        code={cardItemCode}
+        type={category?.value || 'store'}
         metadata={metadata || ''}
         metadata_type={metadataType?.value || 'qr'}
         animatedStyle={cardStyle}
       />
     );
-  }, [brand, itemCode, category, metadataType]);
+  }, [brand, category, metadataType, cardStyle]);
 
   const renderSheetItem = useCallback(
     (item: CategoryItem | BrandItem | MetadataTypeItem) => {
@@ -288,6 +296,8 @@ const AddScreen: React.FC = () => {
           : isMetadataType
             ? metadataType?.value === item.value
             : false;
+
+      if (!item) return null;
 
       if (isCategory) {
         return (
@@ -356,7 +366,7 @@ const AddScreen: React.FC = () => {
       default:
         return [];
     }
-  }, [sheetType, categoryData, brands, metadataTypeData]);
+  }, [sheetType, categoryData, brands]);
 
   // Key extractor
   const keyExtractor = useCallback((item: unknown, index: number) => {
@@ -434,7 +444,7 @@ const AddScreen: React.FC = () => {
               <ThemedDisplayInput
                 iconName="domain"
                 placeholder={t('addScreen.brandPlaceholder')}
-                logoCode={brand?.code || values.code}
+                logoCode={brand ? brand.code : undefined} // Clear logoCode when brand is null
                 value={brand?.name || ''}
                 onPress={() => onOpenSheet('brand')}
                 onClear={handleClearBrand}
@@ -478,7 +488,8 @@ const AddScreen: React.FC = () => {
                     ? t('addScreen.metadataTypeTitle')
                     : ''
             }
-            enableDynamicSizing={true}
+            snapPoints={['70%']} // Set a fixed height
+            enableDynamicSizing={false} // Disable dynamic sizing
             onClose={() => setIsSheetOpen(false)}
             contentType="flat"
             contentProps={{
@@ -502,7 +513,7 @@ const styles = StyleSheet.create({
   },
   scrollViewContent: {
     flexGrow: 1,
-    paddingHorizontal: getResponsiveWidth(3.6),
+    paddingHorizontal: getResponsiveWidth(4.8),
     paddingTop: getResponsiveHeight(15.6),
   },
   titleContainer: {
@@ -514,13 +525,13 @@ const styles = StyleSheet.create({
   headerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: getResponsiveWidth(3.6),
-    gap: getResponsiveWidth(3.6),
+    paddingHorizontal: getResponsiveWidth(4.8),
+    gap: getResponsiveWidth(4.8),
   },
   titleButtonContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: getResponsiveWidth(3.6),
+    gap: getResponsiveWidth(4.8),
   },
   title: {
     fontSize: getResponsiveFontSize(28),

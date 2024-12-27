@@ -103,8 +103,8 @@ export function ThemedEmptyCard({
           borderBottomRightRadius: getResponsiveWidth(4),
         },
         cardFooterButton: {
-          paddingHorizontal: getResponsiveWidth(5), // Responsive padding
-          paddingVertical: getResponsiveHeight(1), // Responsive padding
+          paddingHorizontal: getResponsiveWidth(4.8), // Responsive padding
+          // paddingVertical: getResponsiveHeight(1), // Responsive padding
         },
       }),
     [paddingTop]

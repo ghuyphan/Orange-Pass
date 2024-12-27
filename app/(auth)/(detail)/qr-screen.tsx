@@ -54,7 +54,7 @@ export default function CreateQRScreen() {
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    paddingHorizontal: getResponsiveWidth(3.6),
+    paddingHorizontal: getResponsiveWidth(4.8),
   },
   loadingWrapper: {
     flex: 1,
@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
   },
   cardWrapper: {
     marginTop: getResponsiveHeight(2.4),
-    padding: getResponsiveWidth(3.6),
+    padding: getResponsiveWidth(4.8),
     borderRadius: getResponsiveWidth(2.8),
     marginBottom: getResponsiveHeight(1.2),
   },

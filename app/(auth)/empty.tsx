@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
     gap: getResponsiveWidth(2),
   },
   content: {
-    paddingHorizontal: getResponsiveWidth(4.8),
+    paddingHorizontal: getResponsiveWidth(3.6),
     fontSize: getResponsiveFontSize(16),
     marginTop: getResponsiveHeight(2),
     lineHeight: getResponsiveFontSize(25),

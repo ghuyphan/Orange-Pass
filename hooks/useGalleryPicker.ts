@@ -53,8 +53,6 @@ export const useGalleryPicker = ({
                     codeFormat: codeFormat,
                 });
 
-                console.log('Decoded QR code:', result);
-
                 if (result) {
                     const actionMap: Record<string, () => void> = {
                         'WIFI': () => onOpenSheet('wifi'),

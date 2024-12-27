@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
   },
   termsContainer: {
     alignItems: 'center',
-    paddingHorizontal: getResponsiveWidth(5),
+    paddingHorizontal: getResponsiveWidth(3.6),
   },
   termsText: {
     fontSize: getResponsiveFontSize(12),

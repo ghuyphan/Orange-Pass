@@ -36,8 +36,8 @@ export const ThemedVietQRCard = ({
   const styles = useMemo(() => StyleSheet.create({
     container: {
       borderRadius: getResponsiveWidth(4),
-      paddingVertical: getResponsiveHeight(1.8),
       paddingHorizontal: getResponsiveWidth(4.8),
+      paddingVertical: getResponsiveHeight(1.8),
     },
     headerContainer: {
       flexDirection: 'row',

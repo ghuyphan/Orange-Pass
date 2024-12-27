@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { Appearance, StatusBar } from 'react-native';
+import { Appearance, StatusBar, Platform } from 'react-native';
 import { useMMKVBoolean } from 'react-native-mmkv';
 import { storage } from '@/utils/storage';
+import * as NavigationBar from 'expo-navigation-bar';
 
 // Updated ThemeContextType to include currentTheme
 type ThemeContextType = {
@@ -34,10 +35,24 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
 
     const [currentTheme, setCurrentTheme] = useState<'light' | 'dark'>(getCurrentTheme());
 
+    const setNavigationBarColor = useCallback(async (theme: 'light' | 'dark') => {
+        if (Platform.OS === 'android') {
+            try {
+                await NavigationBar.setBackgroundColorAsync(theme === 'dark' ? '#121212' : '#FAFAFA');
+                await NavigationBar.setButtonStyleAsync(theme === 'dark' ? 'light' : 'dark');
+            } catch (error) {
+                console.error("Error setting navigation bar color:", error);
+            }
+        }
+    }, []);
+    
     useEffect(() => {
         const updateSystemTheme = () => {
             const colorScheme = Appearance.getColorScheme();
             setSystemTheme(colorScheme === 'dark' ? 'dark' : 'light');
+            if(isDarkMode === undefined){
+                setNavigationBarColor(colorScheme || 'light');
+            }
         };
 
         const listener = Appearance.addChangeListener(updateSystemTheme);
@@ -46,12 +61,8 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
 
     useEffect(() => {
         setCurrentTheme(getCurrentTheme());
-
-        // This will only save the preference, not change the system appearance
-        if (isDarkMode !== undefined) {
-            storage.set('dark-mode', isDarkMode);
-        }
-    }, [isDarkMode, getCurrentTheme]); // Only `isDarkMode` is a dependency now
+        setNavigationBarColor(getCurrentTheme());
+    }, [isDarkMode, getCurrentTheme, setNavigationBarColor]); // Only `isDarkMode` is a dependency now
 
     const setDarkMode = (value: boolean | undefined) => {
         setIsDarkMode(value);

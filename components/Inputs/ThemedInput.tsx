@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     paddingVertical: getResponsiveHeight(1.8),
-    paddingHorizontal: getResponsiveWidth(4.8),
+    paddingHorizontal: getResponsiveWidth(3.6),
     borderRadius: getResponsiveWidth(4),
     flexDirection: 'column',
   },

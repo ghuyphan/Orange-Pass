@@ -64,7 +64,7 @@ export const ThemedPinnedCard = ({
             styles.codeWrapper,
             metadata_type === 'barcode'
               ? {
-                  paddingHorizontal: getResponsiveWidth(4.8),
+                  paddingHorizontal: getResponsiveWidth(3.6),
                   paddingVertical: getResponsiveHeight(1.8),
                 }
               : {},
@@ -109,8 +109,8 @@ export const ThemedPinnedCard = ({
 const styles = StyleSheet.create({
   container: {
     borderRadius: getResponsiveWidth(4),
-    paddingVertical: getResponsiveHeight(1.8),
     paddingHorizontal: getResponsiveWidth(4.8),
+    paddingVertical: getResponsiveHeight(1.8),
   },
   headerContainer: {
     flexDirection: 'row',

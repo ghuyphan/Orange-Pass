@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: getResponsiveWidth(4.8),
+    paddingHorizontal: getResponsiveWidth(3.6),
     pointerEvents: 'none',
   },
   leftSectionContainer: {
