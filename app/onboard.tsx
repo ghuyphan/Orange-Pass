@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useCallback, useMemo } from 'react';
 import { StyleSheet, View, TouchableWithoutFeedback, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -26,6 +26,68 @@ type Feature = {
 // Type for bottom sheet types
 type SheetType = 'tos' | 'privacy' | null;
 
+// Terms of Service Content
+const TermsOfServiceContent = ({ cardColor }: { cardColor: string }) => (
+  <>
+    <View style={[styles.sectionContainer, { backgroundColor: cardColor, marginBottom: getResponsiveHeight(2.4) }]}>
+      <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
+        {t('onboardingScreen.termsOfService.termsOfServiceTitle')} 🚀
+      </ThemedText>
+      <ThemedText style={styles.sectionText}>
+        {t('onboardingScreen.termsOfService.termsOfServiceContent1')}
+      </ThemedText>
+    </View>
+    <View style={[styles.sectionContainer, { backgroundColor: cardColor }]}>
+      <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
+        {t('onboardingScreen.termsOfService.termsOfServiceDescription')} 📋
+      </ThemedText>
+      <View style={styles.bulletContainer}>
+        {t('onboardingScreen.termsOfService.termsOfServiceContent2')
+          .split('\n')
+          .map((bullet, index) =>
+            bullet.trim().startsWith('*') ? (
+              <View key={index} style={styles.bulletPoint}>
+                <ThemedText style={styles.bulletIcon}>•</ThemedText>
+                <ThemedText style={styles.bulletText}>{bullet.replace('*', '').trim()}</ThemedText>
+              </View>
+            ) : null
+          )}
+      </View>
+    </View>
+  </>
+);
+
+// Privacy Policy Content
+const PrivacyPolicyContent = ({ cardColor }: { cardColor: string }) => (
+  <>
+    <View style={[styles.sectionContainer, { backgroundColor: cardColor, marginBottom: getResponsiveHeight(2.4) }]}>
+      <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
+        {t('onboardingScreen.termsOfService.privacyPolicyTitle')} 🔒
+      </ThemedText>
+      <ThemedText style={styles.sectionText}>
+        {t('onboardingScreen.termsOfService.privacyPolicyContent1')}
+      </ThemedText>
+    </View>
+    <View style={[styles.sectionContainer, { backgroundColor: cardColor }]}>
+      <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
+        {t('onboardingScreen.termsOfService.privacyPolicyDescription')} 🤝
+      </ThemedText>
+      <View style={styles.bulletContainer}>
+        {t('onboardingScreen.termsOfService.privacyPolicyContent2')
+          .split('\n')
+          .map((bullet, index) =>
+            bullet.trim().startsWith('*') ? (
+              <View key={index} style={styles.bulletPoint}>
+                <ThemedText style={styles.bulletIcon}>•</ThemedText>
+                <ThemedText style={styles.bulletText}>{bullet.replace('*', '').trim()}</ThemedText>
+              </View>
+            ) : null
+          )}
+      </View>
+    </View>
+  </>
+);
+
 const OnBoardScreen = () => {
   const router = useRouter();
   const iconColor = useThemeColor({ light: Colors.light.icon, dark: Colors.dark.icon }, 'buttonBackground');
@@ -52,87 +114,31 @@ const OnBoardScreen = () => {
     },
   ];
 
-  const onFinish = () => {
+  const onFinish = useCallback(() => {
     storage.set('hasSeenOnboarding', true);
     triggerSuccessHapticFeedback();
     router.replace('/login');
-  };
+  }, []);
 
-  const onOpenSheet = (type: SheetType) => {
+  const onOpenSheet = useCallback((type: SheetType) => {
     setSheetType(type);
     bottomSheetRef.current?.snapToIndex(0);
-  };
+  }, []);
 
-  const onCloseSheet = () => {
+  const onCloseSheet = useCallback(() => {
     bottomSheetRef.current?.close();
     setSheetType(null);
-  };
+  }, []);
 
-  const renderSheetContent = () => {
-    return (
+  // Memoize the sheet content based on sheetType and cardColor
+  const renderSheetContent = useMemo(() => {
+    return () => (
       <ScrollView style={styles.sheetContentContainer}>
-        {sheetType === 'tos' && (
-          <>
-            <View style={[styles.sectionContainer, { backgroundColor: cardColor, marginBottom: getResponsiveHeight(2.4) }]}>
-              <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
-                {t('onboardingScreen.termsOfService.termsOfServiceTitle')} 🚀
-              </ThemedText>
-              <ThemedText style={styles.sectionText}>
-                {t('onboardingScreen.termsOfService.termsOfServiceContent1')}
-              </ThemedText>
-            </View>
-            <View style={[styles.sectionContainer, { backgroundColor: cardColor }]}>
-              <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
-                {t('onboardingScreen.termsOfService.termsOfServiceDescription')} 📋
-              </ThemedText>
-              <View style={styles.bulletContainer}>
-                {t('onboardingScreen.termsOfService.termsOfServiceContent2')
-                  .split('\n')
-                  .map((bullet, index) =>
-                    bullet.trim().startsWith('*') ? (
-                      <View key={index} style={styles.bulletPoint}>
-                        <ThemedText style={styles.bulletIcon}>•</ThemedText>
-                        <ThemedText style={styles.bulletText}>{bullet.replace('*', '').trim()}</ThemedText>
-                      </View>
-                    ) : null
-                  )}
-              </View>
-            </View>
-          </>
-        )}
-
-        {sheetType === 'privacy' && (
-          <>
-            <View style={[styles.sectionContainer, { backgroundColor: cardColor, marginBottom: getResponsiveHeight(2.4) }]}>
-              <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
-                {t('onboardingScreen.termsOfService.privacyPolicyTitle')} 🔒
-              </ThemedText>
-              <ThemedText style={styles.sectionText}>
-                {t('onboardingScreen.termsOfService.privacyPolicyContent1')}
-              </ThemedText>
-            </View>
-            <View style={[styles.sectionContainer, { backgroundColor: cardColor }]}>
-              <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
-                {t('onboardingScreen.termsOfService.privacyPolicyDescription')} 🤝
-              </ThemedText>
-              <View style={styles.bulletContainer}>
-                {t('onboardingScreen.termsOfService.privacyPolicyContent2')
-                  .split('\n')
-                  .map((bullet, index) =>
-                    bullet.trim().startsWith('*') ? (
-                      <View key={index} style={styles.bulletPoint}>
-                        <ThemedText style={styles.bulletIcon}>•</ThemedText>
-                        <ThemedText style={styles.bulletText}>{bullet.replace('*', '').trim()}</ThemedText>
-                      </View>
-                    ) : null
-                  )}
-              </View>
-            </View>
-          </>
-        )}
+        {sheetType === 'tos' && <TermsOfServiceContent cardColor={cardColor} />}
+        {sheetType === 'privacy' && <PrivacyPolicyContent cardColor={cardColor} />}
       </ScrollView>
-    );
-  };
+    )
+  }, [sheetType, cardColor]);
 
   return (
     <ThemedView style={styles.container}>

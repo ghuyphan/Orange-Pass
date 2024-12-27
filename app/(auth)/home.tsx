@@ -118,95 +118,92 @@ function HomeScreen() {
   const emptyCardOffset = useSharedValue(300);
   const scrollY = useSharedValue(0);
 
-  const shouldSyncInitially = useCallback(async (userId: string) => {
-    if (!userId) return false;
-
-    const hasLocal = await hasLocalData(userId);
-    if (hasLocal) return true;
-
-    if (!isOffline) {
-      try {
-        const serverData: ServerRecord[] = await fetchServerData(userId);
-        if (serverData.length > 0) return true;
-      } catch (error) {
-        console.error('Error checking server data for initial sync:', error);
-        return true; // Assume sync needed on error
-      }
-    }
-
-    return false;
-  }, [isOffline]);
-
   const syncWithServer = useCallback(async (userId: string) => {
+    // Early Exit: Offline Mode
     if (isOffline) {
-      // If offline, update isEmpty based on local data only
       const hasLocal = await hasLocalData(userId);
       setIsEmpty(!hasLocal);
       setIsLoading(false);
       return;
     }
-
-    if (isSyncing) return;
-
+  
+    // Early Exit: Already Syncing
+    if (isSyncing) {
+      return;
+    }
+  
+    setIsSyncing(true);
+    setToastMessage(t('homeScreen.syncing'));
+    setIsToastVisible(true);
+  
     try {
-      setIsSyncing(true);
-      setToastMessage(t('homeScreen.syncing'));
-      setIsToastVisible(true);
-
-      // 1. Sync Local Changes to Server (if any)
-      await syncQrCodes(userId);
-
-      // 2. Fetch Server Data and Update Local DB
+      // 1. Prioritize Local Changes: Sync to Server First
+      await syncQrCodes(userId); 
+  
+      // 2. Fetch and Update from Server: Get the latest from the server
       const serverData: ServerRecord[] = await fetchServerData(userId);
       if (serverData.length > 0) {
         await insertOrUpdateQrCodes(serverData);
       }
-
-      // 3. Update UI
-      const localData = await getQrCodesByUserId(userId); // Still needed to get the full data for the UI
+  
+      // 3. Refresh UI with Local Data: Ensures consistency, regardless of sync success
+      const localData = await getQrCodesByUserId(userId);
       dispatch(setQrData(localData));
-
-      // Update isEmpty based on the potentially updated local data
+  
+      // 4. Update isEmpty: Check using the most reliable method
       const hasLocal = await hasLocalData(userId);
       setIsEmpty(!hasLocal);
-
+  
     } catch (error) {
-      console.error('Error syncing QR codes:', error);
+      console.error('Error during sync process:', error);
       setToastMessage(t('homeScreen.syncError'));
       setIsToastVisible(true);
-      // On error, rely on hasLocalData to determine isEmpty
+  
+      // Fallback: Ensure isEmpty is updated even on error
       const hasLocal = await hasLocalData(userId);
       setIsEmpty(!hasLocal);
+  
     } finally {
+      // Reset states regardless of success or failure
       setIsLoading(false);
       setIsToastVisible(false);
       setIsSyncing(false);
     }
-  }, [isOffline, isSyncing, dispatch]);
-
+  }, [isOffline, isSyncing, dispatch, userId]);
+  
   useEffect(() => {
-    if (!userId) return;
-
+    if (!userId) return; // Guard clause: Exit if no userId
+  
     const initializeData = async () => {
-      setIsLoading(true); // Start with loading state
-
-      const needsInitialSync = await shouldSyncInitially(userId);
-      if (needsInitialSync) {
-        console.log('Initial sync required.');
-        await syncWithServer(userId).catch(error => {
-          console.error('Error during initial sync:', error);
-        });
-      } else {
-        console.log('No initial sync needed.');
-        const hasLocal = await hasLocalData(userId); // Check local data
-        setIsEmpty(!hasLocal); // Set isEmpty based on local data
+      setIsLoading(true); // Indicate loading start
+  
+      try {
+          const hasLocal = await hasLocalData(userId);
+  
+          // Trigger Sync: If there are unsynced changes or no local data
+          if (!hasLocal) {
+              console.log('Initial sync required.');
+              await syncWithServer(userId);
+          } else {
+              const unSyncedData = await getUnsyncedQrCodes(userId);
+              if (unSyncedData.length > 0) {
+                  console.log('Syncing unsynced data.');
+                  await syncWithServer(userId);
+              } else {
+                  console.log('No initial sync needed.');
+                  setIsEmpty(!hasLocal);
+              }
+          }
+      } catch (error) {
+          console.error('Error during data initialization:', error);
+          // Handle initialization error (e.g., set an error state, retry mechanism)
+      } finally {
+          setIsLoading(false); // Ensure loading is reset
       }
-
-      setIsLoading(false); // Set isLoading to false after checks
-    };
-
+  };
+  
     initializeData();
-  }, [userId, shouldSyncInitially]);
+  }, [userId]);
 
   useEffect(() => {
     // Only show online/offline toast if there's an actual change in network state

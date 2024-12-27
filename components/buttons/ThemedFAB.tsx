@@ -78,7 +78,7 @@ export const ThemedFAB = forwardRef<View, ThemedFABProps>(({
 
   // Backdrop opacity animation
   const backdropAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: withTiming(open ? 0.7 : 0, animationConfig)
+    opacity: withTiming(open ? 0.5 : 0, animationConfig)
   }), [open, animationConfig]);
 
   // Optimize repeated animation styles with memoization
@@ -111,7 +111,7 @@ export const ThemedFAB = forwardRef<View, ThemedFABProps>(({
           )
         )
       }]
-    }), [open, delay, animationConfig]);
+    }), [open, animationConfig]); // Remove delay from dependencies
   };
 
   const useTextAnimationStyle = (delay: number) => {
@@ -132,19 +132,15 @@ export const ThemedFAB = forwardRef<View, ThemedFABProps>(({
           )
         )
       }],
-    }), [open, delay, animationConfig]);
+    }), [open, animationConfig]); // Remove delay from dependencies
   };
 
-  // Dynamically generate animation styles based on number of actions
-  const buttonStyles = actions.map((_, index) => {
-    const delay = (index + 1) * 50;
-    return useButtonAnimationStyle(delay);
-  });
+  // Calculate the delays for each action outside of the map
+  const delays = actions.map((_, index) => (index + 1) * 50);
 
-  const textStyles = actions.map((_, index) => {
-    const delay = (index + 1) * 50;
-    return useTextAnimationStyle(delay);
-  });
+  // Now call the animation hooks with the calculated delays
+  const buttonStyles = delays.map(useButtonAnimationStyle);
+  const textStyles = delays.map(useTextAnimationStyle);
 
   // useEffect to handle closing animation
   useEffect(() => {
@@ -212,14 +208,14 @@ export const ThemedFAB = forwardRef<View, ThemedFABProps>(({
                         styles.buttonText,
                         { color: colors.text },
                         textStyle,
-                        textStyles[index]
+                        textStyles[index] // Use the pre-calculated style here
                       ]}
                     >
                       {action.text}
                     </Animated.Text>
                     <ThemedButton
                       style={styles.fab}
-                      animatedStyle={buttonStyles[index]}
+                      animatedStyle={buttonStyles[index]} // Use the pre-calculated style here
                       onPress={handlePressWithAnimation(action.onPress)}
                       iconName={action.iconName}
                     />
@@ -278,5 +274,6 @@ const styles = StyleSheet.create({
     textShadowRadius: 1,
   }
 });
+
 
 export default ThemedFAB;

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet, View, Keyboard } from 'react-native';
+import { StyleSheet, View, Keyboard, FlatList } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { Formik } from 'formik';
@@ -41,7 +41,7 @@ import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '
 
 const AnimatedKeyboardAwareScrollView = Animated.createAnimatedComponent(KeyboardAwareScrollView);
 
-type SheetType = 'category' | 'brand' | 'metadataType' | null;
+type SheetType = 'category' | 'brand' | 'metadataType';
 
 interface CategoryItem {
   display: string;
@@ -93,7 +93,7 @@ const AddScreen: React.FC = () => {
   const [brand, setBrand] = useState<BrandItem | null>(null);
   const [brands, setBrands] = useState<BrandItem[]>([]);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [sheetType, setSheetType] = useState<SheetType>(null);
+  const [sheetType, setSheetType] = useState<SheetType | null>(null); // use null as initial value
   const [metadataType, setMetadataType] = useState<MetadataTypeItem>(metadataTypeData[0]); // Default to 'qr'
 
   const bottomSheetRef = useRef<BottomSheet>(null);
@@ -107,67 +107,70 @@ const AddScreen: React.FC = () => {
     codeProvider?: string;
   }>();
 
-  const bankCode = useMemo(() => {
+  const { bankCode, itemCode } = useMemo(() => {
+    let bankCodeResult: string | null = null;
+    let itemCodeResult: string | null = null;
+
     if (codeType !== 'ewallet' && codeBin) {
-      return returnItemCodeByBin(codeBin.toString());
+      bankCodeResult = returnItemCodeByBin(codeBin.toString());
     }
-    return null;
-  }, [codeBin, codeType]);
 
-  const itemCode = useMemo(() => {
     if (codeType === 'ewallet' && codeProvider) {
-      return codeProvider;
+      itemCodeResult = codeProvider;
     } else {
-      return bankCode;
+      itemCodeResult = bankCodeResult;
     }
-  }, [codeType, codeProvider, bankCode]);
 
-  // Update brands when category changes
+    return { bankCode: bankCodeResult, itemCode: itemCodeResult };
+  }, [codeBin, codeType, codeProvider]);
+
+  // Optimize brands update
   useEffect(() => {
-    if (category) {
-      const items = returnItemsByType(category.value);
-      setBrands(
-        items.map((item) => ({
-          code: item.code,
-          name: item.name,
-          full_name: item.full_name[locale],
-          type: category.value,
-        }))
-      );
-    } else {
+    if (!category) {
       setBrands([]);
+      return;
     }
-  }, [category, currentLocale]);
 
-  // Set initial category based on codeType
+    const items = returnItemsByType(category.value);
+    setBrands(
+      items.map((item) => ({
+        code: item.code,
+        name: item.name,
+        full_name: item.full_name[locale],
+        type: category.value,
+      }))
+    );
+  }, [category, locale]);
+
+  // Optimize category initialization
   useEffect(() => {
-    if (codeType) {
-      const categoryMap: { [key: string]: CategoryItem } = {
-        store: { display: t('addScreen.storeCategory'), value: 'store' },
-        bank: { display: t('addScreen.bankCategory'), value: 'bank' },
-        ewallet: { display: t('addScreen.ewalletCategory'), value: 'ewallet' },
-      };
-      const newCategory = categoryMap[codeType.toString().toLowerCase()];
-      if (newCategory) {
-        setCategory(newCategory);
-      }
+    if (!codeType) return;
+
+    const categoryMap: { [key: string]: CategoryItem } = {
+      store: { display: t('addScreen.storeCategory'), value: 'store' },
+      bank: { display: t('addScreen.bankCategory'), value: 'bank' },
+      ewallet: { display: t('addScreen.ewalletCategory'), value: 'ewallet' },
+    };
+    const newCategory = categoryMap[codeType.toString().toLowerCase()];
+    if (newCategory) {
+      setCategory(newCategory);
     }
   }, [codeType]);
 
-  // Set initial brand based on itemCode
+  // Optimize brand initialization
   useEffect(() => {
-    if (itemCode) {
-      const itemData = returnItemData(itemCode);
-      if (itemData) {
-        setBrand({
-          code: itemCode,
-          name: itemData.name,
-          full_name: itemData.full_name[locale],
-          type: category?.value || 'store', // default type can be adjusted if needed
-        });
-      }
+    if (!itemCode) return;
+
+    const itemData = returnItemData(itemCode);
+    if (itemData) {
+      setBrand({
+        code: itemCode,
+        name: itemData.name,
+        full_name: itemData.full_name[locale],
+        type: category?.value || 'store', // default type can be adjusted if needed
+      });
     }
-  }, [itemCode, category]);
+  }, [itemCode, category, locale]);
 
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
@@ -260,7 +263,7 @@ const AddScreen: React.FC = () => {
     setMetadataType(metadataTypeData[0]);
   }, []);
 
-  const renderCardItem = (metadata: string) => {
+  const renderCardItem = useCallback((metadata: string) => {
     return (
       <ThemedCardItem
         code={brand?.code?.toString() || itemCode?.toString() || ''}
@@ -270,14 +273,14 @@ const AddScreen: React.FC = () => {
         animatedStyle={cardStyle}
       />
     );
-  };
+  }, [brand, itemCode, category, metadataType]);
 
   const renderSheetItem = useCallback(
     (item: CategoryItem | BrandItem | MetadataTypeItem) => {
       const isCategory = 'value' in item && (item.value === 'store' || item.value === 'bank' || item.value === 'ewallet');
       const isMetadataType = 'value' in item && (item.value === 'qr' || item.value === 'barcode');
       const isBrand = 'code' in item;
-  
+
       const isSelected = isCategory
         ? category?.value === item.value
         : isBrand
@@ -285,7 +288,7 @@ const AddScreen: React.FC = () => {
           : isMetadataType
             ? metadataType?.value === item.value
             : false;
-  
+
       if (isCategory) {
         return (
           <CategorySheetItem
@@ -295,7 +298,7 @@ const AddScreen: React.FC = () => {
               setCategory(item as CategoryItem);
               setBrand(null);
               bottomSheetRef.current?.close();
-              setTimeout(() => setIsSheetOpen(false), 50);
+              setSheetType(null);
             }}
             iconColors={iconColors}
             textColors={colors}
@@ -309,7 +312,7 @@ const AddScreen: React.FC = () => {
             onPress={() => {
               setBrand(item as BrandItem);
               bottomSheetRef.current?.close();
-              setTimeout(() => setIsSheetOpen(false), 50);
+              setSheetType(null);
             }}
             iconColors={iconColors}
             textColors={colors}
@@ -323,7 +326,7 @@ const AddScreen: React.FC = () => {
             onPress={() => {
               setMetadataType(item as MetadataTypeItem);
               bottomSheetRef.current?.close();
-              setTimeout(() => setIsSheetOpen(false), 50);
+              setSheetType(null);
             }}
             iconColors={iconColors}
             textColors={colors}
@@ -335,11 +338,37 @@ const AddScreen: React.FC = () => {
     [category, brand, metadataType, iconColors, colors]
   );
 
-  const categoryData: CategoryItem[] = [
+  const categoryData: CategoryItem[] = useMemo(() => [
     { display: t('addScreen.storeCategory'), value: 'store' },
     { display: t('addScreen.bankCategory'), value: 'bank' },
     { display: t('addScreen.ewalletCategory'), value: 'ewallet' },
-  ];
+  ], []);
+
+  // Prepare sheet data
+  const sheetData = useMemo(() => {
+    switch (sheetType) {
+      case 'category':
+        return categoryData;
+      case 'brand':
+        return brands;
+      case 'metadataType':
+        return metadataTypeData;
+      default:
+        return [];
+    }
+  }, [sheetType, categoryData, brands, metadataTypeData]);
+
+  // Key extractor
+  const keyExtractor = useCallback((item: unknown, index: number) => {
+    const typedItem = item as CategoryItem | BrandItem | MetadataTypeItem;
+    if ('value' in typedItem) {
+      return typedItem.value;
+    } else if ('code' in typedItem) {
+      return typedItem.code;
+    } else {
+      return index.toString();
+    }
+  }, []);
 
   return (
     <Formik
@@ -450,35 +479,14 @@ const AddScreen: React.FC = () => {
                     : ''
             }
             enableDynamicSizing={true}
-            onClose={() => {
-              setTimeout(() => {
-                setIsSheetOpen(false);
-              }, 50);
-            }}
+            onClose={() => setIsSheetOpen(false)}
             contentType="flat"
             contentProps={{
               flatListProps: {
-                data:
-                  sheetType === 'category'
-                    ? categoryData
-                    : sheetType === 'brand'
-                      ? brands
-                      : sheetType === 'metadataType'
-                        ? metadataTypeData
-                        : [],
+                data: sheetData,
                 showsVerticalScrollIndicator: false,
-                renderItem: ({ item }) =>
-                  renderSheetItem(item as CategoryItem | BrandItem | MetadataTypeItem),
-                keyExtractor: (item: unknown, index: number) => {
-                  const typedItem = item as CategoryItem | BrandItem | MetadataTypeItem;
-                  if ('value' in typedItem) {
-                    return typedItem.value;
-                  } else if ('code' in typedItem) {
-                    return typedItem.code;
-                  } else {
-                    return index.toString();
-                  }
-                },
+                renderItem: ({ item }) => renderSheetItem(item as CategoryItem | BrandItem | MetadataTypeItem),
+                keyExtractor: keyExtractor,
               },
             }}
           />

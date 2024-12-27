@@ -1,11 +1,23 @@
-import React, { useMemo, useEffect, useState } from 'react';
-import { StyleSheet, View, StyleProp, ViewStyle, ActivityIndicator, Pressable } from 'react-native';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import {
+  StyleSheet,
+  StyleProp,
+  ViewStyle,
+  View,
+  Pressable,
+  ActivityIndicator,
+} from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Portal } from 'react-native-paper';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+} from 'react-native-reanimated';
 import { ThemedText } from '../ThemedText';
 import { Colors } from '@/constants/Colors';
 import { useTheme } from '@/context/ThemeContext';
+import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
 
 /**
  * Props for the ThemedStatusToast component
@@ -62,19 +74,23 @@ export function ThemedStatusToast({
   const [isAnimationComplete, setIsAnimationComplete] = useState(false);
 
   // Memoized toast style with dynamic theming
-  const toastStyle = useMemo(() => ([
-    styles.toastContainer,
-    {
-      backgroundColor: currentTheme === 'light' 
-        ? Colors.light.toastBackground 
-        : Colors.dark.toastBackground
-    },
-    style
-  ]), [currentTheme, style]);
+  const toastStyle = useMemo(
+    () => [
+      styles.toastContainer,
+      {
+        backgroundColor:
+          currentTheme === 'light'
+            ? Colors.light.toastBackground
+            : Colors.dark.toastBackground,
+      },
+      style,
+    ],
+    [currentTheme, style]
+  );
 
-  // Reanimated values for entrance/exit animation
+  // Reanimated shared values for entrance/exit animation
   const opacity = useSharedValue(0);
-  const translateY = useSharedValue(50);
+  const translateY = useSharedValue(getResponsiveHeight(6));
 
   // Animated style for toast entrance/exit
   const animatedStyle = useAnimatedStyle(() => ({
@@ -99,14 +115,23 @@ export function ThemedStatusToast({
       // Animate toast out
       setIsAnimationComplete(true);
       opacity.value = withTiming(0, { duration: 300 });
-      translateY.value = withTiming(50, { duration: 300 });
-      
+      translateY.value = withTiming(getResponsiveHeight(6), { duration: 300 });
+
       // Reset animation state
       setTimeout(() => {
         setIsAnimationComplete(false);
       }, 300);
     }
   }, [isVisible, duration, onVisibilityToggle, opacity, translateY]);
+
+  const handleOnDismiss = useCallback(() => {
+    if (onDismiss) {
+      onDismiss();
+    }
+    if (onVisibilityToggle) {
+      onVisibilityToggle(false);
+    }
+  }, [onDismiss, onVisibilityToggle]);
 
   // Render nothing if not visible and no animation in progress
   if (!isVisible && !isAnimationComplete) {
@@ -122,19 +147,19 @@ export function ThemedStatusToast({
         <View style={styles.toastContent}>
           <View style={styles.toastTitle}>
             {showLoadingIndicator ? (
-              <ActivityIndicator size="small" color={color} />
+              <ActivityIndicator size={getResponsiveFontSize(16)} color={color} />
             ) : (
               <MaterialIcons
                 name={iconName}
-                size={20}
+                size={getResponsiveFontSize(20)}
                 color={color}
               />
             )}
             <View style={styles.messageContainer}>
-              <ThemedText 
-                style={styles.toastText} 
-                numberOfLines={2} 
-                ellipsizeMode="tail" 
+              <ThemedText
+                style={styles.toastText}
+                numberOfLines={2}
+                ellipsizeMode="tail"
                 type="defaultSemiBold"
               >
                 {message}
@@ -142,14 +167,19 @@ export function ThemedStatusToast({
             </View>
           </View>
           {!showLoadingIndicator && (
-            <Pressable 
-              onPress={onDismiss} 
-              hitSlop={30} 
+            <Pressable
+              onPress={handleOnDismiss}
+              hitSlop={{
+                top: getResponsiveHeight(3.6),
+                bottom: getResponsiveHeight(3.6),
+                left: getResponsiveWidth(3.6),
+                right: getResponsiveWidth(3.6),
+              }}
               style={styles.iconTouchable}
             >
               <MaterialIcons
                 name={dismissIconName}
-                size={20}
+                size={getResponsiveFontSize(20)}
                 color={color}
               />
             </Pressable>
@@ -162,9 +192,9 @@ export function ThemedStatusToast({
 
 const styles = StyleSheet.create({
   toastContainer: {
-    borderRadius: 16,
-    paddingVertical: 15,
-    paddingHorizontal: 20,
+    borderRadius: getResponsiveWidth(4),
+    paddingVertical: getResponsiveHeight(1.8),
+    paddingHorizontal: getResponsiveWidth(4.8),
     flexDirection: 'row',
     alignItems: 'center',
   },
@@ -178,18 +208,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
-    gap: 10,
+    gap: getResponsiveWidth(2.4),
   },
   messageContainer: {
     flex: 1,
-    marginRight: 5, // Ensures space for the close button
+    marginRight: getResponsiveWidth(1.2), // Ensures space for the close button
   },
   toastText: {
-    fontSize: 14,
+    fontSize: getResponsiveFontSize(14),
     overflow: 'hidden',
   },
   iconTouchable: {
-    borderRadius: 50,
-    padding: 5,
+    borderRadius: getResponsiveWidth(12),
   },
 });

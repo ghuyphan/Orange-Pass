@@ -222,7 +222,7 @@ export async function getLocallyDeletedQrCodes(userId: string) {
     }
 }
 
-export async function fetchServerData(userId: string) {
+export async function fetchServerData(userId: string): Promise<ServerRecord[]> {
     try {
         // 1. Get locally deleted QR code IDs
         const locallyDeletedQrCodes = await getLocallyDeletedQrCodes(userId);
@@ -251,13 +251,53 @@ export async function fetchServerData(userId: string) {
             sort: 'updated', // Sort by updated to get the latest changes
         });
 
-        return serverData.items;
+        // 5. Validate and Transform the Data:
+        const validatedServerData: ServerRecord[] = serverData.items.map(item => {
+            // Check if 'item' has all required properties of ServerRecord
+            if (
+                !item.id ||
+                item.qr_index === undefined || // Use undefined for number
+                !item.user_id ||
+                !item.code ||
+                !item.metadata ||
+                !item.metadata_type ||
+                !item.type ||
+                !item.created ||
+                !item.updated ||
+                item.is_deleted === undefined
+            ) {
+                console.log('item: ', item);
+                throw new Error("Invalid server data format: Missing required properties");
+            }
+
+            // Transform 'item' into a ServerRecord object
+            const serverRecord: ServerRecord = {
+                id: item.id,
+                qr_index: item.qr_index,
+                user_id: item.user_id,
+                code: item.code,
+                metadata: item.metadata,
+                metadata_type: item.metadata_type,
+                account_name: item.account_name || null, // Handle optional properties
+                account_number: item.account_number || null, // Handle optional properties
+                type: item.type,
+                created: item.created,
+                updated: item.updated,
+                is_deleted: item.is_deleted,
+                collectionId: '', // Add the missing property
+                collectionName: '', // Add the missing property
+                is_synced: false, // Add the missing property
+            };
+
+            return serverRecord;
+        });
+
+        return validatedServerData;
     } catch (error) {
-        console.error('Error fetching server data:', error);
+        console.error('Error fetching or validating server data:', error);
         throw error;
     }
 }
-
 // Function to insert or update QR codes based on their existence in the local DB
 export async function insertOrUpdateQrCodes(qrDataArray: QRRecord[]): Promise<void> {
     const db = await openDatabase();
@@ -303,7 +343,7 @@ export async function insertOrUpdateQrCodes(qrDataArray: QRRecord[]): Promise<vo
                 qrData.created,
                 qrData.updated,
                 qrData.is_deleted ? 1 : 0,
-                qrData.is_synced ? 1 : 0,
+                0, // Always set is_synced to 0 for new records
             ]);
 
             await db.runAsync(
@@ -318,7 +358,7 @@ export async function insertOrUpdateQrCodes(qrDataArray: QRRecord[]): Promise<vo
         for (const qrData of recordsToUpdate) {
             await db.runAsync(
                 `UPDATE qrcodes 
-              SET qr_index = ?, code = ?, metadata = ?, metadata_type = ?, account_name = ?, account_number = ?, type = ?, updated = ?, is_synced = ?, is_deleted = ?
+              SET qr_index = ?, code = ?, metadata = ?, metadata_type = ?, account_name = ?, account_number = ?, type = ?, updated = ?, is_deleted = ?
               WHERE id = ?`,
                 qrData.qr_index,
                 qrData.code,
@@ -328,8 +368,8 @@ export async function insertOrUpdateQrCodes(qrDataArray: QRRecord[]): Promise<vo
                 qrData.account_number || '',
                 qrData.type,
                 qrData.updated,
-                qrData.is_synced ? 1 : 0,
                 qrData.is_deleted ? 1 : 0,
+                // Removed is_synced from here
                 qrData.id
             );
         }
@@ -341,6 +381,7 @@ export async function insertOrUpdateQrCodes(qrDataArray: QRRecord[]): Promise<vo
         console.error('Failed to insert/update QR codes:', error);
     }
 }
+
 export async function searchQrCodes(
     userId: string,
     searchQuery: string = ''

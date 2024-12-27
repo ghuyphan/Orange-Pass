@@ -338,7 +338,7 @@ const ThemedReuseableSheet = forwardRef<BottomSheet, ReuseableSheetProps>(
         backdropComponent={(props) => (
           <BottomSheetBackdrop
             {...props}
-            opacity={0.7}
+            opacity={0.5}
             appearsOnIndex={0}
             disappearsOnIndex={-1}
             onPress={
