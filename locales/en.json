@@ -118,6 +118,13 @@
       "add": "Add",
       "scan": "Scan",
       "gallery": "Gallery"
+    },
+    "linkingSheet": {
+      "title": "Link card",
+      "share": "Share",
+      "open": "Open",
+      "copy": "Copy",
+      "warning": "This link is not secure"
     }
   },
   "addScreen": {

@@ -790,14 +790,6 @@ const styles = StyleSheet.create({
   },
   titleButton: {
   },
-  searchContainer: {
-    paddingHorizontal: 15,
-    marginBottom: 15
-  },
-  searchInput: {
-    borderRadius: 16,
-    paddingVertical: 0,
-  },
   listContainer: {
     paddingTop: getResponsiveHeight(18),
     flexGrow: 1,
@@ -828,7 +820,7 @@ const styles = StyleSheet.create({
     zIndex: 3,
   },
   loadingContainer: {
-    paddingTop: STATUSBAR_HEIGHT + 105,
+    paddingTop: getResponsiveHeight(18),
     paddingHorizontal: 15,
     flex: 1,
   },

@@ -64,57 +64,50 @@ interface ReuseableSheetProps extends Partial<BottomSheetProps> {
 }
 
 const ThemedReuseableSheet = forwardRef<BottomSheet, ReuseableSheetProps>(
-  (
-    {
-      title,
-      description,
-      actions,
-      customContent,
-      customHeader,
-      customFooter,
-      styles: customStyles = {},
-      contentType = 'scroll',
-      contentProps = {},
-      closeOnBackdropPress = true,
-      snapPoints = [],
-      dynamicSnapPoints = false,
-      enableDynamicSizing = false,
-      minHeight = '30%',
-      maxHeight = '90%',
-      onClose,
-      showCloseButton = false,
-      ...bottomSheetProps
-    },
-    ref
-  ) => {
+  ({
+    title,
+    description,
+    actions,
+    customContent,
+    customHeader,
+    customFooter,
+    styles: customStyles = {},
+    contentType = 'scroll',
+    contentProps = {},
+    closeOnBackdropPress = true,
+    snapPoints = [],
+    dynamicSnapPoints = false,
+    enableDynamicSizing = false,
+    minHeight = '30%',
+    maxHeight = '90%',
+    onClose,
+    showCloseButton = false,
+    ...bottomSheetProps
+  }, ref) => {
     const { currentTheme } = useTheme();
     const bottomSheetRef = useRef<BottomSheet>(null);
     const isSheetVisible = useRef(false);
 
-    // Handle back button press
     useFocusEffect(
       useCallback(() => {
         const onBackPress = () => {
           if (isSheetVisible.current) {
             bottomSheetRef.current?.close();
             onClose?.();
-            return true; // Prevent default back action
+            return true;
           }
-          return false; // Let default back action happen
+          return false;
         };
 
         BackHandler.addEventListener('hardwareBackPress', onBackPress);
-
         return () => BackHandler.removeEventListener('hardwareBackPress', onBackPress);
       }, [onClose])
     );
 
-    // Track bottom sheet visibility
     const handleSheetChange = useCallback((index: number) => {
       isSheetVisible.current = index >= 0;
     }, []);
 
-    // Expose BottomSheet methods to parent component via ref
     useImperativeHandle(ref, () => ({
       expand: () => {
         bottomSheetRef.current?.expand();
@@ -182,7 +175,7 @@ const ThemedReuseableSheet = forwardRef<BottomSheet, ReuseableSheetProps>(
             bottomSheetRef.current?.close();
             onClose?.();
           }}
-          style={styles.closeButton}
+          style={[styles.closeButton, customStyles.closeButton]}
           hitSlop={{
             top: getResponsiveHeight(1.2),
             bottom: getResponsiveHeight(1.2),
@@ -190,77 +183,21 @@ const ThemedReuseableSheet = forwardRef<BottomSheet, ReuseableSheetProps>(
             right: getResponsiveWidth(2.4),
           }}
         >
-          <MaterialCommunityIcons name="close" size={getResponsiveFontSize(16)} color={iconColor} />
+          <MaterialCommunityIcons
+            name="close"
+            size={getResponsiveFontSize(16)}
+            color={iconColor}
+          />
         </Pressable>
       );
     };
 
-    // Determine snap points
-    const resolvedSnapPoints = dynamicSnapPoints ? [minHeight, maxHeight] : snapPoints;
-
-    // Render content based on contentType
-    const renderContent = () => {
-      const contentBody = renderContentBody();
-
-      switch (contentType) {
-        case 'scroll':
-          return (
-            <BottomSheetScrollView
-              style={[customStyles.scrollView]}
-              contentContainerStyle={[
-                styles.contentContainer,
-                customStyles.container,
-                customStyles.scrollViewContent,
-              ]}
-              {...contentProps.scrollViewProps}
-            >
-              {contentBody}
-            </BottomSheetScrollView>
-          );
-        case 'flat':
-          return (
-            <BottomSheetFlatList
-              style={[customStyles.flatList]}
-              contentContainerStyle={[
-                {backgroundColor: 'red',
-                  // padding: 20,
-                  marginHorizontal: 20,
-                  paddingHorizontal: 20,
-                }
-                // styles.contentContainer,
-                // customStyles.container,
-                // customStyles.flatListContent,
-              ]}
-              {...contentProps.flatListProps}
-              renderItem={contentProps.flatListProps?.renderItem}
-              data={contentProps.flatListProps?.data}
-              ListHeaderComponent={() => contentBody}
-            />
-          );
-        default:
-          return (
-            <View
-              style={[
-                styles.contentContainer,
-                customStyles.container,
-                customStyles.customContent,
-              ]}
-            >
-              {contentBody}
-            </View>
-          );
-      }
-    };
-
-    // Render main content body
-    const renderContentBody = () => (
-      <>
+    const renderHeader = () => (
+      <View style={[styles.headerContainer, customStyles.header]}>
         {renderCloseButton()}
-
         {customHeader}
-
         {(title || description) && (
-          <View style={styles.headerContent}>
+          <View style={[styles.headerContent, customStyles.headerContent]}>
             {title && (
               <ThemedText style={[styles.title, customStyles.title]}>{title}</ThemedText>
             )}
@@ -271,11 +208,14 @@ const ThemedReuseableSheet = forwardRef<BottomSheet, ReuseableSheetProps>(
             )}
           </View>
         )}
+      </View>
+    );
 
+    const renderContentBody = () => (
+      <>
         {customContent}
-
         {actions && (
-          <View style={styles.buttonsContainer}>
+          <View style={[styles.buttonsContainer, customStyles.buttonsContainer]}>
             {actions.map((action, index) => (
               <Pressable
                 key={index}
@@ -307,10 +247,60 @@ const ThemedReuseableSheet = forwardRef<BottomSheet, ReuseableSheetProps>(
             ))}
           </View>
         )}
-
         {customFooter}
       </>
     );
+
+    const renderContent = () => {
+
+      switch (contentType) {
+        case 'scroll':
+          return (
+            <>
+              {renderHeader()}
+              <BottomSheetScrollView
+                showsVerticalScrollIndicator={false}
+                style={[customStyles.scrollView]}
+                contentContainerStyle={[
+                  styles.contentContainer,
+                  customStyles.scrollViewContent,
+                ]}
+                {...contentProps.scrollViewProps}
+              >
+                {renderContentBody()}
+              </BottomSheetScrollView>
+            </>
+          );
+        case 'flat':
+          return (
+            <>
+              {renderHeader()}
+              <View style={[styles.flatListContainer, customStyles.flatList]}>
+                <BottomSheetFlatList
+                  contentContainerStyle={[
+                    styles.contentContainer,
+                    customStyles.flatListContent,
+                  ]}
+                  {...contentProps.flatListProps}
+                  renderItem={contentProps.flatListProps?.renderItem}
+                  data={contentProps.flatListProps?.data}
+                />
+              </View>
+            </>
+          );
+        default:
+          return (
+            <>
+              {renderHeader()}
+              <View style={[styles.contentContainer, customStyles.customContent]}>
+                {renderContentBody()}
+              </View>
+            </>
+          );
+      }
+    };
+
+    const resolvedSnapPoints = dynamicSnapPoints ? [minHeight, maxHeight] : snapPoints;
 
     return (
       <BottomSheet
@@ -328,7 +318,7 @@ const ThemedReuseableSheet = forwardRef<BottomSheet, ReuseableSheetProps>(
             backgroundColor:
               currentTheme === 'light' ? Colors.light.background : Colors.dark.background,
           },
-          customStyles.container,
+          customStyles.background,
         ]}
         handleStyle={[
           styles.handle,
@@ -336,9 +326,9 @@ const ThemedReuseableSheet = forwardRef<BottomSheet, ReuseableSheetProps>(
             backgroundColor:
               currentTheme === 'light' ? Colors.light.background : Colors.dark.background,
           },
-          customStyles.header,
+          customStyles.handle,
         ]}
-        handleIndicatorStyle={styles.handleIndicator}
+        handleIndicatorStyle={[styles.handleIndicator, customStyles.handleIndicator]}
         enablePanDownToClose={true}
         backdropComponent={(props) => (
           <BottomSheetBackdrop
@@ -364,8 +354,6 @@ const ThemedReuseableSheet = forwardRef<BottomSheet, ReuseableSheetProps>(
   }
 );
 
-ThemedReuseableSheet.displayName = 'ThemedReuseableSheet';
-
 const styles = StyleSheet.create({
   background: {
     backgroundColor: 'white',
@@ -379,14 +367,22 @@ const styles = StyleSheet.create({
     width: getResponsiveWidth(12),
     height: getResponsiveHeight(0.6),
   },
-  contentContainer: {
-    paddingVertical: getResponsiveHeight(1.8),
+  headerContainer: {
+    // paddingVertical: getResponsiveHeight(1.8),
+    marginBottom: getResponsiveHeight(0.6),
     paddingHorizontal: getResponsiveWidth(3.6),
     paddingTop: getResponsiveHeight(0.6),
+    position: 'relative',
+  },
+  flatListContainer: {
+    flex: 1,
+    // marginVertical: getResponsiveHeight(1.8),
+  },
+  contentContainer: {
+    paddingHorizontal: getResponsiveWidth(3.6),
+    paddingVertical: getResponsiveHeight(1.8),
   },
   headerContent: {
-    marginBottom: getResponsiveHeight(2.4),
-    position: 'relative',
   },
   title: {
     fontSize: getResponsiveFontSize(18),
@@ -397,6 +393,7 @@ const styles = StyleSheet.create({
     fontSize: getResponsiveFontSize(14),
     color: 'gray',
     textAlign: 'center',
+    marginTop: getResponsiveHeight(0.6),
   },
   buttonsContainer: {
     flexDirection: 'column',
@@ -429,5 +426,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
 });
+
+ThemedReuseableSheet.displayName = 'ThemedReuseableSheet';
 
 export default ThemedReuseableSheet;

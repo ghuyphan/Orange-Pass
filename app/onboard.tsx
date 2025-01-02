@@ -1,5 +1,5 @@
 import React, { useRef, useState, useCallback, useMemo } from 'react';
-import { StyleSheet, View, TouchableWithoutFeedback, ScrollView } from 'react-native';
+import { StyleSheet, View, TouchableWithoutFeedback } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -130,15 +130,17 @@ const OnBoardScreen = () => {
     setSheetType(null);
   }, []);
 
-  // Memoize the sheet content based on sheetType and cardColor
-  const renderSheetContent = useMemo(() => {
-    return () => (
-      <ScrollView style={styles.sheetContentContainer}>
-        {sheetType === 'tos' && <TermsOfServiceContent cardColor={cardColor} />}
-        {sheetType === 'privacy' && <PrivacyPolicyContent cardColor={cardColor} />}
-      </ScrollView>
-    )
-  }, [sheetType, cardColor]);
+    // Memoize the sheet content based on sheetType and cardColor
+    const renderSheetContent = useMemo(() => {
+      return () => {
+        if (sheetType === 'tos') {
+          return <TermsOfServiceContent cardColor={cardColor} />;
+        } else if (sheetType === 'privacy') {
+          return <PrivacyPolicyContent cardColor={cardColor} />;
+        }
+        return null;
+      };
+    }, [sheetType, cardColor]);
 
   return (
     <ThemedView style={styles.container}>
@@ -146,7 +148,7 @@ const OnBoardScreen = () => {
         <View style={styles.logoContainer}>
           <LOGO width={getResponsiveWidth(14)} height={getResponsiveWidth(14)} />
         </View>
-        <ThemedText  style={styles.screenTitle} type="title">{t('onboardingScreen.title')}</ThemedText>
+        <ThemedText style={styles.screenTitle} type="title">{t('onboardingScreen.title')}</ThemedText>
       </View>
 
       <View style={styles.contentContainer}>
@@ -206,16 +208,16 @@ const OnBoardScreen = () => {
         />
       </View>
       <ThemedReuseableSheet
-        ref={bottomSheetRef}
-        title={
-          sheetType === 'tos'
-            ? t('onboardingScreen.termsOfService.termsOfServiceSheetTitle')
-            : t('onboardingScreen.termsOfService.privacyPolicySheetTitle')
-        }
-        contentType="scroll"
-        enableDynamicSizing={true}
-        customContent={<>{renderSheetContent()}</>}
-      />
+          ref={bottomSheetRef}
+          title={
+            sheetType === 'tos'
+              ? t('onboardingScreen.termsOfService.termsOfServiceSheetTitle')
+              : t('onboardingScreen.termsOfService.privacyPolicySheetTitle')
+          }
+          contentType="scroll"
+          enableDynamicSizing={true}
+          customContent={renderSheetContent()} // Pass customContent directly
+        />
     </ThemedView>
   );
 };
@@ -234,7 +236,7 @@ const styles = StyleSheet.create({
     padding: getResponsiveWidth(3.5),
     borderRadius: getResponsiveWidth(5),
   },
-  screenTitle:{
+  screenTitle: {
     fontSize: getResponsiveFontSize(25),
   },
   contentContainer: {
@@ -264,7 +266,6 @@ const styles = StyleSheet.create({
   bottomContainer: {
     paddingTop: getResponsiveHeight(1.8),
     paddingBottom: getResponsiveHeight(3.6),
-    // paddingHorizontal: getResponsiveWidth(3.6),
     gap: getResponsiveHeight(1.8),
     justifyContent: 'center',
   },
@@ -274,7 +275,7 @@ const styles = StyleSheet.create({
   },
   termsContainer: {
     alignItems: 'center',
-    paddingHorizontal: getResponsiveWidth(3.6),
+    paddingHorizontal: getResponsiveWidth(4.8),
   },
   termsText: {
     fontSize: getResponsiveFontSize(12),
@@ -300,9 +301,6 @@ const styles = StyleSheet.create({
   button: {
     marginHorizontal: getResponsiveWidth(3.6),
   },
-  sheetContentContainer: {
-    // paddingHorizontal: getResponsiveWidth(3.6),
-  },
   sectionContainer: {
     borderRadius: getResponsiveWidth(4),
     paddingVertical: getResponsiveHeight(1.8),
@@ -310,19 +308,20 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: getResponsiveFontSize(16),
-    marginBottom: getResponsiveHeight(0.5),
+    marginBottom: getResponsiveHeight(1.2),
   },
   sectionText: {
     fontSize: getResponsiveFontSize(14),
     lineHeight: getResponsiveFontSize(22),
   },
   bulletContainer: {
-    marginTop: getResponsiveHeight(1.2),
+    // marginTop: getResponsiveHeight(1.2),
+    gap: getResponsiveHeight(1.2),
   },
   bulletPoint: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: getResponsiveHeight(1.2),
+    // marginBottom: getResponsiveHeight(1.2),
   },
   bulletIcon: {
     fontSize: getResponsiveFontSize(20),

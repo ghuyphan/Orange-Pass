@@ -6,6 +6,8 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedButton } from '@/components/buttons';
 import { useTheme } from '@/context/ThemeContext';
 import { Colors } from '@/constants/Colors';
+import { getResponsiveHeight, getResponsiveWidth } from '@/utils/responsive';
+import { t } from '@/i18n';
 
 interface LinkingSheetContentProps {
   url: string | null;
@@ -82,9 +84,9 @@ const LinkingSheetContent: React.FC<LinkingSheetContentProps> = ({
   return (
     <View style={[styles.container, { backgroundColor: colors.cardBg }, style]}>
       {/* Header */}
-      <View style={styles.header}>
+      {/* <View style={styles.header}>
         <ThemedText type='defaultSemiBold' style={styles.title}>Link Details</ThemedText>
-      </View>
+      </View> */}
 
       {/* URL Display Card */}
       <Pressable 
@@ -122,7 +124,7 @@ const LinkingSheetContent: React.FC<LinkingSheetContentProps> = ({
             color={colors.error}
           />
           <ThemedText style={[styles.warningText, { color: colors.error }]}>
-            This link is not secure
+            {t('homeScreen.linkingSheet.warning')}
           </ThemedText>
         </View>
       )}
@@ -150,8 +152,8 @@ const styles = StyleSheet.create({
   container: {
     borderRadius: 16,
     // padding: 20,
-    paddingVertical: 15,
-    paddingHorizontal: 20,
+    paddingHorizontal: getResponsiveWidth(4.8),
+    paddingVertical: getResponsiveHeight(1.8),
     gap: 15,
   },
   header: {
@@ -167,8 +169,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 10,
-    paddingHorizontal: 15,
+    paddingHorizontal: getResponsiveWidth(4.8),
+    paddingVertical: getResponsiveHeight(1.8),
     borderRadius: 16,
     borderWidth: 1,
     gap: 12,
@@ -187,7 +189,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginTop: -10
+    backgroundColor: 'rgba(255, 0, 0, 0.1)',
+    borderRadius: 8,
+    paddingHorizontal: getResponsiveWidth(4.8),
   },
   warningText: {
     fontSize: 13,

@@ -478,6 +478,17 @@ const AddScreen: React.FC = () => {
           </AnimatedKeyboardAwareScrollView>
 
           <ThemedReuseableSheet
+            styles={{
+              flatListContent: {
+                paddingVertical: getResponsiveHeight(1.8),
+                paddingHorizontal: getResponsiveWidth(4.8),
+                // gap: getResponsiveHeight(2.4)
+                backgroundColor: sectionsColors,
+                borderRadius: getResponsiveWidth(4),
+                marginHorizontal: getResponsiveWidth(3.6),
+                
+              }
+            }}
             ref={bottomSheetRef}
             title={
               sheetType === 'category'
