@@ -111,6 +111,8 @@ export default function LoginScreen() {
               onBlur={handleBlur('email')}
               value={values.email}
               errorMessage={touched.email && errors.email ? t(`loginScreen.errors.${errors.email}`) : ''}
+              disabled={isSubmitting}
+              disableOpacityChange={true}
             />
             <ThemedView style={styles.divider} />
             <ThemedInput
@@ -122,6 +124,8 @@ export default function LoginScreen() {
               onBlur={handleBlur('password')}
               value={values.password}
               errorMessage={touched.password && errors.password ? t(`loginScreen.errors.${errors.password}`) : ''}
+              disabled={isSubmitting}
+              disableOpacityChange={true}
             />
           </View>
           <View style={styles.forgotButton}>

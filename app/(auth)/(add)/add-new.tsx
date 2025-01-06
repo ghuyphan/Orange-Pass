@@ -73,7 +73,7 @@ const memoizedReturnItemsByType = (type: DataType, locale: string) => {
     code: item.code,
     name: item.name,
     full_name: item.full_name[locale],
-    type: type,
+    type: type === 'vietqr' ? 'store' : type, // Modify the type value based on the expected values
   }));
 };
 
@@ -159,23 +159,28 @@ const AddScreen: React.FC = () => {
       (codeType === 'store' || codeType === 'bank' || codeType === 'ewallet')
     ) {
       initialCategory = categoryMap[codeType];
-      setCategory(initialCategory);
+      setCategory(initialCategory as CategoryItem);
     }
 
     // 2. Initialize brand based on itemCode (only if itemCode is valid and category is set or default type)
     if (itemCode) {
       const itemData = memoizedReturnItemData(itemCode, locale);
       if (itemData) {
-        setBrand({
-          ...itemData,
-          type: initialCategory ? initialCategory.value : 'store', // Use category type if available, otherwise default
-        });
+        const categoryType = initialCategory ? initialCategory.value : 'store';
+        if (categoryType === 'bank' || categoryType === 'store' || categoryType === 'ewallet') {
+          setBrand({
+            ...itemData,
+            type: categoryType,
+          });
+        } else {
+          console.error(`Invalid category type: ${categoryType}`);
+        }
       }
     }
 
     // 3. Initialize brands based on initialCategory (only if category is set)
     if (initialCategory) {
-      const initialBrands = memoizedReturnItemsByType(initialCategory.value, locale);
+      const initialBrands = memoizedReturnItemsByType(initialCategory.value as DataType, locale);
       setBrands(initialBrands);
     }
   }, [codeType, itemCode, locale]); // Run only when codeType, itemCode, or locale changes

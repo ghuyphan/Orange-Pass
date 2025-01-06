@@ -30,12 +30,20 @@
     "loggingIn": "Logging in...",
     "errors": {
       "invalidEmail": "Invalid email",
-      "emailRequired": "Please enter your username",
+      "emailRequired": "Please enter your email",
       "invalidPassword": "Invalid password",
       "passwordRequired": "Please enter your password",
       "offlineNotice": "You are offline. Please connect to the internet to log in.",
       "400": "Invalid email or password. Please try again.",
-      "500": "Something went wrong on our end. Please try again later."
+      "500": "Something went wrong on our end. Please try again later.",
+      "emptyFields": "Email and password fields cannot be empty.",
+      "passwordTooShort": "Password must be at least 6 characters long.",
+      "timeout": "Login request timed out. Please check your network connection and try again.",
+      "invalidResponse": "Received an invalid response from the server. Please try again later.",
+      "storageError": "Failed to store authentication data. Please try again later.",
+      "databaseError": "Failed to set up the local database. Please try again later.",
+      "invalidCredentials": "Invalid credentials. Please check your email and password.",
+      "tooManyAttempts": "Too many login attempts. Please try again later."
     }
   },
   "registerScreen": {

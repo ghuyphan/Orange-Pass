@@ -17,7 +17,7 @@
       "qr.localFetchFailed": "Không tìm thấy dữ liệu QR. Một số tính năng không khả dụng."
     }
   },
-  "loginScreen": {
+"loginScreen": {
     "email": "Email",
     "emailPlaceholder": "Nhập email",
     "password": "Mật khẩu",
@@ -35,7 +35,15 @@
       "passwordRequired": "Nhập mật khẩu nha",
       "offlineNotice": "Bạn đang offline. Kết nối mạng đi!",
       "400": "Email hoặc mật khẩu sai. Thử lại nhé.",
-      "500": "Lỗi máy chủ rồi. Thử lại sau nha."
+      "500": "Lỗi máy chủ rồi. Thử lại sau nha.",
+      "emptyFields": "Không được để trống email và mật khẩu.",
+      "passwordTooShort": "Mật khẩu phải ít nhất 6 ký tự.",
+      "timeout": "Quá thời gian đăng nhập. Kiểm tra lại mạng và thử lại nhé.",
+      "invalidResponse": "Phản hồi từ máy chủ không hợp lệ. Thử lại sau nha.",
+      "storageError": "Lưu thông tin đăng nhập lỗi rồi. Thử lại nhé.",
+      "databaseError": "Lỗi cơ sở dữ liệu. Thử lại sau nha.",
+      "invalidCredentials": "Thông tin đăng nhập sai. Kiểm tra email và mật khẩu.",
+      "tooManyAttempts": "Đăng nhập sai nhiều quá rồi. Thử lại sau nhé."
     }
   },
   "registerScreen": {

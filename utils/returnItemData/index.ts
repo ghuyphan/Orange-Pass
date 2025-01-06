@@ -19,7 +19,6 @@ interface ItemType {
   accent_color: { light: string; dark: string };
 }
 
-
 const normalizeTextCache = new Map<string, string>();
 
 function normalizeText(text: string): string {

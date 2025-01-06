@@ -49,6 +49,8 @@ export type ThemedInputProps = {
   disabled?: boolean;
   /** Background color for the input */
   backgroundColor?: string;
+  /** Whether to disable the opacity change when the input is disabled */
+  disableOpacityChange?: boolean;
 };
 
 export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(
@@ -69,11 +71,12 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(
       onSubmitEditing = () => {},
       disabled = false,
       backgroundColor,
+      disableOpacityChange = false,
     },
     ref
   ) => {
     const { currentTheme } = useTheme();
-    const { locale } = useLocale();
+    const { locale } = useLocale(); // If you need locale-specific logic, use this
     const [localValue, setLocalValue] = useState(value);
     const [isSecure, setIsSecure] = useState(secureTextEntry);
     const [isErrorModalVisible, setIsErrorModalVisible] = useState(false);
@@ -102,10 +105,11 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(
           backgroundColor:
             backgroundColor ??
             (currentTheme === 'light' ? Colors.light.inputBackground : Colors.dark.inputBackground),
+          opacity: disabled && !disableOpacityChange ? 0.5 : 1, // Opacity control
         },
         style,
       ],
-      [currentTheme, isError, errorMessage, style, backgroundColor]
+      [currentTheme, style, backgroundColor, disabled, disableOpacityChange] // Updated dependencies
     );
 
     const ErrorTooltip = () => (
@@ -144,7 +148,11 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(
             ]}
           >
             {iconName && (
-              <MaterialCommunityIcons name={iconName} size={getResponsiveWidth(4.5)} color={placeholderColor} />
+              <MaterialCommunityIcons
+                name={iconName}
+                size={getResponsiveWidth(4.5)}
+                color={placeholderColor}
+              />
             )}
             <TextInput
               ref={ref}
@@ -152,7 +160,7 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(
               style={[
                 styles.input,
                 {
-                  color,
+                  color: disabled ? placeholderColor : color,
                   marginLeft: iconName ? getResponsiveWidth(2.5) : 0,
                 },
               ]}
@@ -163,32 +171,42 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(
               onFocus={onFocus}
               placeholder={placeholder}
               placeholderTextColor={placeholderColor}
-              accessible
-              aria-label={label}
+              accessible={true}
+              accessibilityLabel={label} // For better accessibility
               keyboardType={keyboardType}
               editable={!disabled}
             />
 
             <View style={styles.rightContainer}>
               {/* Clear Value Button */}
-              {localValue.length > 0 && !disabled && (
+              {localValue.length > 0 && (
                 <Pressable
-                  onPress={onClearValue}
+                  onPress={disabled ? undefined : onClearValue}
                   style={styles.iconTouchable}
-                  hitSlop={{ top: getResponsiveHeight(0.6), bottom: getResponsiveHeight(0.6), left: getResponsiveWidth(1.2), right: getResponsiveWidth(1.2) }}
-                  // android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', borderless: false, radius: 10 }}
+                  hitSlop={{
+                    top: getResponsiveHeight(0.6),
+                    bottom: getResponsiveHeight(0.6),
+                    left: getResponsiveWidth(1.2),
+                    right: getResponsiveWidth(1.2),
+                  }}
+                  disabled={disabled}
                 >
                   <MaterialIcons name={'cancel'} color={color} size={getResponsiveWidth(4)} />
                 </Pressable>
               )}
 
               {/* Secure Entry Toggle */}
-              {localValue.length > 0 && !disabled && secureTextEntry && (
+              {localValue.length > 0 && secureTextEntry && (
                 <Pressable
-                  onPress={onToggleSecureValue}
+                  onPress={disabled ? undefined : onToggleSecureValue}
                   style={[styles.iconTouchable]}
-                  hitSlop={{ top: getResponsiveHeight(0.6), bottom: getResponsiveHeight(0.6), left: getResponsiveWidth(1.2), right: getResponsiveWidth(1.2) }}
-                  // android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', borderless: false, radius: 10 }}
+                  hitSlop={{
+                    top: getResponsiveHeight(0.6),
+                    bottom: getResponsiveHeight(0.6),
+                    left: getResponsiveWidth(1.2),
+                    right: getResponsiveWidth(1.2),
+                  }}
+                  disabled={disabled}
                 >
                   <MaterialIcons
                     name={isSecure ? 'visibility' : 'visibility-off'}
@@ -281,3 +299,5 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
+
+export default ThemedInput;

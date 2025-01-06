@@ -97,6 +97,8 @@ export default function ForgotPasswordScreen() {
               errorMessage={
                 touched.email && errors.email ? t(`forgotPasswordScreen.errors.${errors.email}`) : ''
               }
+              disabled={isSubmitting}
+              disableOpacityChange={true}
             />
           </View>
           <ThemedButton

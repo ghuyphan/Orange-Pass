@@ -107,6 +107,8 @@ export default function RegisterScreen() {
                             errorMessage={
                                 touched.email && errors.email ? t(`registerScreen.errors.${errors.email}`) : ''
                             }
+                            disabled={isSubmitting}
+                            disableOpacityChange={true}
                         />
                         <ThemedView style={styles.divider} />
                         <ThemedInput
@@ -121,6 +123,8 @@ export default function RegisterScreen() {
                                     ? t(`registerScreen.errors.${errors.fullName}`)
                                     : ''
                             }
+                            disabled={isSubmitting}
+                            disableOpacityChange={true}
                         />
                         <ThemedView style={styles.divider} />
                         <ThemedInput
@@ -136,6 +140,8 @@ export default function RegisterScreen() {
                                     ? t(`registerScreen.errors.${errors.password}`)
                                     : ''
                             }
+                            disabled={isSubmitting}
+                            disableOpacityChange={true}
                         />
                         <ThemedView style={styles.divider} />
                         <ThemedInput
@@ -151,6 +157,8 @@ export default function RegisterScreen() {
                                     ? t(`registerScreen.errors.${errors.confirmPassword}`)
                                     : ''
                             }
+                            disabled={isSubmitting}
+                            disableOpacityChange={true}
                         />
                     </View>
                     <ThemedButton
