@@ -58,14 +58,15 @@ import { useCameraSetup } from '@/hooks/useCameraSetup';
 import { useFocusGesture } from '@/hooks/useFocusGesture';
 import { width } from '@/constants/Constants';
 import { useGalleryPicker } from '@/hooks/useGalleryPicker';
+import { getResponsiveHeight, getResponsiveWidth } from '@/utils/responsive';
 
 const ReanimatedCamera = Reanimated.createAnimatedComponent(Camera);
 Reanimated.addWhitelistedNativeProps({ zoom: true });
 
-type SheetType = {
-  type: SheetType;
-  id?: string;
-};
+// type SheetType = {
+//   type: SheetType;
+//   id?: string;
+// };
 
 // Main component
 export default function ScanScreen() {
@@ -392,7 +393,7 @@ const styles = StyleSheet.create({
   },
   cameraContainer: {
     marginTop: STATUSBAR_HEIGHT + 10,
-    flex: 1.75,
+    flex:  getResponsiveHeight(0.25),
     backgroundColor: 'black',
     borderRadius: 16,
     overflow: 'hidden',
@@ -413,7 +414,8 @@ const styles = StyleSheet.create({
     width: '100%',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 15,
+    // paddingHorizontal: 15,
+    paddingHorizontal: getResponsiveWidth(3.6),
     zIndex: 10,
   },
   headerButton: {

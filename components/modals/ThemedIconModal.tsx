@@ -13,6 +13,7 @@ import { Colors } from '@/constants/Colors';
 import { ThemedTextButton } from '../buttons/ThemedTextButton';
 import { useTheme } from '@/context/ThemeContext';
 import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
+import { t } from '@/i18n';
 
 export type ThemedModalProps = {
   lightColor?: string;

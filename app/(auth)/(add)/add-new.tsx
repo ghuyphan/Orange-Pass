@@ -38,6 +38,7 @@ import {
 } from '@/utils/returnItemData';
 import { useLocale } from '@/context/LocaleContext';
 import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
+import DataType from '@/types/dataType';
 
 const AnimatedKeyboardAwareScrollView = Animated.createAnimatedComponent(KeyboardAwareScrollView);
 
@@ -66,8 +67,7 @@ const metadataTypeData: MetadataTypeItem[] = [
 ];
 
 // Memoized helper functions (outside the component)
-const memoizedReturnItemsByType = (type: string, locale: string) => {
-  console.log("Calculating items for type:", type); // Log when calculation happens
+const memoizedReturnItemsByType = (type: DataType, locale: string) => {
   const items = returnItemsByType(type);
   return items.map((item) => ({
     code: item.code,

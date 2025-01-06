@@ -215,7 +215,8 @@ const OnBoardScreen = () => {
               : t('onboardingScreen.termsOfService.privacyPolicySheetTitle')
           }
           contentType="scroll"
-          enableDynamicSizing={true}
+          // enableDynamicSizing={true}
+          snapPoints={['50%']}
           customContent={renderSheetContent()} // Pass customContent directly
         />
     </ThemedView>

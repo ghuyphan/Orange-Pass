@@ -2,7 +2,7 @@ import tinycolor from 'tinycolor2';
 import Datas from '@/assets/Datas.json';
 import colorConfig from '@/assets/color-config.json';
 import vietQRBanksData from '@/assets/vietQRBanks.json'; // Import the JSON data
-
+import DataType from '@/types/dataType';
 interface ColorInfo {
   color: { light: string };
   accent_color: { light: string };
@@ -19,7 +19,6 @@ interface ItemType {
   accent_color: { light: string; dark: string };
 }
 
-type DataType = 'bank' | 'store' | 'ewallet' | 'vietqr';
 
 const normalizeTextCache = new Map<string, string>();
 

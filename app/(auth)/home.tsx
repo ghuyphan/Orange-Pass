@@ -63,7 +63,7 @@ import { ThemedBottomToast } from '@/components/toast/ThemedBottomToast';
 import ThemedFilter from '@/components/ThemedFilter';
 import EmptyListItem from '@/components/lists/EmptyListItem';
 import LinkingSheetContent from '@/components/bottomsheet/LinkingSheetContent';
-import { getResponsiveHeight } from '@/utils/responsive';
+import { getResponsiveHeight, getResponsiveWidth } from '@/utils/responsive';
 
 // 5. Internationalization
 import { t } from '@/i18n';
@@ -776,7 +776,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
-    paddingHorizontal: 15,
+    // paddingHorizontal: 15,
+    paddingHorizontal: getResponsiveWidth(3.6),
     pointerEvents: 'box-none',
   },
   titleText: {
