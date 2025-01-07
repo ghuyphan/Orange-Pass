@@ -38,7 +38,7 @@ const validateInput = (email: string, password: string) => {
 };
 
 const loginWithTimeout = async (email: string, password: string, attempt = 1): Promise<any> => {
-  const loginPromise = pb.collection('users').authWithPassword(email, password);
+  const loginPromise = await pb.collection('users').authWithPassword(email, password);
   const timeoutPromise = new Promise((_, reject) => {
     setTimeout(() => {
       const timeoutError: LoginError = new Error(t('loginScreen.errors.timeout')) as LoginError;

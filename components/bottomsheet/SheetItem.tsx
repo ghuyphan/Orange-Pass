@@ -144,9 +144,9 @@ const styles = StyleSheet.create({
   sheetItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: getResponsiveWidth(3.6),
-    // paddingVertical: getResponsiveHeight(1.2),
-    // paddingHorizontal: getResponsiveWidth(2.4),
+    gap: getResponsiveWidth(2.5),
+    paddingVertical: getResponsiveHeight(1.8),
+    paddingHorizontal: getResponsiveWidth(4.8),
     borderRadius: getResponsiveWidth(4),
     overflow: 'hidden',
   },

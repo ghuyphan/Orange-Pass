@@ -519,7 +519,7 @@ const DetailScreen = () => {
       <ThemedReuseableSheet
         ref={bottomSheetRef}
         title={t('homeScreen.manage')}
-        enableDynamicSizing={true}
+        snapPoints={['28%']}
         actions={[
           {
             icon: 'pencil-outline',

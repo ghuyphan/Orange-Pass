@@ -379,10 +379,12 @@ const styles = StyleSheet.create({
     // marginVertical: getResponsiveHeight(1.8),
   },
   contentContainer: {
-    paddingHorizontal: getResponsiveWidth(3.6),
-    paddingVertical: getResponsiveHeight(1.8),
+    // paddingHorizontal: getResponsiveWidth(3.6),
+    // paddingVertical: getResponsiveHeight(1.8),
+    marginBottom: getResponsiveHeight(1.8),
   },
   headerContent: {
+    marginBottom: getResponsiveHeight(1.8),
   },
   title: {
     fontSize: getResponsiveFontSize(18),

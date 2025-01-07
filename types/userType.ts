@@ -3,7 +3,7 @@ interface UserRecord {
     username: string;
     name: string;
     email: string;
-    avatar: string | object;
+    avatar:  object;
     verified: boolean;
   }
 export default UserRecord

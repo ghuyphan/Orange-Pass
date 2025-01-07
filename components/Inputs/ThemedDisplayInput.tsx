@@ -221,7 +221,7 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     paddingVertical: getResponsiveHeight(1.8),
-    paddingHorizontal: getResponsiveWidth(3.6),
+    paddingHorizontal: getResponsiveWidth(4.8),
     borderRadius: getResponsiveWidth(4),
     flexDirection: 'column',
   },
@@ -232,13 +232,13 @@ const styles = StyleSheet.create({
     fontSize: getResponsiveFontSize(13),
   },
   logoContainer: {
-    width: getResponsiveWidth(6),
+    width: getResponsiveWidth(6), 
     height: getResponsiveWidth(6),
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'white',
     borderRadius: getResponsiveWidth(6),
-    marginRight: getResponsiveWidth(1.2),
+    marginRight: getResponsiveWidth(0),
   },
   logo: {
     width: '55%',

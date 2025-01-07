@@ -144,14 +144,15 @@ const AddScreen: React.FC = () => {
     return { bankCode: bankCodeResult, itemCode: itemCodeResult };
   }, [codeBin, codeType, codeProvider]);
 
+  // Category Mapping outside useEffect
+  const categoryMap = useMemo(() => ({
+    store: { display: t('addScreen.storeCategory'), value: 'store' },
+    bank: { display: t('addScreen.bankCategory'), value: 'bank' },
+    ewallet: { display: t('addScreen.ewalletCategory'), value: 'ewallet' },
+  }), [locale]);
+
   // Optimized State Initialization and Updates
   useEffect(() => {
-    const categoryMap = {
-      store: { display: t('addScreen.storeCategory'), value: 'store' },
-      bank: { display: t('addScreen.bankCategory'), value: 'bank' },
-      ewallet: { display: t('addScreen.ewalletCategory'), value: 'ewallet' },
-    };
-
     // 1. Initialize category based on codeType (only if codeType is valid)
     let initialCategory = null;
     if (
@@ -183,7 +184,7 @@ const AddScreen: React.FC = () => {
       const initialBrands = memoizedReturnItemsByType(initialCategory.value as DataType, locale);
       setBrands(initialBrands);
     }
-  }, [codeType, itemCode, locale]); // Run only when codeType, itemCode, or locale changes
+  }, [codeType, itemCode, locale, categoryMap]); // Run only when codeType, itemCode, or locale changes
 
   // Update brands when category changes
   useEffect(() => {
@@ -357,7 +358,7 @@ const AddScreen: React.FC = () => {
     { display: t('addScreen.storeCategory'), value: 'store' },
     { display: t('addScreen.bankCategory'), value: 'bank' },
     { display: t('addScreen.ewalletCategory'), value: 'ewallet' },
-  ], []);
+  ], [locale]);
 
   // Prepare sheet data
   const sheetData = useMemo(() => {
@@ -387,7 +388,7 @@ const AddScreen: React.FC = () => {
 
   return (
     <Formik
-      initialValues={{
+      initialValues={useMemo(() => ({
         code: brand?.code || bankCode?.toString() || '',
         qr_index: '',
         metadata: codeValue?.toString() || '',
@@ -395,7 +396,7 @@ const AddScreen: React.FC = () => {
         metadata_type: 'qr', // Add metadata_type to initial values
         account_name: '',
         account_number: '',
-      }}
+      }), [brand?.code, bankCode, codeValue, category?.value])}
       validationSchema={qrCodeSchema}
       onSubmit={async (values, { setSubmitting }) => {
         setSubmitting(true);
@@ -485,13 +486,13 @@ const AddScreen: React.FC = () => {
           <ThemedReuseableSheet
             styles={{
               flatListContent: {
-                paddingVertical: getResponsiveHeight(1.8),
-                paddingHorizontal: getResponsiveWidth(4.8),
+                // paddingHorizontal: getResponsiveWidth(4.8),
                 // gap: getResponsiveHeight(2.4)
                 backgroundColor: sectionsColors,
                 borderRadius: getResponsiveWidth(4),
                 marginHorizontal: getResponsiveWidth(3.6),
-                
+                // marginTop: getResponsiveHeight(1.8),
+                marginBottom: getResponsiveHeight(3.6),
               }
             }}
             ref={bottomSheetRef}
@@ -504,8 +505,7 @@ const AddScreen: React.FC = () => {
                     ? t('addScreen.metadataTypeTitle')
                     : ''
             }
-            snapPoints={['70%']} // Set a fixed height
-            enableDynamicSizing={false} // Disable dynamic sizing
+            snapPoints={['65%']} // Set a fixed height
             onClose={() => setIsSheetOpen(false)}
             contentType="flat"
             contentProps={{

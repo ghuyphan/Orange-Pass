@@ -65,10 +65,10 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(
       errorMessage = '',
       secureTextEntry = false,
       keyboardType = 'default',
-      onChangeText = () => {},
-      onBlur = () => {},
-      onFocus = () => {},
-      onSubmitEditing = () => {},
+      onChangeText = () => { },
+      onBlur = () => { },
+      onFocus = () => { },
+      onSubmitEditing = () => { },
       disabled = false,
       backgroundColor,
       disableOpacityChange = false,
@@ -150,7 +150,8 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(
             {iconName && (
               <MaterialCommunityIcons
                 name={iconName}
-                size={getResponsiveWidth(4.5)}
+                // size={getResponsiveWidth(4.5)}
+                size={getResponsiveFontSize(16)}
                 color={placeholderColor}
               />
             )}
@@ -191,7 +192,7 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(
                   }}
                   disabled={disabled}
                 >
-                  <MaterialIcons name={'cancel'} color={color} size={getResponsiveWidth(4)} />
+                  <MaterialIcons name={'cancel'} color={color} size={getResponsiveFontSize(16)} />
                 </Pressable>
               )}
 
@@ -224,7 +225,7 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(
                   leaveTouchDelay={1500}
                   theme={{ colors: { onSurface: errorColor } }}
                 >
-                  <Pressable onPress={() => {}} style={styles.errorIconContainer}>
+                  <Pressable onPress={() => { }} style={styles.errorIconContainer}>
                     <MaterialIcons name="error" size={getResponsiveWidth(4)} color={errorColor} />
                   </Pressable>
                 </Tooltip>
@@ -248,7 +249,7 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     paddingVertical: getResponsiveHeight(1.8),
-    paddingHorizontal: getResponsiveWidth(3.6),
+    paddingHorizontal: getResponsiveWidth(4.8),
     borderRadius: getResponsiveWidth(4),
     flexDirection: 'column',
   },
@@ -268,7 +269,7 @@ const styles = StyleSheet.create({
   rightContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: getResponsiveWidth(2.4),
+    gap: getResponsiveWidth(3.6),
   },
   iconTouchable: {
     borderRadius: getResponsiveWidth(12),

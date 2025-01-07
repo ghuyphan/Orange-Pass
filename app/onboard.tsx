@@ -130,17 +130,17 @@ const OnBoardScreen = () => {
     setSheetType(null);
   }, []);
 
-    // Memoize the sheet content based on sheetType and cardColor
-    const renderSheetContent = useMemo(() => {
-      return () => {
-        if (sheetType === 'tos') {
-          return <TermsOfServiceContent cardColor={cardColor} />;
-        } else if (sheetType === 'privacy') {
-          return <PrivacyPolicyContent cardColor={cardColor} />;
-        }
-        return null;
-      };
-    }, [sheetType, cardColor]);
+  // Memoize the sheet content based on sheetType and cardColor
+  const renderSheetContent = useMemo(() => {
+    return () => {
+      if (sheetType === 'tos') {
+        return <TermsOfServiceContent cardColor={cardColor} />;
+      } else if (sheetType === 'privacy') {
+        return <PrivacyPolicyContent cardColor={cardColor} />;
+      }
+      return null;
+    };
+  }, [sheetType, cardColor]);
 
   return (
     <ThemedView style={styles.container}>
@@ -208,17 +208,25 @@ const OnBoardScreen = () => {
         />
       </View>
       <ThemedReuseableSheet
-          ref={bottomSheetRef}
-          title={
-            sheetType === 'tos'
-              ? t('onboardingScreen.termsOfService.termsOfServiceSheetTitle')
-              : t('onboardingScreen.termsOfService.privacyPolicySheetTitle')
+        ref={bottomSheetRef}
+        title={
+          sheetType === 'tos'
+            ? t('onboardingScreen.termsOfService.termsOfServiceSheetTitle')
+            : t('onboardingScreen.termsOfService.privacyPolicySheetTitle')
+        }
+        contentType="scroll"
+        styles={{
+          scrollViewContent: {
+            // paddingHorizontal: getResponsiveWidth(4.8),
+            // gap: getResponsiveHeight(2.4)
+            // backgroundColor: sectionsColors,
+            borderRadius: getResponsiveWidth(4),
+            marginHorizontal: getResponsiveWidth(3.6),
           }
-          contentType="scroll"
-          // enableDynamicSizing={true}
-          snapPoints={['50%']}
-          customContent={renderSheetContent()} // Pass customContent directly
-        />
+        }}
+        snapPoints={['65%']}
+        customContent={renderSheetContent()} // Pass customContent directly
+      />
     </ThemedView>
   );
 };

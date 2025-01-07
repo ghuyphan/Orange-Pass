@@ -285,7 +285,7 @@ export default function ScanScreen() {
             />
           </Reanimated.View>
         </GestureDetector>
-        <FocusIndicator focusPoint={focusPoint} animatedFocusStyle={animatedFocusStyle} />
+        {/* <FocusIndicator focusPoint={focusPoint} animatedFocusStyle={animatedFocusStyle} /> */}
         <ScannerFrame highlight={codeScannerHighlights[0]} layout={layout} scanFrame={scanFrame} />
         <View style={{ position: 'absolute', bottom: 20, left: 0, right: 0 }}>
           {codeMetadata && quickScan === false ? (
