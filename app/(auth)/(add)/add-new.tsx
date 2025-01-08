@@ -18,8 +18,8 @@ import BottomSheet from '@gorhom/bottom-sheet';
 import { RootState } from '@/store/rootReducer';
 import { Colors } from '@/constants/Colors';
 import { useTheme } from '@/context/ThemeContext';
-
 import { t } from '@/i18n';
+
 // Components
 import { ThemedButton } from '@/components/buttons/ThemedButton';
 import ThemedCardItem from '@/components/cards/ThemedCardItem';
@@ -29,7 +29,7 @@ import { ThemedView } from '@/components/ThemedView';
 import ThemedReuseableSheet from '@/components/bottomsheet/ThemedReusableSheet';
 import { CategorySheetItem, BrandSheetItem, MetadataTypeSheetItem } from '@/components/bottomsheet/SheetItem';
 
-// Utilities
+// Utilities and Types
 import { qrCodeSchema } from '@/utils/validationSchemas';
 import {
   returnItemCodeByBin,
@@ -42,18 +42,18 @@ import DataType from '@/types/dataType';
 
 const AnimatedKeyboardAwareScrollView = Animated.createAnimatedComponent(KeyboardAwareScrollView);
 
-type SheetType = 'category' | 'brand' | 'metadataType';
-
+// Types
 interface CategoryItem {
   display: string;
-  value: 'store' | 'bank' | 'ewallet';
+  value: 'bank' | 'ewallet' | 'store';
 }
 
 interface BrandItem {
   code: string;
   name: string;
   full_name: string;
-  type: 'store' | 'bank' | 'ewallet';
+  // type: 'store' | 'bank' | 'ewallet';
+  type: 'bank' | 'ewallet' | 'store';
 }
 
 interface MetadataTypeItem {
@@ -61,31 +61,39 @@ interface MetadataTypeItem {
   value: 'qr' | 'barcode';
 }
 
+interface FormParams {
+  category: CategoryItem | null;
+  brand: BrandItem | null;
+  metadataType: MetadataTypeItem;
+}
+
+type SheetType = 'category' | 'brand' | 'metadataType';
+
+// Constants
 const metadataTypeData: MetadataTypeItem[] = [
-  { display: 'QR Code', value: 'qr' },
-  { display: 'Barcode', value: 'barcode' },
+  { display: t('addScreen.qr'), value: 'qr' },
+  { display: t('addScreen.barcode'), value: 'barcode' },
 ];
 
-// Memoized helper functions (outside the component)
+// Memoized helper functions
 const memoizedReturnItemsByType = (type: DataType, locale: string) => {
   const items = returnItemsByType(type);
   return items.map((item) => ({
     code: item.code,
     name: item.name,
     full_name: item.full_name[locale],
-    type: type === 'vietqr' ? 'store' : type, // Modify the type value based on the expected values
+    type: type === 'vietqr' ? 'store' : type,
   }));
 };
 
 const memoizedReturnItemData = (itemCode: string, locale: string) => {
-  console.log("Fetching data for itemCode:", itemCode); // Log when fetching happens
   const itemData = returnItemData(itemCode);
   if (itemData) {
     return {
       code: itemCode,
       name: itemData.name,
       full_name: itemData.full_name[locale],
-      type: 'store', // Default type
+      type: 'store',
     };
   }
   return null;
@@ -93,9 +101,10 @@ const memoizedReturnItemData = (itemCode: string, locale: string) => {
 
 const AddScreen: React.FC = () => {
   const { currentTheme: theme } = useTheme();
-
   const { locale: currentLocale } = useLocale();
   const locale = currentLocale ?? 'en';
+
+  // Theme-related memoized values
   const colors = useMemo(
     () => (theme === 'light' ? Colors.light.text : Colors.dark.text),
     [theme]
@@ -109,16 +118,7 @@ const AddScreen: React.FC = () => {
     [theme]
   );
 
-  const [category, setCategory] = useState<CategoryItem | null>(null);
-  const [brand, setBrand] = useState<BrandItem | null>(null);
-  const [brands, setBrands] = useState<BrandItem[]>([]);
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [sheetType, setSheetType] = useState<SheetType | null>(null); // use null as initial value
-  const [metadataType, setMetadataType] = useState<MetadataTypeItem>(metadataTypeData[0]); // Default to 'qr'
-
-  const bottomSheetRef = useRef<BottomSheet>(null);
-  const scrollY = useSharedValue(0);
-
+  // Route params
   const { codeFormat, codeValue, codeBin, codeType, codeProvider } = useLocalSearchParams<{
     codeFormat?: string;
     codeValue?: string;
@@ -127,6 +127,21 @@ const AddScreen: React.FC = () => {
     codeProvider?: string;
   }>();
 
+  // State
+  const [params, setParams] = useState<FormParams>({
+    category: null,
+    brand: null,
+    metadataType: metadataTypeData[0]
+  });
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [sheetType, setSheetType] = useState<SheetType | null>(null);
+  const [brands, setBrands] = useState<BrandItem[]>([]);
+
+  // Refs and animated values
+  const bottomSheetRef = useRef<BottomSheet>(null);
+  const scrollY = useSharedValue(0);
+
+  // Memoized values
   const { bankCode, itemCode } = useMemo(() => {
     let bankCodeResult: string | null = null;
     let itemCodeResult: string | null = null;
@@ -144,58 +159,55 @@ const AddScreen: React.FC = () => {
     return { bankCode: bankCodeResult, itemCode: itemCodeResult };
   }, [codeBin, codeType, codeProvider]);
 
-  // Category Mapping outside useEffect
   const categoryMap = useMemo(() => ({
-    store: { display: t('addScreen.storeCategory'), value: 'store' },
     bank: { display: t('addScreen.bankCategory'), value: 'bank' },
     ewallet: { display: t('addScreen.ewalletCategory'), value: 'ewallet' },
+    store: { display: t('addScreen.storeCategory'), value: 'store' },
+    // bank: { display: t('addScreen.bankCategory'), value: 'bank' },
+
   }), [locale]);
 
-  // Optimized State Initialization and Updates
-  useEffect(() => {
-    // 1. Initialize category based on codeType (only if codeType is valid)
-    let initialCategory = null;
-    if (
-      codeType &&
-      (codeType === 'store' || codeType === 'bank' || codeType === 'ewallet')
-    ) {
-      initialCategory = categoryMap[codeType];
-      setCategory(initialCategory as CategoryItem);
+  // Initial params setup
+  const initialParams = useMemo(() => {
+    const result: Partial<FormParams> = {
+      metadataType: metadataTypeData[0]
+    };
+
+    if (codeType && (codeType === 'store' || codeType === 'bank' || codeType === 'ewallet')) {
+      result.category = categoryMap[codeType] as CategoryItem;
     }
 
-    // 2. Initialize brand based on itemCode (only if itemCode is valid and category is set or default type)
     if (itemCode) {
       const itemData = memoizedReturnItemData(itemCode, locale);
-      if (itemData) {
-        const categoryType = initialCategory ? initialCategory.value : 'store';
-        if (categoryType === 'bank' || categoryType === 'store' || categoryType === 'ewallet') {
-          setBrand({
-            ...itemData,
-            type: categoryType,
-          });
-        } else {
-          console.error(`Invalid category type: ${categoryType}`);
-        }
+      if (itemData && result.category) {
+        result.brand = {
+          ...itemData,
+          type: result.category.value
+        };
       }
     }
 
-    // 3. Initialize brands based on initialCategory (only if category is set)
-    if (initialCategory) {
-      const initialBrands = memoizedReturnItemsByType(initialCategory.value as DataType, locale);
-      setBrands(initialBrands);
-    }
-  }, [codeType, itemCode, locale, categoryMap]); // Run only when codeType, itemCode, or locale changes
+    return result;
+  }, [codeType, itemCode, locale, categoryMap]);
 
-  // Update brands when category changes
+  // Effects
   useEffect(() => {
-    if (category) {
-      const updatedBrands = memoizedReturnItemsByType(category.value, locale);
+    setParams(prev => ({
+      ...prev,
+      ...initialParams
+    }));
+  }, [initialParams]);
+
+  useEffect(() => {
+    if (params.category) {
+      const updatedBrands = memoizedReturnItemsByType(params.category.value, locale);
       setBrands(updatedBrands);
     } else {
-      setBrands([]); // Clear brands if category is null
+      setBrands([]);
     }
-  }, [category, locale]);
+  }, [params.category, locale]);
 
+  // Animation handlers
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
       scrollY.value = event.contentOffset.y;
@@ -229,18 +241,42 @@ const AddScreen: React.FC = () => {
     };
   });
 
-  const cardStyle = useAnimatedStyle(() => {
-    const scale = interpolate(
-      scrollY.value,
-      [0, scrollThreshold],
-      [0.8, scaleValue],
-      Extrapolation.CLAMP
-    );
+  const cardStyle = useAnimatedStyle(() => ({
+    transform: [{
+      scale: interpolate(
+        scrollY.value,
+        [0, scrollThreshold],
+        [0.8, scaleValue],
+        Extrapolation.CLAMP
+      )
+    }],
+  }));
 
-    return {
-      transform: [{ scale }],
-    };
-  });
+  // Event handlers
+  const updateParams = useCallback((updates: Partial<FormParams>) => {
+    setParams(prev => {
+      const newParams = { ...prev, ...updates };
+
+      // Handle dependent updates
+      if (updates.category) {
+        newParams.brand = null;
+      }
+
+      return newParams;
+    });
+  }, []);
+
+  const handleClearCategory = useCallback(() => {
+    updateParams({ category: null, brand: null });
+  }, [updateParams]);
+
+  const handleClearBrand = useCallback(() => {
+    updateParams({ brand: null });
+  }, [updateParams]);
+
+  const handleClearMetadataType = useCallback(() => {
+    updateParams({ metadataType: metadataTypeData[0] });
+  }, [updateParams]);
 
   const onNavigateBack = useCallback(() => {
     router.back();
@@ -248,46 +284,60 @@ const AddScreen: React.FC = () => {
 
   const onOpenSheet = useCallback(
     (type: SheetType) => {
-      if (type === 'brand' && !category) {
+      if (type === 'brand' && !params.category) {
         console.warn("Category is not selected. Cannot open brand sheet.");
         return;
       }
       setIsSheetOpen(true);
       setSheetType(type);
-      bottomSheetRef.current?.snapToIndex(0); // Assuming 0 is the desired snap point index
+      bottomSheetRef.current?.snapToIndex(0);
       if (Keyboard.isVisible()) {
         Keyboard.dismiss();
       }
     },
-    [category]
+    [params.category]
   );
 
-  const handleClearCategory = useCallback(() => {
-    setCategory(null);
-    setBrand(null); // Clear brand when category is cleared
-  }, []);
-
-  const handleClearBrand = useCallback(() => {
-    setBrand(null);
-  }, []);
-
-  const handleClearMetadataType = useCallback(() => {
-    setMetadataType(metadataTypeData[0]);
-  }, []);
+  // Render functions
   const renderCardItem = useCallback((metadata: string) => {
-    // Derive data from local state instead of relying solely on itemCode from route params
-    const cardItemCode = brand?.code || (category && returnItemCodeByBin(category.value)) || '';
+    const cardItemCode = params.brand?.code || (params.category && returnItemCodeByBin(params.category.value)) || '';
 
     return (
       <ThemedCardItem
         code={cardItemCode}
-        type={category?.value || 'store'}
+        type={params.category?.value || 'store'}
         metadata={metadata || ''}
-        metadata_type={metadataType?.value || 'qr'}
+        metadata_type={params.metadataType?.value || 'qr'}
         animatedStyle={cardStyle}
       />
     );
-  }, [brand, category, metadataType, cardStyle]);
+  }, [params, cardStyle]);
+
+  const handleSheetItemSelect = useCallback((
+    item: CategoryItem | BrandItem | MetadataTypeItem,
+    type: SheetType
+  ) => {
+    switch (type) {
+      case 'category':
+        updateParams({
+          category: item as CategoryItem,
+          brand: null
+        });
+        break;
+      case 'brand':
+        updateParams({
+          brand: item as BrandItem
+        });
+        break;
+      case 'metadataType':
+        updateParams({
+          metadataType: item as MetadataTypeItem
+        });
+        break;
+    }
+    bottomSheetRef.current?.close();
+    setSheetType(null);
+  }, [updateParams]);
 
   const renderSheetItem = useCallback(
     (item: CategoryItem | BrandItem | MetadataTypeItem) => {
@@ -296,71 +346,56 @@ const AddScreen: React.FC = () => {
       const isBrand = 'code' in item;
 
       const isSelected = isCategory
-        ? category?.value === item.value
+        ? params.category?.value === item.value
         : isBrand
-          ? brand?.code === item.code
+          ? params.brand?.code === item.code
           : isMetadataType
-            ? metadataType?.value === item.value
+            ? params.metadataType?.value === item.value
             : false;
 
       if (!item) return null;
 
+      const commonProps = {
+        item,
+        isSelected,
+        iconColors,
+        textColors: colors,
+      };
+
       if (isCategory) {
         return (
           <CategorySheetItem
-            item={item}
-            isSelected={isSelected}
-            onPress={() => {
-              setCategory(item as CategoryItem);
-              setBrand(null);
-              bottomSheetRef.current?.close();
-              setSheetType(null);
-            }}
-            iconColors={iconColors}
-            textColors={colors}
+            {...commonProps}
+            onPress={() => handleSheetItemSelect(item, 'category')}
           />
         );
       } else if (isBrand) {
         return (
           <BrandSheetItem
-            item={item}
-            isSelected={isSelected}
-            onPress={() => {
-              setBrand(item as BrandItem);
-              bottomSheetRef.current?.close();
-              setSheetType(null);
-            }}
-            iconColors={iconColors}
-            textColors={colors}
+            {...commonProps}
+            onPress={() => handleSheetItemSelect(item, 'brand')}
           />
         );
       } else if (isMetadataType) {
         return (
           <MetadataTypeSheetItem
-            item={item}
-            isSelected={isSelected}
-            onPress={() => {
-              setMetadataType(item as MetadataTypeItem);
-              bottomSheetRef.current?.close();
-              setSheetType(null);
-            }}
-            iconColors={iconColors}
-            textColors={colors}
+            {...commonProps}
+            onPress={() => handleSheetItemSelect(item, 'metadataType')}
           />
         );
       }
       return null;
     },
-    [category, brand, metadataType, iconColors, colors]
+    [params, iconColors, colors, handleSheetItemSelect]
   );
 
   const categoryData: CategoryItem[] = useMemo(() => [
-    { display: t('addScreen.storeCategory'), value: 'store' },
     { display: t('addScreen.bankCategory'), value: 'bank' },
     { display: t('addScreen.ewalletCategory'), value: 'ewallet' },
+    { display: t('addScreen.storeCategory'), value: 'store' },
+
   ], [locale]);
 
-  // Prepare sheet data
   const sheetData = useMemo(() => {
     switch (sheetType) {
       case 'category':
@@ -374,34 +409,31 @@ const AddScreen: React.FC = () => {
     }
   }, [sheetType, categoryData, brands]);
 
-  // Key extractor
   const keyExtractor = useCallback((item: unknown, index: number) => {
     const typedItem = item as CategoryItem | BrandItem | MetadataTypeItem;
     if ('value' in typedItem) {
       return typedItem.value;
     } else if ('code' in typedItem) {
       return typedItem.code;
-    } else {
-      return index.toString();
     }
+    return index.toString();
   }, []);
 
   return (
     <Formik
-      initialValues={useMemo(() => ({
-        code: brand?.code || bankCode?.toString() || '',
+      initialValues={{
+        code: params.brand?.code || bankCode?.toString() || '',
         qr_index: '',
         metadata: codeValue?.toString() || '',
-        category: category?.value || '',
-        metadata_type: 'qr', // Add metadata_type to initial values
+        category: params.category?.value || '',
+        metadata_type: params.metadataType.value,
         account_name: '',
         account_number: '',
-      }), [brand?.code, bankCode, codeValue, category?.value])}
+      }}
       validationSchema={qrCodeSchema}
       onSubmit={async (values, { setSubmitting }) => {
         setSubmitting(true);
         try {
-          console.log('Selected metadata type:', values.metadata_type); // Use this value
           router.replace('/(auth)/home');
         } catch (error) {
           console.error(error);
@@ -443,18 +475,18 @@ const AddScreen: React.FC = () => {
               <ThemedDisplayInput
                 iconName="format-list-bulleted-type"
                 placeholder={t('addScreen.categoryPlaceholder')}
-                value={category?.display}
+                value={params.category?.display}
                 onPress={() => onOpenSheet('category')}
                 onClear={handleClearCategory}
               />
               <ThemedDisplayInput
                 iconName="domain"
                 placeholder={t('addScreen.brandPlaceholder')}
-                logoCode={brand ? brand.code : undefined} // Clear logoCode when brand is null
-                value={brand?.name || ''}
+                logoCode={params.brand ? params.brand.code : undefined}
+                value={params.brand?.name || ''}
                 onPress={() => onOpenSheet('brand')}
                 onClear={handleClearBrand}
-                disabled={!category}
+                disabled={!params.category}
               />
               <ThemedInput
                 iconName="credit-card-outline"
@@ -466,9 +498,9 @@ const AddScreen: React.FC = () => {
                 disabled={!!codeValue}
               />
               <ThemedDisplayInput
-                iconName="qrcode" // Or a more generic icon
+                iconName="qrcode"
                 placeholder={t('addScreen.metadataTypePlaceholder')}
-                value={metadataType?.display}
+                value={params.metadataType?.display}
                 onPress={() => onOpenSheet('metadataType')}
                 onClear={handleClearMetadataType}
                 showClearButton={false}
@@ -486,12 +518,9 @@ const AddScreen: React.FC = () => {
           <ThemedReuseableSheet
             styles={{
               flatListContent: {
-                // paddingHorizontal: getResponsiveWidth(4.8),
-                // gap: getResponsiveHeight(2.4)
                 backgroundColor: sectionsColors,
                 borderRadius: getResponsiveWidth(4),
                 marginHorizontal: getResponsiveWidth(3.6),
-                // marginTop: getResponsiveHeight(1.8),
                 marginBottom: getResponsiveHeight(3.6),
               }
             }}
@@ -505,7 +534,13 @@ const AddScreen: React.FC = () => {
                     ? t('addScreen.metadataTypeTitle')
                     : ''
             }
-            snapPoints={['65%']} // Set a fixed height
+            snapPoints={
+              sheetType === 'category'
+                ? ['40%']
+                : sheetType === 'metadataType'
+                  ? ['40%'] // Assuming you want a specific snap point for metadataType
+                  : ['40%', '80%']
+            }
             onClose={() => setIsSheetOpen(false)}
             contentType="flat"
             contentProps={{
@@ -556,7 +591,6 @@ const styles = StyleSheet.create({
   formContainer: {
     justifyContent: 'center',
     borderRadius: getResponsiveWidth(4),
-    // padding: getResponsiveWidth(1.2),
   },
   saveButton: {
     marginTop: getResponsiveHeight(2.4),

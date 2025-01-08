@@ -1,5 +1,5 @@
 {
-"authRefresh": {
+  "authRefresh": {
     "errors": {
       "401": "Phiên hết hạn. Vui lòng đăng nhập lại.",
       "403": "Bạn không có quyền thực hiện.",
@@ -17,7 +17,7 @@
       "qr.localFetchFailed": "Không tìm thấy dữ liệu QR. Một số tính năng không khả dụng."
     }
   },
-"loginScreen": {
+  "loginScreen": {
     "email": "Email",
     "emailPlaceholder": "Nhập email",
     "password": "Mật khẩu",
@@ -150,8 +150,18 @@
     "barcodeTitle": "Mã vạch",
     "barcodePlaceholder": "Nhập mã vạch",
     "imageTitle": "Hình ảnh",
+    "brandTitle": "Thương hiệu",
+    "brandPlaceholder": "Nhập thương hiệu",
+    "metadataTypeTitle": "Loại mã",
+    "metadataTypePlaceholder": "Chọn loại mã",
+    "metadataPlaceholder": "Nhập thông tin",
     "errors": {
-      
+      "categoryRequired": "Loại thẻ là bắt buộc",
+      "brandRequired": "Thương hiệu là bắt buộc",
+      "metadataRequired": "Thông tin là bắt buộc",
+      "metadataTypeRequired": "Loại mã là bắt buộc",
+      "accountNameRequired": "Tên tài khoản là bắt buộc",
+      "accountNumberRequired": "Số tài khoản là bắt buộc"
     }
   },
   "scanScreen": {

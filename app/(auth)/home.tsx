@@ -320,7 +320,7 @@ function HomeScreen() {
         { scale },
         { translateY }
       ],
-      pointerEvents: scrollY.value > 50 ? 'none' : 'auto',
+      // pointerEvents: scrollY.value > 50 ? 'none' : 'auto',
     };
   }, []);
 
@@ -587,18 +587,15 @@ function HomeScreen() {
     <ThemedView style={styles.container}>
       <Animated.View
         style={[styles.titleContainer, titleContainerStyle]}
-        pointerEvents="box-none"
       >
         <View
           style={styles.headerContainer}
-          pointerEvents="box-none"
         >
           <ThemedText style={styles.titleText} type="title">
             {t('homeScreen.title')}
           </ThemedText>
           <View
             style={styles.titleButtonContainer}
-            pointerEvents="auto" // Crucially, set this to 'auto'
           >
             <ThemedButton
               iconName="qrcode-scan"
@@ -789,7 +786,6 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     // paddingHorizontal: 15,
     paddingHorizontal: getResponsiveWidth(3.6),
-    pointerEvents: 'box-none',
   },
   titleText: {
     fontSize: 28,
@@ -798,7 +794,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    pointerEvents: 'box-none',
   },
   titleButton: {
   },
