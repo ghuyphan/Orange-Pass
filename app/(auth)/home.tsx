@@ -126,43 +126,43 @@ function HomeScreen() {
       setIsLoading(false);
       return;
     }
-  
+
     // Early Exit: Already Syncing
     if (isSyncing) {
       return;
     }
-  
+
     setIsSyncing(true);
     setToastMessage(t('homeScreen.syncing'));
     setIsToastVisible(true);
-  
+
     try {
       // 1. Prioritize Local Changes: Sync to Server First
-      await syncQrCodes(userId); 
-  
+      await syncQrCodes(userId);
+
       // 2. Fetch and Update from Server: Get the latest from the server
       const serverData: ServerRecord[] = await fetchServerData(userId);
       if (serverData.length > 0) {
         await insertOrUpdateQrCodes(serverData);
       }
-  
+
       // 3. Refresh UI with Local Data: Ensures consistency, regardless of sync success
       const localData = await getQrCodesByUserId(userId);
       dispatch(setQrData(localData));
-  
+
       // 4. Update isEmpty: Check using the most reliable method
       const hasLocal = await hasLocalData(userId);
       setIsEmpty(!hasLocal);
-  
+
     } catch (error) {
       console.error('Error during sync process:', error);
       setToastMessage(t('homeScreen.syncError'));
       setIsToastVisible(true);
-  
+
       // Fallback: Ensure isEmpty is updated even on error
       const hasLocal = await hasLocalData(userId);
       setIsEmpty(!hasLocal);
-  
+
     } finally {
       // Reset states regardless of success or failure
       setIsLoading(false);
@@ -170,37 +170,37 @@ function HomeScreen() {
       setIsSyncing(false);
     }
   }, [isOffline, isSyncing, dispatch]);
-  
+
   useEffect(() => {
     if (!userId) return; // Guard clause: Exit if no userId
-  
+
     const initializeData = async () => {
       setIsLoading(true); // Indicate loading start
-  
-      try {
-          const hasLocal = await hasLocalData(userId);
-  
-          // Trigger Sync: If there are unsynced changes or no local data
-          if (!hasLocal) {
-              console.log('Initial sync required.');
-              await syncWithServer(userId);
-          } else {
-              const unSyncedData = await getUnsyncedQrCodes(userId);
-              if (unSyncedData.length > 0) {
-                  await syncWithServer(userId);
-              } else {
-                  setIsEmpty(!hasLocal);
-              }
-          }
-      } catch (error) {
-          console.error('Error during data initialization:', error);
 
-          // Handle initialization error (e.g., set an error state, retry mechanism)
+      try {
+        const hasLocal = await hasLocalData(userId);
+
+        // Trigger Sync: If there are unsynced changes or no local data
+        if (!hasLocal) {
+          console.log('Initial sync required.');
+          await syncWithServer(userId);
+        } else {
+          const unSyncedData = await getUnsyncedQrCodes(userId);
+          if (unSyncedData.length > 0) {
+            await syncWithServer(userId);
+          } else {
+            setIsEmpty(!hasLocal);
+          }
+        }
+      } catch (error) {
+        console.error('Error during data initialization:', error);
+
+        // Handle initialization error (e.g., set an error state, retry mechanism)
       } finally {
-          setIsLoading(false); // Ensure loading is reset
+        setIsLoading(false); // Ensure loading is reset
       }
-  };
-  
+    };
+
     initializeData();
   }, [userId]);
 
@@ -718,8 +718,19 @@ function HomeScreen() {
             setIsSheetOpen(false)
           }, 50);
         }}
-        // snapPoints={['25%']}}
-        enableDynamicSizing={true}
+        snapPoints={['30%']}
+        styles={{
+          customContent: {
+            // paddingHorizontal: getResponsiveWidth(4.8),
+            // gap: getResponsiveHeight(2.4)
+            // backgroundColor: sectionsColors,
+            borderRadius: getResponsiveWidth(4),
+            marginHorizontal: getResponsiveWidth(3.6),
+            // marginTop: getResponsiveHeight(1.8),
+            marginBottom: getResponsiveHeight(3.6),
+          }
+        }}
+        // enableDynamicSizing={true}
         customContent={
           <View>
             {renderSheetContent()}

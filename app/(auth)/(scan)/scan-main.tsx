@@ -141,18 +141,18 @@ export default function ScanScreen() {
   };
 
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+  // const bottomSheetModalRef = useRef<BottomSheetModal>(null);
 
   const handleExpandPress = useCallback(() => {
     bottomSheetRef.current?.snapToIndex(0);
   }, []);
 
 
-  const handleOpenSecondSheet = () => {
-    if (bottomSheetModalRef.current) {
-      bottomSheetModalRef.current.presentSecondSheet();
-    }
-  };
+  // const handleOpenSecondSheet = () => {
+  //   if (bottomSheetModalRef.current) {
+  //     bottomSheetModalRef.current.presentSecondSheet();
+  //   }
+  // };
 
   const onLayout = useCallback((event: LayoutChangeEvent) => {
     setLayout(event.nativeEvent.layout);
