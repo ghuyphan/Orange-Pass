@@ -1,139 +1,179 @@
-import React, { useEffect, useMemo, useLayoutEffect } from 'react';
+import React, { useEffect, useMemo, useCallback, useRef } from 'react';
 import { StyleSheet } from 'react-native';
-import Animated, { useAnimatedStyle, withSpring, withTiming, useSharedValue } from 'react-native-reanimated';
+import Animated, {
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+  useSharedValue,
+} from 'react-native-reanimated';
 
 interface CameraHighlight {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+interface Layout {
+  width: number;
+  height: number;
 }
 
 interface ScannerFrameProps {
-    highlight: CameraHighlight | null;
-    layout: { width: number; height: number };
-    scanFrame: { height: number; width: number };
+  highlight: CameraHighlight | null;
+  layout: Layout;
+  scanFrame: Layout;
 }
 
-const FRAME_SIZE = 220; // Consistent frame size
+const FRAME_SIZE = 220;
+const CORNER_SIZE = 15;
+const CORNER_BORDER_WIDTH = 3;
+const CORNER_RADIUS = 6;
+
+const springConfig = { stiffness: 200, damping: 16 };
 
 export const ScannerFrame: React.FC<ScannerFrameProps> = ({ highlight, layout, scanFrame }) => {
-    // Initialize shared values (no need for separate initialX and initialY)
-    const frameX = useSharedValue(0); 
-    const frameY = useSharedValue(0);
-    const frameWidth = useSharedValue(FRAME_SIZE);
-    const frameHeight = useSharedValue(FRAME_SIZE);
-    const frameColor = useSharedValue('rgba(255, 255, 255, 0.8)');
-    const frameBackgroundColor = useSharedValue('rgba(255, 255, 255, 0)');
+  // Ref to track if the layout has been initialized
+  const layoutInitialized = useRef(false);
 
-    // Always create these hooks, even if not used immediately
-    const animatedFrameStyle = useAnimatedStyle(() => ({
-        position: 'absolute',
-        borderRadius: 6,
-        pointerEvents: 'box-none',
-        backgroundColor: frameBackgroundColor.value,
-        left: frameX.value,
-        top: frameY.value,
-        width: frameWidth.value,
-        height: frameHeight.value,
-        borderColor: frameColor.value,
-    }));
-
-    const animatedBorderStyle = useAnimatedStyle(() => ({
-        borderColor: frameColor.value,
-    }));
-
-    // Always create the memoized corners
-    const corners = useMemo(() => (
-        <>
-            <Animated.View style={[styles.corner, styles.topLeft, animatedBorderStyle]} />
-            <Animated.View style={[styles.corner, styles.topRight, animatedBorderStyle]} />
-            <Animated.View style={[styles.corner, styles.bottomLeft, animatedBorderStyle]} />
-            <Animated.View style={[styles.corner, styles.bottomRight, animatedBorderStyle]} />
-        </>
-    ), [animatedBorderStyle]);
-
-    // useEffect to handle highlight changes
-    useEffect(() => {
-        if (highlight && scanFrame && layout.width > 0 && layout.height > 0) {
-            // Calculate scales and adjusted values
-            const xScale = layout.width / scanFrame.height - 0.025;
-            const yScale = layout.height / scanFrame.width - 0.01;
-            const widthScale = layout.height / scanFrame.width + 0.1;
-            const heightScale = layout.width / scanFrame.height + 0.15;
-
-            const adjustedX = highlight.x * xScale;
-            const adjustedY = highlight.y * yScale;
-            const adjustedWidth = highlight.width * widthScale;
-            const adjustedHeight = highlight.height * heightScale;
-
-            // Animate to the new highlight area
-            frameX.value = withSpring(adjustedX, { stiffness: 200, damping: 16 });
-            frameY.value = withSpring(adjustedY, { stiffness: 200, damping: 16 });
-            frameWidth.value = withSpring(adjustedWidth, { stiffness: 200, damping: 16 });
-            frameHeight.value = withSpring(adjustedHeight, { stiffness: 200, damping: 16 });
-            frameColor.value = '#FFCC00';
-            frameBackgroundColor.value = 'rgba(128, 128, 128, 0.2)';
-        } else {
-            frameX.value = withTiming((layout.width - FRAME_SIZE) / 2);
-            frameY.value = withTiming((layout.height - FRAME_SIZE) / 2);
-            frameWidth.value = withTiming(FRAME_SIZE);
-            frameHeight.value = withTiming(FRAME_SIZE);
-            frameColor.value = withTiming('rgba(255, 255, 255, 0.8)');
-            frameBackgroundColor.value = withTiming('rgba(255, 255, 255, 0)');
-        }
-    }, [highlight, layout, scanFrame, 
-        frameX, frameY, frameWidth, frameHeight, 
-        frameColor, frameBackgroundColor]);
-
-    // useLayoutEffect to set initial position after layout is available
-    useLayoutEffect(() => {
-        if (layout.width > 0 && layout.height > 0) {
-            frameX.value = (layout.width - FRAME_SIZE) / 2;
-            frameY.value = (layout.height - FRAME_SIZE) / 2;
-        }
-    }, [layout]); 
-
-    // Check for valid layout before rendering
-    if (!layout || layout.width <= 0 || layout.height <= 0) {
-        return null;
+  // Calculate center position (only once layout is available)
+  const centerPosition = useMemo(() => {
+    if (layout.width && layout.height) {
+      layoutInitialized.current = true; // Mark layout as initialized
+      return {
+        x: (layout.width - FRAME_SIZE) / 2,
+        y: (layout.height - FRAME_SIZE) / 2,
+      };
     }
+    return { x: 0, y: 0 }; // Default until layout is available
+  }, [layout]);
 
-    return <Animated.View style={[animatedFrameStyle]}>{corners}</Animated.View>;
+  // Initialize framePosition with centerPosition if layout is available
+  const framePosition = useSharedValue(centerPosition);
+  const frameDimensions = useSharedValue({ width: FRAME_SIZE, height: FRAME_SIZE });
+  const frameStyle = useSharedValue({
+    color: 'rgba(255, 255, 255, 0.8)',
+    backgroundColor: 'rgba(255, 255, 255, 0)',
+  });
+
+  // Memoized scaling calculations
+  const getScaledValues = useCallback(
+    (highlight: CameraHighlight, scanFrame: Layout, layout: Layout) => {
+      const xScale = layout.width / scanFrame.height - 0.025;
+      const yScale = layout.height / scanFrame.width - 0.01;
+      const widthScale = layout.height / scanFrame.width + 0.1;
+      const heightScale = layout.width / scanFrame.height + 0.15;
+
+      return {
+        x: highlight.x * xScale,
+        y: highlight.y * yScale,
+        width: highlight.width * widthScale,
+        height: highlight.height * heightScale,
+      };
+    },
+    []
+  );
+
+  // Animated styles
+  const animatedFrameStyle = useAnimatedStyle(() => ({
+    position: 'absolute',
+    borderRadius: CORNER_RADIUS,
+    pointerEvents: 'box-none',
+    backgroundColor: frameStyle.value.backgroundColor,
+    borderColor: frameStyle.value.color,
+    left: framePosition.value.x,
+    top: framePosition.value.y,
+    width: frameDimensions.value.width,
+    height: frameDimensions.value.height,
+  }));
+
+  const animatedBorderStyle = useAnimatedStyle(() => ({
+    borderColor: frameStyle.value.color,
+  }));
+
+  // Corner components
+  const corners = useMemo(
+    () => (
+      <>
+        <Animated.View style={[styles.corner, styles.topLeft, animatedBorderStyle]} />
+        <Animated.View style={[styles.corner, styles.topRight, animatedBorderStyle]} />
+        <Animated.View style={[styles.corner, styles.bottomLeft, animatedBorderStyle]} />
+        <Animated.View style={[styles.corner, styles.bottomRight, animatedBorderStyle]} />
+      </>
+    ),
+    [animatedBorderStyle]
+  );
+
+  // Handle highlight changes
+  useEffect(() => {
+    if (!layout.width || !layout.height) return;
+
+    if (highlight && scanFrame) {
+      const scaled = getScaledValues(highlight, scanFrame, layout);
+
+      framePosition.value = withSpring({ x: scaled.x, y: scaled.y }, springConfig);
+      frameDimensions.value = withSpring({ width: scaled.width, height: scaled.height }, springConfig);
+      frameStyle.value = {
+        color: '#FFCC00',
+        backgroundColor: 'rgba(128, 128, 128, 0.2)',
+      };
+    } else {
+      // Only update position if it hasn't been initialized yet
+      if (!layoutInitialized.current) {
+        framePosition.value = centerPosition; // Set initial position
+        layoutInitialized.current = true;
+      }
+      
+      framePosition.value = withTiming(centerPosition);
+
+      frameDimensions.value = withTiming({ width: FRAME_SIZE, height: FRAME_SIZE });
+      frameStyle.value = {
+        color: 'rgba(255, 255, 255, 0.8)',
+        backgroundColor: 'rgba(255, 255, 255, 0)',
+      };
+    }
+  }, [highlight, layout, scanFrame, centerPosition]);
+
+  if (!layout.width || !layout.height) return null;
+
+  return (
+    <Animated.View style={animatedFrameStyle}>{corners}</Animated.View>
+  );
 };
 
 const styles = StyleSheet.create({
-    corner: {
-        position: 'absolute',
-        width: 15,
-        height: 15,
-    },
-    topLeft: {
-        top: 0,
-        left: 0,
-        borderTopLeftRadius: 6,
-        borderTopWidth: 3,
-        borderLeftWidth: 3,
-    },
-    topRight: {
-        top: 0,
-        right: 0,
-        borderTopRightRadius: 6,
-        borderTopWidth: 3,
-        borderRightWidth: 3,
-    },
-    bottomLeft: {
-        bottom: 0,
-        left: 0,
-        borderBottomLeftRadius: 6,
-        borderBottomWidth: 3,
-        borderLeftWidth: 3,
-    },
-    bottomRight: {
-        bottom: 0,
-        right: 0,
-        borderBottomRightRadius: 6,
-        borderBottomWidth: 3,
-        borderRightWidth: 3,
-    },
+  corner: {
+    position: 'absolute',
+    width: CORNER_SIZE,
+    height: CORNER_SIZE,
+    borderWidth: CORNER_BORDER_WIDTH,
+  },
+  topLeft: {
+    top: 0,
+    left: 0,
+    borderTopLeftRadius: CORNER_RADIUS,
+    borderRightWidth: 0,
+    borderBottomWidth: 0,
+  },
+  topRight: {
+    top: 0,
+    right: 0,
+    borderTopRightRadius: CORNER_RADIUS,
+    borderLeftWidth: 0,
+    borderBottomWidth: 0,
+  },
+  bottomLeft: {
+    bottom: 0,
+    left: 0,
+    borderBottomLeftRadius: CORNER_RADIUS,
+    borderRightWidth: 0,
+    borderTopWidth: 0,
+  },
+  bottomRight: {
+    bottom: 0,
+    right: 0,
+    borderBottomRightRadius: CORNER_RADIUS,
+    borderLeftWidth: 0,
+    borderTopWidth: 0,
+  },
 });
