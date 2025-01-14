@@ -113,6 +113,7 @@ export default function LoginScreen() {
               errorMessage={touched.email && errors.email ? t(`loginScreen.errors.${errors.email}`) : ''}
               disabled={isSubmitting}
               disableOpacityChange={true}
+              required={true}
             />
             <ThemedView style={styles.divider} />
             <ThemedInput

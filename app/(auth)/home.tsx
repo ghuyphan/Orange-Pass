@@ -58,6 +58,7 @@ import ThemedReuseableSheet from '@/components/bottomsheet/ThemedReusableSheet';
 import ThemedCardItem from '@/components/cards/ThemedCardItem';
 import { ThemedFilterSkeleton, ThemedCardSkeleton } from '@/components/skeletons';
 import { ThemedStatusToast } from '@/components/toast/ThemedStatusToast';
+import { ThemedTopToast } from '@/components/toast/ThemedTopToast';
 import { ThemedModal } from '@/components/modals/ThemedIconModal';
 import { ThemedBottomToast } from '@/components/toast/ThemedBottomToast';
 import ThemedFilter from '@/components/ThemedFilter';
@@ -86,6 +87,8 @@ function HomeScreen() {
   const [isActive, setIsActive] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [isToastVisible, setIsToastVisible] = useState(false);
+  const [topToastMessage, setTopToastMessage] = useState('');
+  const [isTopToastVisible, setIsTopToastVisible] = useState(false);
   const [isBottomToastVisible, setIsBottomToastVisible] = useState(false);
   const [bottomToastColor, setBottomToastColor] = useState('');
   const [bottomToastIcon, setBottomToastIcon] = useState('');
@@ -477,6 +480,17 @@ function HomeScreen() {
       .then(filteredData => dispatch(setQrData(filteredData)));
   }, [userId, dispatch, setFilter]); // Add setFilter to the dependency array
 
+  const handleCopySuccess = () => {
+    setIsTopToastVisible(true); // Show the toast
+    setTopToastMessage(t('homeScreen.copied'));
+    setTimeout(() => {
+      setIsTopToastVisible(false);
+    }, 3000);
+    // You might want to hide the toast after a timeout here, 
+    // depending on how your ThemedTopToast works
+  };
+
+
 
   // const handleExpandPress = useCallback((id: string) => {
   //   setSelectedItemId(id);
@@ -551,7 +565,7 @@ function HomeScreen() {
   );
 
   const paddingValues = useMemo(() => {
-    return [0, height * 0.70, height * 0.40, height * 0.20];
+    return [0, height * 0.70, height * 0.45, height * 0.20];
   }, []);
 
   const listContainerPadding = useMemo(() => {
@@ -569,7 +583,9 @@ function HomeScreen() {
       case 'linking':
         return (
           <>
-            <LinkingSheetContent url={linkingUrl} />
+            <LinkingSheetContent url={linkingUrl}
+              onCopySuccess={handleCopySuccess}
+            />
           </>
         );
       case 'setting':
@@ -672,17 +688,17 @@ function HomeScreen() {
         <ThemedFAB
           actions={[
             {
-              text: t('homeScreen.fab.add'),
+              text: ('homeScreen.fab.add'),
               iconName: 'plus-circle',
               onPress: onNavigateToAddScreen
             },
             {
-              text: t('homeScreen.fab.scan'),
+              text: ('homeScreen.fab.scan'),
               iconName: 'camera',
               onPress: onNavigateToScanScreen,
             },
             {
-              text: t('homeScreen.fab.gallery'),
+              text: ('homeScreen.fab.gallery'),
               iconName: 'image',
               onPress: onOpenGallery
             }
@@ -699,6 +715,13 @@ function HomeScreen() {
         style={styles.toastContainer}
         isSyncing={isSyncing}
       />
+      <ThemedTopToast
+        message={topToastMessage}
+        isVisible={isTopToastVisible}
+      // onVisibilityToggle={true}
+      // other props as needed
+      />
+
       <ThemedBottomToast
         isVisible={isBottomToastVisible}
         message={bottomToastMessage}
@@ -715,16 +738,12 @@ function HomeScreen() {
             setIsSheetOpen(false)
           }, 50);
         }}
-        snapPoints={['30%']}
+        snapPoints={['35%']}
         styles={{
           customContent: {
-            // paddingHorizontal: getResponsiveWidth(4.8),
-            // gap: getResponsiveHeight(2.4)
-            // backgroundColor: sectionsColors,
             borderRadius: getResponsiveWidth(4),
             marginHorizontal: getResponsiveWidth(3.6),
-            // marginTop: getResponsiveHeight(1.8),
-            marginBottom: getResponsiveHeight(3.6),
+            backgroundColor: 'red'
           }
         }}
         // enableDynamicSizing={true}
@@ -759,7 +778,6 @@ function HomeScreen() {
         message={t('homeScreen.confirmDeleteMessage')}
         isVisible={isModalVisible}
         iconName="delete-outline"
-
       />
     </ThemedView>
   );
@@ -821,8 +839,10 @@ const styles = StyleSheet.create({
     right: 0,
   },
   fab: {
-    bottom: 20,
-    right: 15,
+    // bottom: 20,
+    bottom: getResponsiveHeight(5),
+    // right: 15,
+    right: getResponsiveWidth(3.6),
     position: 'absolute',
     zIndex: 3,
   },

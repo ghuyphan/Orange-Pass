@@ -171,12 +171,12 @@ const styles = StyleSheet.create({
     },
     title: {
         textAlign: 'center',
-        fontSize: getResponsiveFontSize(26),
+        fontSize: getResponsiveFontSize(24),
         marginBottom: getResponsiveHeight(1),
     },
     subtitle: {
         textAlign: 'center',
-        fontSize: getResponsiveFontSize(18),
+        fontSize: getResponsiveFontSize(16),
         lineHeight: getResponsiveFontSize(25),
     },
     bottomContainer: {

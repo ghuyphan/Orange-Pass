@@ -17,7 +17,7 @@
       "qr.localFetchFailed": "QR-данные не найдены. Некоторые функции недоступны."
     }
   },
-"loginScreen": {
+  "loginScreen": {
     "email": "Электронная почта",
     "emailPlaceholder": "Введите вашу электронную почту",
     "password": "Пароль",
@@ -108,6 +108,7 @@
     "cancel": "Отмена",
     "moveToTrash": "Переместить в корзину",
     "move": "Переместить",
+    "copied": "Ссылка скопирована",
     "fetchError": "Не удалось загрузить данные. Повторите попытку.",
     "syncError": "Не удалось синхронизировать. Повторите попытку.",
     "filters": {
@@ -130,17 +131,39 @@
   },
   "addScreen": {
     "title": "Добавить карту",
-    "type": "Тип",
+    "type": "Тип карты",
     "bank": "Банк",
     "store": "Магазин",
     "ewallet": "Электронный кошелек",
     "qr": "QR-код",
     "barcode": "Штрих-код",
     "image": "Изображение",
-    "metadataPlaceholder": "Введите номер карты",
-    "metadataLabel": "Номер карты",
     "saveButton": "Сохранить",
-    "failedToOpenGoogleMaps": "  Не удалось открыть Google Maps."
+    "categoryTitle": "Категория карты",
+    "categoryPlaceholder": "Введите категорию карты",
+    "storeCategory": "Магазин",
+    "ewalletCategory": "Электронный кошелек",
+    "bankCategory": "Банк",
+    "nameTitle": "Название карты",
+    "namePlaceholder": "Введите название карты",
+    "qrCodeTitle": "QR-код",
+    "qrCodePlaceholder": "Введите QR-код",
+    "barcodeTitle": "Штрих-код",
+    "barcodePlaceholder": "Введите штрих-код",
+    "imageTitle": "Изображение",
+    "brandTitle": "Бренд",
+    "brandPlaceholder": "Введите бренд",
+    "metadataTypeTitle": "Тип кода",
+    "metadataTypePlaceholder": "Выберите тип кода",
+    "metadataPlaceholder": "Введите информацию",
+    "errors": {
+      "categoryRequired": "Категория карты обязательна",
+      "brandRequired": "Бренд обязателен",
+      "metadataRequired": "Информация обязательна",
+      "metadataTypeRequired": "Тип кода обязателен",
+      "accountNameRequired": "Имя учетной записи обязательно",
+      "accountNumberRequired": "Номер учетной записи обязателен"
+    }
   },
   "settingsScreen": {
     "title": "Настройки",

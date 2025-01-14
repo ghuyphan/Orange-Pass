@@ -12,11 +12,13 @@ import { t } from '@/i18n';
 interface LinkingSheetContentProps {
   url: string | null;
   style?: StyleProp<ViewStyle>;
+  onCopySuccess?: () => void; 
 }
 
 const LinkingSheetContent: React.FC<LinkingSheetContentProps> = ({ 
   url, 
   style,
+  onCopySuccess
 }) => {
   const { currentTheme } = useTheme();
   
@@ -33,9 +35,10 @@ const LinkingSheetContent: React.FC<LinkingSheetContentProps> = ({
     if (!url) return;
     try {
       await Clipboard.setStringAsync(url);
-      Alert.alert('Success', 'Link copied to clipboard');
+      onCopySuccess?.();
+      // Alert.alert('Success', 'Link copied to clipboard');
     } catch (error) {
-      Alert.alert('Error', 'Failed to copy link');
+      // Alert.alert('Error', 'Failed to copy link');
     }
   };
 
@@ -154,13 +157,13 @@ const styles = StyleSheet.create({
     // padding: 20,
     paddingHorizontal: getResponsiveWidth(4.8),
     paddingVertical: getResponsiveHeight(1.8),
+    marginHorizontal: getResponsiveWidth(3.6),
     gap: 15,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 4,
   },
   title: {
     fontSize: 16,

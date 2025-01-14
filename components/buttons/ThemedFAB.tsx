@@ -14,6 +14,7 @@ import Animated, {
   useSharedValue,
 } from 'react-native-reanimated';
 import { ThemedButton } from './ThemedButton';
+import { t } from '@/i18n';
 
 export interface FABAction {
   text?: string;
@@ -211,7 +212,7 @@ export const ThemedFAB = forwardRef<View, ThemedFABProps>(({
                         textStyles[index] // Use the pre-calculated style here
                       ]}
                     >
-                      {action.text}
+                      {t(action.text)}
                     </Animated.Text>
                     <ThemedButton
                       style={styles.fab}

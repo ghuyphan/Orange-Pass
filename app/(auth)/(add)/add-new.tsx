@@ -541,8 +541,11 @@ const AddScreen: React.FC = () => {
                   ? ['40%'] // Assuming you want a specific snap point for metadataType
                   : ['40%', '80%']
             }
-            onClose={() => setIsSheetOpen(false)}
-            contentType="flat"
+            onClose={() => {
+              setTimeout(() => {
+                setIsSheetOpen(false)
+              }, 50);
+            }}            contentType="flat"
             contentProps={{
               flatListProps: {
                 data: sheetData,

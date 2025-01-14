@@ -110,6 +110,7 @@
     "move": "Chuyển",
     "fetchError": "Chưa tải được dữ liệu. Thử lại nhé!",
     "syncError": "Chưa đồng bộ được. Thử lại nhé!",
+    "copied": "Đã sao chép liên kết",
     "filters": {
       "all": "Tất cả",
       "bank": "Ngân hàng",

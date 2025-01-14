@@ -9,15 +9,9 @@ import {
   LayoutAnimation,
 } from 'react-native';
 import { t } from '@/i18n'; // Translation function
-import { ThemedText } from './ThemedText';
 import { useLocale } from '@/context/LocaleContext';
 import { useTheme } from '@/context/ThemeContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import Animated, {
-  useAnimatedStyle,
-  withTiming,
-  Easing,
-} from 'react-native-reanimated';
 import { Colors } from '@/constants/Colors';
 import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
 
@@ -45,23 +39,6 @@ const FilterItem = React.memo(
     isDarkMode: boolean;
     handlePress: (filterKey: string) => void;
   }) => {
-
-    const translateX = -getResponsiveWidth(2.4);
-    const animatedStyle = useAnimatedStyle(() => ({
-      opacity: withTiming(isSelected ? 1 : 0, {
-        duration: 100,
-        easing: Easing.out(Easing.ease),
-      }),
-      transform: [
-        {
-          translateX: withTiming(isSelected ? 0 : translateX, {
-            duration: 100,
-            easing: Easing.out(Easing.ease),
-          }),
-        },
-      ],
-    }));
-
     return (
       <Pressable
         onPress={() => {
@@ -74,15 +51,10 @@ const FilterItem = React.memo(
           pressed && { opacity: 0.7 },
         ]}
       >
-        <View
-          style={[
-            styles.animatedView,
-            isSelected ? { gap: getResponsiveWidth(1.2), paddingHorizontal: getResponsiveWidth(3.6) } : { gap: 0 },
-          ]}
-        >
+        <View style={styles.animatedView}>
           <MaterialCommunityIcons
             name={isSelected ? item.iconName : `${item.iconName}-outline`}
-            size={getResponsiveFontSize(18)}
+            size={getResponsiveFontSize(20)}
             color={
               isSelected
                 ? isDarkMode
@@ -93,21 +65,6 @@ const FilterItem = React.memo(
                 : Colors.light.icon
             }
           />
-          {isSelected && (
-            <Animated.View style={animatedStyle}>
-              <ThemedText
-                style={[
-                  styles.baseTextStyle,
-                  isSelected &&
-                    (isDarkMode
-                      ? styles.selectedFilterTextDarkMode
-                      : styles.selectedFilterTextLightMode),
-                ]}
-              >
-                {item.label}
-              </ThemedText>
-            </Animated.View>
-          )}
         </View>
       </Pressable>
     );
@@ -203,30 +160,18 @@ const ThemedFilter = ({ selectedFilter, onFilterChange, style }: ThemedFilterPro
 
 const styles = StyleSheet.create({
   filterContainer: {
-    flexDirection: 'row',
+    flex: 1,
     gap: getResponsiveWidth(2),
     paddingHorizontal: getResponsiveWidth(3.6),
-    // justifyContent: 'space-evenly',
+    justifyContent: 'space-between',
   },
   filterButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: getResponsiveHeight(1.2),
-    paddingHorizontal: getResponsiveWidth(3.6),
+    paddingVertical: getResponsiveHeight(1.5),
+    paddingHorizontal: getResponsiveWidth(4.5),
     borderRadius: getResponsiveWidth(4),
     overflow: 'hidden',
-  },
-  baseTextStyle: {
-    fontSize: getResponsiveFontSize(16),
-    fontWeight: '500',
-  },
-  selectedFilterTextLightMode: {
-    color: Colors.dark.text,
-    fontSize: getResponsiveFontSize(16),
-  },
-  selectedFilterTextDarkMode: {
-    color: Colors.light.text,
-    fontSize: getResponsiveFontSize(16),
   },
   selectedFilterLightMode: {
     backgroundColor: Colors.light.icon,
@@ -239,14 +184,6 @@ const styles = StyleSheet.create({
   },
   lightModeButton: {
     backgroundColor: Colors.light.buttonBackground,
-  },
-  filterButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    overflow: 'hidden',
-    borderRadius: getResponsiveWidth(3.6),
-    flex: 1,
   },
   animatedView: {
     flexDirection: 'row',

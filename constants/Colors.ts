@@ -29,7 +29,7 @@ export const Colors = {
     tabIconDefault: '#757575',
     tabIconSelected: tintColorDark,
     error: '#f2726f',
-    toastBackground: '#231D1F',
+    toastBackground: '#423B3D',
     buttonBackground: '#45383A',
     buttonHighlight: '#6A4F4B', 
     cardBackground: '#2E282A',
