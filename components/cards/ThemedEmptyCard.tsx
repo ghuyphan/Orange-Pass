@@ -6,31 +6,24 @@ import { ThemedButton } from '../buttons/ThemedButton';
 import { useTheme } from '@/context/ThemeContext';
 import { Colors } from '@/constants/Colors';
 import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
+import { t } from '@/i18n';
 
 export type ThemedEmptyCardProps = {
-  /** Light color theme for the card text */
   lightColor?: string;
-  /** Dark color theme for the card text */
   darkColor?: string;
-  /** Header Label to display on the card */
   headerLabel: string;
-  /** Footer Label to display on the card */
   footerLabel: string;
-  /** Foot Button Label to display on the card */
   footButtonLabel: string;
-  /** Function to call when the card is pressed */
-  cardOnPress: () => void;
-  /** Function to call when the button is pressed */
+  cardOnPress?: () => void; // Made optional
   buttonOnPress: () => void;
-  /** Custom styles for the card */
   style?: object;
-  /** Custom styles for the card footer */
   footerStyle?: object;
-  /** Vertical padding for the header */
   paddingTop?: number;
-  /** Image to display inside the card */
   image?: any;
+  testID?: string; // Added for testing
 };
+
+const DEFAULT_IMAGE = require('@/assets/images/card.png');
 
 export function ThemedEmptyCard({
   lightColor,
@@ -43,95 +36,118 @@ export function ThemedEmptyCard({
   style,
   footerStyle,
   paddingTop,
-  image = require('@/assets/images/card.png'),
+  image = DEFAULT_IMAGE,
+  testID,
 }: ThemedEmptyCardProps) {
   const { currentTheme: colorScheme } = useTheme();
-  const color = colorScheme === 'light' ? Colors.light.text : Colors.dark.text;
-  const buttoncolor =
-    colorScheme === 'light' ? Colors.light.buttonBackground : Colors.dark.buttonBackground;
+  
+  const colors = useMemo(() => ({
+    text: colorScheme === 'light' ? Colors.light.text : Colors.dark.text,
+    buttonBackground: colorScheme === 'light' ? Colors.light.buttonBackground : Colors.dark.buttonBackground,
+    cardBackground: colorScheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground,
+    cardFooter: colorScheme === 'light' ? Colors.light.cardFooter : Colors.dark.cardFooter,
+  }), [colorScheme]);
+
+  const styles = useMemo(() => createStyles(paddingTop), [paddingTop]);
 
   const cardContainerStyle = useMemo(
     () => [
       {
-        backgroundColor:
-          colorScheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground,
+        backgroundColor: colors.cardBackground,
         borderRadius: getResponsiveWidth(4),
       },
       style,
     ],
-    [colorScheme, style]
+    [colors.cardBackground, style]
   );
 
   const footerBackground = useMemo(
     () => ({
-      backgroundColor: colorScheme === 'light' ? Colors.light.cardFooter : Colors.dark.cardFooter,
+      backgroundColor: colors.cardFooter,
     }),
-    [colorScheme]
-  );
-
-  const dynamicStyles = useMemo(
-    () =>
-      StyleSheet.create({
-        cardHeaderContainer: {
-          flexDirection: 'row',
-          width: '100%', // Take full available width within padding
-          paddingTop: paddingTop || getResponsiveHeight(2), // Responsive padding
-          paddingHorizontal: getResponsiveWidth(4.8),
-        },
-        label: {
-          fontSize: getResponsiveFontSize(28),
-          lineHeight: getResponsiveFontSize(38),
-        },
-        cardImageContainer: {
-          alignItems: 'center',
-          height: getResponsiveHeight(30), // Responsive height
-          justifyContent: 'center',
-          paddingBottom: getResponsiveHeight(3), // Responsive padding
-        },
-        image: {
-          width: getResponsiveWidth(90), // 85% of screen width
-          height: getResponsiveHeight(38), // 30% of screen height
-          resizeMode: 'contain', // Maintain aspect ratio
-        },
-        cardFooterContainer: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          paddingVertical: getResponsiveHeight(1.8),
-          paddingHorizontal: getResponsiveWidth(4.8),
-          justifyContent: 'space-between',
-          borderBottomLeftRadius: getResponsiveWidth(4),
-          borderBottomRightRadius: getResponsiveWidth(4),
-        },
-        cardFooterButton: {
-          paddingHorizontal: getResponsiveWidth(4.8), // Responsive padding
-          // paddingVertical: getResponsiveHeight(1), // Responsive padding
-        },
-      }),
-    [paddingTop]
+    [colors.cardFooter]
   );
 
   return (
-    <Pressable style={cardContainerStyle} onPress={cardOnPress}>
+    <Pressable 
+      style={cardContainerStyle} 
+      onPress={cardOnPress}
+      testID={testID}
+      disabled={!cardOnPress}
+    >
       <ThemedView style={cardContainerStyle}>
-        <View style={dynamicStyles.cardHeaderContainer}>
-          <ThemedText style={[dynamicStyles.label, { color }]} type="title">
-            {headerLabel}
+        <View style={styles.cardHeaderContainer}>
+          <ThemedText 
+            style={[styles.label, { color: colors.text }]} 
+            type="title"
+            numberOfLines={2}
+          >
+            {/* {headerLabel} */}
+            {t(headerLabel)}
           </ThemedText>
         </View>
-        <View style={dynamicStyles.cardImageContainer}>
-          <Image source={image} style={dynamicStyles.image} />
+        
+        <View style={styles.cardImageContainer}>
+          <Image 
+            source={image} 
+            style={styles.image}
+            accessibilityRole="image"
+            accessibilityLabel={t(headerLabel)}
+          />
         </View>
-        <View
-          style={[dynamicStyles.cardFooterContainer, footerBackground, footerStyle]}
-        >
-          <ThemedText>{footerLabel}</ThemedText>
+        
+        <View style={[styles.cardFooterContainer, footerBackground, footerStyle]}>
+          <ThemedText numberOfLines={1}>
+            {t(footerLabel)}
+            {/* {footerLabel} */}
+          </ThemedText>
           <ThemedButton
-            label={footButtonLabel}
+            label={t(footButtonLabel)}
+            // label={footButtonLabel}
             onPress={buttonOnPress}
-            style={[dynamicStyles.cardFooterButton, { backgroundColor: buttoncolor }]}
+            style={[
+              styles.cardFooterButton, 
+              { backgroundColor: colors.buttonBackground }
+            ]}
           />
         </View>
       </ThemedView>
     </Pressable>
   );
 }
+
+const createStyles = (paddingTop?: number) => StyleSheet.create({
+  cardHeaderContainer: {
+    flexDirection: 'row',
+    width: '100%',
+    paddingTop: paddingTop || getResponsiveHeight(2),
+    paddingHorizontal: getResponsiveWidth(4.8),
+  },
+  label: {
+    fontSize: getResponsiveFontSize(28),
+    lineHeight: getResponsiveFontSize(38),
+  },
+  cardImageContainer: {
+    alignItems: 'center',
+    height: getResponsiveHeight(30),
+    justifyContent: 'center',
+    paddingBottom: getResponsiveHeight(3),
+  },
+  image: {
+    width: getResponsiveWidth(90),
+    height: getResponsiveHeight(38),
+    resizeMode: 'contain',
+  },
+  cardFooterContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: getResponsiveHeight(1.8),
+    paddingHorizontal: getResponsiveWidth(4.8),
+    justifyContent: 'space-between',
+    borderBottomLeftRadius: getResponsiveWidth(4),
+    borderBottomRightRadius: getResponsiveWidth(4),
+  },
+  cardFooterButton: {
+    paddingHorizontal: getResponsiveWidth(4.8),
+  },
+});

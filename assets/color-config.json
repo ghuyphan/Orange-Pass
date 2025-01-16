@@ -127,6 +127,14 @@
             "light": "#E7D59C"
         }
     },
+    "COOPBANK" : {
+        "color": {
+            "light": "#C83737"
+        },
+        "accent_color": {
+            "light": "#245896"
+        }
+    },
     "DBK": {
         "color": {
             "light": "#8992B5"
@@ -383,6 +391,14 @@
             "light": "#A9C8A1"
         }
     },
+    "SPP": {
+        "color": {
+            "light": "#E8624A"
+        },
+        "accent_color": {
+            "light": "#FFA07A"
+        }
+    },
     "TCB": {
         "color": {
             "light": "#A3A6AB"
@@ -606,5 +622,13 @@
         "accent_color": {
             "light": "#EBF6E2"
         }
-    }
+    }, 
+    "ZALOPAY": {
+        "color": {
+            "light": "#0168FE"
+        },
+        "accent_color": {
+            "light": "#00CF6A"
+        }
+    }  
 }

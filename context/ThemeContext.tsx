@@ -40,14 +40,15 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     Appearance.getColorScheme() || 'light'
   );
 
-  const currentTheme = useMemo((): Theme => 
-    isDarkMode === undefined ? systemTheme : (isDarkMode ? 'dark' : 'light'),
-    [isDarkMode, systemTheme]
-  );
+  const currentTheme = useMemo((): Theme => {
+    if (isDarkMode === undefined) {
+      return systemTheme;  // Use system theme by default instead of light
+    }
+    return isDarkMode ? 'dark' : 'light';
+  }, [isDarkMode, systemTheme]);
 
   const setNavigationBarColor = useCallback(async (theme: Theme) => {
     if (Platform.OS !== 'android') return;
-
     const colors = NAVIGATION_BAR_COLORS[theme];
     try {
       await Promise.all([
@@ -62,10 +63,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     const updateSystemTheme = () => {
       const newTheme = Appearance.getColorScheme() || 'light';
-      setSystemTheme(newTheme as Theme);
-      
+      setSystemTheme(newTheme);
+      // Only update the navigation bar if "Use System Setting" is active
       if (isDarkMode === undefined) {
-        setNavigationBarColor(newTheme as Theme);
+        setNavigationBarColor(newTheme);
       }
     };
 
@@ -83,13 +84,16 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setIsDarkMode(value);
       if (value !== undefined) {
         storage.set('dark-mode', value);
+      } else {
+        // Remove the key to use system theme
+        storage.delete('dark-mode');
       }
     },
     useSystemTheme: () => {
       setIsDarkMode(undefined);
       storage.delete('dark-mode');
     },
-    currentTheme
+    currentTheme,
   }), [isDarkMode, currentTheme]);
 
   return (

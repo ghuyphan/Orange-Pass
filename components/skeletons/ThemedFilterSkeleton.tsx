@@ -3,6 +3,8 @@ import { View, StyleSheet } from 'react-native';
 import { MotiView } from 'moti';
 import { Skeleton } from 'moti/skeleton';
 import { useTheme } from '@/context/ThemeContext';
+import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
+import { Colors } from '@/constants/Colors';
 
 interface ThemedFilterSkeletonProps {
   show?: boolean;
@@ -42,9 +44,9 @@ export function ThemedFilterSkeleton({ show = true }: ThemedFilterSkeletonProps)
           <View key={index} style={styles.filterButton}>
             <Skeleton
               colors={skeletonColors}
-              width={100}
-              height={45}
-              radius={16}
+              width={getResponsiveWidth(20.5)}
+              height={getResponsiveHeight(5.7)}
+              radius={getResponsiveWidth(4)}
             />
           </View>
         ))}
@@ -57,9 +59,10 @@ const styles = StyleSheet.create({
   filterContainer: {
     flexDirection: 'row',
     marginBottom: 10,
-    gap: 10,
+    gap: getResponsiveWidth(2),
+    justifyContent: 'space-between',
   },
   filterButton: {
-    borderRadius: 5,
+    borderRadius: getResponsiveWidth(4)
   },
 });

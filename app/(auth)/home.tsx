@@ -118,7 +118,7 @@ function HomeScreen() {
 
   // 11. Shared Values (Reanimated)
   const isEmptyShared = useSharedValue(qrData.length === 0 ? 1 : 0);
-  const emptyCardOffset = useSharedValue(300);
+  const emptyCardOffset = useSharedValue(350);
   const scrollY = useSharedValue(0);
 
   const syncWithServer = useCallback(async (userId: string) => {

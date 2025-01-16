@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useCallback, useRef } from 'react';
+import React, { useEffect, useMemo, useCallback, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -33,22 +33,18 @@ const CORNER_RADIUS = 6;
 const springConfig = { stiffness: 200, damping: 16 };
 
 export const ScannerFrame: React.FC<ScannerFrameProps> = ({ highlight, layout, scanFrame }) => {
-  // Ref to track if the layout has been initialized
-  const layoutInitialized = useRef(false);
+  const [layoutReady, setLayoutReady] = useState(false);
 
-  // Calculate center position (only once layout is available)
   const centerPosition = useMemo(() => {
     if (layout.width && layout.height) {
-      layoutInitialized.current = true; // Mark layout as initialized
       return {
         x: (layout.width - FRAME_SIZE) / 2,
         y: (layout.height - FRAME_SIZE) / 2,
       };
     }
-    return { x: 0, y: 0 }; // Default until layout is available
+    return { x: 0, y: 0 };
   }, [layout]);
 
-  // Initialize framePosition with centerPosition if layout is available
   const framePosition = useSharedValue(centerPosition);
   const frameDimensions = useSharedValue({ width: FRAME_SIZE, height: FRAME_SIZE });
   const frameStyle = useSharedValue({
@@ -56,7 +52,6 @@ export const ScannerFrame: React.FC<ScannerFrameProps> = ({ highlight, layout, s
     backgroundColor: 'rgba(255, 255, 255, 0)',
   });
 
-  // Memoized scaling calculations
   const getScaledValues = useCallback(
     (highlight: CameraHighlight, scanFrame: Layout, layout: Layout) => {
       const xScale = layout.width / scanFrame.height - 0.025;
@@ -74,7 +69,6 @@ export const ScannerFrame: React.FC<ScannerFrameProps> = ({ highlight, layout, s
     []
   );
 
-  // Animated styles
   const animatedFrameStyle = useAnimatedStyle(() => ({
     position: 'absolute',
     borderRadius: CORNER_RADIUS,
@@ -91,7 +85,6 @@ export const ScannerFrame: React.FC<ScannerFrameProps> = ({ highlight, layout, s
     borderColor: frameStyle.value.color,
   }));
 
-  // Corner components
   const corners = useMemo(
     () => (
       <>
@@ -104,9 +97,11 @@ export const ScannerFrame: React.FC<ScannerFrameProps> = ({ highlight, layout, s
     [animatedBorderStyle]
   );
 
-  // Handle highlight changes
   useEffect(() => {
-    if (!layout.width || !layout.height) return;
+    if (layout.width && layout.height && !layoutReady) {
+      setLayoutReady(true); // Mark layout as ready after dimensions are available
+      framePosition.value = centerPosition; // Immediately place frame in the center
+    }
 
     if (highlight && scanFrame) {
       const scaled = getScaledValues(highlight, scanFrame, layout);
@@ -117,24 +112,18 @@ export const ScannerFrame: React.FC<ScannerFrameProps> = ({ highlight, layout, s
         color: '#FFCC00',
         backgroundColor: 'rgba(128, 128, 128, 0.2)',
       };
-    } else {
-      // Only update position if it hasn't been initialized yet
-      if (!layoutInitialized.current) {
-        framePosition.value = centerPosition; // Set initial position
-        layoutInitialized.current = true;
-      }
-      
+    } else if (layoutReady) {
+      // Animate back to center only after layout initialization
       framePosition.value = withTiming(centerPosition);
-
       frameDimensions.value = withTiming({ width: FRAME_SIZE, height: FRAME_SIZE });
       frameStyle.value = {
         color: 'rgba(255, 255, 255, 0.8)',
         backgroundColor: 'rgba(255, 255, 255, 0)',
       };
     }
-  }, [highlight, layout, scanFrame, centerPosition]);
+  }, [highlight, layout, scanFrame, layoutReady, centerPosition, getScaledValues]);
 
-  if (!layout.width || !layout.height) return null;
+  if (!layoutReady) return null;
 
   return (
     <Animated.View style={animatedFrameStyle}>{corners}</Animated.View>
@@ -177,3 +166,5 @@ const styles = StyleSheet.create({
     borderTopWidth: 0,
   },
 });
+
+export default ScannerFrame;

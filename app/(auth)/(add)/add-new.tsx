@@ -536,7 +536,7 @@ const AddScreen: React.FC = () => {
             }
             snapPoints={
               sheetType === 'category'
-                ? ['40%']
+                ? ['32%']
                 : sheetType === 'metadataType'
                   ? ['40%'] // Assuming you want a specific snap point for metadataType
                   : ['40%', '80%']

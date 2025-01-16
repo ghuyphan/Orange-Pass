@@ -29,9 +29,9 @@ export default function EmptyScreen() {
     >
       <ThemedView style={styles.container}>
         <ThemedEmptyCard
-          headerLabel={t('homeScreen.emptyCard.header')}
-          footerLabel={t('homeScreen.emptyCard.footer')}
-          footButtonLabel={t('homeScreen.emptyCard.footerButton')}
+          headerLabel={('homeScreen.emptyCard.header')}
+          footerLabel={('homeScreen.emptyCard.footer')}
+          footButtonLabel={('homeScreen.emptyCard.footerButton')}
           cardOnPress={() => { }}
           buttonOnPress={onNavigateToScanScreen}
           style={{ paddingTop: getResponsiveHeight(8.5) }}
