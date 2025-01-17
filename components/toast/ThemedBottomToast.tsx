@@ -128,7 +128,7 @@ export function ThemedBottomToast({
 
 const styles = StyleSheet.create({
   toastContainer: {
-    paddingVertical: 5,
+    // paddingVertical: 5,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',

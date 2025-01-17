@@ -104,7 +104,8 @@ async function checkInitialAuth(): Promise<boolean> {
     const expirationDate = getTokenExpirationDate(authToken);
 
     if (!expirationDate || expirationDate <= new Date()) {
-      return isOffline ? false : await refreshAuthToken(authToken);
+      // Attempt to refresh token only if online. Otherwise, continue with local data
+      if (!isOffline && !await refreshAuthToken(authToken)) return false;
     }
 
     const localUserData = await getUserById(userID);
@@ -112,18 +113,21 @@ async function checkInitialAuth(): Promise<boolean> {
 
     store.dispatch(setAuthData({ token: authToken, user: localUserData }));
 
-    // Only fetch QR data and initiate background refresh if online
+    // Fetch QR data from local DB regardless of network state
+    try {
+      const localQrData = await getQrCodesByUserId(userID);
+      store.dispatch(setQrData(localQrData));
+    } catch (error) {
+      console.error('Failed to fetch initial QR data', error);
+      // Handle the error appropriately (e.g., show a message to the user)
+      store.dispatch(setErrorMessage(t('authRefresh.errors.info.qr.localFetchFailed')));
+    }
+
+    // Initiate background refresh only if online
     if (!isOffline) {
-      try {
-        const localQrData = await getQrCodesByUserId(userID);
-        store.dispatch(setQrData(localQrData));
-        // Initiate background refresh without waiting
-        refreshAuthToken(authToken).catch(error => {
-          console.warn('Background token refresh failed', error);
-        });
-      } catch (error) {
-        console.error('Failed to fetch initial QR data', error);
-      }
+      refreshAuthToken(authToken).catch(error => {
+        console.warn('Background token refresh failed', error);
+      });
     }
 
     return true;

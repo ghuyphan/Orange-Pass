@@ -8,6 +8,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { PaperProvider } from 'react-native-paper';
 
 // Import core services and providers
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { store } from '@/store';
 import { createTable } from '@/services/localDB/userDB';
 import { createQrTable } from '@/services/localDB/qrDB';

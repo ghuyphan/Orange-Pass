@@ -28,12 +28,11 @@ interface VietQRScanResult extends BaseScanResult {
   codeType: 'bank' | 'ewallet';
   bin: string;
   provider?: string;
-  merchantId?: string;
-  amount?: string;
+  merchantNumber?: string;
+  merchantName?: string;
   additionalData?: {
     billNumber?: string;
     reference?: string;
-    merchantName?: string;
   };
 }
 
@@ -70,9 +69,9 @@ const PROVIDERS = {
     id: 'MOMO',
     bin: '970454',
     identifiers: ['MM', 'MOMOW2W'],
-    extractMerchantId: (data: { [key: string]: string }) => {
+    extractMerchantNumber: (data: { [key: string]: string }) => {
       const merchantData = data['27'] || '';
-      const match = merchantData.match(/970454(\d+)/);
+      const match = merchantData.match(/970454(\d{6,})/);
       return match?.[1];
     }
   },
@@ -80,15 +79,15 @@ const PROVIDERS = {
     id: 'ZALOPAY',
     bin: '970454',
     identifiers: ['ZP', 'vn.zalopay'],
-    extractMerchantId: (data: { [key: string]: string }) => {
+    extractMerchantNumber: (data: { [key: string]: string }) => {
       const merchantData = data['27'] || '';
-      const match = merchantData.match(/970454(\d+)/);
+      const match = merchantData.match(/970454(\d{6,})/);
       return match?.[1];
     }
   }
 } as const;
 
-// Helper function to parse EMV QR code fields
+// Parse EMV QR code fields
 const parseEMVQR = (qrData: string) => {
   const fields: { [key: string]: string } = {};
   let position = 0;
@@ -110,9 +109,9 @@ const parseEMVQR = (qrData: string) => {
   return fields;
 };
 
-// Helper function to detect provider
+// Detect provider from QR data
 const detectProvider = (qrData: string, fields: { [key: string]: string }): string | undefined => {
-  // First check for e-wallet providers
+  // Check for e-wallet providers
   for (const [key, provider] of Object.entries(PROVIDERS)) {
     if (provider.identifiers.some(id => qrData.includes(id))) {
       return provider.id;
@@ -134,15 +133,32 @@ const detectProvider = (qrData: string, fields: { [key: string]: string }): stri
   return undefined;
 };
 
-// Helper function to extract BIN
+// Extract BIN from merchant info
 const extractBIN = (merchantInfo: string): string => {
-  // Try standard BIN extraction first
   const binMatch = merchantInfo.match(/(?:27|38)\d{8}(\d{6})/);
   if (binMatch) return binMatch[1];
 
-  // Try alternative BIN patterns
   const altBinMatch = merchantInfo.match(/\d{6}/);
   return altBinMatch ? altBinMatch[0] : 'Unknown BIN';
+};
+
+// Extract merchant name from field 62
+const extractMerchantName = (field62?: string): string | undefined => {
+  if (!field62) return undefined;
+  
+  // Look for subfield 08 which typically contains merchant name
+  const nameMatch = field62.match(/08([^]+?)(?=\d{2}|$)/);
+  return nameMatch ? nameMatch[1].trim() : undefined;
+};
+
+// Extract merchant number for bank transfers
+const extractBankMerchantNumber = (merchantInfo: string, bin: string): string | undefined => {
+  if (bin === 'Unknown BIN') return undefined;
+
+  // Look specifically for digits after the BIN
+  const regex = new RegExp(`${bin}(\\d{6,})`);
+  const match = merchantInfo.match(regex);
+  return match ? match[1] : undefined;
 };
 
 const useHandleCodeScanned = () => {
@@ -196,40 +212,37 @@ const useHandleCodeScanned = () => {
             pattern: /^0002010102/,
             handler: (codeMetadata, { t, codeFormat }) => {
               const fields = parseEMVQR(codeMetadata);
-              
+
               // Get merchant information from either field 38 or 27
               const merchantInfo = fields['38'] || fields['27'] || '';
-              
+
               // Detect provider (e-wallet or bank)
               const provider = detectProvider(codeMetadata, fields);
               const providerConfig = provider ? PROVIDERS[provider as keyof typeof PROVIDERS] : undefined;
-              
-              // Extract merchant ID and BIN
-              let merchantId;
+
+              // Extract merchant number and BIN
+              let merchantNumber;
               let bin;
-              
+
               if (providerConfig) {
                 // E-wallet case
-                merchantId = providerConfig.extractMerchantId(fields);
+                merchantNumber = providerConfig.extractMerchantNumber(fields);
                 bin = providerConfig.bin;
               } else {
                 // Bank case
                 bin = extractBIN(merchantInfo);
-                const bankMerchantMatch = merchantInfo.match(/\d{6,}/);
-                merchantId = bankMerchantMatch ? bankMerchantMatch[0] : undefined;
+                merchantNumber = extractBankMerchantNumber(merchantInfo, bin);
               }
-              
-              // Extract amount (field 54)
-              const amount = fields['54'];
-              
-              // Extract additional data
-              let additionalData;
+
+              // Extract merchant name and additional data
               const field62 = fields['62'];
+              const merchantName = extractMerchantName(field62);
+              
+              let additionalData;
               if (field62) {
                 additionalData = {
                   billNumber: field62.match(/01(\d+)/)?.[1],
                   reference: field62.match(/05(\d+)/)?.[1],
-                  merchantName: field62.match(/08([^]+)/)?.[1],
                 };
               }
 
@@ -240,8 +253,8 @@ const useHandleCodeScanned = () => {
                 rawCodeValue: codeMetadata,
                 bin: bin || 'Unknown',
                 provider: provider,
-                merchantId: merchantId,
-                amount: amount,
+                merchantNumber: merchantNumber,
+                merchantName: merchantName,
                 additionalData: additionalData
               };
 

@@ -111,7 +111,9 @@ function HomeScreen() {
 
   // 9. Network Status
   const [wasOffline, setWasOffline] = useState(false);
+  // const isOffline = useSelector(state => state.network.isOffline);
   const isOffline = useSelector((state: RootState) => state.network.isOffline);
+  console.log('isOffline', isOffline);
 
   // 10. User Data
   const userId = useSelector((state: RootState) => state.auth.user?.id ?? '');
@@ -840,7 +842,7 @@ const styles = StyleSheet.create({
   },
   fab: {
     // bottom: 20,
-    bottom: getResponsiveHeight(5),
+    bottom: getResponsiveHeight(4),
     // right: 15,
     right: getResponsiveWidth(3.6),
     position: 'absolute',

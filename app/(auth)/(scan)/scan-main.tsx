@@ -60,6 +60,7 @@ import { width } from '@/constants/Constants';
 import { useGalleryPicker } from '@/hooks/useGalleryPicker';
 import { getResponsiveHeight, getResponsiveWidth } from '@/utils/responsive';
 
+
 const ReanimatedCamera = Reanimated.createAnimatedComponent(Camera);
 Reanimated.addWhitelistedNativeProps({ zoom: true });
 
@@ -124,13 +125,13 @@ export default function ScanScreen() {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
 
+  const [isCameraReady, setIsCameraReady] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isToastVisible, setIsToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [isDecoding, setIsDecoding] = useState(false);
 
   const handleCodeScanned = useHandleCodeScanned();
-
 
   const showToast = (message: string) => {
     setToastMessage(message);
@@ -146,7 +147,6 @@ export default function ScanScreen() {
   const handleExpandPress = useCallback(() => {
     bottomSheetRef.current?.snapToIndex(0);
   }, []);
-
 
   // const handleOpenSecondSheet = () => {
   //   if (bottomSheetModalRef.current) {
@@ -188,16 +188,16 @@ export default function ScanScreen() {
       1000
     ), []
   );
-  
+
   const onOpenSheet = (type: SheetType) => {
     setSheetType(type);
     bottomSheetRef.current?.snapToIndex(0);
   };
 
-   const onOpenGallery = useGalleryPicker({
-     onOpenSheet,
-     onNavigateToAddScreen,
-   });
+  const onOpenGallery = useGalleryPicker({
+    onOpenSheet,
+    onNavigateToAddScreen,
+  });
 
   useEffect(() => {
     return () => {
@@ -243,6 +243,7 @@ export default function ScanScreen() {
     if (device) {
       const timeout = setTimeout(() => {
         cameraOpacity.value = 1;
+        setIsCameraReady(true);
       }, 500);
       return () => clearTimeout(timeout);
     }
@@ -267,37 +268,43 @@ export default function ScanScreen() {
 
   return (
     <View style={styles.container}>
-
       <SafeAreaView style={styles.cameraContainer}>
         <GestureDetector gesture={gesture}>
           <Reanimated.View style={[StyleSheet.absoluteFill, animatedCameraStyle]}>
-            <ReanimatedCamera
-              ref={cameraRef}
-              torch={torch}
-              style={StyleSheet.absoluteFill}
-              device={device}
-              onLayout={onLayout}
-              isActive={true}
-              codeScanner={codeScanner}
-              resizeMode='cover'
-              videoStabilizationMode='auto'
-              animatedProps={cameraAnimatedProps}
-            />
+            {device &&
+              <ReanimatedCamera
+                ref={cameraRef}
+                torch={torch}
+                style={StyleSheet.absoluteFill}
+                device={device}
+                onLayout={onLayout}
+                isActive={true}
+                codeScanner={codeScanner}
+                resizeMode='cover'
+                videoStabilizationMode='auto'
+                animatedProps={cameraAnimatedProps}
+              />
+            }
+
           </Reanimated.View>
         </GestureDetector>
-        <FocusIndicator focusPoint={focusPoint} animatedFocusStyle={animatedFocusStyle} />
-        <ScannerFrame highlight={codeScannerHighlights[0]} layout={layout} scanFrame={scanFrame} />
-        <View style={{ position: 'absolute', bottom: 20, left: 0, right: 0 }}>
-          {codeMetadata && quickScan === false ? (
+        {isCameraReady && (
+          <View>
+            <FocusIndicator focusPoint={focusPoint} animatedFocusStyle={animatedFocusStyle} />
+            <ScannerFrame highlight={codeScannerHighlights[0]} layout={layout} scanFrame={scanFrame} />
+            <View style={{ position: 'absolute', bottom: 20, left: 0, right: 0 }}>
+              {codeMetadata && quickScan === false ? (
+                <QRResult
+                  codeValue={codeValue}
+                  codeType={codeType}
+                  iconName={iconName}
+                  animatedStyle={animatedStyle}
+                />
+              ) : null}
+            </View>
+          </View>
+        )}
 
-            <QRResult
-              codeValue={codeValue}
-              codeType={codeType}
-              iconName={iconName}
-              animatedStyle={animatedStyle}
-            />
-          ) : null}
-        </View>
       </SafeAreaView>
 
 
@@ -393,9 +400,10 @@ const styles = StyleSheet.create({
   },
   cameraContainer: {
     marginTop: STATUSBAR_HEIGHT + 10,
-    flex:  getResponsiveHeight(0.25),
+    flex: getResponsiveHeight(0.25),
     backgroundColor: 'black',
-    borderRadius: 16,
+    // borderRadius: 16,
+    borderRadius: getResponsiveWidth(4),
     overflow: 'hidden',
   },
   loader: {

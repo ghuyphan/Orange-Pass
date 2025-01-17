@@ -53,13 +53,14 @@ export const useGalleryPicker = ({
                     codeFormat: codeFormat,
                 });
 
+                console.log('Decoded QR code:', result);
                 if (result) {
                     const actionMap: Record<string, () => void> = {
                         'WIFI': () => onOpenSheet('wifi'),
                         'URL': () => onOpenSheet('linking', undefined, result.rawCodeValue),
                         // Handle bank and ewallet, passing bin and provider if they exist
-                        'bank': () => onNavigateToAddScreen(result.codeFormat, result.rawCodeValue, result.bin, result.codeType, result.provider),
-                        'ewallet': () => onNavigateToAddScreen(result.codeFormat, result.rawCodeValue, result.bin, result.codeType, result.provider),
+                        // 'bank': () => onNavigateToAddScreen(result.codeFormat, result.rawCodeValue, result.bin, result.codeType, result.provider),
+                        // 'ewallet': () => onNavigateToAddScreen(result.codeFormat, result.rawCodeValue, result.bin, result.codeType, result.provider),
                         'alphanumeric': () => { /* Handle alphanumeric */ },
                         'unknown': () => console.log('Unknown code format:', result.rawCodeValue),
                     };
