@@ -311,13 +311,16 @@ export default function ScanScreen() {
       <View style={styles.bottomContainer}>
         <View style={{ flexDirection: 'column', alignItems: 'center', paddingTop: 20, }}>
 
-          <View style={styles.zoomControlContainer}>
-            <ZoomControl
-              zoom={zoom}
-              minZoom={Number(minZoom.toFixed(2))}
-              maxZoom={maxZoom}
-            />
-          </View>
+          {device && (
+            <View style={styles.zoomControlContainer}>
+              <ZoomControl
+                zoom={zoom}
+                minZoom={Number(minZoom.toFixed(2))}
+                maxZoom={maxZoom}
+              />
+            </View>
+          )}
+
         </View>
         <View style={styles.bottomButtonsContainer}>
 
