@@ -333,8 +333,8 @@ const DetailScreen = () => {
         },
       ]}
       contentContainerStyle={styles.container}
-      extraScrollHeight={getResponsiveHeight(12)}
-      extraHeight={getResponsiveHeight(24)}
+      // extraScrollHeight={getResponsiveHeight(12)}
+      // extraHeight={getResponsiveHeight(24)}
       enableOnAndroid
       showsVerticalScrollIndicator={false}
     >
@@ -557,7 +557,7 @@ const DetailScreen = () => {
 
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
+    // flexGrow: 1,
     paddingHorizontal: getResponsiveWidth(3.6),
   },
   headerWrapper: {

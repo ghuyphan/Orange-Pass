@@ -6,7 +6,6 @@ import {
   StyleSheet,
   View,
   Pressable,
-  LayoutAnimation,
 } from 'react-native';
 import { t } from '@/i18n'; // Translation function
 import { useLocale } from '@/context/LocaleContext';
@@ -51,7 +50,7 @@ const FilterItem = React.memo(
           pressed && { opacity: 0.7 },
         ]}
       >
-        <View style={styles.animatedView}>
+        <View style={styles.iconView}>
           <MaterialCommunityIcons
             name={isSelected ? item.iconName : `${item.iconName}-outline`}
             size={getResponsiveFontSize(20)}
@@ -115,22 +114,11 @@ const ThemedFilter = ({ selectedFilter, onFilterChange, style }: ThemedFilterPro
     },
   ];
 
-  const customLayoutAnimation = useMemo(
-    () =>
-      LayoutAnimation.create(
-        250, // Reduced duration
-        LayoutAnimation.Types.easeInEaseOut,
-        LayoutAnimation.Properties.opacity
-      ),
-    []
-  );
-
   const handlePress = useCallback(
     (filterKey: string) => {
-      LayoutAnimation.configureNext(customLayoutAnimation);
       onFilterChange(filterKey);
     },
-    [onFilterChange, customLayoutAnimation]
+    [onFilterChange]
   );
 
   const renderItem = ({ item }: { item: FilterItemType }) => (
@@ -185,7 +173,7 @@ const styles = StyleSheet.create({
   lightModeButton: {
     backgroundColor: Colors.light.buttonBackground,
   },
-  animatedView: {
+  iconView: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

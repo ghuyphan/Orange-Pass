@@ -10,6 +10,10 @@ import Animated, {
   useSharedValue,
   withSpring,
   withTiming,
+  SlideInUp,
+  SlideInDown,
+  FadeInDown,
+  FadeOutDown
 } from 'react-native-reanimated';
 import { router } from 'expo-router';
 import DraggableFlatList, { ScaleDecorator } from 'react-native-draggable-flatlist';
@@ -20,7 +24,7 @@ import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 // 1. Types and constants
 import QRRecord from '@/types/qrType';
 import ServerRecord from '@/types/serverDataTypes';
-import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
+// import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
 import { height } from '@/constants/Constants';
 
 // 2. Services and store
@@ -113,7 +117,6 @@ function HomeScreen() {
   const [wasOffline, setWasOffline] = useState(false);
   // const isOffline = useSelector(state => state.network.isOffline);
   const isOffline = useSelector((state: RootState) => state.network.isOffline);
-  console.log('isOffline', isOffline);
 
   // 10. User Data
   const userId = useSelector((state: RootState) => state.auth.user?.id ?? '');
@@ -187,7 +190,6 @@ function HomeScreen() {
 
         // Trigger Sync: If there are unsynced changes or no local data
         if (!hasLocal) {
-          console.log('Initial sync required.');
           await syncWithServer(userId);
         } else {
           const unSyncedData = await getUnsyncedQrCodes(userId);
@@ -241,6 +243,10 @@ function HomeScreen() {
       animateEmptyCard();
     }
   }, [isEmpty, isEmptyShared]);
+
+  useEffect(() => { 
+    animateEmptyCard();
+  }, [qrData.length > 0]);
 
   const animateEmptyCard = () => {
     emptyCardOffset.value = withSpring(0, {
@@ -488,17 +494,7 @@ function HomeScreen() {
     setTimeout(() => {
       setIsTopToastVisible(false);
     }, 3000);
-    // You might want to hide the toast after a timeout here, 
-    // depending on how your ThemedTopToast works
   };
-
-
-
-  // const handleExpandPress = useCallback((id: string) => {
-  //   setSelectedItemId(id);
-  //   setIsSheetOpen(true);
-  //   bottomSheetRef.current?.snapToIndex(0);
-  // }, [setSelectedItemId, bottomSheetRef, setIsSheetOpen]);
 
   const onDeleteSheetPress = useCallback(() => {
     bottomSheetRef.current?.close();
@@ -647,43 +643,49 @@ function HomeScreen() {
           onNavigateToScanScreen={onNavigateToScanScreen}
         />
       ) : (
-        <DraggableFlatList
-          ref={flatListRef}
-          bounces={true}
-          ListHeaderComponent={
-            <Animated.View
-              style={[listHeaderStyle, { marginBottom: getResponsiveHeight(3.6), }]}
-            >
-              <ThemedFilter
-                selectedFilter={filter}
-                onFilterChange={handleFilterPress}
-              />
-            </Animated.View>
-          }
-          ListEmptyComponent={
-            <View style={styles.emptyItem}>
-              <MaterialIcons color={color} name="search" size={50} />
-              <ThemedText style={{ textAlign: 'center', lineHeight: 30 }}>
-                {t('homeScreen.noItemFound')}
-              </ThemedText>
-            </View>
-          }
-          automaticallyAdjustKeyboardInsets
-          keyboardDismissMode="on-drag"
-          data={[...qrData]}
-          renderItem={renderItem}
-          keyExtractor={(item, index) => `draggable-item-${item.id}`}
-          containerStyle={{ flex: 1 }}
-          contentContainerStyle={[styles.listContainer, qrData.length > 0 && { paddingBottom: listContainerPadding }]}
-          scrollEventThrottle={16}
-          showsVerticalScrollIndicator={false}
-          onDragBegin={onDragBegin}
-          onDragEnd={onDragEnd}
-          dragItemOverflow={false}
-          onScrollOffsetChange={onScrollOffsetChange}
-          decelerationRate={'fast'}
-          scrollEnabled={!fabOpen}
-        />
+        <Animated.View style={[emptyCardStyle, [{flex: 1}]]}>
+
+
+          <DraggableFlatList
+            // itemEnteringAnimation={FadeInDown}
+            // itemExitingAnimation={FadeOutDown}
+            ref={flatListRef}
+            bounces={true}
+            ListHeaderComponent={
+              <Animated.View
+                style={[listHeaderStyle, { marginBottom: getResponsiveHeight(3.6), }]}
+              >
+                <ThemedFilter
+                  selectedFilter={filter}
+                  onFilterChange={handleFilterPress}
+                />
+              </Animated.View>
+            }
+            ListEmptyComponent={
+              <View style={styles.emptyItem}>
+                <MaterialIcons color={color} name="search" size={50} />
+                <ThemedText style={{ textAlign: 'center', lineHeight: 30 }}>
+                  {t('homeScreen.noItemFound')}
+                </ThemedText>
+              </View>
+            }
+            automaticallyAdjustKeyboardInsets
+            keyboardDismissMode="on-drag"
+            data={[...qrData]}
+            renderItem={renderItem}
+            keyExtractor={(item, index) => `draggable-item-${item.id}`}
+            containerStyle={{ flex: 1 }}
+            contentContainerStyle={[styles.listContainer, qrData.length > 0 && { paddingBottom: listContainerPadding }]}
+            scrollEventThrottle={16}
+            showsVerticalScrollIndicator={false}
+            onDragBegin={onDragBegin}
+            onDragEnd={onDragEnd}
+            dragItemOverflow={false}
+            onScrollOffsetChange={onScrollOffsetChange}
+            decelerationRate={'fast'}
+            scrollEnabled={!fabOpen}
+          />
+        </Animated.View>
       )}
       {(!isLoading && qrData.length > 0) &&
 

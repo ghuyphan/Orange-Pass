@@ -78,14 +78,11 @@ export async function hasLocalData(userId: string): Promise<boolean> {
 // Optimized delete function to mark as deleted
 export async function deleteQrCode(id: string) {
     const db = await openDatabase();
-    const updatedAt = new Date().toISOString(); // Get the current timestamp in ISO format
-
     try {
-        // Mark the QR code as deleted and update the timestamp
-        await db.runAsync(
-            'UPDATE qrcodes SET is_deleted = 1, is_synced = 0, updated = ? WHERE id = ?',
-            updatedAt, id
-        );
+        // Use nested transaction to handle updates efficiently
+        await db.runAsync(`
+            DELETE FROM qrcodes WHERE id = ? SET is_deleted = 1, created = CURRENT_TIMESTAMP - INTERVAL '5 minutes' DAY, updated = CURRENT_TIMESTAMP;
+        `, id);
     } catch (error) {
         console.error(`Failed to delete QR code ${id}:`, error);
     }

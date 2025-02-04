@@ -118,7 +118,6 @@ function SettingsScreen() {
       },
     ],
     [
-      { leftIcon: 'info-outline', settingsTitle: t('settingsScreen.about'), onPress: () => {} },
       {
         leftIcon: 'translate',
         settingsTitle: t('settingsScreen.language'),

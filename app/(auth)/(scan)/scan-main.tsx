@@ -270,14 +270,14 @@ export default function ScanScreen() {
     <View style={styles.container}>
       <SafeAreaView style={styles.cameraContainer}>
         <GestureDetector gesture={gesture}>
-          <Reanimated.View style={[StyleSheet.absoluteFill, animatedCameraStyle]}>
-            {device &&
+          <Reanimated.View onLayout={onLayout} style={[StyleSheet.absoluteFill, animatedCameraStyle]}>
+            {isCameraReady &&
               <ReanimatedCamera
                 ref={cameraRef}
                 torch={torch}
                 style={StyleSheet.absoluteFill}
                 device={device}
-                onLayout={onLayout}
+                // onLayout={onLayout}
                 isActive={true}
                 codeScanner={codeScanner}
                 resizeMode='cover'
@@ -285,25 +285,25 @@ export default function ScanScreen() {
                 animatedProps={cameraAnimatedProps}
               />
             }
-
+            {isCameraReady && (
+              <View>
+                <FocusIndicator focusPoint={focusPoint} animatedFocusStyle={animatedFocusStyle} />
+                <ScannerFrame highlight={codeScannerHighlights[0]} layout={layout} scanFrame={scanFrame} />
+                <View style={{ position: 'absolute', bottom: 20, left: 0, right: 0 }}>
+                  {codeMetadata && quickScan === false ? (
+                    <QRResult
+                      codeValue={codeValue}
+                      codeType={codeType}
+                      iconName={iconName}
+                      animatedStyle={animatedStyle}
+                    />
+                  ) : null}
+                </View>
+              </View>
+            )}
           </Reanimated.View>
         </GestureDetector>
-        {isCameraReady && (
-          <View>
-            <FocusIndicator focusPoint={focusPoint} animatedFocusStyle={animatedFocusStyle} />
-            <ScannerFrame highlight={codeScannerHighlights[0]} layout={layout} scanFrame={scanFrame} />
-            <View style={{ position: 'absolute', bottom: 20, left: 0, right: 0 }}>
-              {codeMetadata && quickScan === false ? (
-                <QRResult
-                  codeValue={codeValue}
-                  codeType={codeType}
-                  iconName={iconName}
-                  animatedStyle={animatedStyle}
-                />
-              ) : null}
-            </View>
-          </View>
-        )}
+
 
       </SafeAreaView>
 

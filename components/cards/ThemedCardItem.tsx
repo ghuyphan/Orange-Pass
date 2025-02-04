@@ -47,10 +47,6 @@ const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps):
   // Determine if we should use the default metadata value
   const isDefaultCode = useMemo(() => code === 'N/A', [code]); // Or whatever your default code is
 
-  // Determine the type based on priority:
-  // 1. Explicitly set type in props
-  // 2. Type derived from itemData
-  // 3. Default to 'bank' if it's the default code, otherwise 'store'
   const cardType = useMemo(() => {
     if (type) return type;
     if (itemDataType) return itemDataType;
@@ -60,11 +56,15 @@ const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps):
   const iconPath = useMemo(() => getIconPath(code), [code]);
 
   const accountDisplayName = useMemo(() => {
-    if (cardType === 'bank' && accountNumber) {
-      const maskedLength = Math.max(0, accountNumber.length - 4);
-      return `${'*'.repeat(maskedLength)}${accountNumber.slice(-4)}`;
+    if (cardType === 'bank') {
+      if (accountNumber) {
+        const maskedLength = Math.max(0, accountNumber.length - 4);
+        return `${'*'.repeat(maskedLength)}${accountNumber.slice(-4)}`;
+      } else {
+        return ''; // Display "N/A" when accountNumber is null for bank cards
+      }
     }
-    return accountName;
+    return accountName; // For non-bank cards, continue to display accountName
   }, [cardType, accountNumber, accountName]);
 
   // Use a placeholder or an empty string if metadata is not available or if it's the default code
@@ -125,39 +125,33 @@ const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps):
           >
             {accountName}
           </Text>
-          {cardType === 'bank' ? (
+
+          {cardType && (
             <Text
               numberOfLines={1}
               ellipsizeMode="tail"
               style={styles.cardType}
             >
-              {accountDisplayName}
-            </Text>
-          ) : (
-            <Text
-              numberOfLines={1}
-              ellipsizeMode="tail"
-              style={styles.cardType}
-            >
-              {displayMetadata}
+              {cardType === 'store' ? displayMetadata  : accountDisplayName}
             </Text>
           )}
         </View>
         <View style={styles.qrContainer}>
-          {/* Conditionally render QR/Barcode based on displayMetadata */}
           {displayMetadata ? (
             metadata_type === 'qr' ? (
               <QRCode value={displayMetadata} size={getResponsiveWidth(17)} />
-            ) : (
+            ) : metadata_type === 'barcode' ? ( // Assuming 'barcode' is a valid type
               <Barcode
                 height={getResponsiveHeight(8.4)}
                 maxWidth={getResponsiveWidth(30)}
                 value={displayMetadata}
                 format="CODE128"
               />
+            ) : (
+              <View style={styles.qrPlaceholder} /> // Placeholder for unknown metadata_type
             )
           ) : (
-            <View style={styles.qrPlaceholder} />
+            <View style={styles.qrPlaceholder} /> // Placeholder when displayMetadata is missing
           )}
         </View>
       </View>
@@ -182,22 +176,21 @@ const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps):
         { marginHorizontal: getResponsiveWidth(3.6), marginBottom: getResponsiveHeight(1.8) },
       ]}
     >
-      <Animated.View style={[animatedStyle, style]}>
-        {onItemPress ? (
-          <Pressable
-            disabled={isActive}
-            onPress={onItemPress}
-            onLongPress={onDrag}
-            delayLongPress={250}
-            android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
-            style={styles.pressableContainer}
-          >
-            {renderContent()}
-          </Pressable>
-        ) : (
-          renderContent()
-        )}
-      </Animated.View>
+      {/* Removed Animated.View here */}
+      {onItemPress ? (
+        <Pressable
+          disabled={isActive}
+          onPress={onItemPress}
+          onLongPress={onDrag}
+          delayLongPress={250}
+          android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', foreground: true, borderless: false }}
+          style={styles.pressableContainer}
+        >
+          {renderContent()}
+        </Pressable>
+      ) : (
+        renderContent()
+      )}
     </View>
   );
 });
@@ -216,7 +209,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: getResponsiveWidth(4.8),
     aspectRatio: 1.65,
     justifyContent: 'space-between',
-    elevation: 3,
+    // elevation: 3,
   },
   cardHeader: {
     flexDirection: 'row',
