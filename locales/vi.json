@@ -129,6 +129,7 @@
       "gallery": "Chọn ảnh"
     }
   },
+
   "addScreen": {
     "title": "Thêm thẻ",
     "type": "Loại thẻ",
@@ -155,7 +156,11 @@
     "brandPlaceholder": "Nhập thương hiệu",
     "metadataTypeTitle": "Loại mã",
     "metadataTypePlaceholder": "Chọn loại mã",
-    "metadataPlaceholder": "Nhập thông tin",
+    "metadataPlaceholder": "Nhập thông tin mã",
+    "accountNameTitle": "Tên chủ tài khoản",
+    "accountNamePlaceholder": "Nhập tên chủ tài khoản",
+    "accountNumberTitle": "Số tài khoản",
+    "accountNumberPlaceholder": "Nhập số tài khoản",
     "errors": {
       "categoryRequired": "Loại thẻ là bắt buộc",
       "brandRequired": "Thương hiệu là bắt buộc",
@@ -233,7 +238,8 @@
     "logingOut": "Đang đăng xuất...",
     "confirmLogoutTitle": "Đăng xuất?",
     "confirmLogoutMessage": "Bạn có chắc chắn muốn đăng xuất không?",
-    "confirmLogoutButton": "Đăng xuất"
+    "confirmLogoutButton": "Đăng xuất",
+    "appVersion": "Phiên bản"
   },
   "languageScreen": {
     "title": "Ngôn ngữ",

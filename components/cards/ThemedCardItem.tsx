@@ -1,7 +1,6 @@
-import React, { memo, useMemo } from 'react';
+import React, { memo, useMemo, useEffect } from 'react';
 import { Image, StyleSheet, View, Pressable, Text } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import Animated from 'react-native-reanimated';
 import QRCode from 'react-native-qrcode-svg';
 import Barcode from 'react-native-barcode-svg';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -9,13 +8,14 @@ import { getIconPath } from '@/utils/returnIcon';
 import { returnItemData } from '@/utils/returnItemData';
 import { returnMidpointColors } from '@/utils/returnMidpointColor';
 import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 
 export type ThemedCardItemProps = {
   isActive?: boolean;
   code: string;
   type: 'bank' | 'store' | 'ewallet';
   metadata: string;
-  metadata_type: 'qr' | 'barcode';
+  metadata_type?: 'qr' | 'barcode'; // Make metadata_type optional
   accountName?: string;
   accountNumber?: string;
   style?: object;
@@ -25,13 +25,15 @@ export type ThemedCardItemProps = {
   onDrag?: () => void;
 };
 
+const MIDPOINT_COUNT = 6; // Named constant
+
 const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps): JSX.Element {
   const {
-    isActive,
+    isActive = false, // Default value for isActive
     code,
     type,
     metadata,
-    metadata_type = 'qr',
+    metadata_type = 'qr', // Default value for metadata_type
     accountName,
     accountNumber,
     style,
@@ -44,8 +46,7 @@ const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps):
   const itemData = useMemo(() => returnItemData(code), [code]);
   const { name, color, accent_color, type: itemDataType } = itemData;
 
-  // Determine if we should use the default metadata value
-  const isDefaultCode = useMemo(() => code === 'N/A', [code]); // Or whatever your default code is
+  const isDefaultCode = useMemo(() => code === 'N/A', [code]);
 
   const cardType = useMemo(() => {
     if (type) return type;
@@ -56,28 +57,52 @@ const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps):
   const iconPath = useMemo(() => getIconPath(code), [code]);
 
   const accountDisplayName = useMemo(() => {
-    if (cardType === 'bank') {
+    if (cardType !== 'store') {
       if (accountNumber) {
         const maskedLength = Math.max(0, accountNumber.length - 4);
         return `${'*'.repeat(maskedLength)}${accountNumber.slice(-4)}`;
       } else {
-        return ''; // Display "N/A" when accountNumber is null for bank cards
+        return '';
       }
     }
-    return accountName; // For non-bank cards, continue to display accountName
+    return accountName;
   }, [cardType, accountNumber, accountName]);
 
-  // Use a placeholder or an empty string if metadata is not available or if it's the default code
   const displayMetadata = useMemo(() => {
     if (isDefaultCode || !metadata) {
-      return ''; // Or a placeholder string like 'N/A' if you prefer
+      return '';
     }
     return metadata;
   }, [metadata, isDefaultCode]);
 
+
+  // Reanimated Shared Value and Animated Style for QR/Barcode Placeholder
+  const placeholderWidth = useSharedValue(getResponsiveWidth(16.8)); // Initial width for QR
+  const placeholderHeight = useSharedValue(getResponsiveWidth(16.8));
+
+  const animatedPlaceholderStyle = useAnimatedStyle(() => {
+    return {
+      width: withTiming(placeholderWidth.value, { duration: 200 }),
+      height: withTiming(placeholderHeight.value, { duration: 200 }),
+    };
+  });
+
+  // Update shared values based on metadata_type
+  useEffect(() => {
+    if (metadata_type === 'barcode') {
+      placeholderWidth.value = getResponsiveWidth(33.6);
+      placeholderHeight.value = getResponsiveWidth(16.8);
+
+    } else {
+      placeholderWidth.value = getResponsiveWidth(16.8); // Reset to QR code size.
+      placeholderHeight.value = getResponsiveWidth(16.8);
+    }
+  }, [metadata_type, placeholderWidth, placeholderHeight]);
+
+
   const renderContent = () => (
     <LinearGradient
-      colors={returnMidpointColors(color.light, accent_color.light, 6) || ['#FAF3E7', '#D6C4AF']}
+      colors={returnMidpointColors(color.light, accent_color.light, MIDPOINT_COUNT) || ['#FAF3E7', '#D6C4AF']}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={styles.cardContainer}
@@ -116,6 +141,7 @@ const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps):
       </View>
 
       {/* Card Footer */}
+
       <View style={styles.cardFooter}>
         <View style={styles.footerLeft}>
           <Text
@@ -132,7 +158,7 @@ const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps):
               ellipsizeMode="tail"
               style={styles.cardType}
             >
-              {cardType === 'store' ? displayMetadata  : accountDisplayName}
+              {iconPath !== 124 ? cardType === 'store' ? displayMetadata : accountDisplayName : ''}
             </Text>
           )}
         </View>
@@ -140,18 +166,16 @@ const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps):
           {displayMetadata ? (
             metadata_type === 'qr' ? (
               <QRCode value={displayMetadata} size={getResponsiveWidth(17)} />
-            ) : metadata_type === 'barcode' ? ( // Assuming 'barcode' is a valid type
+            ) : (
               <Barcode
                 height={getResponsiveHeight(8.4)}
                 maxWidth={getResponsiveWidth(30)}
                 value={displayMetadata}
                 format="CODE128"
               />
-            ) : (
-              <View style={styles.qrPlaceholder} /> // Placeholder for unknown metadata_type
             )
           ) : (
-            <View style={styles.qrPlaceholder} /> // Placeholder when displayMetadata is missing
+            <Animated.View style={[styles.qrPlaceholder, animatedPlaceholderStyle]} />
           )}
         </View>
       </View>
@@ -176,7 +200,6 @@ const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps):
         { marginHorizontal: getResponsiveWidth(3.6), marginBottom: getResponsiveHeight(1.8) },
       ]}
     >
-      {/* Removed Animated.View here */}
       {onItemPress ? (
         <Pressable
           disabled={isActive}
@@ -197,11 +220,11 @@ const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps):
 
 const styles = StyleSheet.create({
   outerContainer: {
-    // shadowColor: '#000',
-    // shadowOffset: { width: 0, height: 4 },
-    // shadowOpacity: 0.1,
-    // shadowRadius: 6,
-    // elevation: 5,
+    shadowColor: '#000', // Or a dynamic color based on theme
+    shadowOffset: { width: 0, height: 2 }, // Reduced shadow offset
+    shadowOpacity: 0.1, // Reduced shadow opacity
+    shadowRadius: 4, // Reduced shadow radius
+    elevation: 5,
   },
   cardContainer: {
     borderRadius: getResponsiveWidth(4),
@@ -209,7 +232,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: getResponsiveWidth(4.8),
     aspectRatio: 1.65,
     justifyContent: 'space-between',
-    // elevation: 3,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -225,7 +247,7 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: getResponsiveFontSize(16),
     fontWeight: 'bold',
-    maxWidth: getResponsiveWidth(36), // Set a maximum width
+    maxWidth: getResponsiveWidth(36), // Consider making this more dynamic
   },
   logoContainer: {
     width: getResponsiveWidth(9.6),
@@ -252,13 +274,13 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: getResponsiveFontSize(16),
     fontWeight: '600',
-    maxWidth: getResponsiveWidth(45), // Set a maximum width
+    maxWidth: getResponsiveWidth(45), // Consider making this more dynamic
   },
   cardType: {
     color: 'rgba(255,255,255,0.7)',
     fontSize: getResponsiveFontSize(12),
     marginTop: getResponsiveHeight(0.6),
-    maxWidth: getResponsiveWidth(28.8), // Set a maximum width
+    maxWidth: getResponsiveWidth(28.8), // Consider making this more dynamic
     overflow: 'hidden',
   },
   qrContainer: {
@@ -267,14 +289,14 @@ const styles = StyleSheet.create({
     padding: getResponsiveWidth(2),
   },
   qrPlaceholder: {
-    width: getResponsiveWidth(16.8),
-    height: getResponsiveWidth(16.8),
+    width: getResponsiveWidth(16.8),  // Initial size for QR
+    height: getResponsiveWidth(16.8), // Initial size for QR
     backgroundColor: 'white',
     borderRadius: getResponsiveWidth(2),
     padding: getResponsiveWidth(2),
   },
   dragHandle: {
-    position: 'absolute',
+        position: 'absolute', // Consider removing absolute positioning
     bottom: 0,
     left: 0,
     right: 0,

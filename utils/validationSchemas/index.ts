@@ -41,28 +41,31 @@ export const forgotPasswordSchema = yup.object().shape({
 });
 
 export const qrCodeSchema = yup.object().shape({
-  code: yup
-    .string()
-    .required(t('qrCodeScreen.errors.codeRequired')),
-  qr_index: yup
-    .number()
-    .integer(t('qrCodeScreen.errors.qrIndexInteger'))
-    .required(t('qrCodeScreen.errors.qrIndexRequired')),
-  metadata: yup
-    .string()
-    .nullable(),
-  type: yup
-    .string()
-    .oneOf(['store', 'bank', 'ewallet'], t('qrCodeScreen.errors.invalidType'))
-    .required(t('qrCodeScreen.errors.typeRequired')),
-  metadata_type: yup
-    .string()
-    .oneOf(['qr', 'barcode'], t('qrCodeScreen.errors.invalidMetadataType'))
-    .required(t('qrCodeScreen.errors.metadataTypeRequired')),
-  account_name: yup
-    .string()
-    .nullable(),
-  account_number: yup
-    .string()
-    .nullable(),
+  category: yup
+    .object()
+    .shape({
+      display: yup.string().required(), //  'display' is always present
+      value: yup.string().oneOf(['bank', 'ewallet', 'store']).required(),
+    })
+    .nullable() // Allow null, as the category can be cleared
+    .required(t('addScreen.errors.categoryRequired')), // Make category required
+  brand: yup
+    .object()
+    .shape({
+      code: yup.string().required(),
+      name: yup.string().required(),
+      full_name: yup.string().required(),
+      type: yup.string().oneOf(['bank', 'ewallet', 'store']).required(),
+    })
+    .nullable(), //  null when no brand is selected
+  metadataType: yup
+    .object()
+    .shape({
+      display: yup.string().required(),
+      value: yup.string().oneOf(['qr', 'barcode']).required(),
+    })
+    .required(t('addScreen.errors.metadataTypeRequired')), // metadataType is always required
+  metadata: yup.string().required(t('addScreen.errors.metadataRequired')), // Metadata is required
+  accountName: yup.string().nullable(),
+  accountNumber: yup.string().nullable(),
 });

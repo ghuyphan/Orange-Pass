@@ -9,11 +9,7 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
-  withTiming,
-  SlideInUp,
-  SlideInDown,
-  FadeInDown,
-  FadeOutDown
+  withTiming
 } from 'react-native-reanimated';
 import { router } from 'expo-router';
 import DraggableFlatList, { ScaleDecorator } from 'react-native-draggable-flatlist';

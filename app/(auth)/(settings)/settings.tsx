@@ -31,6 +31,7 @@ import { useLocale } from '@/context/LocaleContext';
 import { useTheme } from '@/context/ThemeContext';
 import { MaterialIcons } from '@expo/vector-icons';
 import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
+import * as Application from 'expo-application';
 
 // Define the type for your settings card items
 interface SettingsCardItem {
@@ -50,6 +51,7 @@ function SettingsScreen() {
   const scrollY = useSharedValue(0);
   const email = useSelector((state: RootState) => state.auth.user?.email ?? '-');
   const name = useSelector((state: RootState) => state.auth.user?.name ?? '-');
+  const appVersion = Application.nativeApplicationVersion;
 
   const sectionsColors = useMemo(
     () =>
@@ -197,6 +199,7 @@ function SettingsScreen() {
           </View>
         }
         ListFooterComponent={
+          <>
           <ThemedButton
             iconName="logout"
             label={t('settingsScreen.logout')}
@@ -205,6 +208,10 @@ function SettingsScreen() {
             onPress={onLogout}
             style={{ marginTop: getResponsiveHeight(1.8) }}
           />
+          <ThemedText style={styles.versionText}>
+    {t('settingsScreen.appVersion') + ' ' + appVersion}
+</ThemedText>
+          </>
         }
         scrollEventThrottle={16}
       />
@@ -310,5 +317,11 @@ const styles = StyleSheet.create({
     borderRadius: getResponsiveWidth(4),
     marginBottom: getResponsiveHeight(1.8),
     overflow: 'hidden',
+  },
+  versionText: {
+    marginTop: getResponsiveHeight(0.9),
+    fontSize: getResponsiveFontSize(12),
+    opacity: 0.6,
+    textAlign: 'center',
   },
 });

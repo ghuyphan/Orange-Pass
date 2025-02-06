@@ -1,4 +1,4 @@
-import React, { useState, useMemo, forwardRef } from 'react';
+import React, { useState, useMemo, forwardRef, useEffect } from 'react'; // Import useEffect
 import {
   StyleSheet,
   StyleProp,
@@ -19,31 +19,18 @@ import { getIconPath } from '@/utils/returnIcon';
 import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
 
 export type ThemedDisplayInputProps = {
-  /** The name of the icon to display on the input */
   iconName?: keyof typeof MaterialCommunityIcons.glyphMap;
-  /** The code of the logo to display on the input */
   logoCode?: string;
-  /** Label to display on the input */
   label?: string;
-  /** The value of the input */
   value?: string;
-  /** The placeholder of the input */
   placeholder?: string;
-  /** Custom styles for the input */
   style?: StyleProp<ViewStyle>;
-  /** Whether the input is in an error state */
   isError?: boolean;
-  /** The error message to display if the input is in an error state */
   errorMessage?: string;
-  /** Function to call when the input is pressed */
   onPress?: () => void;
-  /** Function to call when the clear button is pressed */
   onClear?: () => void;
-  /** Whether to show the clear button */
   showClearButton?: boolean;
-  /** Whether the input is disabled */
   disabled?: boolean;
-  /** Background color for the input */
   backgroundColor?: string;
 };
 
@@ -68,6 +55,7 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
   ) => {
     const { currentTheme } = useTheme();
     const [isErrorModalVisible, setIsErrorModalVisible] = useState(false);
+    const [displayValue, setDisplayValue] = useState(value); // Local state for display
 
     // Color configurations
     const color = currentTheme === 'light' ? Colors.light.text : Colors.dark.text;
@@ -107,6 +95,17 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
         </TouchableWithoutFeedback>
       </Modal>
     );
+
+    // Update displayValue when the external value prop changes
+    useEffect(() => {
+      setDisplayValue(value);
+    }, [value]);
+
+    const handleClear = () => {
+      setDisplayValue(''); // Clear the *local* display value
+      onClear();         // *Then* call the parent's onClear function
+    };
+
 
     return (
       <View style={[styles.container, style]}>
@@ -148,23 +147,22 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
                 style={[
                   styles.input,
                   {
-                    color: value ? color : placeholderColor,
+                    color: displayValue ? color : placeholderColor, // Use displayValue
                     marginLeft: iconName || logoCode ? getResponsiveWidth(2.4) : 0,
                   },
                 ]}
                 numberOfLines={1}
                 ellipsizeMode="tail"
               >
-                {value || placeholder}
+                {displayValue || placeholder} {/* Use displayValue */}
               </ThemedText>
 
               <View style={styles.rightContainer}>
                 {/* Clear Value Button */}
-                {/* {value.length > 0 && !disabled && ( */}
                 {((showClearButton === undefined || showClearButton) && value.length > 0 && !disabled) && (
-                
+
                   <Pressable
-                    onPress={onClear}
+                    onPress={handleClear} // Use the local handler
                     style={styles.iconTouchable}
                     hitSlop={{
                       top: getResponsiveHeight(0.6),
@@ -232,7 +230,7 @@ const styles = StyleSheet.create({
     fontSize: getResponsiveFontSize(13),
   },
   logoContainer: {
-    width: getResponsiveWidth(6), 
+    width: getResponsiveWidth(6),
     height: getResponsiveWidth(6),
     alignItems: 'center',
     justifyContent: 'center',
