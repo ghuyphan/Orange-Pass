@@ -145,7 +145,7 @@ const extractBIN = (merchantInfo: string): string => {
 // Extract merchant name from field 62
 const extractMerchantName = (field62?: string): string | undefined => {
   if (!field62) return undefined;
-  
+
   // Look for subfield 08 which typically contains merchant name
   const nameMatch = field62.match(/08([^]+?)(?=\d{2}|$)/);
   return nameMatch ? nameMatch[1].trim() : undefined;
@@ -237,7 +237,7 @@ const useHandleCodeScanned = () => {
               // Extract merchant name and additional data
               const field62 = fields['62'];
               const merchantName = extractMerchantName(field62);
-              
+
               let additionalData;
               if (field62) {
                 additionalData = {
@@ -263,11 +263,11 @@ const useHandleCodeScanned = () => {
           },
 
           Alphanumeric: {
-            pattern: /^[a-zA-Z0-9]+$/,
+            pattern: /^[a-zA-Z0-9:]+$/, // MODIFIED REGEX
             handler: (codeMetadata, { t, codeFormat }) => {
               return {
                 codeType: 'alphanumeric',
-                iconName: 'text-fields',
+                iconName: 'text-fields', // You might want a different icon
                 codeFormat: codeFormat,
                 rawCodeValue: codeMetadata,
               };

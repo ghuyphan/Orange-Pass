@@ -1,4 +1,4 @@
-import React, { useState, useMemo, forwardRef, useEffect } from 'react'; // Import useEffect
+import React, { useState, useMemo, forwardRef, useEffect } from 'react';
 import {
   StyleSheet,
   StyleProp,
@@ -74,9 +74,9 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
               ? Colors.light.inputBackground
               : Colors.dark.inputBackground),
         },
-        style,
+        // style, // Removed style from here
       ],
-      [currentTheme, style, backgroundColor]
+      [currentTheme, backgroundColor] // Removed style from dependencies
     );
 
     const ErrorTooltip = () => (
@@ -108,7 +108,7 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
 
 
     return (
-      <View style={[styles.container, style]}>
+      <View style={[styles.container, style]}> 
         <ThemedView style={inputContainerStyle}>
           {!iconName && !logoCode && (
             <ThemedText style={[styles.label, { color }]} type="defaultSemiBold">
@@ -154,13 +154,12 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
                 numberOfLines={1}
                 ellipsizeMode="tail"
               >
-                {displayValue || placeholder} {/* Use displayValue */}
+                {displayValue || placeholder}
               </ThemedText>
 
               <View style={styles.rightContainer}>
                 {/* Clear Value Button */}
-                {((showClearButton === undefined || showClearButton) && value.length > 0 && !disabled) && (
-
+                {showClearButton && !disabled && value.length > 0 && (
                   <Pressable
                     onPress={handleClear} // Use the local handler
                     style={styles.iconTouchable}

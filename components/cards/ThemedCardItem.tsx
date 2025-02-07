@@ -169,7 +169,7 @@ const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps):
             ) : (
               <Barcode
                 height={getResponsiveHeight(8.4)}
-                maxWidth={getResponsiveWidth(30)}
+                maxWidth={getResponsiveWidth(33.6)}
                 value={displayMetadata}
                 format="CODE128"
               />

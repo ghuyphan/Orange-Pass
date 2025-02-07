@@ -47,13 +47,13 @@ export const useGalleryPicker = ({
                 const decode = await decodeQR(image.path);
                 const codeValue = decode?.value ?? '';
                 const codeFormat = decode?.format;
+                console.log('codeformat', codeFormat);
 
                 const result: ExtendedScanResult | null = handleCodeScanned(codeValue, {
                     t: (key) => key, // Replace with your actual translation function
                     codeFormat: codeFormat,
                 });
 
-                console.log('Decoded QR code:', result);
                 if (result) {
                     const actionMap: Record<string, () => void> = {
                         'WIFI': () => onOpenSheet('wifi'),
@@ -61,7 +61,8 @@ export const useGalleryPicker = ({
                         // Handle bank and ewallet, passing bin and provider if they exist
                         'bank': () => onNavigateToAddScreen(result.codeFormat, result.rawCodeValue, result.bin, result.codeType, result.provider),
                         'ewallet': () => onNavigateToAddScreen(result.codeFormat, result.rawCodeValue, result.bin, result.codeType, result.provider),
-                        'alphanumeric': () => { /* Handle alphanumeric */ },
+                        'alphanumeric': () => {
+                            onNavigateToAddScreen(result.codeFormat, result.rawCodeValue);},
                         'unknown': () => console.log('Unknown code format:', result.rawCodeValue),
                     };
 
