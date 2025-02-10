@@ -47,7 +47,6 @@ export const useGalleryPicker = ({
                 const decode = await decodeQR(image.path);
                 const codeValue = decode?.value ?? '';
                 const codeFormat = decode?.format;
-                console.log('codeformat', codeFormat);
 
                 const result: ExtendedScanResult | null = handleCodeScanned(codeValue, {
                     t: (key) => key, // Replace with your actual translation function
