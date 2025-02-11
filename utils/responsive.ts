@@ -1,35 +1,27 @@
 import { Dimensions, PixelRatio, ScaledSize } from 'react-native';
 
-// Define types for dimensions
-type DimensionsType = {
-  window: {
-    width: number;
-    height: number;
-  };
-  screen: {
-    width: number;
-    height: number;
-  };
-};
+// Use interface for better type checking and readability
+interface DimensionsType {
+  window: ScaledSize;
+  screen: ScaledSize;
+}
 
 class ResponsiveManager {
-  private static instance: ResponsiveManager;
+  private static instance: ResponsiveManager | null = null; // Allow null for lazy initialization
   private dimensions: DimensionsType;
   private invFontScale: number;
 
   private constructor() {
-    const window = Dimensions.get('window');
-    const screen = Dimensions.get('screen');
-    
     this.dimensions = {
-      window: { width: window.width, height: window.height },
-      screen: { width: screen.width, height: screen.height }
+      window: Dimensions.get('window'), // Initialize directly
+      screen: Dimensions.get('screen'),
     };
     this.invFontScale = 1 / PixelRatio.getFontScale();
     this.setupDimensionsListener();
   }
 
   public static getInstance(): ResponsiveManager {
+    // Use lazy initialization (more efficient if not always used)
     if (!ResponsiveManager.instance) {
       ResponsiveManager.instance = new ResponsiveManager();
     }
@@ -37,43 +29,52 @@ class ResponsiveManager {
   }
 
   private setupDimensionsListener(): void {
-    // Listen for window dimension changes
-    Dimensions.addEventListener('change', ({ window, screen }: { 
-      window: ScaledSize, 
-      screen: ScaledSize 
-    }) => {
-      const dimensionsChanged = 
-        window.width !== this.dimensions.window.width ||
-        window.height !== this.dimensions.window.height ||
-        screen.width !== this.dimensions.screen.width ||
-        screen.height !== this.dimensions.screen.height;
+    // Use a more descriptive name for the event handler
+    Dimensions.addEventListener('change', this.handleDimensionsChange);
+  }
 
-      if (dimensionsChanged) {
-        this.dimensions = {
-          window: { width: window.width, height: window.height },
-          screen: { width: screen.width, height: screen.height }
-        };
-        this.invFontScale = 1 / PixelRatio.getFontScale();
+  // Separate handler function for clarity and potential reusability
+  private handleDimensionsChange = ({ window, screen }: { window: ScaledSize; screen: ScaledSize }): void => {
+    // More efficient comparison: check if references are different
+    if (window !== this.dimensions.window || screen !== this.dimensions.screen) {
+      this.dimensions = { window, screen };
+      this.invFontScale = 1 / PixelRatio.getFontScale();
+    }
+  };
+
+    // Combine getResponsiveFontSize, getResponsiveWidth, and getResponsiveHeight into one function
+  public getResponsiveValue(
+    type: 'font' | 'width' | 'height',
+    value: number,
+    options: {
+      scaleUp?: boolean;
+      maxWidth?: number;
+      maxHeight?: number;
+      useScreen?: boolean;
+    } = {} // Use an options object
+  ): number {
+      const { scaleUp = false, maxWidth, maxHeight, useScreen = false } = options;
+
+      switch (type) {
+          case 'font':
+              return scaleUp ? value / this.invFontScale : value * this.invFontScale;
+          case 'width': {
+              const baseWidth = useScreen ? this.dimensions.screen.width : this.dimensions.window.width;
+              const width = (value / 100) * baseWidth;
+              return maxWidth ? Math.min(width, maxWidth) : width;
+          }
+          case 'height': {
+              const baseHeight = useScreen ? this.dimensions.screen.height : this.dimensions.window.height;
+              const height = (value / 100) * baseHeight;
+              return maxHeight ? Math.min(height, maxHeight) : height;
+          }
+          default:
+              // TypeScript will enforce that type is one of the above, but good practice to have a default
+              return value;
       }
-    });
   }
 
-  public getResponsiveFontSize(size: number, scaleUp = false): number {
-    return scaleUp ? size / this.invFontScale : size * this.invFontScale;
-  }
-
-  public getResponsiveWidth(percentage: number, maxWidth?: number, useScreen = false): number {
-    const baseWidth = useScreen ? this.dimensions.screen.width : this.dimensions.window.width;
-    const width = (percentage / 100) * baseWidth;
-    return maxWidth ? Math.min(width, maxWidth) : width;
-  }
-
-  public getResponsiveHeight(percentage: number, maxHeight?: number, useScreen = false): number {
-    const baseHeight = useScreen ? this.dimensions.screen.height : this.dimensions.window.height;
-    const height = (percentage / 100) * baseHeight;
-    return maxHeight ? Math.min(height, maxHeight) : height;
-  }
-
+  // Use getters only when necessary.  Direct access is often more efficient.
   public get windowWidth(): number {
     return this.dimensions.window.width;
   }
@@ -94,26 +95,23 @@ class ResponsiveManager {
 // Export a singleton instance
 const responsive = ResponsiveManager.getInstance();
 
-// Export utility functions
+// Export utility functions using the combined function
 export const getResponsiveFontSize = (size: number, scaleUp = false): number =>
-  responsive.getResponsiveFontSize(size, scaleUp);
+  responsive.getResponsiveValue('font', size, { scaleUp });
 
 export const getResponsiveWidth = (
-  percentage: number, 
-  maxWidth?: number, 
+  percentage: number,
+  maxWidth?: number,
   useScreen = false
-): number => responsive.getResponsiveWidth(percentage, maxWidth, useScreen);
+): number => responsive.getResponsiveValue('width', percentage, { maxWidth, useScreen });
 
 export const getResponsiveHeight = (
-  percentage: number, 
-  maxHeight?: number, 
+  percentage: number,
+  maxHeight?: number,
   useScreen = false
-): number => responsive.getResponsiveHeight(percentage, maxHeight, useScreen);
+): number => responsive.getResponsiveValue('height', percentage, { maxHeight, useScreen });
 
-// Export dimensions
-export const WINDOW_WIDTH = responsive.windowWidth;
-export const WINDOW_HEIGHT = responsive.windowHeight;
-export const SCREEN_WIDTH = responsive.screenWidth;
-export const SCREEN_HEIGHT = responsive.screenHeight;
+// Export dimensions directly (more efficient)
+export const { windowWidth: WINDOW_WIDTH, windowHeight: WINDOW_HEIGHT, screenWidth: SCREEN_WIDTH, screenHeight: SCREEN_HEIGHT } = responsive;
 
 export default responsive;

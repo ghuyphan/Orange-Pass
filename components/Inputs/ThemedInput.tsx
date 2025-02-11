@@ -8,6 +8,8 @@ import {
   Pressable,
   Modal,
   TouchableWithoutFeedback,
+  NativeSyntheticEvent,
+  TextInputFocusEventData,
 } from 'react-native';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { ThemedText } from '../ThemedText';
@@ -19,38 +21,23 @@ import { Tooltip } from 'react-native-paper';
 import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
 
 export type ThemedInputProps = {
-  /** The name of the icon to display on the input */
   iconName?: keyof typeof MaterialCommunityIcons.glyphMap;
-  /** Label to display on the input */
-  label: string;
-  /** The value of the input */
+  label?: string;
   value?: string;
-  /** The placeholder of the input */
   placeholder?: string;
-  /** Custom styles for the input */
   style?: StyleProp<ViewStyle>;
-  /** Whether the input is in an error state */
   isError?: boolean;
-  /** The error message to display if the input is in an error state */
   errorMessage?: string;
-  /** Whether the input should be secure */
   secureTextEntry?: boolean;
-  /** Keyboard type for the input */
   keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad';
-  /** Function to call when the input value changes */
   onChangeText?: (text: string) => void;
-  /** Function to call when the input loses focus */
-  onBlur?: () => void;
-  /** Function to call when the input gains focus */
-  onFocus?: () => void;
-  /** Function to call when the clear button is pressed */
+  onBlur?: (event: NativeSyntheticEvent<TextInputFocusEventData>) => void; // Updated type
+  onFocus?: (event: NativeSyntheticEvent<TextInputFocusEventData>) => void; // Good practice for consistency
   onSubmitEditing?: () => void;
-  /** Whether the input is disabled */
   disabled?: boolean;
-  /** Background color for the input */
   backgroundColor?: string;
-  /** Whether to disable the opacity change when the input is disabled */
   disableOpacityChange?: boolean;
+  required?: boolean;
 };
 
 export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(
@@ -65,25 +52,26 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(
       errorMessage = '',
       secureTextEntry = false,
       keyboardType = 'default',
-      onChangeText = () => { },
-      onBlur = () => { },
-      onFocus = () => { },
-      onSubmitEditing = () => { },
+      onChangeText = () => {},
+      onBlur = () => {}, // Provide default empty functions
+      onFocus = () => {},  // Provide default empty functions
+      onSubmitEditing = () => {},
       disabled = false,
       backgroundColor,
       disableOpacityChange = false,
+      required = false,
     },
     ref
   ) => {
     const { currentTheme } = useTheme();
-    const { locale } = useLocale(); // If you need locale-specific logic, use this
+    const { locale } = useLocale();
     const [localValue, setLocalValue] = useState(value);
     const [isSecure, setIsSecure] = useState(secureTextEntry);
     const [isErrorModalVisible, setIsErrorModalVisible] = useState(false);
 
-    // Color configurations
     const color = currentTheme === 'light' ? Colors.light.text : Colors.dark.text;
-    const placeholderColor = currentTheme === 'light' ? Colors.light.placeHolder : Colors.dark.placeHolder;
+    const placeholderColor =
+      currentTheme === 'light' ? Colors.light.placeHolder : Colors.dark.placeHolder;
     const errorColor = currentTheme === 'light' ? Colors.light.error : Colors.dark.error;
 
     const onClearValue = () => {
@@ -98,18 +86,34 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(
       onChangeText(text);
     };
 
+    // Internal handler for onBlur
+    const handleBlur = (event: NativeSyntheticEvent<TextInputFocusEventData>) => {
+        // Perform any internal logic you need on blur *within* ThemedInput
+        // (e.g., updating internal state).  You likely don't need anything
+        // here, given Formik handles most of this.
+        onBlur(event); // Call the *provided* onBlur handler.
+    };
+
+      // Internal handler for onFocus
+      const handleFocus = (event: NativeSyntheticEvent<TextInputFocusEventData>) => {
+        onFocus(event);
+    };
+
+
     const inputContainerStyle = useMemo(
       () => [
         styles.inputContainer,
         {
           backgroundColor:
             backgroundColor ??
-            (currentTheme === 'light' ? Colors.light.inputBackground : Colors.dark.inputBackground),
-          opacity: disabled && !disableOpacityChange ? 0.5 : 1, // Opacity control
+            (currentTheme === 'light'
+              ? Colors.light.inputBackground
+              : Colors.dark.inputBackground),
+          opacity: disabled && !disableOpacityChange ? 0.5 : 1,
         },
         style,
       ],
-      [currentTheme, style, backgroundColor, disabled, disableOpacityChange] // Updated dependencies
+      [currentTheme, style, backgroundColor, disabled, disableOpacityChange]
     );
 
     const ErrorTooltip = () => (
@@ -135,6 +139,7 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(
           {!iconName && (
             <ThemedText style={[styles.label, { color }]} type="defaultSemiBold">
               {label}
+              {required && <ThemedText style={{ color: 'red' }}> *</ThemedText>}
             </ThemedText>
           )}
 
@@ -150,7 +155,6 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(
             {iconName && (
               <MaterialCommunityIcons
                 name={iconName}
-                // size={getResponsiveWidth(4.5)}
                 size={getResponsiveFontSize(16)}
                 color={placeholderColor}
               />
@@ -168,18 +172,17 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(
               secureTextEntry={isSecure}
               value={localValue}
               onChangeText={handleChangeText}
-              onBlur={onBlur}
-              onFocus={onFocus}
+              onBlur={handleBlur} // Use the internal handler
+              onFocus={handleFocus}
               placeholder={placeholder}
               placeholderTextColor={placeholderColor}
               accessible={true}
-              accessibilityLabel={label} // For better accessibility
+              accessibilityLabel={label}
               keyboardType={keyboardType}
               editable={!disabled}
             />
 
             <View style={styles.rightContainer}>
-              {/* Clear Value Button */}
               {localValue.length > 0 && (
                 <Pressable
                   onPress={disabled ? undefined : onClearValue}
@@ -196,7 +199,6 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(
                 </Pressable>
               )}
 
-              {/* Secure Entry Toggle */}
               {localValue.length > 0 && secureTextEntry && (
                 <Pressable
                   onPress={disabled ? undefined : onToggleSecureValue}
@@ -217,7 +219,6 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(
                 </Pressable>
               )}
 
-              {/* Error Icon */}
               {isError && errorMessage && (
                 <Tooltip
                   title={errorMessage}
@@ -225,7 +226,7 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(
                   leaveTouchDelay={1500}
                   theme={{ colors: { onSurface: errorColor } }}
                 >
-                  <Pressable onPress={() => { }} style={styles.errorIconContainer}>
+                  <Pressable onPress={() => {}} style={styles.errorIconContainer}>
                     <MaterialIcons name="error" size={getResponsiveWidth(4)} color={errorColor} />
                   </Pressable>
                 </Tooltip>
@@ -234,7 +235,6 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(
           </View>
         </ThemedView>
 
-        {/* Error Tooltip Modal */}
         <ErrorTooltip />
       </View>
     );

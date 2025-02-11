@@ -5,13 +5,13 @@
       "403": "Bạn không có quyền thực hiện.",
       "404": "Lỗi xác thực. Vui lòng đăng nhập.",
       "500": "Lỗi hệ thống. Vui lòng thử lại sau.",
-      "localUserDataNotFound": "Không tìm thấy dữ liệu. Vui lòng đăng nhập lại.",
+      "localUserDataNotFound": "Không tìm thấy dữ liệu người dùng. Vui lòng đăng nhập lại.",
       "invalidToken": "Mã thông báo không hợp lệ. Vui lòng đăng nhập lại.",
       "unknown": "Đã xảy ra lỗi. Vui lòng thử lại sau."
     },
     "warnings": {
       "usingOfflineData": "Bạn đang ngoại tuyến. Một số tính năng không khả dụng.",
-      "network.offlineMode": "Bạn đang ngoại tuyến. Xác thực bị giới hạn."
+      "network.offlineMode": "Bạn đang ngoại tuyến. Việc xác thực có thể bị hạn chế."
     },
     "info": {
       "qr.localFetchFailed": "Không tìm thấy dữ liệu QR. Một số tính năng không khả dụng."
@@ -29,21 +29,21 @@
     "registerNow": "Đăng ký ngay!",
     "loggingIn": "Đang đăng nhập...",
     "errors": {
-      "invalidEmail": "Email không đúng",
-      "emailRequired": "Nhập email đi bạn",
-      "invalidPassword": "Sai mật khẩu rồi",
-      "passwordRequired": "Nhập mật khẩu nha",
-      "offlineNotice": "Bạn đang offline. Kết nối mạng đi!",
-      "400": "Email hoặc mật khẩu sai. Thử lại nhé.",
-      "500": "Lỗi máy chủ rồi. Thử lại sau nha.",
-      "emptyFields": "Không được để trống email và mật khẩu.",
+      "invalidEmail": "Email không hợp lệ",
+      "emailRequired": "Vui lòng nhập email",
+      "invalidPassword": "Mật khẩu không đúng",
+      "passwordRequired": "Vui lòng nhập mật khẩu",
+      "offlineNotice": "Bạn đang ngoại tuyến. Vui lòng kết nối mạng!",
+      "400": "Email hoặc mật khẩu không đúng. Vui lòng thử lại.",
+      "500": "Đã xảy ra lỗi máy chủ. Vui lòng thử lại sau.",
+      "emptyFields": "Vui lòng nhập email và mật khẩu.",
       "passwordTooShort": "Mật khẩu phải ít nhất 6 ký tự.",
-      "timeout": "Quá thời gian đăng nhập. Kiểm tra lại mạng và thử lại nhé.",
-      "invalidResponse": "Phản hồi từ máy chủ không hợp lệ. Thử lại sau nha.",
-      "storageError": "Lưu thông tin đăng nhập lỗi rồi. Thử lại nhé.",
-      "databaseError": "Lỗi cơ sở dữ liệu. Thử lại sau nha.",
-      "invalidCredentials": "Thông tin đăng nhập sai. Kiểm tra email và mật khẩu.",
-      "tooManyAttempts": "Đăng nhập sai nhiều quá rồi. Thử lại sau nhé."
+      "timeout": "Quá thời gian đăng nhập. Vui lòng kiểm tra kết nối mạng và thử lại.",
+      "invalidResponse": "Phản hồi từ máy chủ không hợp lệ. Vui lòng thử lại sau.",
+      "storageError": "Đã xảy ra lỗi khi lưu thông tin đăng nhập. Vui lòng thử lại.",
+      "databaseError": "Đã xảy ra lỗi cơ sở dữ liệu. Vui lòng thử lại sau.",
+      "invalidCredentials": "Thông tin đăng nhập không chính xác. Vui lòng kiểm tra email và mật khẩu.",
+      "tooManyAttempts": "Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau."
     }
   },
   "registerScreen": {
@@ -60,23 +60,23 @@
     "registering": "Đang đăng ký...",
     "registerSuccess": "Tạo tài khoản thành công!",
     "errors": {
-      "fullNameRequired": "Nhập họ tên của bạn nha",
-      "fullNameInvalid": "Họ tên không đúng rồi",
-      "invalidEmail": "Email không đúng định dạng",
-      "emailRequired": "Nhập email đi bạn",
+      "fullNameRequired": "Vui lòng nhập họ và tên.",
+      "fullNameInvalid": "Họ và tên không hợp lệ.",
+      "invalidEmail": "Email không hợp lệ.",
+      "emailRequired": "Vui lòng nhập email",
       "invalidPassword": "Mật khẩu không hợp lệ",
       "invalidPasswordLength": "Mật khẩu phải tối thiểu 8 ký tự",
       "invalidPasswordLowerCase": "Mật khẩu cần có chữ thường",
       "invalidPasswordUpperCase": "Mật khẩu cần có chữ hoa",
-      "invalidPasswordNumber": "Mật khẩu cần có số nữa",
+      "invalidPasswordNumber": "Mật khẩu cần có số.",
       "invalidPasswordSpecialChar": "Mật khẩu cần có ký tự đặc biệt (như !@#$%^&*()_)",
-      "passwordRequired": "Nhập mật khẩu đi bạn",
+      "passwordRequired": "Vui lòng nhập mật khẩu.",
       "passwordsDontMatch": "Hai mật khẩu không giống nhau",
-      "confirmPasswordRequired": "Xác nhận lại mật khẩu nào",
-      "offlineNotice": "Bạn đang offline. Kết nối mạng đi!",
-      "400": "Email này đã có người dùng rồi. Thử email khác nhé.",
-      "403": "Chưa tạo được tài khoản. Liên hệ với tụi mình nếu cần hỗ trợ nha.",
-      "500": "Lỗi máy chủ rồi. Thử lại sau nha."
+      "confirmPasswordRequired": "Vui lòng xác nhận lại mật khẩu",
+      "offlineNotice": "Bạn đang ngoại tuyến. Vui lòng kết nối mạng!",
+      "400": "Email này đã được sử dụng. Vui lòng sử dụng email khác.",
+      "403": "Không thể tạo tài khoản. Vui lòng liên hệ với chúng tôi để được hỗ trợ.",
+      "500": "Đã xảy ra lỗi máy chủ. Vui lòng thử lại sau."
     }
   },
   "forgotPasswordScreen": {
@@ -87,29 +87,29 @@
     "sendingResetLink": "Đang gửi...",
     "successMessage": "Link đặt lại mật khẩu đã được gửi tới email của bạn rồi đó. Kiểm tra ngay nhé!",
     "errors": {
-      "emailRequired": "Nhập email của bạn vào nha",
-      "invalidEmail": "Email không đúng rồi",
-      "500": "Lỗi máy chủ rồi. Thử lại sau nha."
+      "emailRequired": "Vui lòng nhập email.",
+      "invalidEmail": "Email không hợp lệ.",
+      "500": "Đã xảy ra lỗi máy chủ. Vui lòng thử lại sau."
     }
   },
   "homeScreen": {
     "title": "Orange⁺",
     "searchPlaceholder": "Tìm kiếm thẻ của bạn",
-    "noItemFound": "Chưa tìm thấy thẻ nào. Thử lại nhé!",
+    "noItemFound": "Không tìm thấy thẻ. Vui lòng thử lại",
     "manage": "Quản lý thẻ",
     "edit": "Sửa thẻ",
     "delete": "Xóa thẻ",
     "syncing": "Đang đồng bộ...",
     "deleting": "Đang xóa...",
-    "offline": "Hình như bạn đang offline",
+    "offline": "Bạn đang ngoại tuyến",
     "online": "Đã kết nối lại",
     "confirmDeleteTitle": "Xóa thẻ này?",
     "confirmDeleteMessage": "Bạn có chắc chắn muốn xóa thẻ này không?",
     "cancel": "Huỷ",
     "moveToTrash": "Xóa",
     "move": "Chuyển",
-    "fetchError": "Chưa tải được dữ liệu. Thử lại nhé!",
-    "syncError": "Chưa đồng bộ được. Thử lại nhé!",
+    "fetchError": "Không thể tải dữ liệu. Vui lòng thử lại.",
+    "syncError": "Không thể đồng bộ. Vui lòng thử lại.",
     "copied": "Đã sao chép liên kết",
     "filters": {
       "all": "Tất cả",
@@ -121,7 +121,7 @@
       "header": "Tất cả mã QR của bạn\nGiờ đã ở cùng một nơi",
       "footer": "Thêm thẻ mới nào!",
       "footerButton": "Thêm thẻ",
-      "content": "Lưu tất cả mã QR của bạn vào đây - từ thẻ ngân hàng, ví tiền, thẻ thành viên,...  Sắp xếp và truy cập dễ dàng mọi lúc mọi nơi."
+      "content": "Lưu tất cả mã QR của bạn vào đây - từ thẻ ngân hàng, ví tiền, thẻ thành viên,... Sắp xếp và truy cập dễ dàng mọi lúc mọi nơi."
     },
     "fab": {
       "add": "Thêm thẻ",
@@ -129,13 +129,12 @@
       "gallery": "Chọn ảnh"
     }
   },
-
   "addScreen": {
     "title": "Thêm thẻ",
     "type": "Loại thẻ",
     "bank": "Ngân hàng",
     "store": "Cửa hàng",
-    "ewallet": "Ví tiền",
+    "ewallet": "Ví",
     "qr": "Mã QR",
     "barcode": "Mã vạch",
     "image": "Hình ảnh",
@@ -143,7 +142,7 @@
     "categoryTitle": "Loại thẻ",
     "categoryPlaceholder": "Nhập loại thẻ",
     "storeCategory": "Cửa hàng",
-    "ewalletCategory": "Ví tiền",
+    "ewalletCategory": "Ví",
     "bankCategory": "Ngân hàng",
     "nameTitle": "Tên thẻ",
     "namePlaceholder": "Nhập tên thẻ",
@@ -161,13 +160,22 @@
     "accountNamePlaceholder": "Nhập tên chủ tài khoản",
     "accountNumberTitle": "Số tài khoản",
     "accountNumberPlaceholder": "Nhập số tài khoản",
+    "saving": "Đang lưu...",
     "errors": {
-      "categoryRequired": "Loại thẻ là bắt buộc",
-      "brandRequired": "Thương hiệu là bắt buộc",
-      "metadataRequired": "Thông tin là bắt buộc",
-      "metadataTypeRequired": "Loại mã là bắt buộc",
-      "accountNameRequired": "Tên tài khoản là bắt buộc",
-      "accountNumberRequired": "Số tài khoản là bắt buộc"
+      "categoryRequired": "Vui lòng nhập loại thẻ.",
+      "brandRequired": "Vui lòng nhập thương hiệu.",
+      "metadataRequired": "Vui lòng nhập thông tin mã.",
+      "metadataTypeRequired": "Vui lòng chọn loại mã.",
+      "accountNameRequired": "Vui lòng nhập tên tài khoản.",
+      "accountNumberRequired": "Vui lòng nhập số tài khoản.",
+      "emptyFields": "Không được bỏ trống các trường thông tin.",
+      "invalidInput": "Thông tin không hợp lệ. Vui lòng kiểm tra lại.",
+      "saveFailed": "Không thể lưu thẻ. Vui lòng thử lại sau.",
+      "offlineNotice": "Bạn đang ngoại tuyến. Vui lòng kết nối mạng.",
+      "timeout": "Quá thời gian. Vui lòng kiểm tra kết nối mạng.",
+      "invalidResponse": "Phản hồi từ máy chủ không hợp lệ. Vui lòng thử lại sau.",
+      "storageError": "Đã xảy ra lỗi khi lưu thông tin thẻ. Vui lòng thử lại.",
+      "databaseError": "Đã xảy ra lỗi cơ sở dữ liệu. Vui lòng thử lại sau."
     }
   },
   "scanScreen": {
@@ -197,19 +205,19 @@
     "finishButton": "Bắt đầu",
     "termsOfService": {
       "agreementPrefix": "Nhấn tiếp tục nghĩa là bạn đồng ý với",
-      "termsOfServiceLink": "Những quy tắc",
+      "termsOfServiceLink": "Điều khoản dịch vụ",
       "privacyPolicyPrefix": "và đã xem qua",
-      "privacyPolicyLink": "Quyền riêng tư",
-      "termsOfServiceSheetTitle": "Một số quy tắc",
+      "privacyPolicyLink": "Chính sách bảo mật",
+      "termsOfServiceSheetTitle": "Điều khoản dịch vụ",
       "termsOfServiceTitle": "Chào mừng bạn đến với Orange⁺",
       "termsOfServiceDescription": "Nguyên tắc cộng đồng",
-      "termsOfServiceContent1": "Để mọi người dùng app lưu mã QR của tụi mình đều vui vẻ, tụi mình có vài quy tắc nho nhỏ. Đảm bảo xài app đúng cách và bảo vệ cộng đồng của chúng ta nha!",
-      "termsOfServiceContent2": "Nói đơn giản là:\n*Đừng làm gì phạm pháp hay xấu tính. Không đăng nội dung xấu hay không phù hợp.\n* Tôn trọng quyền riêng tư nhé. Xin phép trước khi chia sẻ mã QR của người khác.\n* Giữ tài khoản của bạn cẩn thận. Không chia sẻ lung tung là được!",
-      "privacyPolicySheetTitle": "Chính sách quyền riêng tư",
+      "termsOfServiceContent1": "Để đảm bảo trải nghiệm tích cực cho tất cả người dùng, vui lòng tuân thủ các nguyên tắc cộng đồng sau đây:",
+      "termsOfServiceContent2": "Tóm lại:\n* Không thực hiện hành vi bất hợp pháp hoặc gây hại. Không đăng tải nội dung không phù hợp.\n* Tôn trọng quyền riêng tư. Không chia sẻ mã QR của người khác mà không có sự cho phép.\n* Bảo vệ tài khoản của bạn. Không chia sẻ thông tin đăng nhập.",
+      "privacyPolicySheetTitle": "Chính sách bảo mật",
       "privacyPolicyTitle": "Dữ liệu của bạn, Orange⁺ bảo vệ",
       "privacyPolicyDescription": "Lời hứa về quyền riêng tư",
-      "privacyPolicyContent1": "Orange⁺ rất coi trọng quyền riêng tư của bạn. Tụi mình chỉ thu thập một ít thông tin cần thiết để app hoạt động tốt hơn thôi. Ví dụ như tên với email để cá nhân hóa tài khoản và liên lạc với bạn.",
-      "privacyPolicyContent2": "\n* Yên tâm, dữ liệu của bạn được bảo mật với Orange⁺. Tụi mình không chia sẻ cho ai mà chưa hỏi ý bạn đâu.\n* Hệ thống bảo mật xịn sò giúp thông tin của bạn luôn an toàn.\n* Bạn kiểm soát mọi thứ. Muốn xóa tài khoản lúc nào cũng được."
+      "privacyPolicyContent1": "Orange⁺ cam kết bảo vệ quyền riêng tư của bạn. Chúng tôi chỉ thu thập thông tin cần thiết để cải thiện trải nghiệm ứng dụng, chẳng hạn như tên và email để cá nhân hóa tài khoản và liên lạc.",
+      "privacyPolicyContent2": "Chúng tôi cam kết:\n* Bảo mật dữ liệu của bạn. Không chia sẻ thông tin cá nhân khi chưa có sự đồng ý.\n* Sử dụng các biện pháp bảo mật tiên tiến để bảo vệ thông tin.\n* Bạn có toàn quyền kiểm soát dữ liệu, bao gồm cả quyền xóa tài khoản."
     }
   },
   "detailsScreen": {
