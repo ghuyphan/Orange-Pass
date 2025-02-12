@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, StyleSheet, Linking, Alert, StyleProp, ViewStyle, Pressable, Share } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedButton } from '@/components/buttons';
+import { ThemedModal } from '../modals/ThemedIconModal';
 import { useTheme } from '@/context/ThemeContext';
 import { Colors } from '@/constants/Colors';
 import { getResponsiveHeight, getResponsiveWidth } from '@/utils/responsive';
@@ -12,16 +13,20 @@ import { t } from '@/i18n';
 interface LinkingSheetContentProps {
   url: string | null;
   style?: StyleProp<ViewStyle>;
-  onCopySuccess?: () => void; 
+  onCopySuccess?: () => void;
 }
 
-const LinkingSheetContent: React.FC<LinkingSheetContentProps> = ({ 
-  url, 
+const LinkingSheetContent: React.FC<LinkingSheetContentProps> = ({
+  url,
   style,
   onCopySuccess
 }) => {
   const { currentTheme } = useTheme();
-  
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [modalIcon, setModalIcon] = useState<keyof typeof MaterialIcons.glyphMap>();
+  const [modalTitle, setModalTitle] = useState<string | null>(null);
+  const [modalDescription, setModalDescription] = useState<string | null>(null);
+
   const colors = {
     error: currentTheme === 'light' ? Colors.light.error : Colors.dark.error,
     icon: currentTheme === 'light' ? Colors.light.icon : Colors.dark.icon,
@@ -56,20 +61,12 @@ const LinkingSheetContent: React.FC<LinkingSheetContentProps> = ({
 
   const handleOpenLink = async () => {
     if (!url) return;
-    
+
     if (url.startsWith('http://')) {
-      Alert.alert(
-        'Security Warning',
-        'This link uses HTTP, which is not secure. Your data may be at risk.',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { 
-            text: 'Open Anyway', 
-            onPress: () => Linking.openURL(url),
-            style: 'destructive'
-          }
-        ]
-      );
+      setIsModalVisible(true);
+      setModalIcon('warning');
+      setModalTitle('Security Warning');
+      setModalDescription('This link uses HTTP, which is not secure. Your data may be at risk.');
     } else {
       try {
         await Linking.openURL(url);
@@ -83,6 +80,12 @@ const LinkingSheetContent: React.FC<LinkingSheetContentProps> = ({
 
   const isInsecure = url.startsWith('http://');
   const displayUrl = url.length > 45 ? url.substring(0, 45) + '...' : url;
+  const onOpenUrl = () => {
+    Linking.openURL(url);
+    setTimeout(() => {
+      setIsModalVisible(false);
+    }, 200);
+  }
 
   return (
     <View style={[styles.container, { backgroundColor: colors.cardBg }, style]}>
@@ -90,30 +93,39 @@ const LinkingSheetContent: React.FC<LinkingSheetContentProps> = ({
       {/* <View style={styles.header}>
         <ThemedText type='defaultSemiBold' style={styles.title}>Link Details</ThemedText>
       </View> */}
+      <ThemedModal
+        onPrimaryAction={onOpenUrl}
+        primaryActionText='Open anyway'
+        iconName={modalIcon}
+        title={modalTitle || ''}
+        message={modalDescription || ''}
+        isVisible={isModalVisible}
+        onDismiss={() => setIsModalVisible(false)} />
 
       {/* URL Display Card */}
-      <Pressable 
+      <Pressable
         onPress={handleCopyLink}
         style={[
           styles.urlCard,
-          { borderColor: colors.border,
+          {
+            borderColor: colors.border,
             backgroundColor: colors.inputBg
-           }
+          }
         ]}
       >
         <View style={styles.urlRow}>
-          <MaterialCommunityIcons 
-            name={isInsecure ? "lock-open" : "lock"} 
-            size={16} 
-            color={isInsecure ? colors.error : colors.icon} 
+          <MaterialCommunityIcons
+            name={isInsecure ? "lock-open" : "lock"}
+            size={16}
+            color={isInsecure ? colors.error : colors.icon}
           />
           <ThemedText style={styles.urlText} numberOfLines={1}>
             {displayUrl}
           </ThemedText>
         </View>
-        <MaterialCommunityIcons 
-          name="content-copy" 
-          size={16} 
+        <MaterialCommunityIcons
+          name="content-copy"
+          size={16}
           color={colors.icon}
         />
       </Pressable>

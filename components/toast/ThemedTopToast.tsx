@@ -79,7 +79,7 @@ export function ThemedTopToast({
     if (isVisible) {
       // Animate toast in from the top
       opacity.value = withTiming(1, { duration: 300 });
-      translateY.value = withTiming(0, { duration: 300 });
+      translateY.value = withTiming(2, { duration: 300 });
 
       // Auto-dismiss timer
       const timer = setTimeout(() => {
@@ -91,7 +91,7 @@ export function ThemedTopToast({
       // Animate toast out to the top
       setIsAnimationComplete(true);
       opacity.value = withTiming(0, { duration: 300 });
-      translateY.value = withTiming(-getResponsiveHeight(10), { duration: 300 });
+      translateY.value = withTiming(-getResponsiveHeight(12), { duration: 300 });
 
       // Reset animation state
       setTimeout(() => {

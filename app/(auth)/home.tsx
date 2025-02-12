@@ -290,7 +290,7 @@ function HomeScreen() {
         Extrapolation.CLAMP
       ),
       {
-        duration: 250,
+        duration: 200,
         easing: Easing.out(Easing.ease)
       }
     );
@@ -339,7 +339,7 @@ function HomeScreen() {
           ? 80
           : 10,
       {
-        duration: 250,
+        duration: 200,
         easing: Easing.bezier(0.25, 0.1, 0.25, 1),
       }
     );

@@ -148,11 +148,6 @@ export default function ScanScreen() {
     bottomSheetRef.current?.snapToIndex(0);
   }, []);
 
-  // const handleOpenSecondSheet = () => {
-  //   if (bottomSheetModalRef.current) {
-  //     bottomSheetModalRef.current.presentSecondSheet();
-  //   }
-  // };
 
   const onLayout = useCallback((event: LayoutChangeEvent) => {
     setLayout(event.nativeEvent.layout);
@@ -290,7 +285,7 @@ export default function ScanScreen() {
                 <FocusIndicator focusPoint={focusPoint} animatedFocusStyle={animatedFocusStyle} />
                 <ScannerFrame highlight={codeScannerHighlights[0]} layout={layout} scanFrame={scanFrame} />
                 <View style={{ position: 'absolute', bottom: 20, left: 0, right: 0 }}>
-                  {codeMetadata && quickScan === false ? (
+                  {codeMetadata ? (
                     <QRResult
                       codeValue={codeValue}
                       codeType={codeType}

@@ -175,7 +175,8 @@
       "timeout": "Quá thời gian. Vui lòng kiểm tra kết nối mạng.",
       "invalidResponse": "Phản hồi từ máy chủ không hợp lệ. Vui lòng thử lại sau.",
       "storageError": "Đã xảy ra lỗi khi lưu thông tin thẻ. Vui lòng thử lại.",
-      "databaseError": "Đã xảy ra lỗi cơ sở dữ liệu. Vui lòng thử lại sau."
+      "databaseError": "Đã xảy ra lỗi cơ sở dữ liệu. Vui lòng thử lại sau.",
+      "selectCategoryFirstMessage": "Vui lòng chọn loại thẻ trước."
     }
   },
   "scanScreen": {

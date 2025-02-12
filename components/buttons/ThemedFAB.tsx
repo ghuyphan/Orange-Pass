@@ -73,7 +73,7 @@ export const ThemedFAB = forwardRef<View, ThemedFABProps>(({
 
   // Shared animation configuration
   const animationConfig = useMemo(() => ({
-    duration: 250,
+    duration: 200,
     easing: Easing.out(Easing.cubic)
   }), []);
 
@@ -86,7 +86,7 @@ export const ThemedFAB = forwardRef<View, ThemedFABProps>(({
   const translateY = useAnimatedStyle(() => ({
     transform: [{
       translateY: withTiming(open ? -30 : 0, {
-        duration: 250,
+        duration: 200,
         easing: Easing.bezier(0.4, 0, 0.2, 1)
       })
     }]

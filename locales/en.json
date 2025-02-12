@@ -1,4 +1,8 @@
 {
+  "common": {
+    "done": "Done",
+    "cancel": "Cancel"
+  },
   "authRefresh": {
     "errors": {
       "401": "Session expired. Please log in again.",

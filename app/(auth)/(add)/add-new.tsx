@@ -163,7 +163,7 @@ const AddScreen: React.FC = () => {
   // --- Memoized values ---
 
   // Determine bankCode and itemCode from URL parameters
-  const { bankCode, itemCode } = useMemo(() => {
+  const { itemCode } = useMemo(() => {
     const isEWallet = codeType === 'ewallet';
     return {
       bankCode: !isEWallet && codeBin ? returnItemCodeByBin(codeBin) : null,  // Get bank code from BIN
@@ -211,11 +211,11 @@ const AddScreen: React.FC = () => {
 
 
   // Brands list (dynamically generated based on the selected category)
-  const brands = useCallback((categoryValue: DataType | undefined) => {
-    return categoryValue
-      ? getItemsByTypeHelper(categoryValue, locale)
-      : [];
-  }, [locale, getItemsByTypeHelper]);
+  // const brands = useCallback((categoryValue: DataType | undefined) => {
+  //   return categoryValue
+  //     ? getItemsByTypeHelper(categoryValue, locale)
+  //     : [];
+  // }, [locale, getItemsByTypeHelper]);
 
   // --- Animation ---
   const scrollHandler = useAnimatedScrollHandler({
@@ -231,26 +231,26 @@ const AddScreen: React.FC = () => {
 
   const titleContainerStyle = useAnimatedStyle(
     () => ({
-      opacity: interpolate(
-        scrollY.value,
-        [scrollThreshold, scrollThreshold + animationRange],
-        [1, 0],
-        Extrapolation.CLAMP
-      ),
-      transform: [
-        {
-          translateY: interpolate(
+        opacity: interpolate(
             scrollY.value,
-            [0, scrollThreshold],
-            [0, translateYValue],
+            [scrollThreshold, scrollThreshold + animationRange],
+            [1, 0],
             Extrapolation.CLAMP
-          ),
-        },
-      ],
-      zIndex: scrollY.value > scrollThreshold * 0.75 || isSheetOpen ? 0 : 1,
+        ),
+        transform: [
+            {
+                translateY: interpolate(
+                    scrollY.value,
+                    [0, scrollThreshold],
+                    [0, translateYValue],
+                    Extrapolation.CLAMP
+                ),
+            },
+        ],
+         zIndex: isSheetOpen ? 0 : 1, // Simplified zIndex. 
     }),
-    [isSheetOpen]
-  );
+    [isSheetOpen] // Make sure to include isSheetOpen here
+);
 
   const cardStyle = useAnimatedStyle(
     () => ({
@@ -320,23 +320,23 @@ const AddScreen: React.FC = () => {
         shouldValidate?: boolean | undefined
       ) => void
     ) => {
+      if (isSheetOpen) {
+        
+      }
+      setIsSheetOpen(true);
       if (type === 'brand' && !category) {
-        // More descriptive alert message:
-        // Alert.alert(
-        //   t('addScreen.selectCategoryFirstTitle'),
-        //   t('addScreen.selectCategoryFirstMessage'),
-        //   [{ text: t('addScreen.ok') }]
-        // );
-        showToast(t('addScreen.selectCategoryFirstMessage'));
+        showToast(t('addScreen.errors.selectCategoryFirstMessage'));
         return;
       } else 
       if (type === 'metadataType' && !category) {
         showToast(t('addScreen.selectCategoryFirstMessage'));
         return;
       }
-      setIsSheetOpen(true);
+
       setSheetType(type);
-      bottomSheetRef.current?.snapToIndex(0);
+      setTimeout(() => {
+        bottomSheetRef.current?.snapToIndex(0);
+      }, 100);
       Keyboard.dismiss();
     },
     [t]
@@ -345,37 +345,33 @@ const AddScreen: React.FC = () => {
   // Handle selection from a bottom sheet
   const handleSheetItemSelect = useCallback(
     (
-      item: SheetItem,
-      type: SheetType,
-      setFieldValue: (
-        field: string,
-        value: any,
-        shouldValidate?: boolean | undefined
-      ) => void
+        item: SheetItem,
+        type: SheetType,
+        setFieldValue: (
+            field: string,
+            value: any,
+            shouldValidate?: boolean | undefined
+        ) => void
     ) => {
-      switch (type) {
-        case 'category':
-          setFieldValue('category', item as CategoryItem);
-          setFieldValue('brand', null); // Clear brand when category changes
-          setFieldValue('metadataType', metadataTypeData[0]); // Reset metadataType
-          setFieldValue('accountName', '');
-          setFieldValue('accountNumber', '');
-          setFieldValue('metadata', '');
-          break;
-        case 'brand':
-          setFieldValue('brand', item as BrandItem);
-          break;
-        case 'metadataType':
-          setFieldValue('metadataType', item as MetadataTypeItem);
-          break;
-      }
-      bottomSheetRef.current?.close();
-      setSheetType(null);
-      setIsSheetOpen(false);
+        switch (type) {
+            case 'category':
+                setFieldValue('category', item as CategoryItem);
+                setFieldValue('brand', null); // Clear brand when category changes
+                setFieldValue('metadataType', metadataTypeData[0]); // Reset metadataType
+                setFieldValue('accountName', '');
+                setFieldValue('accountNumber', '');
+                break;
+            case 'brand':
+                setFieldValue('brand', item as BrandItem);
+                break;
+            case 'metadataType':
+                setFieldValue('metadataType', item as MetadataTypeItem);
+                break;
+        }
+        bottomSheetRef.current?.close(); // Ensure the sheet is closed!
     },
     [metadataTypeData]
-  );
-
+);
   // --- Rendering Functions ---
 
   // Render the card preview
@@ -406,7 +402,7 @@ const AddScreen: React.FC = () => {
     setIsToastVisible(true);
     setTimeout(() => {
       setIsToastVisible(false);
-    }, 2500);
+    }, 2000);
   }, []);
 
   // Render an item within a bottom sheet
@@ -522,7 +518,6 @@ const AddScreen: React.FC = () => {
   const handleFormSubmit = useCallback(
     async (values: FormParams, formikHelpers: FormikHelpers<FormParams>) => {
       try {
-        console.log('Submitting values:', values);
         router.replace('/(auth)/home');  // Navigate to home screen after submission
       } catch (error) {
         console.error('Submission error:', error);
@@ -539,7 +534,7 @@ const AddScreen: React.FC = () => {
   );
 
   const handleSheetChange = useCallback((index: number) => {
-    setIsSheetOpen(index !== -1); // Update sheet visibility state
+    setIsSheetOpen(!(index === -1));
   }, []);
 
   // --- Animation for Account/Number Section ---
@@ -581,8 +576,8 @@ const AddScreen: React.FC = () => {
         touched,
         isSubmitting,
         setFieldValue,
-        setTouched
       }) => (
+        console.log(values),
         <ThemedView style={styles.container}>
           <ThemedTopToast message={toastMessage} isVisible={isToastVisible}/>
           <Animated.View style={[styles.titleContainer, titleContainerStyle]}>

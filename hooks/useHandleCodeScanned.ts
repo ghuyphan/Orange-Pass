@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { throttle } from 'lodash';
-import WifiManager from 'react-native-wifi-reborn';
+import WifiManager from 'react-native-wifi-reborn'; // Keep this, as it might be used within an extraction function
 import { MaterialIcons } from '@expo/vector-icons';
 
 type MaterialIconsIconName = keyof typeof MaterialIcons.glyphMap;
@@ -51,18 +51,19 @@ type ScanResult =
   | AlphanumericScanResult
   | UnknownScanResult;
 
-interface Pattern {
-  pattern: RegExp;
-  handler: (
-    codeMetadata: string,
-    options: {
-      quickScan?: boolean;
-      codeFormat?: number;
-      t: (key: string) => string;
-      setIsConnecting?: (connecting: boolean) => void;
-    }
-  ) => ScanResult;
+interface ExtractionOptions {
+  codeFormat?: number;
+  t: (key: string) => string; // For internationalization
+  setIsConnecting?: (connecting: boolean) => void;  // For Wifi connection
 }
+
+interface ScanPattern {
+  type: string; // e.g., 'WIFI', 'URL', 'VietQR', 'Alphanumeric', 'Custom'
+  iconName: MaterialIconsIconName;
+  match: (code: string) => boolean; //  More flexible than RegExp
+  extract: (code: string, options: ExtractionOptions) => ScanResult;
+}
+
 
 const PROVIDERS = {
   MOMO: {
@@ -161,139 +162,141 @@ const extractBankMerchantNumber = (merchantInfo: string, bin: string): string | 
   return match ? match[1] : undefined;
 };
 
-const useHandleCodeScanned = () => {
-  const handleCodeScanned = useCallback(
-    throttle(
-      (
-        codeMetadata: string,
-        options: {
-          quickScan?: boolean;
-          codeFormat?: number;
-          t: (key: string) => string;
-          setIsConnecting?: (connecting: boolean) => void;
-        }
-      ): ScanResult => {
-        const { quickScan, t, setIsConnecting, codeFormat } = options;
+// Helper function to extract subfields from VietQR data (field 62)
+const extractField = (fieldData: string, fieldId: string): string | undefined => {
+    const regex = new RegExp(`${fieldId}([^]+?)(?=\\d{2}|$)`); // Improved regex
+    const match = fieldData.match(regex);
+    return match ? match[1].trim() : undefined;
+  };
 
-        const patterns: { [key: string]: Pattern } = {
-          WIFI: {
-            pattern: /^WIFI:/,
-            handler: (codeMetadata, { quickScan, t, setIsConnecting, codeFormat }) => {
-              const ssidMatch = codeMetadata.match(/S:([^;]*)/);
-              const passMatch = codeMetadata.match(/P:([^;]*)/);
-              const isWepMatch = codeMetadata.match(/T:([^;]*)/);
+const SCAN_PATTERNS: ScanPattern[] = [
+    {
+        type: 'WIFI',
+        iconName: 'wifi',
+        match: (code) => code.startsWith('WIFI:'),
+        extract: (code, options) => {
+          // ...  (Simplified extraction logic, see below)
+          const parts = code.substring(5).split(';').reduce((acc:any, part) => {
+            const [key, value] = part.split(':');
+            if (key && value) {
+              acc[key] = value;
+            }
+            return acc;
+          }, {});
 
-              return {
-                codeType: 'WIFI',
-                iconName: 'wifi',
-                codeFormat: codeFormat,
-                rawCodeValue: codeMetadata,
-                ssid: ssidMatch ? ssidMatch[1] : 'Unknown',
-                pass: passMatch ? passMatch[1] : '',
-                isWep: isWepMatch ? isWepMatch[1] === 'WEP' : undefined,
-              };
-            },
-          },
-
-          URL: {
-            pattern: /^(https:\/\/|http:\/\/)/,
-            handler: (codeMetadata, { t, codeFormat }) => {
-              return {
-                codeType: 'URL',
-                iconName: 'explore',
-                codeFormat: codeFormat,
-                rawCodeValue: codeMetadata,
-                url: codeMetadata.replace(/^https?:\/\//, ''),
-              };
-            },
-          },
-
-          VietQR: {
-            pattern: /^0002010102/,
-            handler: (codeMetadata, { t, codeFormat }) => {
-              const fields = parseEMVQR(codeMetadata);
-
-              // Get merchant information from either field 38 or 27
-              const merchantInfo = fields['38'] || fields['27'] || '';
-
-              // Detect provider (e-wallet or bank)
-              const provider = detectProvider(codeMetadata, fields);
-              const providerConfig = provider ? PROVIDERS[provider as keyof typeof PROVIDERS] : undefined;
-
-              // Extract merchant number and BIN
-              let merchantNumber;
-              let bin;
-
-              if (providerConfig) {
-                // E-wallet case
-                merchantNumber = providerConfig.extractMerchantNumber(fields);
-                bin = providerConfig.bin;
-              } else {
-                // Bank case
-                bin = extractBIN(merchantInfo);
-                merchantNumber = extractBankMerchantNumber(merchantInfo, bin);
-              }
-
-              // Extract merchant name and additional data
-              const field62 = fields['62'];
-              const merchantName = extractMerchantName(field62);
-
-              let additionalData;
-              if (field62) {
-                additionalData = {
-                  billNumber: field62.match(/01(\d+)/)?.[1],
-                  reference: field62.match(/05(\d+)/)?.[1],
-                };
-              }
-
-              const result: VietQRScanResult = {
-                codeType: provider ? 'ewallet' : 'bank',
-                iconName: 'qr-code',
-                codeFormat: codeFormat,
-                rawCodeValue: codeMetadata,
-                bin: bin || 'Unknown',
-                provider: provider,
-                merchantNumber: merchantNumber,
-                merchantName: merchantName,
-                additionalData: additionalData
-              };
-
-              return result;
-            },
-          },
-
-          Alphanumeric: {
-            pattern: /^[a-zA-Z0-9:]+$/, // MODIFIED REGEX
-            handler: (codeMetadata, { t, codeFormat }) => {
-              return {
-                codeType: 'alphanumeric',
-                iconName: 'text-fields', // You might want a different icon
-                codeFormat: codeFormat,
-                rawCodeValue: codeMetadata,
-              };
-            },
-          },
-        };
-
-        for (const key in patterns) {
-          const { pattern, handler } = patterns[key];
-          if (pattern.test(codeMetadata)) {
-            return handler(codeMetadata, options);
-          }
-        }
-
-        return {
-          codeType: 'unknown',
-          iconName: 'help',
-          rawCodeValue: codeMetadata,
-        };
+           return {
+              codeType: 'WIFI',
+              iconName: 'wifi',
+              codeFormat: options.codeFormat,
+              rawCodeValue: code,
+              ssid: parts.S || 'Unknown',
+              pass: parts.P || '',
+              isWep: parts.T === 'WEP', // Much cleaner
+            };
+        },
       },
-      500
-    ),
-    []
-  );
+      {
+        type: 'URL',
+        iconName: 'explore',
+        match: (code) => code.startsWith('http://') || code.startsWith('https://'),
+        extract: (code, options) => ({
+          codeType: 'URL',
+          iconName: 'explore',
+          codeFormat: options.codeFormat,
+          rawCodeValue: code,
+          url: code.replace(/^https?:\/\//, ''), // Keep this concise
+        }),
+      },
+      {
+        type: 'VietQR',
+        iconName: 'qr-code',
+        match: (code) => code.startsWith('0002010102'), // Keep the initial check simple
+        extract: (code, options) => {
+          const fields = parseEMVQR(code); // Your existing function
+          const merchantInfo = fields['38'] || fields['27'] || '';
+          const provider = detectProvider(code, fields);  // Keep this
+          const providerConfig = provider ? PROVIDERS[provider as keyof typeof PROVIDERS] : undefined;
 
-  return handleCodeScanned;
-};
+          let merchantNumber;
+          let bin;
 
-export default useHandleCodeScanned;
+          if (providerConfig) {
+              merchantNumber = providerConfig.extractMerchantNumber(fields);
+              bin = providerConfig.bin;
+          } else {
+              bin = extractBIN(merchantInfo);
+              merchantNumber = extractBankMerchantNumber(merchantInfo, bin);
+          }
+
+          const field62 = fields['62'];
+          const merchantName = extractMerchantName(field62);
+
+          const additionalData = field62 ? {
+              billNumber: extractField(field62, '01'),  // Use helper
+              reference: extractField(field62, '05'),   // Use helper
+          } : undefined;
+
+          return {
+              codeType: provider ? 'ewallet' : 'bank',
+              iconName: 'qr-code',
+              codeFormat: options.codeFormat,
+              rawCodeValue: code,
+              bin: bin || 'Unknown',
+              provider: provider,
+              merchantNumber: merchantNumber,
+              merchantName: merchantName,
+              additionalData: additionalData
+          };
+        },
+      },
+        {
+            type: 'Alphanumeric',
+            iconName: 'text-fields',
+            match: (code) => /^[a-zA-Z0-9:]+$/.test(code), // Use .test() for matching
+            extract: (code, options) => ({
+                codeType: 'alphanumeric',
+                iconName: 'text-fields',
+                codeFormat: options.codeFormat,
+                rawCodeValue: code,
+            }),
+        },
+        {
+          type: 'unknown',
+          iconName: 'help',
+          match: () => true, // Always matches as the last resort
+          extract: (code, options) => ({
+            codeType: 'unknown',
+            iconName: 'help',
+            rawCodeValue: code,
+          }),
+        },
+    ];
+
+const useHandleCodeScanned = () => {
+    const handleCodeScanned = useCallback(
+      throttle(
+        (
+          codeMetadata: string,
+          options: ExtractionOptions
+        ): ScanResult => {
+          const pattern = SCAN_PATTERNS.find((p) => p.match(codeMetadata));
+
+          if (pattern) {
+            return pattern.extract(codeMetadata, options);
+          }
+          // No need for an else, unknown should be the last in SCAN_PATTERNS
+          return {
+            codeType: 'unknown',
+            iconName: 'help',
+            rawCodeValue: codeMetadata,
+          } as UnknownScanResult; //this one to make sure the return is ScanResult type.
+        },
+        500
+      ),
+      []
+    );
+
+    return handleCodeScanned;
+  };
+
+  export default useHandleCodeScanned;
