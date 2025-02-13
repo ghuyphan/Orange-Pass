@@ -109,7 +109,6 @@ export default function RegisterScreen() {
                             }
                             disabled={isSubmitting}
                             disableOpacityChange={true}
-                            required={true}
                         />
                         <ThemedView style={styles.divider} />
                         <ThemedInput
@@ -126,7 +125,6 @@ export default function RegisterScreen() {
                             }
                             disabled={isSubmitting}
                             disableOpacityChange={true}
-                            required={true}
                         />
                         <ThemedView style={styles.divider} />
                         <ThemedInput
@@ -144,7 +142,6 @@ export default function RegisterScreen() {
                             }
                             disabled={isSubmitting}
                             disableOpacityChange={true}
-                            required={true}
                         />
                         <ThemedView style={styles.divider} />
                         <ThemedInput
@@ -162,7 +159,6 @@ export default function RegisterScreen() {
                             }
                             disabled={isSubmitting}
                             disableOpacityChange={true}
-                            required={true}
                         />
                     </View>
                     <ThemedButton

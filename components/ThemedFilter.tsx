@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState, useMemo } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   FlatList,
   StyleProp,
@@ -6,8 +6,9 @@ import {
   StyleSheet,
   View,
   Pressable,
+  Dimensions,
 } from 'react-native';
-import { t } from '@/i18n'; // Translation function
+import { t } from '@/i18n';
 import { useLocale } from '@/context/LocaleContext';
 import { useTheme } from '@/context/ThemeContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -38,6 +39,9 @@ const FilterItem = React.memo(
     isDarkMode: boolean;
     handlePress: (filterKey: string) => void;
   }) => {
+     // Use a fixed base size and only scale it slightly.
+    const buttonWidth = getResponsiveWidth(20); // Adjust the base (20%) as needed
+
     return (
       <Pressable
         onPress={() => {
@@ -45,6 +49,7 @@ const FilterItem = React.memo(
         }}
         style={({ pressed }) => [
           styles.filterButton,
+          {width: buttonWidth}, // Apply the calculated width
           isDarkMode ? styles.darkModeButton : styles.lightModeButton,
           isSelected && (isDarkMode ? styles.selectedFilterDarkMode : styles.selectedFilterLightMode),
           pressed && { opacity: 0.7 },
@@ -53,7 +58,7 @@ const FilterItem = React.memo(
         <View style={styles.iconView}>
           <MaterialCommunityIcons
             name={isSelected ? item.iconName : `${item.iconName}-outline`}
-            size={getResponsiveFontSize(20)}
+            size={getResponsiveFontSize(20)}  // Responsive font size, but consider a fixed size too
             color={
               isSelected
                 ? isDarkMode
@@ -81,16 +86,14 @@ const ThemedFilter = ({ selectedFilter, onFilterChange, style }: ThemedFilterPro
   const { locale } = useLocale();
   const { currentTheme } = useTheme();
   const isDarkMode = currentTheme === 'dark';
+  const screenWidth = Dimensions.get('window').width;
 
-  // State to force re-render and update translations
   const [filterKey, setFilterKey] = useState(0);
 
-  // Add an effect to update filterKey when locale changes
   useEffect(() => {
     setFilterKey((prev) => prev + 1);
   }, [locale]);
 
-  // Generate filters with fresh translations each render
   const filters: FilterItemType[] = [
     {
       key: 'all',
@@ -131,6 +134,28 @@ const ThemedFilter = ({ selectedFilter, onFilterChange, style }: ThemedFilterPro
     />
   );
 
+
+  // Calculate dynamic gap based on screen width
+  const calculateGap = () => {
+    const baseGap = 2; // Minimum gap
+    const numItems = filters.length;
+    const buttonWidth = getResponsiveWidth(20); // Adjust based on your button's desired width
+    const totalButtonWidth = buttonWidth * numItems;
+    const padding = getResponsiveWidth(3.6) * 2;  // Total horizontal padding
+
+    const availableSpace = screenWidth - totalButtonWidth - padding;
+    const maxGap = availableSpace / (numItems -1);
+    
+     // Use a minimum width to decide when to reduce the gap.  Adjust as necessary.
+    const minWidthForMaxGap = 50 ;
+
+     if(screenWidth >= minWidthForMaxGap)
+       return Math.min(maxGap,getResponsiveWidth(8)); // limit gap for extremely wide screens,adjust getResponsiveWidth(8) as you see the limit
+     else
+       return getResponsiveWidth(baseGap); // on smaller screens use getResponsiveWidth
+  };
+    const gap = calculateGap();
+
   return (
     <FlatList
       horizontal
@@ -138,27 +163,28 @@ const ThemedFilter = ({ selectedFilter, onFilterChange, style }: ThemedFilterPro
       data={filters}
       keyExtractor={(item) => `${locale}-${item.key}-${filterKey}`}
       renderItem={renderItem}
-      extraData={[selectedFilter, locale, filterKey]}
-      contentContainerStyle={[styles.filterContainer, style]}
+      extraData={[selectedFilter, locale, filterKey, screenWidth]}
+      contentContainerStyle={[styles.filterContainer, {gap:gap},style]} //apply dynamic gap
       showsHorizontalScrollIndicator={false}
       scrollEnabled={true}
     />
   );
 };
-
 const styles = StyleSheet.create({
   filterContainer: {
-    flex: 1,
-    gap: getResponsiveWidth(2),
-    paddingHorizontal: getResponsiveWidth(3.6),
-    justifyContent: 'space-between',
+    // flex: 1, // Removed flex: 1
+    // gap: getResponsiveWidth(2),  // Dynamic gap is now handled directly
+    paddingHorizontal: getResponsiveWidth(3.6), // Keep consistent padding
+    // justifyContent: 'space-between',//removed
+    alignItems: 'center', // Vertically center items
   },
   filterButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: getResponsiveHeight(1.5),
-    paddingHorizontal: getResponsiveWidth(4.5),
-    borderRadius: getResponsiveWidth(4),
+    justifyContent: 'center',
+    paddingVertical: getResponsiveHeight(1.5),   // Vertical padding - adjust as needed
+    // paddingHorizontal: getResponsiveWidth(4.5), // Removed dynamic horizontal padding inside the button
+    borderRadius: getResponsiveWidth(4),          // Adjust as needed
     overflow: 'hidden',
   },
   selectedFilterLightMode: {
@@ -177,8 +203,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: getResponsiveWidth(3.6),
+    paddingHorizontal: getResponsiveWidth(3.6), // Keep consistent padding
   },
 });
-
 export default ThemedFilter;

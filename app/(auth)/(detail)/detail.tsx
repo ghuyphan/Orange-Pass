@@ -33,6 +33,7 @@ import { deleteQrCode, updateQrIndexes } from '@/services/localDB/qrDB';
 
 import { setQrData } from '@/store/reducers/qrSlice';
 import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
+import { ThemedTopToast } from '@/components/toast/ThemedTopToast';
 
 // Constants
 const AMOUNT_SUGGESTIONS = ['10,000', '50,000', '100,000', '500,000', '1,000,000'];
@@ -69,7 +70,7 @@ const DetailScreen = () => {
   const qrData = useSelector((state: RootState) => state.qr.qrData);
   const isOffline = useSelector((state: RootState) => state.network.isOffline);
   const router = useRouter();
-  useUnmountBrightness(1, false);
+  useUnmountBrightness(1, true);
 
   const bottomSheetRef = useRef<BottomSheet>(null);
 
@@ -78,8 +79,9 @@ const DetailScreen = () => {
   const [isToastVisible, setIsToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isTopToastVisible, setIsTopToastVisible] = useState(false);
+  const [topToastMessage, setTopToastMessage] = useState('');
   const [vietQRBanks, setVietQRBanks] = useState<BankItem[]>([]);
-  const [isLoadingBanks, setIsLoadingBanks] = useState(true);
 
   const item = useMemo<ItemData | null>(() => {
     if (!encodedItem) return null;
@@ -126,7 +128,6 @@ const DetailScreen = () => {
       }
 
       setVietQRBanks(banks);
-      setIsLoadingBanks(false);
     };
 
     setTimeout(() => {
@@ -221,9 +222,19 @@ const DetailScreen = () => {
     [vietQRBanks, item?.type]
   );
 
+  const showTopToast = useCallback((message: string) => {
+    setIsTopToastVisible(true);
+    setTopToastMessage(message);
+  }, []);
+
   const handleTransferAmount = useCallback(
     throttle(async () => {
       if (!item || !amount) return;
+
+      if (isOffline) {
+        showTopToast(t('detailsScreen.offlineMessage'));
+        return;
+      }
 
       setIsSyncing(true);
       setIsToastVisible(true);
@@ -376,7 +387,6 @@ const DetailScreen = () => {
           <View
             style={[
               styles.transferContainer,
-              isOffline ? { opacity: 0.4, pointerEvents: 'none' } : {},
             ]}
           >
             <View style={styles.transferHeader}>
@@ -514,6 +524,7 @@ const DetailScreen = () => {
           onDismiss={() => setIsToastVisible(false)}
           style={styles.toastContainer}
         />
+        <ThemedTopToast isVisible={isTopToastVisible} message={topToastMessage} />
       </View>
 
       <ThemedReuseableSheet

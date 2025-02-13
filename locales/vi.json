@@ -92,43 +92,43 @@
       "500": "Đã xảy ra lỗi máy chủ. Vui lòng thử lại sau."
     }
   },
-  "homeScreen": {
-    "title": "Orange⁺",
-    "searchPlaceholder": "Tìm kiếm thẻ của bạn",
-    "noItemFound": "Không tìm thấy thẻ. Vui lòng thử lại",
-    "manage": "Quản lý thẻ",
-    "edit": "Sửa thẻ",
-    "delete": "Xóa thẻ",
-    "syncing": "Đang đồng bộ...",
-    "deleting": "Đang xóa...",
-    "offline": "Bạn đang ngoại tuyến",
-    "online": "Đã kết nối lại",
-    "confirmDeleteTitle": "Xóa thẻ này?",
-    "confirmDeleteMessage": "Bạn có chắc chắn muốn xóa thẻ này không?",
-    "cancel": "Huỷ",
-    "moveToTrash": "Xóa",
-    "move": "Chuyển",
-    "fetchError": "Không thể tải dữ liệu. Vui lòng thử lại.",
-    "syncError": "Không thể đồng bộ. Vui lòng thử lại.",
-    "copied": "Đã sao chép liên kết",
-    "filters": {
-      "all": "Tất cả",
-      "bank": "Ngân hàng",
-      "store": "Cửa hàng",
-      "ewallet": "Ví tiền"
+    "homeScreen": {
+      "title": "Orange⁺",
+      "searchPlaceholder": "Tìm kiếm thẻ của bạn",
+      "noItemFound": "Không tìm thấy thẻ. Vui lòng thử lại",
+      "manage": "Quản lý thẻ",
+      "edit": "Sửa thẻ",
+      "delete": "Xóa",
+      "syncing": "Đang đồng bộ...",
+      "deleting": "Đang xóa...",
+      "offline": "Bạn đang ngoại tuyến",
+      "online": "Đã kết nối lại",
+      "confirmDeleteTitle": "Chuyển vào Thùng rác?",
+      "confirmDeleteMessage": "Bạn có chắc chắn muốn chuyển thẻ này vào thùng rác không?",
+      "cancel": "Huỷ",
+      "moveToTrash": "Chuyển vào Thùng rác",
+      "move": "Chuyển",
+      "fetchError": "Không thể tải dữ liệu. Vui lòng thử lại.",
+      "syncError": "Không thể đồng bộ. Vui lòng thử lại.",
+      "copied": "Đã sao chép liên kết",
+      "filters": {
+        "all": "Tất cả",
+        "bank": "Ngân hàng",
+        "store": "Cửa hàng",
+        "ewallet": "Ví tiền"
+      },
+      "emptyCard": {
+        "header": "Tất cả mã QR của bạn\nGiờ đã ở cùng một nơi",
+        "footer": "Thêm thẻ mới nào!",
+        "footerButton": "Thêm thẻ",
+        "content": "Lưu tất cả mã QR của bạn vào đây - từ thẻ ngân hàng, ví tiền, thẻ thành viên,... Sắp xếp và truy cập dễ dàng mọi lúc mọi nơi."
+      },
+      "fab": {
+        "add": "Thêm thẻ",
+        "scan": "Quét mã",
+        "gallery": "Chọn ảnh"
+      }
     },
-    "emptyCard": {
-      "header": "Tất cả mã QR của bạn\nGiờ đã ở cùng một nơi",
-      "footer": "Thêm thẻ mới nào!",
-      "footerButton": "Thêm thẻ",
-      "content": "Lưu tất cả mã QR của bạn vào đây - từ thẻ ngân hàng, ví tiền, thẻ thành viên,... Sắp xếp và truy cập dễ dàng mọi lúc mọi nơi."
-    },
-    "fab": {
-      "add": "Thêm thẻ",
-      "scan": "Quét mã",
-      "gallery": "Chọn ảnh"
-    }
-  },
   "addScreen": {
     "title": "Thêm thẻ",
     "type": "Loại thẻ",
@@ -142,7 +142,7 @@
     "categoryTitle": "Loại thẻ",
     "categoryPlaceholder": "Nhập loại thẻ",
     "storeCategory": "Cửa hàng",
-    "ewalletCategory": "Ví",
+    "ewalletCategory": "Ví tiền",
     "bankCategory": "Ngân hàng",
     "nameTitle": "Tên thẻ",
     "namePlaceholder": "Nhập tên thẻ",

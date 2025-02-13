@@ -320,9 +320,6 @@ const AddScreen: React.FC = () => {
         shouldValidate?: boolean | undefined
       ) => void
     ) => {
-      if (isSheetOpen) {
-        
-      }
       setIsSheetOpen(true);
       if (type === 'brand' && !category) {
         showToast(t('addScreen.errors.selectCategoryFirstMessage'));
@@ -400,9 +397,6 @@ const AddScreen: React.FC = () => {
   const showToast = useCallback((message: string) => {
     setToastMessage(message);
     setIsToastVisible(true);
-    setTimeout(() => {
-      setIsToastVisible(false);
-    }, 2000);
   }, []);
 
   // Render an item within a bottom sheet

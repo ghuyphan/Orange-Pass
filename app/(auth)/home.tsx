@@ -64,6 +64,7 @@ import { ThemedBottomToast } from '@/components/toast/ThemedBottomToast';
 import ThemedFilter from '@/components/ThemedFilter';
 import EmptyListItem from '@/components/lists/EmptyListItem';
 import LinkingSheetContent from '@/components/bottomsheet/LinkingSheetContent';
+import SettingSheetContent from '@/components/bottomsheet/SettingSheetContent';
 import { getResponsiveHeight, getResponsiveWidth } from '@/utils/responsive';
 
 // 5. Internationalization
@@ -240,7 +241,7 @@ function HomeScreen() {
     }
   }, [isEmpty, isEmptyShared]);
 
-  useEffect(() => { 
+  useEffect(() => {
     animateEmptyCard();
   }, [qrData.length > 0]);
 
@@ -577,16 +578,20 @@ function HomeScreen() {
       case 'linking':
         return (
           <>
-            <LinkingSheetContent url={linkingUrl}
+            <LinkingSheetContent
+              url={linkingUrl}
               onCopySuccess={handleCopySuccess}
             />
           </>
         );
       case 'setting':
         return (
-          <View>
-            <ThemedText>Setting</ThemedText>
-          </View>
+          <>
+            <SettingSheetContent
+              onEdit={() => { }}
+              onDelete={onDeleteSheetPress}
+            />
+          </>
         );
       default:
         return null;
@@ -639,7 +644,7 @@ function HomeScreen() {
           onNavigateToScanScreen={onNavigateToScanScreen}
         />
       ) : (
-        <Animated.View style={[emptyCardStyle, [{flex: 1}]]}>
+        <Animated.View style={[emptyCardStyle, [{ flex: 1 }]]}>
 
 
           <DraggableFlatList
@@ -840,7 +845,7 @@ const styles = StyleSheet.create({
   },
   fab: {
     // bottom: 20,
-    bottom: getResponsiveHeight(4),
+    bottom: getResponsiveHeight(2),
     // right: 15,
     right: getResponsiveWidth(3.6),
     position: 'absolute',

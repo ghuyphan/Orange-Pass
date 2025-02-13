@@ -99,9 +99,10 @@ export const ThemedVietQRCard = ({
       marginHorizontal: getResponsiveWidth(3.6),
     },
     napasIcon: {
-      width: '21%',
+      width: '20%',
       height: getResponsiveHeight(2.4),
       marginTop: getResponsiveHeight(0.6),
+      marginRight: getResponsiveWidth(1.6),
     },
     infoContainer: {
       alignItems: 'center',
@@ -144,11 +145,6 @@ export const ThemedVietQRCard = ({
           <QRCode
             value={metadata}
             size={qrSize}
-            // logo={iconPath}
-            // logoSize={qrSize * 0.2}
-            // logoBackgroundColor="white"
-            // logoBorderRadius={50}
-            // logoMargin={5}
             quietZone={getResponsiveWidth(0.8)}
           />
         </View>
