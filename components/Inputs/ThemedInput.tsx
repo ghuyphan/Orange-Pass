@@ -1,4 +1,4 @@
-import React, { useState, useMemo, forwardRef } from 'react';
+import React, { useState, useMemo, forwardRef, useCallback } from 'react';
 import {
   TextInput,
   StyleSheet,
@@ -38,6 +38,7 @@ export type ThemedInputProps = {
   backgroundColor?: string;
   disableOpacityChange?: boolean;
   required?: boolean;
+  onDisabledPress?: () => void; // New prop
 };
 
 export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(
@@ -60,6 +61,7 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(
       backgroundColor,
       disableOpacityChange = false,
       required = false,
+      onDisabledPress, // Destructure the new prop
     },
     ref
   ) => {
@@ -74,30 +76,33 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(
       currentTheme === 'light' ? Colors.light.placeHolder : Colors.dark.placeHolder;
     const errorColor = currentTheme === 'light' ? Colors.light.error : Colors.dark.error;
 
-    const onClearValue = () => {
+    const onClearValue = useCallback(() => {
       setLocalValue('');
       onChangeText('');
-    };
+    }, [onChangeText]);
 
-    const onToggleSecureValue = () => setIsSecure((prevState) => !prevState);
+    const onToggleSecureValue = useCallback(() => setIsSecure((prevState) => !prevState), []);
 
-    const handleChangeText = (text: string) => {
+    const handleChangeText = useCallback((text: string) => {
       setLocalValue(text);
       onChangeText(text);
-    };
+    }, [onChangeText]);
 
     // Internal handler for onBlur
-    const handleBlur = (event: NativeSyntheticEvent<TextInputFocusEventData>) => {
-        // Perform any internal logic you need on blur *within* ThemedInput
-        // (e.g., updating internal state).  You likely don't need anything
-        // here, given Formik handles most of this.
+    const handleBlur = useCallback((event: NativeSyntheticEvent<TextInputFocusEventData>) => {
         onBlur(event); // Call the *provided* onBlur handler.
-    };
+    }, [onBlur]);
 
       // Internal handler for onFocus
-      const handleFocus = (event: NativeSyntheticEvent<TextInputFocusEventData>) => {
+    const handleFocus = useCallback((event: NativeSyntheticEvent<TextInputFocusEventData>) => {
         onFocus(event);
-    };
+    }, [onFocus]);
+
+    const handleDisabledPress = useCallback(() => {
+      if (onDisabledPress) {
+        onDisabledPress();
+      }
+    }, [onDisabledPress]);
 
 
     const inputContainerStyle = useMemo(
@@ -116,7 +121,7 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(
       [currentTheme, style, backgroundColor, disabled, disableOpacityChange]
     );
 
-    const ErrorTooltip = () => (
+    const ErrorTooltip = useCallback(() => (
       <Modal
         transparent={true}
         visible={isErrorModalVisible}
@@ -131,10 +136,15 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(
           </View>
         </TouchableWithoutFeedback>
       </Modal>
-    );
+    ), [isErrorModalVisible, errorMessage, errorColor]);
 
     return (
       <View style={[styles.container, style]}>
+        <Pressable  // Wrap the entire input area with Pressable
+          style={{ width: '100%' }} // Ensure Pressable covers the whole area
+          onPress={disabled ? handleDisabledPress : undefined} // Conditional onPress
+          disabled={!disabled} // Only enable press when disabled
+        >
         <ThemedView style={inputContainerStyle}>
           {!iconName && (
             <ThemedText style={[styles.label, { color }]} type="defaultSemiBold">
@@ -234,6 +244,7 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(
             </View>
           </View>
         </ThemedView>
+      </Pressable>
 
         <ErrorTooltip />
       </View>

@@ -90,13 +90,14 @@ export const useCameraScanner = () => {
       }
 
       const result = handleCodeScanned(value ?? '', {
-        quickScan,
+        // quickScan,
         t,
         setIsConnecting,
       });
+      console.log('result', result.codeType);
       setCodeType(result.codeType);
       setIconName(result.iconName);
-      setCodeValue(result.codeValue);
+      setCodeValue(result.rawCodeValue);
     } else {
       resetCodeState();
     }

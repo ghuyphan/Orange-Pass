@@ -524,7 +524,11 @@ const DetailScreen = () => {
           onDismiss={() => setIsToastVisible(false)}
           style={styles.toastContainer}
         />
-        <ThemedTopToast isVisible={isTopToastVisible} message={topToastMessage} />
+        <ThemedTopToast
+          isVisible={isTopToastVisible}
+          message={topToastMessage}
+          onVisibilityToggle={(isVisible) => setIsToastVisible(isVisible)}
+        />
       </View>
 
       <ThemedReuseableSheet

@@ -187,6 +187,7 @@ const styles = StyleSheet.create({
   },
   forgotButton: {
     alignSelf: 'flex-end',
+
   },
   loginButton: {
     marginTop: getResponsiveHeight(3.6),
@@ -196,6 +197,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: getResponsiveHeight(1.2),
+    gap: getResponsiveWidth(1.2),
   },
   toastContainer: {
     position: 'absolute',

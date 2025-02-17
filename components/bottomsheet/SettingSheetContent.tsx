@@ -57,7 +57,7 @@ const SettingSheetContent: React.FC<SettingSheetContentProps> = ({
           style={styles.button}
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }} // Better touch target
         >
-           {renderIcon('pencil')}
+           {renderIcon('pencil-outline')}
           <ThemedText style={styles.buttonText}>{t('homeScreen.edit')}</ThemedText>
         </Pressable>
         <Pressable
@@ -65,7 +65,7 @@ const SettingSheetContent: React.FC<SettingSheetContentProps> = ({
           style={styles.button}
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}  // Better touch target
         >
-          {renderIcon('delete')}
+          {renderIcon('delete-outline')}
           <ThemedText style={styles.buttonText}>{t('homeScreen.delete')}</ThemedText>
         </Pressable>
       </View>
@@ -90,7 +90,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: getResponsiveWidth(2.4),
     paddingVertical: getResponsiveHeight(1.2),
-    paddingHorizontal: getResponsiveWidth(2.4),
     borderRadius: getResponsiveWidth(4),  // Rounded corners
     overflow: 'hidden', // Ensures ripple effect doesn't overflow
   },

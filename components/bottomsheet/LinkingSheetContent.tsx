@@ -38,11 +38,13 @@ const LinkingSheetContent: React.FC<LinkingSheetContentProps> = ({
 
   const handleCopyLink = async () => {
     if (!url) return;
+    onCopySuccess?.();
     try {
       await Clipboard.setStringAsync(url);
-      onCopySuccess?.();
+
       // Alert.alert('Success', 'Link copied to clipboard');
     } catch (error) {
+      console.error('Error copying link:', error);
       // Alert.alert('Error', 'Failed to copy link');
     }
   };
@@ -96,6 +98,8 @@ const LinkingSheetContent: React.FC<LinkingSheetContentProps> = ({
       <ThemedModal
         onPrimaryAction={onOpenUrl}
         primaryActionText='Open anyway'
+        onSecondaryAction={() => setIsModalVisible(false)}
+        
         iconName={modalIcon}
         title={modalTitle || ''}
         message={modalDescription || ''}

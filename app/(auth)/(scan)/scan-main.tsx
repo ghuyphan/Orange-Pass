@@ -133,6 +133,7 @@ export default function ScanScreen() {
 
   const handleCodeScanned = useHandleCodeScanned();
 
+
   const showToast = (message: string) => {
     setToastMessage(message);
     setIsToastVisible(true);
@@ -217,18 +218,6 @@ export default function ScanScreen() {
     }
   }, [codeMetadata, opacity]);
 
-
-  const onResultTap = useCallback((url: string, codeType: string) => {
-    switch (codeType) {
-      case 'URL':
-        Linking.openURL(url);
-        break;
-      case 'WIFI':
-        console.log(url);
-        break;
-    }
-  }, []);
-
   const cameraOpacity = useSharedValue(0);
   const animatedCameraStyle = useAnimatedStyle(() => ({
     opacity: withTiming(cameraOpacity.value, { duration: 500 }),
@@ -281,9 +270,12 @@ export default function ScanScreen() {
               />
             }
             {isCameraReady && (
-              <View>
-                <FocusIndicator focusPoint={focusPoint} animatedFocusStyle={animatedFocusStyle} />
-                <ScannerFrame highlight={codeScannerHighlights[0]} layout={layout} scanFrame={scanFrame} />
+              <>
+                <View>
+                  <FocusIndicator focusPoint={focusPoint} animatedFocusStyle={animatedFocusStyle} />
+                  <ScannerFrame highlight={codeScannerHighlights[0]} layout={layout} scanFrame={scanFrame} />
+
+                </View>
                 <View style={{ position: 'absolute', bottom: 20, left: 0, right: 0 }}>
                   {codeMetadata ? (
                     <QRResult
@@ -294,8 +286,9 @@ export default function ScanScreen() {
                     />
                   ) : null}
                 </View>
-              </View>
+              </>
             )}
+
           </Reanimated.View>
         </GestureDetector>
 
@@ -349,40 +342,11 @@ export default function ScanScreen() {
         style={styles.toastContainer}
       />
       <StatusBar barStyle="light-content" />
-      {/* <ThemedSettingSheet
-        ref={bottomSheetModalRef}
-        setting1Text='Quick Scan Mode'
-        setting1Description='Automatically scan for QR codes and barcodes.'
-        setting1Value={quickScan}
-        onSetting1Press={toggleQuickScan}
-        setting2Text='Animate Scan Indicator'
-        setting2Description='Animate the scanner indicator when scanning. Turn it off to improve performance.'
-        setting2Value={showIndicator}
-        onSetting2Press={toggleShowIndicator}
-        setting3Text='High Brightness'
-        setting3Description='Automatically turn up screen brightness to improve visibility.'
-        setting3Value={autoBrightness}
-        onSetting3Press={toggleAutoBrightness}
-      /> */}
       <ThemedReuseableSheet
         ref={bottomSheetRef}
         title={t('homeScreen.manage')}
         // snapPoints={['25%']}}
         enableDynamicSizing={true}
-        // actions={[
-        //   {
-        //     icon: 'pencil-outline',
-        //     iconLibrary: 'MaterialCommunityIcons',
-        //     text: t('homeScreen.edit'),
-        //     onPress: () => bottomSheetRef.current?.close(),
-        //   },
-        //   {
-        //     icon: 'delete-outline',
-        //     iconLibrary: 'MaterialCommunityIcons',
-        //     text: t('homeScreen.delete'),
-        //     onPress: () => {},
-        //   }
-        // ]}
         contentType='scroll'
         customContent={
           <View style={{ flex: 1, backgroundColor: 'black' }} />

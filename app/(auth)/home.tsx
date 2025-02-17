@@ -485,13 +485,14 @@ function HomeScreen() {
       .then(filteredData => dispatch(setQrData(filteredData)));
   }, [userId, dispatch, setFilter]); // Add setFilter to the dependency array
 
-  const handleCopySuccess = () => {
-    setIsTopToastVisible(true); // Show the toast
-    setTopToastMessage(t('homeScreen.copied'));
-    setTimeout(() => {
-      setIsTopToastVisible(false);
-    }, 3000);
-  };
+  const showToast = useCallback((message: string) => {
+    setTopToastMessage(message);
+    setIsTopToastVisible(true);
+  }, []);
+
+  const handleCopySuccess = useCallback(() => {
+    showToast(t('homeScreen.copied'));
+  },[])
 
   const onDeleteSheetPress = useCallback(() => {
     bottomSheetRef.current?.close();
@@ -723,8 +724,7 @@ function HomeScreen() {
       <ThemedTopToast
         message={topToastMessage}
         isVisible={isTopToastVisible}
-      // onVisibilityToggle={true}
-      // other props as needed
+        onVisibilityToggle={(isVisible) => setIsTopToastVisible(isVisible)}
       />
 
       <ThemedBottomToast
@@ -743,7 +743,13 @@ function HomeScreen() {
             setIsSheetOpen(false)
           }, 50);
         }}
-        snapPoints={['35%']}
+        // snapPoints={['35%']}
+        snapPoints={
+          sheetType === 'setting' ? ['25%'] :
+          sheetType === 'wifi' ? ['50%', '80%'] : // Assuming snap points for wifi
+          sheetType === 'linking' ? ['35%'] : // Assuming snap points for linking
+          ['35%'] // Default snap points
+        }
         styles={{
           customContent: {
             borderRadius: getResponsiveWidth(4),

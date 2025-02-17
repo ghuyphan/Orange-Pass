@@ -104,8 +104,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: getResponsiveWidth(1.2),
     alignSelf: 'flex-start',
-    paddingHorizontal: getResponsiveWidth(2.4),
-    paddingVertical: getResponsiveHeight(0.6),
     borderRadius: getResponsiveWidth(12),
     overflow: 'hidden',
   },

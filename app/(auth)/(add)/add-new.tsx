@@ -100,6 +100,7 @@ const AddScreen: React.FC = () => {
   const [isReady, setIsReady] = useState(false); // New state variable
   const [isToastVisible, setIsToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const isToastVisibleRef = useRef(false);
 
   const bottomSheetRef = useRef<BottomSheet>(null);
   const scrollY = useSharedValue(0);
@@ -141,7 +142,6 @@ const AddScreen: React.FC = () => {
   const getItemDataHelper = useCallback(
     (itemCode: string, locale: string): BrandItem | null => {
       const itemData = returnItemData(itemCode); // Assuming returnItemData's signature and return type are known
-      console.log('itemData', itemData);
 
       // Type guard to check if itemData.type is assignable to BrandItem type
       const isExpectedType = (type: DataType): type is 'bank' | 'store' | 'ewallet' => {
@@ -231,26 +231,26 @@ const AddScreen: React.FC = () => {
 
   const titleContainerStyle = useAnimatedStyle(
     () => ({
-        opacity: interpolate(
+      opacity: interpolate(
+        scrollY.value,
+        [scrollThreshold, scrollThreshold + animationRange],
+        [1, 0],
+        Extrapolation.CLAMP
+      ),
+      transform: [
+        {
+          translateY: interpolate(
             scrollY.value,
-            [scrollThreshold, scrollThreshold + animationRange],
-            [1, 0],
+            [0, scrollThreshold],
+            [0, translateYValue],
             Extrapolation.CLAMP
-        ),
-        transform: [
-            {
-                translateY: interpolate(
-                    scrollY.value,
-                    [0, scrollThreshold],
-                    [0, translateYValue],
-                    Extrapolation.CLAMP
-                ),
-            },
-        ],
-         zIndex: isSheetOpen ? 0 : 1, // Simplified zIndex. 
+          ),
+        },
+      ],
+      zIndex: isSheetOpen ? 0 : 1, // Simplified zIndex. 
     }),
     [isSheetOpen] // Make sure to include isSheetOpen here
-);
+  );
 
   const cardStyle = useAnimatedStyle(
     () => ({
@@ -324,11 +324,11 @@ const AddScreen: React.FC = () => {
       if (type === 'brand' && !category) {
         showToast(t('addScreen.errors.selectCategoryFirstMessage'));
         return;
-      } else 
-      if (type === 'metadataType' && !category) {
-        showToast(t('addScreen.selectCategoryFirstMessage'));
-        return;
-      }
+      } else
+        if (type === 'metadataType' && !category) {
+          showToast(t('addScreen.selectCategoryFirstMessage'));
+          return;
+        }
 
       setSheetType(type);
       setTimeout(() => {
@@ -336,39 +336,39 @@ const AddScreen: React.FC = () => {
       }, 100);
       Keyboard.dismiss();
     },
-    [t]
+    [t, showToast]
   );
 
   // Handle selection from a bottom sheet
   const handleSheetItemSelect = useCallback(
     (
-        item: SheetItem,
-        type: SheetType,
-        setFieldValue: (
-            field: string,
-            value: any,
-            shouldValidate?: boolean | undefined
-        ) => void
+      item: SheetItem,
+      type: SheetType,
+      setFieldValue: (
+        field: string,
+        value: any,
+        shouldValidate?: boolean | undefined
+      ) => void
     ) => {
-        switch (type) {
-            case 'category':
-                setFieldValue('category', item as CategoryItem);
-                setFieldValue('brand', null); // Clear brand when category changes
-                setFieldValue('metadataType', metadataTypeData[0]); // Reset metadataType
-                setFieldValue('accountName', '');
-                setFieldValue('accountNumber', '');
-                break;
-            case 'brand':
-                setFieldValue('brand', item as BrandItem);
-                break;
-            case 'metadataType':
-                setFieldValue('metadataType', item as MetadataTypeItem);
-                break;
-        }
-        bottomSheetRef.current?.close(); // Ensure the sheet is closed!
+      switch (type) {
+        case 'category':
+          setFieldValue('category', item as CategoryItem);
+          setFieldValue('brand', null); // Clear brand when category changes
+          setFieldValue('metadataType', metadataTypeData[0]); // Reset metadataType
+          setFieldValue('accountName', '');
+          setFieldValue('accountNumber', '');
+          break;
+        case 'brand':
+          setFieldValue('brand', item as BrandItem);
+          break;
+        case 'metadataType':
+          setFieldValue('metadataType', item as MetadataTypeItem);
+          break;
+      }
+      bottomSheetRef.current?.close(); // Ensure the sheet is closed!
     },
     [metadataTypeData]
-);
+  );
   // --- Rendering Functions ---
 
   // Render the card preview
@@ -397,7 +397,31 @@ const AddScreen: React.FC = () => {
   const showToast = useCallback((message: string) => {
     setToastMessage(message);
     setIsToastVisible(true);
+    isToastVisibleRef.current = true; // Set ref to true when showing
   }, []);
+
+    const onVisibilityToggle = useCallback((isVisible: boolean) => {
+        setIsToastVisible(isVisible);
+        isToastVisibleRef.current = isVisible;  //IMPORTANT: Update ref here
+    }, []);
+
+  const onEmptyInputPress = useCallback((inputType: string) => {
+    if (isToastVisibleRef.current) { // Check the ref
+        return;
+    }
+    
+    switch (inputType) {
+     case 'metadata':
+         showToast(t('addScreen.errors.emptyInputMessage'));
+         break;
+     case 'account':
+         showToast(t('addScreen.errors.emptyInputMessage'));
+         break;
+     default:
+         break;
+    }
+}, [t, showToast]);
+
 
   // Render an item within a bottom sheet
   const renderSheetItem = useCallback(
@@ -571,9 +595,13 @@ const AddScreen: React.FC = () => {
         isSubmitting,
         setFieldValue,
       }) => (
-        console.log(values),
         <ThemedView style={styles.container}>
-          <ThemedTopToast message={toastMessage} isVisible={isToastVisible}/>
+          <ThemedTopToast
+            message={toastMessage}
+            isVisible={isToastVisible}
+            onVisibilityToggle={onVisibilityToggle} // Use the updated callback
+            duration={2000}
+          />
           <Animated.View style={[styles.titleContainer, titleContainerStyle]}>
             <View style={styles.headerContainer}>
               <View style={styles.titleButtonContainer}>
@@ -653,6 +681,7 @@ const AddScreen: React.FC = () => {
                     : undefined
                 }
                 isError={touched.metadata && !!errors.metadata}
+                onDisabledPress={() => onEmptyInputPress('metadata')}
               />
               <ThemedDisplayInput
                 iconName="qrcode"
@@ -691,6 +720,7 @@ const AddScreen: React.FC = () => {
                       : undefined
                   }
                   isError={touched.accountName && !!errors.accountName}
+                  onDisabledPress={() => onEmptyInputPress('account')}
                 />
                 <ThemedInput
                   iconName="account-cash"
@@ -708,6 +738,7 @@ const AddScreen: React.FC = () => {
                       : undefined
                   }
                   isError={touched.accountNumber && !!errors.accountNumber}
+                  onDisabledPress={() => onEmptyInputPress('account')}
                 />
               </Animated.View>
             )}
