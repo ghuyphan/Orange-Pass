@@ -45,7 +45,6 @@ export const ThemedSettingsCardItem = memo(function ThemedSettingsCardItem(
         <View style={styles.rightContainer}>
           <ThemedText style={styles.settingsText}>{settingsText}</ThemedText>
           <MaterialIcons
-            style={{ opacity: 0.5 }}
             name={rightIcon}
             size={iconSize}
             color={iconColor || colors}

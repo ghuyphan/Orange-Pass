@@ -21,6 +21,7 @@ import { ThemeProvider } from '@/context/ThemeContext';
 
 // Import components
 import { ThemedView } from '@/components/ThemedView';
+import 'react-native-get-random-values'
 
 // Prevent auto-hide of splash screen
 SplashScreen.preventAutoHideAsync();

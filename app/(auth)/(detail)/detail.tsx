@@ -364,60 +364,100 @@ const DetailScreen = () => {
         accountNumber={item.account_number}
       />
 
-      <View style={[styles.infoWrapper, { backgroundColor: cardColor }]}>
-        {/* Map Action */}
-        <Pressable onPress={handleOpenMap} style={styles.actionButton}>
-          <View style={styles.actionHeader}>
-            <MaterialCommunityIcons
-              name="map-marker-outline"
-              size={getResponsiveFontSize(16)}
-              color={iconColor}
-            />
-            <ThemedText style={styles.labelText}>{t('detailsScreen.nearbyLocation')}</ThemedText>
-          </View>
-          <MaterialCommunityIcons
-            name="chevron-right"
-            size={getResponsiveFontSize(16)}
-            color={iconColor}
-          />
-        </Pressable>
-
-        {/* Transfer Section for Bank/E-Wallet */}
-        {(item.type === 'bank' || item.type === 'ewallet') && (
-          <View
-            style={[
-              styles.transferContainer,
-            ]}
-          >
-            <View style={styles.transferHeader}>
+      {(item.type === 'bank' || item.type === "store") && (
+        <View style={[styles.infoWrapper, { backgroundColor: cardColor }]}>
+          {/* Map Action */}
+          {(item.type === 'bank' || item.type === "store") && (
+            <Pressable onPress={handleOpenMap} style={styles.actionButton}>
+              <View style={styles.actionHeader}>
+                <MaterialCommunityIcons
+                  name="map-marker-outline"
+                  size={getResponsiveFontSize(16)}
+                  color={iconColor}
+                />
+                <ThemedText style={styles.labelText}>{t('detailsScreen.nearbyLocation')}</ThemedText>
+              </View>
               <MaterialCommunityIcons
-                name="qrcode"
+                name="chevron-right"
                 size={getResponsiveFontSize(16)}
                 color={iconColor}
               />
-              <ThemedText style={styles.labelText}>{t('detailsScreen.createQrCode')}</ThemedText>
-            </View>
-            <View style={styles.transferSection}>
-              <View style={styles.inputWrapper}>
-                <TextInput
-                  style={[
-                    styles.inputField,
-                    {
-                      color:
-                        currentTheme === 'light' ? Colors.light.text : Colors.dark.text,
-                    },
-                  ]}
-                  placeholder={t('detailsScreen.receivePlaceholder')}
-                  keyboardType="numeric"
-                  value={amount}
-                  placeholderTextColor={
-                    currentTheme === 'light'
-                      ? Colors.light.placeHolder
-                      : Colors.dark.placeHolder
-                  }
-                  onChangeText={(text) => setAmount(formatAmount(text))}
+            </Pressable>
+          )}
+
+          {/* Transfer Section for Bank */}
+          {(item.type === 'bank') && (
+            <View
+              style={[
+                styles.transferContainer,
+              ]}
+            >
+              <View style={styles.transferHeader}>
+                <MaterialCommunityIcons
+                  name="qrcode"
+                  size={getResponsiveFontSize(16)}
+                  color={iconColor}
                 />
-                {amount && (
+                <ThemedText style={styles.labelText}>{t('detailsScreen.createQrCode')}</ThemedText>
+              </View>
+              <View style={styles.transferSection}>
+                <View style={styles.inputWrapper}>
+                  <TextInput
+                    style={[
+                      styles.inputField,
+                      {
+                        color:
+                          currentTheme === 'light' ? Colors.light.text : Colors.dark.text,
+                      },
+                    ]}
+                    placeholder={t('detailsScreen.receivePlaceholder')}
+                    keyboardType="numeric"
+                    value={amount}
+                    placeholderTextColor={
+                      currentTheme === 'light'
+                        ? Colors.light.placeHolder
+                        : Colors.dark.placeHolder
+                    }
+                    onChangeText={(text) => setAmount(formatAmount(text))}
+                  />
+                  {amount && (
+                    <Pressable
+                      hitSlop={{
+                        bottom: getResponsiveHeight(2.4),
+                        left: getResponsiveWidth(3.6),
+                        right: getResponsiveWidth(3.6),
+                        top: getResponsiveHeight(2.4),
+                      }}
+                      onPress={() => setAmount('')}
+                      style={[styles.transferButton]}
+
+                    >
+                      <MaterialCommunityIcons
+                        name={'close-circle'}
+                        size={getResponsiveFontSize(16)}
+                        color={iconColor}
+                      />
+                    </Pressable>
+                  )}
+                  <View
+                    style={[
+                      styles.currencyContainer,
+                      currentTheme === 'light'
+                        ? { borderColor: 'rgba(0, 0, 0, 0.2)' }
+                        : { borderColor: 'rgba(255, 255, 255, 0.2)' },
+                    ]}
+                  >
+                    <ThemedText
+                      style={[
+                        styles.currencyText,
+                        currentTheme === 'light'
+                          ? { color: 'rgba(0, 0, 0, 0.2)' }
+                          : { color: 'rgba(255, 255, 255, 0.2)' },
+                      ]}
+                    >
+                      đ
+                    </ThemedText>
+                  </View>
                   <Pressable
                     hitSlop={{
                       bottom: getResponsiveHeight(2.4),
@@ -425,111 +465,76 @@ const DetailScreen = () => {
                       right: getResponsiveWidth(3.6),
                       top: getResponsiveHeight(2.4),
                     }}
-                    onPress={() => setAmount('')}
-                    style={[styles.transferButton]}
+                    onPress={handleTransferAmount}
+                    style={[styles.transferButton, { opacity: amount ? 1 : 0.3 }]}
                   >
                     <MaterialCommunityIcons
-                      name={'close-circle'}
+                      name={amount ? 'chevron-right' : 'chevron-right'}
                       size={getResponsiveFontSize(16)}
                       color={iconColor}
                     />
                   </Pressable>
-                )}
-                <View
-                  style={[
-                    styles.currencyContainer,
-                    currentTheme === 'light'
-                      ? { borderColor: 'rgba(0, 0, 0, 0.2)' }
-                      : { borderColor: 'rgba(255, 255, 255, 0.2)' },
-                  ]}
-                >
-                  <ThemedText
-                    style={[
-                      styles.currencyText,
-                      currentTheme === 'light'
-                        ? { color: 'rgba(0, 0, 0, 0.2)' }
-                        : { color: 'rgba(255, 255, 255, 0.2)' },
-                    ]}
-                  >
-                    đ
-                  </ThemedText>
                 </View>
-                <Pressable
-                  hitSlop={{
-                    bottom: getResponsiveHeight(2.4),
-                    left: getResponsiveWidth(3.6),
-                    right: getResponsiveWidth(3.6),
-                    top: getResponsiveHeight(2.4),
-                  }}
-                  onPress={handleTransferAmount}
-                  style={[styles.transferButton, { opacity: amount ? 1 : 0.3 }]}
-                >
-                  <MaterialCommunityIcons
-                    name={amount ? 'chevron-right' : 'chevron-right'}
-                    size={getResponsiveFontSize(16)}
-                    color={iconColor}
-                  />
-                </Pressable>
+                <FlatList
+                  data={AMOUNT_SUGGESTIONS}
+                  horizontal
+                  style={styles.suggestionList}
+                  showsHorizontalScrollIndicator={false}
+                  keyExtractor={(item) => item}
+                  contentContainerStyle={styles.suggestionListContent}
+                  renderItem={renderSuggestionItem}
+                  initialNumToRender={3}
+                  maxToRenderPerBatch={3}
+                  windowSize={3}
+                />
+              </View>
+            </View>
+          )}
+
+          {/* Bank Transfer Section for Store */}
+          {item.type === 'store' && (
+            <View style={[styles.bottomContainer, { backgroundColor: cardColor }]}>
+              <View style={styles.bottomTitle}>
+                <MaterialCommunityIcons
+                  name="bank-outline"
+                  size={getResponsiveFontSize(18)}
+                  color={iconColor}
+                />
+                <ThemedText>{t('detailsScreen.bankTransfer')}</ThemedText>
+                <Image
+                  source={require('@/assets/images/vietqr.png')}
+                  style={styles.vietQRLogo}
+                  resizeMode="contain"
+                />
               </View>
               <FlatList
-                data={AMOUNT_SUGGESTIONS}
+                data={vietQRBanks}
                 horizontal
-                style={styles.suggestionList}
+                style={styles.bankList}
                 showsHorizontalScrollIndicator={false}
-                keyExtractor={(item) => item}
-                contentContainerStyle={styles.suggestionListContent}
-                renderItem={renderSuggestionItem}
-                initialNumToRender={3}
-                maxToRenderPerBatch={3}
-                windowSize={3}
+                keyExtractor={(item) => item.code}
+                contentContainerStyle={styles.bankListContent}
+                renderItem={renderPaymentMethodItem}
+                ListEmptyComponent={renderEmptyComponent}
               />
             </View>
-          </View>
-        )}
+          )}
 
-        {/* Bank Transfer Section for Store */}
-        {item.type === 'store' && (
-          <View style={[styles.bottomContainer, { backgroundColor: cardColor }]}>
-            <View style={styles.bottomTitle}>
-              <MaterialCommunityIcons
-                name="bank-outline"
-                size={getResponsiveFontSize(18)}
-                color={iconColor}
-              />
-              <ThemedText>{t('detailsScreen.bankTransfer')}</ThemedText>
-              <Image
-                source={require('@/assets/images/vietqr.png')}
-                style={styles.vietQRLogo}
-                resizeMode="contain"
-              />
-            </View>
-            <FlatList
-              data={vietQRBanks}
-              horizontal
-              style={styles.bankList}
-              showsHorizontalScrollIndicator={false}
-              keyExtractor={(item) => item.code}
-              contentContainerStyle={styles.bankListContent}
-              renderItem={renderPaymentMethodItem}
-              ListEmptyComponent={renderEmptyComponent}
-            />
-          </View>
-        )}
-
-        <ThemedStatusToast
-          isSyncing={isSyncing}
-          isVisible={isToastVisible}
-          message={toastMessage}
-          iconName="wifi-off"
-          onDismiss={() => setIsToastVisible(false)}
-          style={styles.toastContainer}
-        />
-        <ThemedTopToast
-          isVisible={isTopToastVisible}
-          message={topToastMessage}
-          onVisibilityToggle={(isVisible) => setIsToastVisible(isVisible)}
-        />
-      </View>
+          <ThemedStatusToast
+            isSyncing={isSyncing}
+            isVisible={isToastVisible}
+            message={toastMessage}
+            iconName="wifi-off"
+            onDismiss={() => setIsToastVisible(false)}
+            style={styles.toastContainer}
+          />
+          <ThemedTopToast
+            isVisible={isTopToastVisible}
+            message={topToastMessage}
+            onVisibilityToggle={(isVisible) => setIsToastVisible(isVisible)}
+          />
+        </View>
+      )}
 
       <ThemedReuseableSheet
         ref={bottomSheetRef}

@@ -472,6 +472,20 @@ export async function updateQrIndexes(qrDataArray: QRRecord[]): Promise<void> {
     }
 }
 
+export async function getNextQrIndex(userId: string): Promise<number> {
+    const db = await openDatabase();
+    try {
+        const result = await db.getFirstAsync<{ maxIndex: number | null }>(
+            'SELECT MAX(qr_index) as maxIndex FROM qrcodes WHERE user_id = ? AND is_deleted = 0',
+            userId
+        );
+        return (result?.maxIndex ?? -1) + 1; // Handle null (first QR code)
+    } catch (error) {
+        console.error('Error getting next QR index:', error);
+        return 0; // Fallback, but log the error!
+    }
+}
+
 
 // Function to close the database
 export async function closeDatabase() {

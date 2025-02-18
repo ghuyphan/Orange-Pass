@@ -92,7 +92,7 @@ export const ThemedPinnedCard = ({
         </View>
 
         <View style={styles.infoContainer}>
-          {type === 'bank' && (
+          {(type === 'bank'  || type === "ewallet" ) && (
             <ThemedText type="defaultSemiBold" style={styles.accountName} numberOfLines={1}>
               {accountName}
             </ThemedText>

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet, View, Keyboard, FlatList, Alert } from 'react-native';
+import { StyleSheet, View, Keyboard, Alert } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { Formik, FormikHelpers } from 'formik';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -41,6 +41,12 @@ import {
 } from '@/utils/responsive';
 import DataType from '@/types/dataType';
 import { ThemedTopToast } from '@/components/toast/ThemedTopToast';
+import { addQrData, removeQrData } from '@/store/reducers/qrSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '@/store/rootReducer';
+import { generateUniqueId } from '@/utils/uniqueId';
+import QRRecord from '@/types/qrType';
+import { getNextQrIndex, insertOrUpdateQrCodes } from '@/services/localDB/qrDB';
 
 const AnimatedKeyboardAwareScrollView = Animated.createAnimatedComponent(
   KeyboardAwareScrollView
@@ -81,8 +87,10 @@ type SheetType = 'category' | 'brand' | 'metadataType';
 // --- Main Component ---
 const AddScreen: React.FC = () => {
   const { currentTheme } = useTheme();
+  const dispatch = useDispatch();
   const { locale: currentLocale } = useLocale();
   const locale = currentLocale ?? 'en';  // Default locale
+  const userId = useSelector((state: RootState) => state.auth.user?.id ?? '');
 
   const { text: colors, icon: iconColors, cardBackground: sectionsColors } = Colors[currentTheme];
 
@@ -95,12 +103,14 @@ const AddScreen: React.FC = () => {
     codeProvider?: string;
   }>();
 
+  const [submittingMsg, setSubmittingMsg] = useState('');
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [sheetType, setSheetType] = useState<SheetType | null>(null);
   const [isReady, setIsReady] = useState(false); // New state variable
   const [isToastVisible, setIsToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const isToastVisibleRef = useRef(false);
+  
 
   const bottomSheetRef = useRef<BottomSheet>(null);
   const scrollY = useSharedValue(0);
@@ -112,6 +122,13 @@ const AddScreen: React.FC = () => {
     ],
     [t]
   );
+
+
+  const showToast = useCallback((message: string) => {
+    setToastMessage(message);
+    setIsToastVisible(true);
+    isToastVisibleRef.current = true; // Set ref to true when showing
+  }, []);
 
   // --- Helper Functions ---
   // Get items (brands) based on the category type
@@ -354,7 +371,7 @@ const AddScreen: React.FC = () => {
         case 'category':
           setFieldValue('category', item as CategoryItem);
           setFieldValue('brand', null); // Clear brand when category changes
-          setFieldValue('metadataType', metadataTypeData[0]); // Reset metadataType
+          // setFieldValue('metadataType', metadataTypeData[0]); // Reset metadataType
           setFieldValue('accountName', '');
           setFieldValue('accountNumber', '');
           break;
@@ -394,33 +411,27 @@ const AddScreen: React.FC = () => {
     [cardStyle, codeProvider]
   );
 
-  const showToast = useCallback((message: string) => {
-    setToastMessage(message);
-    setIsToastVisible(true);
-    isToastVisibleRef.current = true; // Set ref to true when showing
+  const onVisibilityToggle = useCallback((isVisible: boolean) => {
+    setIsToastVisible(isVisible);
+    isToastVisibleRef.current = isVisible;  //IMPORTANT: Update ref here
   }, []);
-
-    const onVisibilityToggle = useCallback((isVisible: boolean) => {
-        setIsToastVisible(isVisible);
-        isToastVisibleRef.current = isVisible;  //IMPORTANT: Update ref here
-    }, []);
 
   const onEmptyInputPress = useCallback((inputType: string) => {
     if (isToastVisibleRef.current) { // Check the ref
-        return;
+      return;
     }
-    
+
     switch (inputType) {
-     case 'metadata':
-         showToast(t('addScreen.errors.emptyInputMessage'));
-         break;
-     case 'account':
-         showToast(t('addScreen.errors.emptyInputMessage'));
-         break;
-     default:
-         break;
+      case 'metadata':
+        showToast(t('addScreen.errors.emptyInputMessage'));
+        break;
+      case 'account':
+        showToast(t('addScreen.errors.emptyInputMessage'));
+        break;
+      default:
+        break;
     }
-}, [t, showToast]);
+  }, [t, showToast]);
 
 
   // Render an item within a bottom sheet
@@ -535,20 +546,60 @@ const AddScreen: React.FC = () => {
   // Handle form submission
   const handleFormSubmit = useCallback(
     async (values: FormParams, formikHelpers: FormikHelpers<FormParams>) => {
+      const newId = generateUniqueId();
+      const now = new Date().toISOString();
+
       try {
-        router.replace('/(auth)/home');  // Navigate to home screen after submission
+        setSubmittingMsg(t('addScreen.submissionMessage'));
+        // 1. Get the next available qr_index *before* creating the record
+        const nextIndex = await getNextQrIndex(userId);
+
+        // 2. Create the new QR record
+        const newQrRecord: QRRecord = {
+          id: newId,
+          qr_index: nextIndex, // Use the result from getNextQrIndex
+          user_id: userId,
+          code: values.brand?.code || '',
+          metadata: values.metadata,
+          metadata_type: values.metadataType?.value || 'qr',
+          account_name: values.accountName,
+          account_number: values.accountNumber,
+          type: values.category?.value || 'store',
+          created: now,
+          updated: now,
+          is_deleted: false,
+          is_synced: false,
+        };
+
+        // 3. Optimistically update Redux store *FIRST*
+        dispatch(addQrData(newQrRecord));
+
+        // 4. Save to the database *SECOND*
+        await insertOrUpdateQrCodes([newQrRecord]);
+
+        // 5. Navigate away (assuming success)
+        router.replace('/(auth)/home');
+
       } catch (error) {
         console.error('Submission error:', error);
-        Alert.alert(
-          t('addScreen.submissionErrorTitle'),
-          t('addScreen.submissionErrorMessage'),
-          [{ text: t('addScreen.ok') }]
-        );
+
+        // 6. Handle errors:
+        //    - Roll back Redux state (IMPORTANT!)
+        dispatch(removeQrData(newId)); // Remove the optimistically added record
+
+        //    - Show an error message to the user
+        // Alert.alert(
+        //   t('addScree.submissionErrorTitle'),
+        //   t('addScreen.submissionErrorMessage'),
+        //   [{ text: t('addScreen.ok') }]
+        // );
       } finally {
-        formikHelpers.setSubmitting(false); // Ensure 'submitting' state is reset
+        // setIsLoading(false);
+
+        formikHelpers.setSubmitting(false);
       }
     },
-    [router, t]
+    [dispatch, router, userId, t] // Include userId in dependencies
   );
 
   const handleSheetChange = useCallback((index: number) => {
@@ -748,6 +799,8 @@ const AddScreen: React.FC = () => {
               onPress={handleSubmit}
               style={styles.saveButton}
               disabled={isSubmitting}
+              loading={isSubmitting}
+              loadingLabel='Saving...'
             />
           </AnimatedKeyboardAwareScrollView>
 
