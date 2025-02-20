@@ -52,7 +52,6 @@ const FilterItem = React.memo(
           {width: buttonWidth}, // Apply the calculated width
           isDarkMode ? styles.darkModeButton : styles.lightModeButton,
           isSelected && (isDarkMode ? styles.selectedFilterDarkMode : styles.selectedFilterLightMode),
-          pressed && { opacity: 0.7 },
         ]}
       >
         <View style={styles.iconView}>

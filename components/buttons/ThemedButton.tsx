@@ -13,6 +13,7 @@ import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '
  */
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 export type ThemedButtonProps = {
+  ref?: React.RefObject<React.ElementRef<typeof Pressable>>;
   /** Light color theme for the button text */
   lightColor?: string;
   /** Dark color theme for the button text */
@@ -55,6 +56,7 @@ export type ThemedButtonProps = {
  * @returns {JSX.Element} The ThemedButton component.
  */
 export function ThemedButton({
+  ref,
   lightColor,
   darkColor,
   label,
@@ -93,6 +95,7 @@ export function ThemedButton({
 
   return (
     <AnimatedPressable
+      ref={ref}
       pointerEvents={pointerEvents}
       onPress={onPress}
       disabled={disabled || loading}

@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
     minWidth: '95%',
     borderRadius: getResponsiveWidth(4),
     paddingHorizontal: getResponsiveWidth(4.8),
-    paddingVertical: getResponsiveHeight(1.8),
+    paddingVertical: getResponsiveHeight(2.4),
     alignItems: 'center',
     justifyContent: 'center',
   },

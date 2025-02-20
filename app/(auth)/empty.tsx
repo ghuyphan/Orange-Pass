@@ -14,9 +14,17 @@ import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '
 export default function EmptyScreen() {
   const colorScheme = useColorScheme();
   const router = useRouter();
+  const dropdownOptions = [
+    { label: ('homeScreen.fab.add'), onPress: () => onNavigateToAddScreen(), icon: 'plus-circle' },
+    { label: ('homeScreen.fab.scan'), onPress: () => onNavigateToScanScreen(), icon: 'camera' },
+
+  ];
   const onNavigateToScanScreen = () => {
     router.push('/(scan)/scan-main');
   };
+const onNavigateToAddScreen = () => {
+  router.push(`/(auth)/(add)/add-new`);
+}
   return (
     <View
       style={[
@@ -34,9 +42,10 @@ export default function EmptyScreen() {
           footButtonLabel={('homeScreen.emptyCard.footerButton')}
           cardOnPress={() => { }}
           buttonOnPress={onNavigateToScanScreen}
-          style={{ paddingTop: getResponsiveHeight(8.5) }}
+          style={{ paddingTop: getResponsiveHeight(8.3) }}
           footerStyle={{ borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }}
           paddingTop={getResponsiveHeight(3)}
+          dropdownOptions={dropdownOptions}
         />
         <ThemedText style={styles.content} type="default">
           {t('homeScreen.emptyCard.content')}

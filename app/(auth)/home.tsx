@@ -125,6 +125,7 @@ function HomeScreen() {
 
   const syncWithServer = useCallback(async (userId: string) => {
     // Early Exit: Offline Mode
+    
     if (isOffline) {
       const hasLocal = await hasLocalData(userId);
       setIsEmpty(!hasLocal);
@@ -177,36 +178,43 @@ function HomeScreen() {
   }, [isOffline, isSyncing, dispatch]);
 
   useEffect(() => {
-    if (!userId) return; // Guard clause: Exit if no userId
+    if (!userId) {
+        return; // Guard clause: Exit if no userId
+    }
 
     const initializeData = async () => {
-      setIsLoading(true); // Indicate loading start
+        setIsLoading(true); // Indicate loading start
 
-      try {
-        const hasLocal = await hasLocalData(userId);
+        try {
+            const hasLocal = await hasLocalData(userId);
 
-        // Trigger Sync: If there are unsynced changes or no local data
-        if (!hasLocal) {
-          await syncWithServer(userId);
-        } else {
-          const unSyncedData = await getUnsyncedQrCodes(userId);
-          if (unSyncedData.length > 0) {
-            await syncWithServer(userId);
-          } else {
-            setIsEmpty(!hasLocal);
-          }
+            // ALWAYS fetch and load local data *before* checking sync conditions
+            const localData = await getQrCodesByUserId(userId);
+            dispatch(setQrData(localData));
+            setIsEmpty(localData.length === 0); // Set based on actual fetched data
+
+
+            // Now, check if a sync is needed
+            if (!hasLocal) {
+                await syncWithServer(userId);  // This will fetch server data and *overwrite* local data
+            } else {
+                const unSyncedData = await getUnsyncedQrCodes(userId);
+                if (unSyncedData.length > 0) {
+                    await syncWithServer(userId); // This will sync local changes *and* fetch latest server data
+                } else {
+                    // No sync needed, we already have the local data.
+                }
+            }
+        } catch (error) {
+            console.error('Error during data initialization:', error);
+            // Handle initialization error (e.g., set an error state, retry mechanism)
+        } finally {
+            setIsLoading(false); // Ensure loading is reset
         }
-      } catch (error) {
-        console.error('Error during data initialization:', error);
-
-        // Handle initialization error (e.g., set an error state, retry mechanism)
-      } finally {
-        setIsLoading(false); // Ensure loading is reset
-      }
     };
 
     initializeData();
-  }, [userId]);
+}, [userId]); // Correct dependencies
 
   useEffect(() => {
     // Only show online/offline toast if there's an actual change in network state
@@ -401,6 +409,26 @@ function HomeScreen() {
     ), []
   );
 
+  const onNavigateToEditScreen = useCallback(
+    throttle(() => {  // Remove the unnecessary parameters
+
+        if (!selectedItemId) {
+            return; // Important: Don't navigate if no item is selected
+        }
+      router.push({
+        pathname: `/(edit)/edit`,  // Correct path
+        params: {
+          id: selectedItemId,  // Pass the item ID
+        },
+      });
+      setTimeout(() => {
+        bottomSheetRef.current?.close();
+      }, 300);
+
+    }, 1000),
+    [selectedItemId, router] // Depend on selectedItemId and router
+  );
+
   const onOpenSheet = useCallback((type: SheetType, id?: string, url?: string, ssid?: string) => {
     setSheetType(type);
     setIsSheetOpen(true);
@@ -498,6 +526,12 @@ function HomeScreen() {
     bottomSheetRef.current?.close();
     setIsModalVisible(true);
   }, []);
+  
+  const dropdownOptions = [
+    { label: ('homeScreen.fab.add'), onPress: () => onNavigateToAddScreen(), icon: 'plus-circle' },
+    { label: ('homeScreen.fab.scan'), onPress: () => onNavigateToScanScreen(), icon: 'camera' },
+    { label:  ('homeScreen.fab.gallery'), onPress: () => onOpenGallery(), icon: 'image' },
+  ];
 
   const onDeletePress = useCallback(async () => {
     if (!selectedItemId) return;
@@ -533,7 +567,7 @@ function HomeScreen() {
       setSelectedItemId(null);
       setTimeout(() => {
         setIsSyncing(false);
-      }, 200);
+      }, 400);
 
     }
   }, [selectedItemId, qrData, dispatch]); // Include qrData in the dependency array
@@ -589,7 +623,7 @@ function HomeScreen() {
         return (
           <>
             <SettingSheetContent
-              onEdit={() => { }}
+              onEdit={onNavigateToEditScreen}
               onDelete={onDeleteSheetPress}
             />
           </>
@@ -643,14 +677,13 @@ function HomeScreen() {
           emptyCardStyle={emptyCardStyle}
           onNavigateToEmptyScreen={onNavigateToEmptyScreen}
           onNavigateToScanScreen={onNavigateToScanScreen}
+          dropdownOptions={dropdownOptions}
         />
       ) : (
         <Animated.View style={[emptyCardStyle, [{ flex: 1 }]]}>
 
 
           <DraggableFlatList
-            // itemEnteringAnimation={FadeInDown}
-            // itemExitingAnimation={FadeOutDown}
             ref={flatListRef}
             bounces={true}
             ListHeaderComponent={

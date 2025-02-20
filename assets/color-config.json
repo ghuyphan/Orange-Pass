@@ -127,7 +127,7 @@
             "light": "#E7D59C"
         }
     },
-    "COOPBANK" : {
+    "COOPBANK": {
         "color": {
             "light": "#C83737"
         },
@@ -319,6 +319,14 @@
             "light": "#95AAC7"
         }
     },
+    "Oceanbank": {
+        "color": {
+            "light": "#1F4788"
+        },
+        "accent_color": {
+            "light": "#2980B9"
+        }
+    },
     "PGB": {
         "color": {
             "light": "#91C5E5"
@@ -341,6 +349,14 @@
         },
         "accent_color": {
             "light": "#E6C69E"
+        }
+    },
+    "SGICB": {
+        "color": {
+            "light": "#2980B9"
+        },
+        "accent_color": {
+            "light": "#3498DB"
         }
     },
     "SCB": {
@@ -455,6 +471,14 @@
             "light": "#D3A1A4"
         }
     },
+    "VIETBANK": {
+        "color": {
+            "light": "#2278B5"
+        },
+        "accent_color": {
+            "light": "#74B9E8"
+        }
+    },
     "VIB": {
         "color": {
             "light": "#8998B5"
@@ -505,10 +529,10 @@
     },
     "MOMO": {
         "color": {
-            "light": "#D82D88"
+            "light": "#f5a6c7"
         },
         "accent_color": {
-            "light": "#f5a6c7"
+            "light": "#D82D88"
         }
     },
     "AEO": {
@@ -521,10 +545,10 @@
     },
     "BHX": {
         "color": {
-            "light": "#BEE3A4"
+            "light": "#85E0BA"
         },
         "accent_color": {
-            "light": "#D4F5BD"
+            "light": "#1A4D30"
         }
     },
     "CIR": {
@@ -622,7 +646,15 @@
         "accent_color": {
             "light": "#EBF6E2"
         }
-    }, 
+    },
+    "VNP": {
+        "color": {
+           "light": "#2F80ED"
+       },
+       "accent_color": {
+           "light": "#2D9CDB"
+       }
+   },
     "ZALOPAY": {
         "color": {
             "light": "#0168FE"
@@ -630,5 +662,13 @@
         "accent_color": {
             "light": "#00CF6A"
         }
-    }  
+    },
+    "VTP":{
+        "color": {
+            "light": "#E74C3C"
+        },
+        "accent_color":{
+            "light": "#C0392B"
+        }
+    }
 }

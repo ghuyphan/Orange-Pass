@@ -14,6 +14,7 @@ interface EmptyListItemProps {
   emptyCardStyle: AnimatedStyle;
   onNavigateToEmptyScreen: () => void;
   onNavigateToScanScreen: () => void;
+  dropdownOptions: { label: string; onPress: () => void }[];
 }
 
 const EmptyListItem: React.FC<EmptyListItemProps> = ({
@@ -21,6 +22,7 @@ const EmptyListItem: React.FC<EmptyListItemProps> = ({
   emptyCardStyle,
   onNavigateToEmptyScreen,
   onNavigateToScanScreen,
+  dropdownOptions,
 }) => {
   const { updateLocale } = useLocale();
   const [locale, setLocale] = useMMKVString('locale', storage);
@@ -41,6 +43,7 @@ const EmptyListItem: React.FC<EmptyListItemProps> = ({
           // footButtonLabel={footButtonLabel}
           cardOnPress={onNavigateToEmptyScreen}
           buttonOnPress={onNavigateToScanScreen}
+          dropdownOptions={dropdownOptions}
         />
       </Animated.View>
     </Animated.ScrollView>

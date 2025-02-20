@@ -84,16 +84,19 @@ function SettingsScreen() {
       setIsLoading(true);
       await SecureStore.deleteItemAsync('authToken');
       pb.authStore.clear();
+
+      // Dispatch actions immediately *before* navigation.
+      dispatch(clearErrorMessage());
+      dispatch(removeAllQrData());  
+      dispatch(clearAuthData());    
+
+      router.replace('/login');
+
     } catch (error) {
       console.error('Logout error:', error);
+      // Consider dispatching an error action here to show an error message.
     } finally {
-      setTimeout(() => {
-        setIsLoading(false);
-        dispatch(clearAuthData());
-        dispatch(clearErrorMessage());
-        dispatch(removeAllQrData());
-        router.replace('/login');
-      }, 300);
+      setIsLoading(false); // Set loading to false *after* everything is done.
     }
   }, [dispatch]);
 
@@ -106,17 +109,17 @@ function SettingsScreen() {
       {
         leftIcon: 'person-outline',
         settingsTitle: t('settingsScreen.editProfile'),
-        onPress: () => {},
+        onPress: () => { },
       },
       {
         leftIcon: 'lock-outline',
         settingsTitle: t('settingsScreen.changePassword'),
-        onPress: () => {},
+        onPress: () => { },
       },
       {
         leftIcon: 'mail-outline',
         settingsTitle: t('settingsScreen.changeEmail'),
-        onPress: () => {},
+        onPress: () => { },
       },
     ],
     [
@@ -200,17 +203,17 @@ function SettingsScreen() {
         }
         ListFooterComponent={
           <>
-          <ThemedButton
-            iconName="logout"
-            label={t('settingsScreen.logout')}
-            loadingLabel={t('settingsScreen.logingOut')}
-            loading={isLoading}
-            onPress={onLogout}
-            style={{ marginTop: getResponsiveHeight(1.8) }}
-          />
-          <ThemedText style={styles.versionText}>
-    {t('settingsScreen.appVersion') + ' ' + appVersion}
-</ThemedText>
+            <ThemedButton
+              iconName="logout"
+              label={t('settingsScreen.logout')}
+              loadingLabel={t('settingsScreen.logingOut')}
+              loading={isLoading}
+              onPress={onLogout}
+              style={{ marginTop: getResponsiveHeight(1.8) }}
+            />
+            <ThemedText style={styles.versionText}>
+              {t('settingsScreen.appVersion') + ' ' + appVersion}
+            </ThemedText>
           </>
         }
         scrollEventThrottle={16}
