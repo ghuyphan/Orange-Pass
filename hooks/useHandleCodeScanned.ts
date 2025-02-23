@@ -252,7 +252,7 @@ const SCAN_PATTERNS: ScanPattern[] = [
         {
             type: 'Alphanumeric',
             iconName: 'text-fields',
-            match: (code) => /^[a-zA-Z0-9:]+$/.test(code), // Use .test() for matching
+            match: (code) => /^[a-zA-Z0-9:; +]+$/.test(code),
             extract: (code, options) => ({
                 codeType: 'alphanumeric',
                 iconName: 'text-fields',

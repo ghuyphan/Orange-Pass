@@ -150,7 +150,6 @@ const styles = StyleSheet.create({
   },
   infoContainer: {
     alignItems: 'center',
-    justifyContent: 'center',
   },
   accountName: {
     color: 'white',

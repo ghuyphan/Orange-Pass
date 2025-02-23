@@ -1,11 +1,9 @@
-// AddScreen.tsx
 import React, { useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { router, useLocalSearchParams } from 'expo-router';
 import { FormikHelpers } from 'formik';
-// import QRForm from '@/components/QRForm';  // Import the new component
-import QRForm from '@/components/forms/QRForm';
-import { addQrData, removeQrData } from '@/store/reducers/qrSlice';
+import QRForm, { FormParams, CategoryItem, BrandItem, MetadataTypeItem } from '@/components/forms/QRForm';
+import { addQrData } from '@/store/reducers/qrSlice';
 import { RootState } from '@/store/rootReducer';
 import { generateUniqueId } from '@/utils/uniqueId';
 import QRRecord from '@/types/qrType';
@@ -13,110 +11,109 @@ import { getNextQrIndex, insertOrUpdateQrCodes } from '@/services/localDB/qrDB';
 import { returnItemCodeByBin, returnItemData } from '@/utils/returnItemData';
 import { useLocale } from '@/context/LocaleContext';
 import { t } from '@/i18n';
-import { CategoryItem, BrandItem, MetadataTypeItem, FormParams } from '@/components/forms/QRForm'; // Corrected import
+import { removeQrData } from '@/store/reducers/qrSlice';
 
 const AddScreen: React.FC = () => {
-    const dispatch = useDispatch();
-    const userId = useSelector((state: RootState) => state.auth.user?.id ?? '');
-    const { locale: currentLocale } = useLocale();
-    const locale = currentLocale ?? 'en';
-    const { codeFormat, codeValue, codeBin, codeType, codeProvider } = useLocalSearchParams<{
-        codeFormat?: string;
-        codeValue?: string;
-        codeBin?: string;
-        codeType?: string;
-        codeProvider?: string;
-    }>();
-    const onNavigateBack = useCallback(() => router.back(), []);
+  const dispatch = useDispatch();
+  const userId = useSelector((state: RootState) => state.auth.user?.id ?? '');
+  const { locale: currentLocale = 'en' } = useLocale(); // Default to 'en' if undefined
+  const { codeFormat, codeValue, codeBin, codeType, codeProvider } = useLocalSearchParams<{
+    codeFormat?: string;
+    codeValue?: string;
+    codeBin?: string;
+    codeType?: string;
+    codeProvider?: string;
+  }>();
 
-      const categoryMap = useMemo(
-        () => ({
-        bank: { display: t('addScreen.bankCategory'), value: 'bank' },
-        ewallet: { display: t('addScreen.ewalletCategory'), value: 'ewallet' },
-        store: { display: t('addScreen.storeCategory'), value: 'store' },
-        }),
-        [t]
-    );
-    const metadataTypeData: MetadataTypeItem[] = useMemo(
-        () => [
-          { display: t('addScreen.qr'), value: 'qr' },
-          { display: t('addScreen.barcode'), value: 'barcode' },
-        ],
-        [t]
-      );
+  const onNavigateBack = useCallback(() => router.back(), []);
 
-    const getItemDataHelper = useCallback(
-        (itemCode: string, locale: string): BrandItem | null => {
-          const itemData = returnItemData(itemCode); 
-    
-          const isExpectedType = (type: string): type is 'bank' | 'store' | 'ewallet' => {
-            return ['bank', 'store', 'ewallet'].includes(type);
-          };
-    
-          return itemData && isExpectedType(itemData.type)
-            ? {
-              code: itemCode,
-              name: itemData.name,
-              full_name: itemData.full_name[locale],
-              type: itemData.type,
-            }
-            : null;
-        },
-        []
-      );
+  // Memoized category map
+  const categoryMap = useMemo(
+    () => ({
+      bank: { display: t('addScreen.bankCategory'), value: 'bank' },
+      ewallet: { display: t('addScreen.ewalletCategory'), value: 'ewallet' },
+      store: { display: t('addScreen.storeCategory'), value: 'store' },
+    }),
+    [t]
+  );
 
-    const { itemCode } = useMemo(() => {
-        const isEWallet = codeType === 'ewallet';
-        return {
-          bankCode: !isEWallet && codeBin ? returnItemCodeByBin(codeBin) : null,
-          itemCode: codeProvider || returnItemCodeByBin(codeBin || ''),
-        };
-      }, [codeBin, codeType, codeProvider]);
+  // Memoized metadata type data
+  const metadataTypeData: MetadataTypeItem[] = useMemo(
+    () => [
+      { display: t('addScreen.qr'), value: 'qr' },
+      { display: t('addScreen.barcode'), value: 'barcode' },
+    ],
+    [t]
+  );
 
-      const initialValues: FormParams = useMemo(() => {
-        const categoryKey = codeType as keyof typeof categoryMap;
-        const category = categoryKey && categoryMap[categoryKey] ? categoryMap[categoryKey] as CategoryItem : null;
-        const brand = codeType && itemCode ? getItemDataHelper(itemCode, locale) : null;
-    
-        let metadataType: MetadataTypeItem;
-        switch (codeFormat) {
-          case '256':
-            metadataType = metadataTypeData.find(item => item.value === 'qr') || metadataTypeData[0];
-            break;
-          case '1':
-            metadataType = metadataTypeData.find(item => item.value === 'barcode') || metadataTypeData[0];
-            break;
-          default:
-            metadataType = metadataTypeData[0];
-        }
-    
-        return {
-          metadataType: metadataType,
-          category: category,
-          brand: brand,
-          metadata: codeValue || '',
-          accountName: '',
-          accountNumber: '',
-        };
-      }, [codeType, itemCode, locale, categoryMap, codeValue, codeFormat, metadataTypeData, getItemDataHelper]);
+  // Optimized item data helper with caching
+  const getItemDataHelper = useCallback(
+    (itemCode: string): BrandItem | null => {
+      const itemData = returnItemData(itemCode);
+      if (!itemData || !['bank', 'store', 'ewallet'].includes(itemData.type)) {
+        return null;
+      }
 
+      return {
+        code: itemCode,
+        name: itemData.name,
+        full_name: itemData.full_name[currentLocale],
+        type: itemData.type as 'bank' | 'store' | 'ewallet', // Type assertion after validation
+      };
+    },
+    [currentLocale]
+  );
+
+  // Memoized item code derivation
+  const itemCode = useMemo(() => {
+    const effectiveCodeProvider = codeProvider || returnItemCodeByBin(codeBin || '');
+    return effectiveCodeProvider;
+  }, [codeBin, codeProvider]);
+
+  // Optimized initial values calculation
+  const initialValues: FormParams = useMemo(() => {
+    const categoryKey = codeType as keyof typeof categoryMap;
+    const category = categoryKey ? categoryMap[categoryKey] : null;
+    const brand = itemCode ? getItemDataHelper(itemCode) : null;
+
+    let metadataType: MetadataTypeItem = metadataTypeData[0]; // Default value
+    if (codeFormat === '256') {
+      metadataType = metadataTypeData.find((item) => item.value === 'qr') || metadataTypeData[0];
+    } else if (codeFormat === '1') {
+      metadataType = metadataTypeData.find((item) => item.value === 'barcode') || metadataTypeData[0];
+    }
+    return {
+      metadataType,
+      category: category as CategoryItem, // Type assertion after validation
+      brand,
+      metadata: codeValue || '',
+      accountName: '',
+      accountNumber: '',
+    };
+  }, [codeType, itemCode, codeValue, codeFormat, categoryMap, metadataTypeData, getItemDataHelper]);
+
+
+
+  // Optimized submit handler
   const handleFormSubmit = useCallback(
     async (values: FormParams, formikHelpers: FormikHelpers<FormParams>) => {
+      formikHelpers.setSubmitting(true); // Start loading state early
       const newId = generateUniqueId();
       const now = new Date().toISOString();
 
       try {
         const nextIndex = await getNextQrIndex(userId);
+
         const newQrRecord: QRRecord = {
           id: newId,
           qr_index: nextIndex,
           user_id: userId,
-          code: values.brand?.code || '',
+          code: values.brand?.code || '', // Fallback to empty string
           metadata: values.metadata,
-          metadata_type: values.metadataType?.value || 'qr',
+          metadata_type: values.metadataType?.value || 'qr', // Fallback to 'qr'
           account_name: values.accountName,
           account_number: values.accountNumber,
-          type: values.category?.value || 'store',
+          type: values.category?.value || 'store',  // Fallback to 'store'
           created: now,
           updated: now,
           is_deleted: false,
@@ -125,17 +122,16 @@ const AddScreen: React.FC = () => {
 
         dispatch(addQrData(newQrRecord));
         await insertOrUpdateQrCodes([newQrRecord]);
-        router.replace('/(auth)/home');
-
+        router.replace('/(auth)/home'); // Navigate on success
       } catch (error) {
         console.error('Submission error:', error);
-        dispatch(removeQrData(newId));
-        // Alert user
+        dispatch(removeQrData(newId)); //remove if error
+        // Consider using a toast or other UI feedback instead of console.error
       } finally {
-        formikHelpers.setSubmitting(false);
+        formikHelpers.setSubmitting(false); // Ensure loading state is reset
       }
     },
-    [dispatch, router, userId]
+    [dispatch, userId]
   );
 
   return (

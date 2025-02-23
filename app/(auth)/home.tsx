@@ -125,7 +125,7 @@ function HomeScreen() {
 
   const syncWithServer = useCallback(async (userId: string) => {
     // Early Exit: Offline Mode
-    
+
     if (isOffline) {
       const hasLocal = await hasLocalData(userId);
       setIsEmpty(!hasLocal);
@@ -179,42 +179,46 @@ function HomeScreen() {
 
   useEffect(() => {
     if (!userId) {
-        return; // Guard clause: Exit if no userId
+      return;
     }
 
     const initializeData = async () => {
-        setIsLoading(true); // Indicate loading start
+      setIsLoading(true);
+      try {
+        let localData = qrData; // Start with what's in Redux
 
-        try {
-            const hasLocal = await hasLocalData(userId);
-
-            // ALWAYS fetch and load local data *before* checking sync conditions
-            const localData = await getQrCodesByUserId(userId);
-            dispatch(setQrData(localData));
-            setIsEmpty(localData.length === 0); // Set based on actual fetched data
-
-
-            // Now, check if a sync is needed
-            if (!hasLocal) {
-                await syncWithServer(userId);  // This will fetch server data and *overwrite* local data
-            } else {
-                const unSyncedData = await getUnsyncedQrCodes(userId);
-                if (unSyncedData.length > 0) {
-                    await syncWithServer(userId); // This will sync local changes *and* fetch latest server data
-                } else {
-                    // No sync needed, we already have the local data.
-                }
-            }
-        } catch (error) {
-            console.error('Error during data initialization:', error);
-            // Handle initialization error (e.g., set an error state, retry mechanism)
-        } finally {
-            setIsLoading(false); // Ensure loading is reset
+        if (localData.length === 0) {
+          localData = await getQrCodesByUserId(userId);
+          dispatch(setQrData(localData)); 
         }
+
+      // Update Redux (if needed)
+        setIsEmpty(localData.length === 0); // Set isEmpty
+
+        // 3. Sync logic (only if online and needed) - unchanged
+        if (!isOffline) {
+          if (localData.length === 0) {
+            await syncWithServer(userId);
+          } else {
+            const unSyncedData = await getUnsyncedQrCodes(userId);
+            if (unSyncedData.length > 0) {
+              await syncWithServer(userId);
+            }
+          }
+        }
+        //AFTER the sync, refresh Local data to show the updated state
+        const updatedLocalData = await getQrCodesByUserId(userId);
+        dispatch(setQrData(updatedLocalData));
+        setIsEmpty(updatedLocalData.length === 0);
+      } catch (error) {
+        console.error('Error during data initialization:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     initializeData();
-}, [userId]); // Correct dependencies
+  }, [userId]); // Add qrData to dependencies
 
   useEffect(() => {
     // Only show online/offline toast if there's an actual change in network state
@@ -412,9 +416,9 @@ function HomeScreen() {
   const onNavigateToEditScreen = useCallback(
     throttle(() => {  // Remove the unnecessary parameters
 
-        if (!selectedItemId) {
-            return; // Important: Don't navigate if no item is selected
-        }
+      if (!selectedItemId) {
+        return; // Important: Don't navigate if no item is selected
+      }
       router.push({
         pathname: `/(edit)/edit`,  // Correct path
         params: {
@@ -429,13 +433,16 @@ function HomeScreen() {
     [selectedItemId, router] // Depend on selectedItemId and router
   );
 
-  const onOpenSheet = useCallback((type: SheetType, id?: string, url?: string, ssid?: string) => {
+  const onOpenSheet = useCallback((type: SheetType, id?: string, url?: string, ssid?: string, password?: string) => {
     setSheetType(type);
     setIsSheetOpen(true);
     setSelectedItemId(id || null);
 
+    console.log('onOpenSheet', type, id, url, ssid);
+
     switch (type) {
       case 'wifi':
+        bottomSheetRef.current?.snapToIndex(0);
       case 'setting':
         if (!id) return;
         bottomSheetRef.current?.snapToIndex(0);
@@ -520,17 +527,17 @@ function HomeScreen() {
 
   const handleCopySuccess = useCallback(() => {
     showToast(t('homeScreen.copied'));
-  },[])
+  }, [])
 
   const onDeleteSheetPress = useCallback(() => {
     bottomSheetRef.current?.close();
     setIsModalVisible(true);
   }, []);
-  
+
   const dropdownOptions = [
     { label: ('homeScreen.fab.add'), onPress: () => onNavigateToAddScreen(), icon: 'plus-circle' },
     { label: ('homeScreen.fab.scan'), onPress: () => onNavigateToScanScreen(), icon: 'camera' },
-    { label:  ('homeScreen.fab.gallery'), onPress: () => onOpenGallery(), icon: 'image' },
+    { label: ('homeScreen.fab.gallery'), onPress: () => onOpenGallery(), icon: 'image' },
   ];
 
   const onDeletePress = useCallback(async () => {
@@ -779,9 +786,9 @@ function HomeScreen() {
         // snapPoints={['35%']}
         snapPoints={
           sheetType === 'setting' ? ['25%'] :
-          sheetType === 'wifi' ? ['50%', '80%'] : // Assuming snap points for wifi
-          sheetType === 'linking' ? ['35%'] : // Assuming snap points for linking
-          ['35%'] // Default snap points
+            sheetType === 'wifi' ? ['50%', '80%'] : // Assuming snap points for wifi
+              sheetType === 'linking' ? ['35%'] : // Assuming snap points for linking
+                ['35%'] // Default snap points
         }
         styles={{
           customContent: {
@@ -796,20 +803,6 @@ function HomeScreen() {
             {renderSheetContent()}
           </View>
         }
-      // actions={[
-      //   {
-      //     icon: 'pencil-outline',
-      //     iconLibrary: 'MaterialCommunityIcons',
-      //     text: t('homeScreen.edit'),
-      //     onPress: () => bottomSheetRef.current?.close(),
-      //   },
-      //   {
-      //     icon: 'delete-outline',
-      //     iconLibrary: 'MaterialCommunityIcons',
-      //     text: t('homeScreen.delete'),
-      //     onPress: () => onDeleteSheetPress(),
-      //   }
-      // ]}
       />
       <ThemedModal
         primaryActionText={t('homeScreen.move')}

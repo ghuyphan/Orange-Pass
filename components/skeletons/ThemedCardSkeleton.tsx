@@ -80,7 +80,7 @@ export function ThemedCardSkeleton({ show = true, index = 0 }) {
             <View style={styles.footerLeft}>
               <Skeleton 
                 colors={colorsArray} 
-                width={getResponsiveWidth(45)} 
+                width={getResponsiveWidth(40)} 
                 height={getResponsiveFontSize(16)} 
               />
               <View style={styles.cardTypeContainer}>
@@ -148,7 +148,6 @@ const styles = StyleSheet.create({
     marginTop: getResponsiveHeight(0.6),
   },
   qrContainer: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
     borderRadius: getResponsiveWidth(2),
     padding: getResponsiveWidth(2),
   },

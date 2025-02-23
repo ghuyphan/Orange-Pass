@@ -9,7 +9,9 @@ import { returnItemData } from '@/utils/returnItemData';
 import { returnMidpointColors } from '@/utils/returnMidpointColor';
 import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
+import Reanimated from 'react-native-reanimated';
 
+const ReanimatedLinearGradient = Reanimated.createAnimatedComponent(LinearGradient);
 export type ThemedCardItemProps = {
   isActive?: boolean;
   code: string;
@@ -23,6 +25,7 @@ export type ThemedCardItemProps = {
   onItemPress?: () => void;
   onMoreButtonPress?: () => void;
   onDrag?: () => void;
+  cardHolderStyle?: object;
 };
 
 const MIDPOINT_COUNT = 6; // Named constant
@@ -41,6 +44,7 @@ const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps):
     onItemPress,
     onMoreButtonPress,
     onDrag,
+    cardHolderStyle
   } = props;
 
   const itemData = useMemo(() => returnItemData(code), [code]);
@@ -101,11 +105,11 @@ const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps):
 
 
   const renderContent = () => (
-    <LinearGradient
+    <ReanimatedLinearGradient
       colors={returnMidpointColors(color.light, accent_color.light, MIDPOINT_COUNT) || ['#FAF3E7', '#D6C4AF']}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
-      style={styles.cardContainer}
+      style={[styles.cardContainer, style, animatedStyle]}
     >
       {/* Card Header */}
       <View style={styles.cardHeader}>
@@ -130,6 +134,7 @@ const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps):
               right: getResponsiveWidth(7.2),
               top: getResponsiveHeight(3.6),
             }}
+            style={{marginRight: -getResponsiveWidth(2.4)}}
           >
             <MaterialCommunityIcons
               name="dots-vertical"
@@ -147,7 +152,7 @@ const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps):
           <Text
             numberOfLines={1}
             ellipsizeMode="tail"
-            style={styles.cardHolderName}
+            style={[styles.cardHolderName, cardHolderStyle]}
           >
             {accountName}
           </Text>
@@ -169,7 +174,7 @@ const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps):
             ) : (
               <Barcode
                 height={getResponsiveHeight(8.4)}
-                maxWidth={getResponsiveWidth(33.6)}
+                maxWidth={getResponsiveWidth(33)}
                 value={displayMetadata}
                 format="CODE128"
               />
@@ -190,7 +195,7 @@ const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps):
           />
         </View>
       )}
-    </LinearGradient>
+    </ReanimatedLinearGradient>
   );
 
   return (
@@ -274,13 +279,13 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: getResponsiveFontSize(16),
     fontWeight: '600',
-    maxWidth: getResponsiveWidth(45), // Consider making this more dynamic
+    maxWidth: getResponsiveWidth(55), // Consider making this more dynamic
   },
   cardType: {
     color: 'rgba(255,255,255,0.7)',
     fontSize: getResponsiveFontSize(12),
     marginTop: getResponsiveHeight(0.6),
-    maxWidth: getResponsiveWidth(28.8), // Consider making this more dynamic
+    maxWidth: getResponsiveWidth(32), // Consider making this more dynamic
     overflow: 'hidden',
   },
   qrContainer: {

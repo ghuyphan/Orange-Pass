@@ -6,7 +6,7 @@ import useHandleCodeScanned from '@/hooks/useHandleCodeScanned';
 import SheetType from '@/types/sheetType';
 
 type GalleryPickerOptions = {
-    onOpenSheet: (type: SheetType, id?: string, url?: string, ssid?: string) => void;
+    onOpenSheet: (type: SheetType, id?: string, url?: string, ssid?: string, pass?: string) => void;
     onNavigateToAddScreen: (
         codeFormat?: number,
         codeValue?: string,
@@ -53,9 +53,11 @@ export const useGalleryPicker = ({
                     codeFormat: codeFormat,
                 });
 
+                console.log('Decoded QR code:', result);
+
                 if (result) {
                     const actionMap: Record<string, () => void> = {
-                        'WIFI': () => onOpenSheet('wifi'),
+                        'WIFI': () => onOpenSheet('wifi', undefined, undefined, result.ssid, result.pass),
                         'URL': () => onOpenSheet('linking', undefined, result.rawCodeValue),
                         // Handle bank and ewallet, passing bin and provider if they exist
                         'bank': () => onNavigateToAddScreen(result.codeFormat, result.rawCodeValue, result.bin, result.codeType, result.provider),

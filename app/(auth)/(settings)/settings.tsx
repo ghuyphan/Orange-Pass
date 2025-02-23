@@ -78,6 +78,10 @@ function SettingsScreen() {
     router.back();
   }, []);
 
+  const onNavigateToEditScreen = useCallback(() => {
+    router.push()
+  }, [])
+
   const logout = useCallback(async () => {
     try {
       setIsModalVisible(false);
@@ -109,7 +113,7 @@ function SettingsScreen() {
       {
         leftIcon: 'person-outline',
         settingsTitle: t('settingsScreen.editProfile'),
-        onPress: () => { },
+        onPress: () => router.push('/edit'),
       },
       {
         leftIcon: 'lock-outline',

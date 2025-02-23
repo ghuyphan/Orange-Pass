@@ -1,7 +1,11 @@
 {
   "common": {
     "done": "Done",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "back": "Back",
+    "discard": "Discard",
+    "unsavedChangesTitle": "Unsaved Changes",
+    "unsavedChanges": "You have unsaved changes. Are you sure you want to leave?"
   },
   "authRefresh": {
     "errors": {
@@ -171,7 +175,8 @@
     "accountNamePlaceholder": "Enter account name",
     "accountNumberTitle": "Account Number",
     "accountNumberPlaceholder": "Enter account number",
-    "saving": "Saving...",
+    "saving": "Saving..."
+    ,
     "errors": {
       "categoryRequired": "Card category is required.",
       "brandRequired": "Brand is required.",
@@ -187,7 +192,11 @@
       "invalidResponse": "Invalid server response. Please try again later.",
       "storageError": "An error occurred while saving card information. Please try again.",
       "databaseError": "A database error occurred. Please try again later.",
-      "selectCategoryFirstMessage": "Please select a card type first."
+      "selectCategoryFirstMessage": "Please select a card type first.",
+      "emptyInputMessage": "Please enter information.",
+      "submissionErrorTitle": "Submission Error",
+      "submissionErrorMessage": "Unable to save information. Please try again.",
+       "ok": "OK"
     }
   },
   "editScreen": {

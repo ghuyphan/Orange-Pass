@@ -1,4 +1,12 @@
 {
+  "common": {
+    "back": "Quay lại",
+    "discard": "Hủy bỏ",
+    "unsavedChangesTitle": "Thay đổi chưa lưu",
+    "unsavedChanges": "Bạn có thay đổi chưa lưu. Bạn có chắc chắn muốn rời đi?",
+    "done": "Xong",
+    "cancel": "Huỷ"
+  },
   "authRefresh": {
     "errors": {
       "401": "Phiên hết hạn. Vui lòng đăng nhập lại.",

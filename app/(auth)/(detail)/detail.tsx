@@ -12,7 +12,6 @@ import { MMKV } from 'react-native-mmkv';
 // Local imports
 import { RootState } from '@/store/rootReducer';
 import { Colors } from '@/constants/Colors';
-import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
 import { useTheme } from '@/context/ThemeContext';
 import { t } from '@/i18n';
 // Components
@@ -34,6 +33,7 @@ import { deleteQrCode, updateQrIndexes } from '@/services/localDB/qrDB';
 import { setQrData } from '@/store/reducers/qrSlice';
 import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
 import { ThemedTopToast } from '@/components/toast/ThemedTopToast';
+import SettingSheetContent from '@/components/bottomsheet/SettingSheetContent';
 
 // Constants
 const AMOUNT_SUGGESTIONS = ['10,000', '50,000', '100,000', '500,000', '1,000,000'];
@@ -82,6 +82,10 @@ const DetailScreen = () => {
   const [isTopToastVisible, setIsTopToastVisible] = useState(false);
   const [topToastMessage, setTopToastMessage] = useState('');
   const [vietQRBanks, setVietQRBanks] = useState<BankItem[]>([]);
+
+  useEffect(() => {
+    console.log('isToastVisible', isToastVisible);
+  }, [isToastVisible])
 
   const item = useMemo<ItemData | null>(() => {
     if (!encodedItem) return null;
@@ -139,7 +143,29 @@ const DetailScreen = () => {
     bottomSheetRef.current?.snapToIndex(0);
   }, []);
 
-  const handleDeletePress = useCallback(
+  const onEditPress = useCallback(
+    throttle(() => {  // Remove the unnecessary parameters
+
+      router.push({
+        pathname: `/(edit)/edit`,  // Correct path
+        params: {
+          id: id,  // Pass the item ID
+        },
+      });
+      setTimeout(() => {
+        bottomSheetRef.current?.close();
+      }, 300);
+
+    }, 1000),
+    [id, router] // Depend on selectedItemId and router
+  );
+
+  const onDeletePress = useCallback(() => {
+    bottomSheetRef.current?.close();
+    setIsModalVisible(true);
+  }, [])
+
+  const onDeleteItem = useCallback(
     async () => {
       if (!id || Array.isArray(id)) return;
 
@@ -225,6 +251,10 @@ const DetailScreen = () => {
   const showTopToast = useCallback((message: string) => {
     setIsTopToastVisible(true);
     setTopToastMessage(message);
+  }, []);
+
+  const onVisibilityToggle = useCallback((isVisible: boolean) => {
+    setIsTopToastVisible(isVisible);
   }, []);
 
   const handleTransferAmount = useCallback(
@@ -528,40 +558,26 @@ const DetailScreen = () => {
             onDismiss={() => setIsToastVisible(false)}
             style={styles.toastContainer}
           />
-          <ThemedTopToast
-            isVisible={isTopToastVisible}
-            message={topToastMessage}
-            onVisibilityToggle={(isVisible) => setIsToastVisible(isVisible)}
-          />
         </View>
       )}
 
       <ThemedReuseableSheet
         ref={bottomSheetRef}
         title={t('homeScreen.manage')}
-        snapPoints={['28%']}
-        actions={[
-          {
-            icon: 'pencil-outline',
-            iconLibrary: 'MaterialCommunityIcons',
-            text: t('homeScreen.edit'),
-            onPress: () => bottomSheetRef.current?.close(),
-          },
-          {
-            icon: 'delete-outline',
-            iconLibrary: 'MaterialCommunityIcons',
-            text: t('homeScreen.delete'),
-            onPress: () => {
-              bottomSheetRef.current?.close();
-              setIsModalVisible(true);
-            },
-          },
-        ]}
+        snapPoints={['25%']}
+        customContent={
+          <>
+            <SettingSheetContent
+              onEdit={onEditPress}
+              onDelete={onDeletePress}
+            />
+          </>
+        }
       />
 
       <ThemedModal
         primaryActionText={t('homeScreen.move')}
-        onPrimaryAction={handleDeletePress}
+        onPrimaryAction={onDeleteItem}
         onDismiss={() => setIsModalVisible(false)}
         dismissable={true}
         onSecondaryAction={() => setIsModalVisible(false)}
@@ -571,13 +587,18 @@ const DetailScreen = () => {
         isVisible={isModalVisible}
         iconName="delete-outline"
       />
+      <ThemedTopToast
+        isVisible={isTopToastVisible}
+        message={topToastMessage}
+        onVisibilityToggle={onVisibilityToggle}
+      />
     </KeyboardAwareScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    // flexGrow: 1,
+    flexGrow: 1,
     paddingHorizontal: getResponsiveWidth(3.6),
   },
   headerWrapper: {

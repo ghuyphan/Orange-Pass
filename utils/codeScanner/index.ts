@@ -89,6 +89,7 @@ export const processScannedCode = ({
   };
 
   for (const key in patterns) {
+    
     const { pattern, handler } = patterns[key];
     if (pattern.test(codeMetadata)) {
       handler();

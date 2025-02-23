@@ -190,13 +190,12 @@ const styles = StyleSheet.create({
 
   },
   loginButton: {
-    marginTop: getResponsiveHeight(3.6),
+    marginVertical: getResponsiveHeight(3.6),
   },
   registerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: getResponsiveHeight(1.2),
     gap: getResponsiveWidth(1.2),
   },
   toastContainer: {
