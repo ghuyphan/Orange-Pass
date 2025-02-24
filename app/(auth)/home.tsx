@@ -65,6 +65,7 @@ import ThemedFilter from '@/components/ThemedFilter';
 import EmptyListItem from '@/components/lists/EmptyListItem';
 import LinkingSheetContent from '@/components/bottomsheet/LinkingSheetContent';
 import SettingSheetContent from '@/components/bottomsheet/SettingSheetContent';
+import WifiSheetContent from '@/components/bottomsheet/WifiSheetContent';
 import { getResponsiveHeight, getResponsiveWidth } from '@/utils/responsive';
 
 // 5. Internationalization
@@ -99,6 +100,8 @@ function HomeScreen() {
   const [fabOpen, setFabOpen] = useState(false);
   const [sheetType, setSheetType] = useState<SheetType>(null);
   const [linkingUrl, setLinkingUrl] = useState<string | null>(null);
+  const [wifiSsid, setWifiSsid] = useState<string | null>(null);
+  const [wifiPassword, setWifiPassword] = useState<string | null>(null);
 
   // 6. Data and Filtering
   const [filter, setFilter] = useState('all');
@@ -419,15 +422,17 @@ function HomeScreen() {
       if (!selectedItemId) {
         return; // Important: Don't navigate if no item is selected
       }
-      router.push({
-        pathname: `/(edit)/edit`,  // Correct path
-        params: {
-          id: selectedItemId,  // Pass the item ID
-        },
-      });
+
+      bottomSheetRef.current?.close();
+    
       setTimeout(() => {
-        bottomSheetRef.current?.close();
-      }, 300);
+        router.push({
+          pathname: `/(edit)/edit`,  // Correct path
+          params: {
+            id: selectedItemId,  // Pass the item ID
+          },
+        });
+      }, 200);
 
     }, 1000),
     [selectedItemId, router] // Depend on selectedItemId and router
@@ -443,6 +448,11 @@ function HomeScreen() {
     switch (type) {
       case 'wifi':
         bottomSheetRef.current?.snapToIndex(0);
+        if (ssid && password) {
+          setWifiSsid(ssid);
+          setWifiPassword(password);
+        }
+        break;
       case 'setting':
         if (!id) return;
         bottomSheetRef.current?.snapToIndex(0);
@@ -613,9 +623,12 @@ function HomeScreen() {
     switch (sheetType) {
       case 'wifi':
         return (
-          <View>
-            <ThemedText>Wifi</ThemedText>
-          </View>
+          <>
+            <WifiSheetContent
+              ssid={wifiSsid || ''}
+              password={wifiPassword || ''}
+            />
+          </>
         );
       case 'linking':
         return (
@@ -777,7 +790,11 @@ function HomeScreen() {
       />
       <ThemedReuseableSheet
         ref={bottomSheetRef}
-        title={t('homeScreen.manage')}
+        // title={t('homeScreen.manage')}
+        title={sheetType === 'setting' ? t('homeScreen.manage') :
+          sheetType === 'wifi' ? t('homeScreen.wifi') :
+            sheetType === 'linking' ? t('homeScreen.linking') :
+              t('homeScreen.settings')}
         onClose={() => {
           setTimeout(() => {
             setIsSheetOpen(false)
@@ -786,7 +803,7 @@ function HomeScreen() {
         // snapPoints={['35%']}
         snapPoints={
           sheetType === 'setting' ? ['25%'] :
-            sheetType === 'wifi' ? ['50%', '80%'] : // Assuming snap points for wifi
+            sheetType === 'wifi' ? ['38%'] : // Assuming snap points for wifi
               sheetType === 'linking' ? ['35%'] : // Assuming snap points for linking
                 ['35%'] // Default snap points
         }

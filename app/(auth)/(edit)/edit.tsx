@@ -78,7 +78,10 @@ const EditScreen: React.FC = () => {
   const handleFormSubmit = useCallback(async (values: FormParams, { setSubmitting }: FormikHelpers<FormParams>) => {
     if (!qrRecord) return;
 
+    setSubmitting(true);
     try {
+
+
       const updatedQrRecord: QRRecord = {
         ...qrRecord,
         code: values.brand?.code || '',
