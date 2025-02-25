@@ -266,7 +266,6 @@ export async function fetchServerData(userId: string): Promise<ServerRecord[]> {
                 !item.updated ||
                 item.is_deleted === undefined
             ) {
-                console.log('item: ', item);
                 throw new Error("Invalid server data format: Missing required properties");
             }
 

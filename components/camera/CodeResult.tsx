@@ -2,93 +2,84 @@ import React, { useCallback } from 'react';
 import {
     StyleSheet,
     TouchableWithoutFeedback,
-    Linking
+    Linking,
+    View, // Import View
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import Animated, { StyleProps } from 'react-native-reanimated';
-import { MaterialCommunityIcons } from '@expo/vector-icons'; // You might not need this, depending on the icons.
-
-// Components
-import { ThemedText } from '@/components/ThemedText';
+import { ThemedText } from '@/components/ThemedText'; // Use your themed text component
 
 // Types
 type QRResultProps = {
     codeValue: string;
     codeType: string;
+    codeFormat?: number; // Add codeFormat
     iconName?: keyof typeof MaterialIcons.glyphMap;
     animatedStyle: StyleProps;
+    onNavigateToAdd: (codeFormat?: number, codeValue?: string, bin?: string, codeType?: string, codeProvider?: string) => void; // Add this prop
+    bin?: string;
+    codeProvider?: string;
 };
 
-export const QRResult: React.FC<QRResultProps> = ({ codeValue, codeType, iconName, animatedStyle }) => {
+export const QRResult: React.FC<QRResultProps> = ({
+    codeValue,
+    codeType,
+    codeFormat,
+    iconName,
+    animatedStyle,
+    onNavigateToAdd,
+    bin,
+    codeProvider
+}) => {
 
     const getFormattedText = useCallback(() => {
         switch (codeType) {
             case 'URL':
                 try {
-                    //  Split the codeValue string using the delimiter.
-                    const parts = codeValue.split(' ');
-                    // Get the link.
-                    const url = parts[2];
-
-                    console.log(url);
-
-                    // Extract a descriptive name from the URL (e.g., "wikipedia" from "en.m.wikipedia.org")
-                    const urlObject = new URL(url); // Use the URL constructor for robust parsing
-                    let domain = urlObject.hostname; // e.g., "en.m.wikipedia.org"
-
-                    // Remove "www." and "en.m." prefixes, and get the main domain part.
-                    domain = domain.replace(/^www\./, ''); // Remove "www." if present
-                    domain = domain.replace(/^en\.m\./, ''); //remove en.m.
+                    const urlObject = new URL(codeValue);
+                    let domain = urlObject.hostname;
+                    domain = domain.replace(/^www\./, '');
+                    domain = domain.replace(/^en\.m\./, ''); //remove en.m.  Consider other subdomains too.
                     const domainParts = domain.split('.');
-                    const siteName = domainParts[0]; //  "wikipedia"
-
-                    // Capitalize the first letter for better display
+                    const siteName = domainParts[0];
                     const capitalizedSiteName = siteName.charAt(0).toUpperCase() + siteName.slice(1);
-
                     return `Navigate to ${capitalizedSiteName}?`;
-
                 } catch (error) {
-                    // Handle potential URL parsing errors (e.g., invalid URL)
                     console.error("Error parsing URL:", error);
                     return `Open link?`; // Fallback text
                 }
 
             case 'WIFI':
-                // Example WIFI string (adapt as needed):  WIFI:T:WPA;S:MyNetwork;P:MyPassword;;
                 try {
-                    const wifiData = codeValue.substring(5); //Remove the WIFI: at the begining.
-                    const wifiParts = wifiData.split(';');
-                    let ssid = '';
-                    for(const part of wifiParts){
-                        if(part.startsWith("S:")){
-                            ssid = part.substring(2); //extract the name
-                            break;
-                        }
+                    const match = codeValue.match(/WIFI:S:([^;]+)/);  // Extract SSID directly
+                    if (match) {
+                        const ssid = match[1];
+                        return `Connect to Wi-Fi ${ssid}?`;
+                    } else {
+                        return "Connect to Wi-Fi?"; // Handle malformed WiFi strings
                     }
-
-                    return `Connect to Wi-Fi ${ssid}?`;
                 } catch (error) {
                     console.error("Error parsing WIFI data:", error);
                     return "Connect to Wi-Fi?";
                 }
-            
+
             case 'bank':
-                 //Example:  bank:BAWAG;bic:BKAUATWW;
-                 try{
+                try {
+                    console.log(codeValue); 
                     const bankData = codeValue.substring(5);
                     const bankParts = bankData.split(';');
                     let bankName = '';
-                    for(const part of bankParts){
-                        if(part.startsWith('bank:')){
-                           bankName = part.substring(5);
-                           break;
+                    for (const part of bankParts) {
+                        if (part.startsWith('bank:')) {
+                            bankName = part.substring(5);
+                            break;
                         }
                     }
-                    return `Open ${bankName} application.`;
-                 }catch(error){
+                    return `Add QR Code.`;
+                } catch (error) {
                     console.error('Error parsing bank data', error)
                     return `Open bank application.`;
-                 }
+                }
             default:
                 return codeValue; // Display raw value for unknown types
         }
@@ -99,19 +90,20 @@ export const QRResult: React.FC<QRResultProps> = ({ codeValue, codeType, iconNam
     const onResultTap = useCallback(() => {
         switch (codeType) {
             case 'URL':
-                const parts = codeValue.split(' ');
-                const url = parts[2];
-                Linking.openURL(url);
+                Linking.openURL(codeValue);
                 break;
             case 'WIFI':
-               //No action for the case of WIFI in this moment.
+                // No action (as per your requirement)
                 break;
             case 'bank':
-                //No action for the case of bank
+                onNavigateToAdd(codeFormat, codeValue, bin, codeType, codeProvider); // Pass all necessary data
                 break;
-            
+            default:
+                // If it's not a special type, navigate to the add screen
+              
+                break;
         }
-    }, [codeValue, codeType]);
+    }, [codeValue, codeType, codeFormat, onNavigateToAdd, bin, codeProvider]);
 
     const formattedText = getFormattedText();
 
@@ -143,6 +135,6 @@ const styles = StyleSheet.create({
         color: 'black',
         fontSize: 12,
         overflow: 'hidden',
-        maxWidth: 200,  // Increased max width
+        maxWidth: 200,
     },
 });

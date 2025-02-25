@@ -1,6 +1,5 @@
 import { useCallback } from 'react';
 import { throttle } from 'lodash';
-import WifiManager from 'react-native-wifi-reborn'; // Keep this, as it might be used within an extraction function
 import { MaterialIcons } from '@expo/vector-icons';
 
 type MaterialIconsIconName = keyof typeof MaterialIcons.glyphMap;

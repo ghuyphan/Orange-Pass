@@ -94,7 +94,6 @@ export const useCameraScanner = () => {
         t,
         setIsConnecting,
       });
-      console.log('result', result.codeType);
       setCodeType(result.codeType);
       setIconName(result.iconName);
       setCodeValue(result.rawCodeValue);

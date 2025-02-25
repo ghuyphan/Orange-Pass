@@ -5,7 +5,6 @@ import {
   Text,
   ActivityIndicator,
   LayoutChangeEvent,
-  Linking,
   SafeAreaView,
   StatusBar,
 } from 'react-native';
@@ -21,7 +20,6 @@ import Reanimated, {
   useAnimatedProps,
 } from 'react-native-reanimated';
 import { useUnmountBrightness } from '@reeq/react-native-device-brightness';
-import ImagePicker from 'react-native-image-crop-picker';
 import { Redirect, useRouter } from 'expo-router';
 import { GestureDetector } from 'react-native-gesture-handler';
 import { throttle } from 'lodash';
@@ -35,7 +33,6 @@ import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
 import { MAX_ZOOM_FACTOR } from '@/constants/Constants';
 import { storage } from '@/utils/storage';
 import { triggerLightHapticFeedback } from '@/utils/haptic';
-import { decodeQR } from '@/utils/decodeQR';
 import SheetType from '@/types/sheetType';
 
 // Components
@@ -46,7 +43,6 @@ import { ZoomControl } from '@/components/camera/ZoomControl';
 import { QRResult } from '@/components/camera/CodeResult';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedStatusToast } from '@/components/toast/ThemedStatusToast';
-import ThemedSettingSheet from '@/components/bottomsheet/ThemedSettingSheet';
 import ThemedReuseableSheet from '@/components/bottomsheet/ThemedReusableSheet';
 
 // Hooks
@@ -63,11 +59,6 @@ import { getResponsiveHeight, getResponsiveWidth } from '@/utils/responsive';
 
 const ReanimatedCamera = Reanimated.createAnimatedComponent(Camera);
 Reanimated.addWhitelistedNativeProps({ zoom: true });
-
-// type SheetType = {
-//   type: SheetType;
-//   id?: string;
-// };
 
 // Main component
 export default function ScanScreen() {
@@ -283,6 +274,7 @@ export default function ScanScreen() {
                       codeType={codeType}
                       iconName={iconName}
                       animatedStyle={animatedStyle}
+                      onNavigateToAdd={onNavigateToAddScreen}
                     />
                   ) : null}
                 </View>

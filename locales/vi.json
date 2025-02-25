@@ -301,7 +301,8 @@
     "generatingQRCode": "Đang tạo mã QR...",
     "failedToOpenGoogleMaps": "Không thể mở Google Maps.",
     "bankTransfer": "Chuyển khoản với",
-    "transferMessage": "Chuyển tiền tới"
+    "transferMessage": "Chuyển tiền tới",
+    "searchBank": "Nhập tên ngân hàng"
   },
   "settingsScreen": {
     "title": "Cài đặt",

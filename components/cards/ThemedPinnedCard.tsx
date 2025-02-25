@@ -29,8 +29,8 @@ export const ThemedPinnedCard = ({
   style,
 }: ThemedPinnedCardProps): JSX.Element => {
   // Calculate dimensions with useMemo
-  const qrSize = useMemo(() => getResponsiveWidth(40), []);
-  const barcodeHeight = useMemo(() => getResponsiveHeight(11), []);
+  const qrSize = useMemo(() => getResponsiveWidth(42), []);
+  const barcodeHeight = useMemo(() => getResponsiveHeight(12), []);
   const barcodeWidth = useMemo(() => getResponsiveWidth(70), []);
 
   // Pre-calculate data with useMemo
@@ -74,11 +74,6 @@ export const ThemedPinnedCard = ({
             <QRCode
               value={metadata}
               size={qrSize}
-              // logo={iconPath}
-              // logoSize={qrSize * 0.15}
-              // logoBackgroundColor="white"
-              // logoBorderRadius={50}
-              // logoMargin={5}
               quietZone={getResponsiveWidth(0.8)}
             />
           ) : (
@@ -159,7 +154,7 @@ const styles = StyleSheet.create({
   accountNumber: {
     color: 'rgba(255,255,255,0.7)',
     fontSize: getResponsiveFontSize(15),
-    maxWidth: getResponsiveWidth(60),
+    maxWidth: getResponsiveWidth(65),
   },
 });
 

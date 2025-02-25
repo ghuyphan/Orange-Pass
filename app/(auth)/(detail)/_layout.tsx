@@ -14,6 +14,7 @@ export default function DetailLayout() {
       >
         <Stack.Screen name="detail" />
         <Stack.Screen name="qr-screen" />
+        <Stack.Screen name="bank-select" />
       </Stack>
     </View>
   );

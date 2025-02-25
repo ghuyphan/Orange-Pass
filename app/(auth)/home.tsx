@@ -708,7 +708,7 @@ function HomeScreen() {
             bounces={true}
             ListHeaderComponent={
               <Animated.View
-                style={[listHeaderStyle, { marginBottom: getResponsiveHeight(3.6), }]}
+                style={[listHeaderStyle, { marginBottom: getResponsiveHeight(3.6)}]}
               >
                 <ThemedFilter
                   selectedFilter={filter}
@@ -870,7 +870,7 @@ const styles = StyleSheet.create({
   titleButton: {
   },
   listContainer: {
-    paddingTop: getResponsiveHeight(18),
+    paddingTop: getResponsiveHeight(18.1),
     flexGrow: 1,
   },
   emptyItem: {

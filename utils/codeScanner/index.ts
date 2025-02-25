@@ -47,11 +47,9 @@ export const processScannedCode = ({
             isWEP: isWep,
           }).then(
             () => {
-              console.log('Connected successfully!');
               setIsConnecting(false);
             },
             (error) => {
-              console.log('Connection failed!', error);
               setIsConnecting(false);
             }
           );
@@ -82,7 +80,6 @@ export const processScannedCode = ({
           setCodeType('card');
           setIconName('qr-code');
           setCodeValue(codeMetadata);
-          console.log('VietQR', codeMetadata);
         }
       },
     },

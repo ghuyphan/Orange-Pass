@@ -23,6 +23,8 @@ type ExtendedScanResult = {
     codeType: string;
     bin?: string;
     provider?: string;
+    ssid?: string;
+    pass?: string;
 };
 
 export const useGalleryPicker = ({

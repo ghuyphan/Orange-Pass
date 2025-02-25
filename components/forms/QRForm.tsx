@@ -527,7 +527,6 @@ const QRForm: React.FC<QRFormProps> = ({
         setFieldValue,
         dirty
       }) => (
-        console.log(isSubmitting),
         <ThemedView style={styles.container}>
           <ThemedTopToast
             message={toastMessage}

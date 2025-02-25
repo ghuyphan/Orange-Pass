@@ -83,10 +83,6 @@ const DetailScreen = () => {
   const [topToastMessage, setTopToastMessage] = useState('');
   const [vietQRBanks, setVietQRBanks] = useState<BankItem[]>([]);
 
-  useEffect(() => {
-    console.log('isToastVisible', isToastVisible);
-  }, [isToastVisible])
-
   const item = useMemo<ItemData | null>(() => {
     if (!encodedItem) return null;
     try {
@@ -257,6 +253,10 @@ const DetailScreen = () => {
     setIsTopToastVisible(isVisible);
   }, []);
 
+  const onNavigateToSelectScreen = useCallback(() => {
+    router.push('/(auth)/(detail)/bank-select');
+  },[])
+  
   const handleTransferAmount = useCallback(
     throttle(async () => {
       if (!item || !amount) return;
@@ -524,19 +524,27 @@ const DetailScreen = () => {
           {/* Bank Transfer Section for Store */}
           {item.type === 'store' && (
             <View style={[styles.bottomContainer, { backgroundColor: cardColor }]}>
-              <View style={styles.bottomTitle}>
+              <Pressable onPress={onNavigateToSelectScreen} style={styles.bottomTitle}>
+                <View style={styles.bankTransferHeader}>
+                  <MaterialCommunityIcons
+                    name="bank-outline"
+                    size={getResponsiveFontSize(18)}
+                    color={iconColor}
+                  />
+                  <ThemedText>{t('detailsScreen.bankTransfer')}</ThemedText>
+                  <Image
+                    source={require('@/assets/images/vietqr.png')}
+                    style={styles.vietQRLogo}
+                    resizeMode="contain"
+                  />
+                </View>
                 <MaterialCommunityIcons
-                  name="bank-outline"
+                  name="magnify"
                   size={getResponsiveFontSize(18)}
                   color={iconColor}
                 />
-                <ThemedText>{t('detailsScreen.bankTransfer')}</ThemedText>
-                <Image
-                  source={require('@/assets/images/vietqr.png')}
-                  style={styles.vietQRLogo}
-                  resizeMode="contain"
-                />
-              </View>
+              </Pressable>
+
               <FlatList
                 data={vietQRBanks}
                 horizontal
@@ -762,10 +770,16 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     borderRadius: getResponsiveWidth(4),
   },
+  bankTransferHeader:{
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getResponsiveWidth(2.4),
+  },
   bottomTitle: {
     flexDirection: 'row',
     gap: getResponsiveWidth(2.4),
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: getResponsiveWidth(4.8),
     paddingVertical: getResponsiveHeight(1.8),
   },
