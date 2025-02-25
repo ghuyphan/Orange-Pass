@@ -11,7 +11,6 @@ import { insertOrUpdateQrCodes } from '@/services/localDB/qrDB';
 import { t } from '@/i18n';
 import { BrandItem, CategoryItem, FormParams, MetadataTypeItem } from '@/components/forms/QRForm';
 import { returnItemData } from '@/utils/returnItemData';
-import { View } from 'react-native';
 
 const EditScreen: React.FC = () => {
   const dispatch = useDispatch();
@@ -75,36 +74,38 @@ const EditScreen: React.FC = () => {
 
 
   // Memoized form submission handler.
-  const handleFormSubmit = useCallback(async (values: FormParams, { setSubmitting }: FormikHelpers<FormParams>) => {
-    if (!qrRecord) return;
+// Inside handleFormSubmit
+const handleFormSubmit = useCallback(async (values: FormParams, { setSubmitting, setFieldError }: FormikHelpers<FormParams>) => {
+  if (!qrRecord) return;
 
-    setSubmitting(true);
-    try {
+  setSubmitting(true); // Set loading immediately
 
+  const updatedQrRecord: QRRecord = {
+    ...qrRecord,
+    code: values.brand?.code || '',
+    metadata: values.metadata,
+    metadata_type: values.metadataType?.value || 'qr',
+    account_name: values.accountName,
+    account_number: values.accountNumber,
+    type: values.category?.value || 'store',
+    updated: new Date().toISOString(),
+    is_synced: false,
+  };
 
-      const updatedQrRecord: QRRecord = {
-        ...qrRecord,
-        code: values.brand?.code || '',
-        metadata: values.metadata,
-        metadata_type: values.metadataType?.value || 'qr',
-        account_name: values.accountName,
-        account_number: values.accountNumber,
-        type: values.category?.value || 'store',
-        updated: new Date().toISOString(),
-        is_synced: false,
-      };
+  // Optimistic Update: Dispatch *before* the await
+  dispatch(updateQrData(updatedQrRecord));
 
-      dispatch(updateQrData(updatedQrRecord));
-      await insertOrUpdateQrCodes([updatedQrRecord]);
-      router.replace('/(auth)/home');
-
-    } catch (error) {
-      console.error('Submission error:', error);
-      // Consider adding more robust error handling (e.g., showing a user-friendly message).
-    } finally {
-      setSubmitting(false);
-    }
-  }, [dispatch, qrRecord, router]);
+  try {
+    // Database update *after* the optimistic UI update.
+    await insertOrUpdateQrCodes([updatedQrRecord]);
+    router.replace('/(auth)/home'); // Navigate after successful update
+  } catch (error) {
+    console.error('Submission error:', error);
+    setFieldError('metadata', 'Failed to save changes.'); // Example
+  } finally {
+    setSubmitting(false); // Turn off loading *after* everything (success or error)
+  }
+}, [dispatch, qrRecord, router]);
 
   // useCallback for onNavigateBack
   const onNavigateBack = useCallback(() => {
