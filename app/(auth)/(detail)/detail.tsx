@@ -8,6 +8,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import BottomSheet from '@gorhom/bottom-sheet';
 import { throttle } from 'lodash';
 import { MMKV } from 'react-native-mmkv';
+import * as Clipboard from 'expo-clipboard';
 
 // Local imports
 import { RootState } from '@/store/rootReducer';
@@ -74,6 +75,7 @@ const DetailScreen = () => {
 
   const bottomSheetRef = useRef<BottomSheet>(null);
 
+  const [toastKey, setToastKey] = useState(0); // Add a key
   const [amount, setAmount] = useState('');
   const [isSyncing, setIsSyncing] = useState(false);
   const [isToastVisible, setIsToastVisible] = useState(false);
@@ -247,6 +249,7 @@ const DetailScreen = () => {
   const showTopToast = useCallback((message: string) => {
     setIsTopToastVisible(true);
     setTopToastMessage(message);
+    setToastKey(prevKey => prevKey + 1); // Increment key on *new* toast
   }, []);
 
   const onVisibilityToggle = useCallback((isVisible: boolean) => {
@@ -301,6 +304,11 @@ const DetailScreen = () => {
     }, 500),
     [item, amount, router]
   );
+
+  const onCopyAccountNumber = useCallback(() => {
+    Clipboard.setStringAsync(item?.account_number ?? '');
+    showTopToast(t('detailsScreen.copiedToClipboard'));
+  },[])
 
   const renderSuggestionItem = useCallback(
     ({ item: suggestionItem }: { item: string }) => (
@@ -392,6 +400,7 @@ const DetailScreen = () => {
         metadata={item.metadata}
         accountName={item.account_name}
         accountNumber={item.account_number}
+        onAccountNumberPress={onCopyAccountNumber}
       />
 
       {(item.type === 'bank' || item.type === "store") && (
@@ -596,6 +605,7 @@ const DetailScreen = () => {
         iconName="delete-outline"
       />
       <ThemedTopToast
+      key={toastKey}
         isVisible={isTopToastVisible}
         message={topToastMessage}
         onVisibilityToggle={onVisibilityToggle}

@@ -106,12 +106,15 @@ const AddScreen: React.FC = () => {
       try {
         const nextIndex = await getNextQrIndex(userId);
 
-        if (values.category?.value === 'bank' && codeBin) {
+        if (values.category?.value === 'bank' && values.brand?.bin) {
           const response = await getVietQRData(
             values.accountNumber ?? '', // Use provided account number, fallback if empty
             values.accountName ?? '',  // Use provided account name
-            codeBin,                   // Use codeBin directly
+            values.brand?.bin,
+            0,
+            '',
           );
+          console.log('VietQR Response:', response);
           metadata = response.data.qrCode; // Update metadata from VietQR
         }
 

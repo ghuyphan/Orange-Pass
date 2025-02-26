@@ -36,7 +36,6 @@ import DataType from '@/types/dataType';
 import { ThemedTopToast } from '@/components/toast/ThemedTopToast';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import ModalManager from '../modals/ModalManager';
-import { getVietQRData } from '@/utils/vietQR';
 
 const AnimatedKeyboardAwareScrollView = Animated.createAnimatedComponent(
   KeyboardAwareScrollView
@@ -52,6 +51,7 @@ export interface BrandItem {
   name: string;
   full_name: string;
   type: 'bank' | 'ewallet' | 'store';
+  bin?: string
 }
 
 export interface MetadataTypeItem {
@@ -237,6 +237,7 @@ const QRForm: React.FC<QRFormProps> = ({
     ) => {
       setIsSheetOpen(true);
       if (type === 'brand' && !category) {
+
         showToast(t('addScreen.errors.selectCategoryFirstMessage'));
         return;
       } else
@@ -586,7 +587,7 @@ const QRForm: React.FC<QRFormProps> = ({
                   onChangeText={handleChange('accountName')}
                   onBlur={handleBlur('accountName')}
                   backgroundColor={sectionsColors}
-                  disabled={!values.metadata}
+                  // disabled={!values.metadata}
                   disableOpacityChange={true}
                   errorMessage={
                     touched.accountName && errors.accountName
@@ -604,7 +605,7 @@ const QRForm: React.FC<QRFormProps> = ({
                   onBlur={handleBlur('accountNumber')}
                   backgroundColor={sectionsColors}
                   keyboardType="numeric"
-                  disabled={!values.metadata}
+                  // disabled={!values.metadata}
                   disableOpacityChange={true}
                   errorMessage={
                     touched.accountNumber && errors.accountNumber
@@ -629,6 +630,7 @@ const QRForm: React.FC<QRFormProps> = ({
 
           <ThemedReuseableSheet
             ref={bottomSheetRef}
+            showSearchBar={sheetType === 'brand'}
             title={
               sheetType === 'category'
                 ? t('addScreen.categoryTitle')

@@ -124,7 +124,7 @@ const BankSelectScreen = () => {
                     placeholder={t('detailsScreen.searchBank')}
                     value={searchQuery}
                     onChangeText={setSearchQuery}
-                    style={{ borderRadius: getResponsiveWidth(16) }}
+                    style={{ borderRadius: getResponsiveWidth(16), paddingVertical: getResponsiveHeight(1) }}
                 />
             </View>
 
@@ -149,16 +149,6 @@ const styles = StyleSheet.create({
     headerWrapper: {
         flexDirection: 'column',
         paddingHorizontal: getResponsiveWidth(3.6),
-    },
-    searchInput: {
-        marginTop: getResponsiveHeight(3.6),
-        paddingHorizontal: getResponsiveWidth(4.8),
-        paddingVertical: getResponsiveHeight(1.2),
-        borderRadius: getResponsiveWidth(4),
-        borderWidth: 1,
-        marginHorizontal: getResponsiveWidth(4.8),
-        marginBottom: getResponsiveHeight(1.8),
-        fontSize: getResponsiveFontSize(16),
     },
     bankItem: {
         flexDirection: 'row',

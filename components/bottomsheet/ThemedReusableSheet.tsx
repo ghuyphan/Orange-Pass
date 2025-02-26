@@ -1,5 +1,5 @@
-import React, { forwardRef, useImperativeHandle, useRef, ReactNode, useCallback } from 'react';
-import { View, StyleSheet, Pressable, ViewStyle, TextStyle, BackHandler } from 'react-native';
+import React, { forwardRef, useImperativeHandle, useRef, ReactNode, useCallback, useState, useMemo } from 'react';
+import { View, StyleSheet, Pressable, ViewStyle, TextStyle, BackHandler, TextInput } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import BottomSheet, {
   BottomSheetScrollView,
@@ -12,6 +12,7 @@ import { Colors } from '@/constants/Colors';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { useTheme } from '@/context/ThemeContext';
 import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
+import { ThemedInput } from '../Inputs';
 
 export interface BottomSheetAction {
   icon?: React.ComponentProps<typeof MaterialCommunityIcons | typeof MaterialIcons>['name'];
@@ -53,7 +54,7 @@ interface ReuseableSheetProps extends Partial<BottomSheetProps> {
   contentType?: 'scroll' | 'flat' | 'custom';
   contentProps?: {
     scrollViewProps?: React.ComponentProps<typeof BottomSheetScrollView>;
-    flatListProps?: React.ComponentProps<typeof BottomSheetFlatList>;
+    flatListProps?: React.ComponentProps<typeof BottomSheetFlatList> & { data: any[]; keyExtractor: (item: any) => string };
   };
   closeOnBackdropPress?: boolean;
   dynamicSnapPoints?: boolean;
@@ -61,6 +62,7 @@ interface ReuseableSheetProps extends Partial<BottomSheetProps> {
   maxHeight?: string | number;
   onClose?: () => void;
   showCloseButton?: boolean;
+  showSearchBar?: boolean;
 }
 
 const ThemedReuseableSheet = forwardRef<BottomSheet, ReuseableSheetProps>(
@@ -82,11 +84,28 @@ const ThemedReuseableSheet = forwardRef<BottomSheet, ReuseableSheetProps>(
     maxHeight = '90%',
     onClose,
     showCloseButton = false,
+    showSearchBar = false,
     ...bottomSheetProps
   }, ref) => {
     const { currentTheme } = useTheme();
     const bottomSheetRef = useRef<BottomSheet>(null);
     const isSheetVisible = useRef(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const filteredData = useMemo(() => {
+      if (contentType !== 'flat' || !contentProps.flatListProps?.data) {
+        return contentProps.flatListProps?.data || [];
+      }
+
+      if (!searchQuery) {
+        return contentProps.flatListProps.data;
+      }
+
+      const lowerCaseQuery = searchQuery.toLowerCase();
+      return contentProps.flatListProps.data.filter(item =>
+        item.name.toLowerCase().includes(lowerCaseQuery)
+      );
+    }, [searchQuery, contentProps.flatListProps?.data, contentType]);
+
 
     useFocusEffect(
       useCallback(() => {
@@ -192,11 +211,12 @@ const ThemedReuseableSheet = forwardRef<BottomSheet, ReuseableSheetProps>(
       );
     };
 
+
     const renderHeader = () => (
       <View style={[styles.headerContainer, customStyles.header]}>
         {renderCloseButton()}
         {customHeader}
-        {(title || description) && (
+        {(title || description) || contentType === 'flat' ? (
           <View style={[styles.headerContent, customStyles.headerContent]}>
             {title && (
               <ThemedText style={[styles.title, customStyles.title]}>{title}</ThemedText>
@@ -206,10 +226,20 @@ const ThemedReuseableSheet = forwardRef<BottomSheet, ReuseableSheetProps>(
                 {description}
               </ThemedText>
             )}
+            {(contentType === 'flat' && showSearchBar) && (
+              <ThemedInput
+                iconName="magnify"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                placeholder="Search..."
+                style={styles.searchBar}
+              />
+            )}
           </View>
-        )}
+        ) : null}
       </View>
     );
+
 
     const renderContentBody = () => (
       <>
@@ -252,7 +282,6 @@ const ThemedReuseableSheet = forwardRef<BottomSheet, ReuseableSheetProps>(
     );
 
     const renderContent = () => {
-
       switch (contentType) {
         case 'scroll':
           return (
@@ -283,7 +312,8 @@ const ThemedReuseableSheet = forwardRef<BottomSheet, ReuseableSheetProps>(
                   ]}
                   {...contentProps.flatListProps}
                   renderItem={contentProps.flatListProps?.renderItem}
-                  data={contentProps.flatListProps?.data}
+                  data={filteredData} // Use filteredData here!
+                  keyExtractor={contentProps.flatListProps?.keyExtractor}
                 />
               </View>
             </>
@@ -368,7 +398,6 @@ const styles = StyleSheet.create({
     height: getResponsiveHeight(0.6),
   },
   headerContainer: {
-    // paddingVertical: getResponsiveHeight(1.8),
     marginBottom: getResponsiveHeight(0.6),
     paddingHorizontal: getResponsiveWidth(3.6),
     paddingTop: getResponsiveHeight(0.6),
@@ -376,11 +405,8 @@ const styles = StyleSheet.create({
   },
   flatListContainer: {
     flex: 1,
-    // marginVertical: getResponsiveHeight(1.8),
   },
   contentContainer: {
-    // paddingHorizontal: getResponsiveWidth(3.6),
-    // paddingVertical: getResponsiveHeight(1.8),
     marginBottom: getResponsiveHeight(1.8),
   },
   headerContent: {
@@ -426,6 +452,13 @@ const styles = StyleSheet.create({
     right: getResponsiveWidth(3.6),
     padding: getResponsiveWidth(1.2),
     zIndex: 1,
+  },
+  searchBarContainer: {
+  },
+  searchBar: {
+    marginTop: getResponsiveHeight(0.6),
+    borderRadius: getResponsiveWidth(10),
+    paddingVertical: getResponsiveHeight(1),
   },
 });
 

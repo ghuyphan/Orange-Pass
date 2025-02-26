@@ -8,6 +8,7 @@ import { returnItemData } from '@/utils/returnItemData';
 import { returnMidpointColors } from '@/utils/returnMidpointColor';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
+import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 
 export type ThemedPinnedCardProps = {
   code: string;
@@ -17,6 +18,8 @@ export type ThemedPinnedCardProps = {
   accountName?: string;
   accountNumber?: string;
   style?: object;
+  onAccountPress?: () => void;
+  onAccountNumberPress?: () => void;
 };
 
 export const ThemedPinnedCard = ({
@@ -27,6 +30,8 @@ export const ThemedPinnedCard = ({
   accountName,
   accountNumber,
   style,
+  onAccountPress,
+  onAccountNumberPress
 }: ThemedPinnedCardProps): JSX.Element => {
   // Calculate dimensions with useMemo
   const qrSize = useMemo(() => getResponsiveWidth(42), []);
@@ -105,13 +110,17 @@ export const ThemedPinnedCard = ({
 
         <View style={styles.infoContainer}>
           {(type === 'bank' || type === "ewallet") && (
-            <ThemedText type="defaultSemiBold" style={styles.accountName} numberOfLines={1}>
-              {accountName}
-            </ThemedText>
+            <TouchableWithoutFeedback onPress={onAccountPress}>
+              <ThemedText type="defaultSemiBold" style={styles.accountName} numberOfLines={1}>
+                {accountName}
+              </ThemedText>
+            </TouchableWithoutFeedback>
           )}
-          <ThemedText style={styles.accountNumber} numberOfLines={1}>
-            {accountNumber ? accountNumber : metadata}
-          </ThemedText>
+          <TouchableWithoutFeedback onPress={onAccountNumberPress}>
+            <ThemedText style={styles.accountNumber} numberOfLines={1}>
+              {accountNumber ? accountNumber : metadata}
+            </ThemedText>
+          </TouchableWithoutFeedback>
         </View>
       </View>
     </LinearGradient>
