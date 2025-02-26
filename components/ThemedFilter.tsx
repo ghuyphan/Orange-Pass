@@ -112,7 +112,7 @@ const ThemedFilter = ({ selectedFilter, onFilterChange, style }: ThemedFilterPro
     {
       key: 'store',
       label: t('homeScreen.filters.store'),
-      iconName: 'store',
+      iconName: 'ticket-percent',
     },
   ];
 

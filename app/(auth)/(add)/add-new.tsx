@@ -12,6 +12,7 @@ import { returnItemCodeByBin, returnItemData } from '@/utils/returnItemData';
 import { useLocale } from '@/context/LocaleContext';
 import { t } from '@/i18n';
 import { removeQrData } from '@/store/reducers/qrSlice';
+import { getVietQRData } from '@/utils/vietQR';
 
 const AddScreen: React.FC = () => {
   const dispatch = useDispatch();
@@ -97,23 +98,33 @@ const AddScreen: React.FC = () => {
   // Optimized submit handler
   const handleFormSubmit = useCallback(
     async (values: FormParams, formikHelpers: FormikHelpers<FormParams>) => {
-      formikHelpers.setSubmitting(true); // Start loading state early
+      formikHelpers.setSubmitting(true);
       const newId = generateUniqueId();
       const now = new Date().toISOString();
+      let metadata = values.metadata;
 
       try {
         const nextIndex = await getNextQrIndex(userId);
+
+        if (values.category?.value === 'bank' && codeBin) {
+          const response = await getVietQRData(
+            values.accountNumber ?? '', // Use provided account number, fallback if empty
+            values.accountName ?? '',  // Use provided account name
+            codeBin,                   // Use codeBin directly
+          );
+          metadata = response.data.qrCode; // Update metadata from VietQR
+        }
 
         const newQrRecord: QRRecord = {
           id: newId,
           qr_index: nextIndex,
           user_id: userId,
-          code: values.brand?.code || '', // Fallback to empty string
-          metadata: values.metadata,
-          metadata_type: values.metadataType?.value || 'qr', // Fallback to 'qr'
+          code: values.brand?.code || '',
+          metadata: metadata, // Use the potentially updated metadata
+          metadata_type: values.metadataType?.value || 'qr',
           account_name: values.accountName,
           account_number: values.accountNumber,
-          type: values.category?.value || 'store',  // Fallback to 'store'
+          type: values.category?.value || 'store',
           created: now,
           updated: now,
           is_deleted: false,
@@ -122,16 +133,16 @@ const AddScreen: React.FC = () => {
 
         dispatch(addQrData(newQrRecord));
         await insertOrUpdateQrCodes([newQrRecord]);
-        router.replace('/(auth)/home'); // Navigate on success
+        router.replace('/(auth)/home');
       } catch (error) {
         console.error('Submission error:', error);
-        dispatch(removeQrData(newId)); //remove if error
+        dispatch(removeQrData(newId));
         // Consider using a toast or other UI feedback instead of console.error
       } finally {
-        formikHelpers.setSubmitting(false); // Ensure loading state is reset
+        formikHelpers.setSubmitting(false);
       }
     },
-    [dispatch, userId]
+    [dispatch, userId, codeBin] // Include codeBin in dependencies
   );
 
   return (

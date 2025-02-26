@@ -1,16 +1,15 @@
 // QRForm.tsx
-import React, { useCallback, useMemo, useRef, useState, useImperativeHandle, forwardRef } from 'react'; // Import forwardRef
-import { useFocusEffect } from 'expo-router';
-import { StyleSheet, View, Keyboard, BackHandler } from 'react-native';
+import React, { useCallback, useMemo, useRef, useState } from 'react'; // Import forwardRef
+import { StyleSheet, View, Keyboard } from 'react-native';
 import { Formik, FormikHelpers } from 'formik';
 import Animated, {
-    Extrapolation,
-    interpolate,
-    useAnimatedScrollHandler,
-    useAnimatedStyle,
-    useSharedValue,
-    FadeIn,
-    FadeOut,
+  Extrapolation,
+  interpolate,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useSharedValue,
+  FadeIn,
+  FadeOut,
 } from 'react-native-reanimated';
 import BottomSheet from '@gorhom/bottom-sheet';
 import { Colors } from '@/constants/Colors';
@@ -23,120 +22,62 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import ThemedReuseableSheet from '@/components/bottomsheet/ThemedReusableSheet';
 import {
-    CategorySheetItem,
-    BrandSheetItem,
-    MetadataTypeSheetItem,
+  CategorySheetItem,
+  BrandSheetItem,
+  MetadataTypeSheetItem,
 } from '@/components/bottomsheet/SheetItem';
 import { qrCodeSchema } from '@/utils/validationSchemas';
 import {
-    returnItemsByType,
+  returnItemsByType,
 } from '@/utils/returnItemData';
 import { useLocale } from '@/context/LocaleContext';
 import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
 import DataType from '@/types/dataType';
 import { ThemedTopToast } from '@/components/toast/ThemedTopToast';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { ThemedModal } from '../modals/ThemedIconModal';
+import ModalManager from '../modals/ModalManager';
+import { getVietQRData } from '@/utils/vietQR';
 
 const AnimatedKeyboardAwareScrollView = Animated.createAnimatedComponent(
-    KeyboardAwareScrollView
+  KeyboardAwareScrollView
 );
 
 export interface CategoryItem {
-    display: string;
-    value: 'bank' | 'ewallet' | 'store';
+  display: string;
+  value: 'bank' | 'ewallet' | 'store';
 }
 
 export interface BrandItem {
-    code: string;
-    name: string;
-    full_name: string;
-    type: 'bank' | 'ewallet' | 'store';
+  code: string;
+  name: string;
+  full_name: string;
+  type: 'bank' | 'ewallet' | 'store';
 }
 
 export interface MetadataTypeItem {
-    display: string;
-    value: 'qr' | 'barcode';
+  display: string;
+  value: 'qr' | 'barcode';
 }
 
 export type SheetItem = CategoryItem | BrandItem | MetadataTypeItem;
 export type SheetType = 'category' | 'brand' | 'metadataType';
 
 export interface FormParams {
-    category: CategoryItem | null;
-    brand: BrandItem | null;
-    metadataType: MetadataTypeItem;
-    metadata: string;
-    accountName: string;
-    accountNumber: string;
+  category: CategoryItem | null;
+  brand: BrandItem | null;
+  metadataType: MetadataTypeItem;
+  metadata: string;
+  accountName: string;
+  accountNumber: string;
 }
 
 interface QRFormProps {
-    initialValues: FormParams;
-    onSubmit: (values: FormParams, formikHelpers: FormikHelpers<FormParams>) => Promise<void>;
-    isEditing: boolean;
-    onNavigateBack: () => void;
-    codeProvider?: string;
+  initialValues: FormParams;
+  onSubmit: (values: FormParams, formikHelpers: FormikHelpers<FormParams>) => Promise<void>;
+  isEditing: boolean;
+  onNavigateBack: () => void;
+  codeProvider?: string;
 }
-
-// Define the type for the ref that ModalManager exposes
-interface ModalManagerRef {
-    showModal: () => void;
-}
-
-// Helper component to manage the modal's visibility.
-const ModalManager = forwardRef<ModalManagerRef, { onNavigateBack: () => void, dirty: boolean }>((props, ref) => { // Use forwardRef and the defined type
-    const { onNavigateBack, dirty } = props;
-    const [isModalVisible, setIsModalVisible] = useState(false);
-
-    // Expose a method to show the modal.
-    const showModal = useCallback(() => {
-        setIsModalVisible(true);
-    }, []);
-
-
-    useImperativeHandle(ref, () => ({
-        showModal,
-    }));
-
-    useFocusEffect(
-        useCallback(() => {
-            const onBackPress = () => {
-                if (isModalVisible) {
-                    setIsModalVisible(false);
-                    return true;
-                }
-                if (dirty) {
-                    setIsModalVisible(true);
-                    return true;
-                }
-                return false;
-            };
-
-            BackHandler.addEventListener('hardwareBackPress', onBackPress);
-            return () => BackHandler.removeEventListener('hardwareBackPress', onBackPress);
-        }, [isModalVisible, dirty, onNavigateBack])
-    );
-
-    return (
-        <ThemedModal
-            isVisible={isModalVisible}
-            onDismiss={() => setIsModalVisible(false)}
-            onPrimaryAction={() => setIsModalVisible(false)}
-            primaryActionText={t('common.back')}
-            message={t('common.unsavedChanges')}
-            title={t('common.unsavedChangesTitle')}
-            secondaryActionText={t('common.discard')}
-            onSecondaryAction={() => {
-                setIsModalVisible(false);
-                onNavigateBack();
-            }}
-            iconName='warning'
-        />
-    );
-});
-
-ModalManager.displayName = 'ModalManager'; // Add display name
 
 const QRForm: React.FC<QRFormProps> = ({
   initialValues,
@@ -149,25 +90,27 @@ const QRForm: React.FC<QRFormProps> = ({
   const { locale: currentLocale } = useLocale();
   const locale = currentLocale ?? 'en';
   const { text: colors, icon: iconColors, cardBackground: sectionsColors } = Colors[currentTheme];
+  const isSheetVisible = useRef(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [sheetType, setSheetType] = useState<SheetType | null>(null);
   const [isToastVisible, setIsToastVisible] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
+  const [toastMessage, setToastMessage] = useState('');  // Keep this for display logic
+  const [toastKey, setToastKey] = useState(0); // Add a key
   const bottomSheetRef = useRef<BottomSheet>(null);
   const scrollY = useSharedValue(0);
   const modalManagerRef = useRef<any>(null);
 
-  // --- Helper Functions --- (These are the same, condensed for brevity)
+  // --- Helper Functions ---
   const getItemsByTypeHelper = useCallback(
     (type: DataType, locale: string): BrandItem[] =>
       returnItemsByType(type).map((item) => {
-        // Ensure 'type' is one of the acceptable values for 'BrandItem'
         if (type === 'bank' || type === 'store' || type === 'ewallet') {
           return {
             code: item.code,
             name: item.name,
             full_name: item.full_name[locale],
-            type: type, // 'type' is already one of 'bank' | 'store' | 'ewallet'
+            type: type,
+            bin: item.bin
           };
         } else {
           return {
@@ -180,14 +123,15 @@ const QRForm: React.FC<QRFormProps> = ({
       }),
     []
   );
-
   const showToast = useCallback((message: string) => {
     setToastMessage(message);
-    setIsToastVisible(true);
+    setIsToastVisible(true); // Show the toast
+    setToastKey(prevKey => prevKey + 1); // Increment key on *new* toast
   }, []);
 
-
-
+  const onToastHidden = useCallback(() => { // Use a separate callback for hiding
+    setIsToastVisible(false);
+  }, []);
   const metadataTypeData: MetadataTypeItem[] = useMemo(
     () => [
       { display: t('addScreen.qr'), value: 'qr' },
@@ -195,8 +139,7 @@ const QRForm: React.FC<QRFormProps> = ({
     ],
     [t]
   );
-
-  // --- Animation --- (This stays largely the same)
+  // --- Animation ---
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
       scrollY.value = event.contentOffset.y;
@@ -226,9 +169,9 @@ const QRForm: React.FC<QRFormProps> = ({
           ),
         },
       ],
-      zIndex: isSheetOpen ? 0 : 1, // Simplified zIndex.
+      zIndex: isSheetOpen ? 0 : 1,
     }),
-    [isSheetOpen] // Make sure to include isSheetOpen here
+    [isSheetOpen]
   );
 
   const cardStyle = useAnimatedStyle(
@@ -247,7 +190,7 @@ const QRForm: React.FC<QRFormProps> = ({
     []
   );
 
-  // --- Event Handlers --- (These are mostly the same)
+  // --- Event Handlers ---
   const handleClearCategory = (
     setFieldValue: (
       field: string,
@@ -298,11 +241,9 @@ const QRForm: React.FC<QRFormProps> = ({
         return;
       } else
         if (type === 'metadataType' && !category) {
-          showToast(t('addScreen.selectCategoryFirstMessage'));
+          showToast(t('addScreen.errors.selectCategoryFirstMessage'));
           return;
         }
-
-
 
       setSheetType(type);
       setTimeout(() => {
@@ -326,8 +267,7 @@ const QRForm: React.FC<QRFormProps> = ({
       switch (type) {
         case 'category':
           setFieldValue('category', item as CategoryItem);
-          setFieldValue('brand', null); // Clear brand when category changes
-          // setFieldValue('metadataType', metadataTypeData[0]); // Reset metadataType
+          setFieldValue('brand', null);
           setFieldValue('accountName', '');
           setFieldValue('accountNumber', '');
           break;
@@ -338,12 +278,12 @@ const QRForm: React.FC<QRFormProps> = ({
           setFieldValue('metadataType', item as MetadataTypeItem);
           break;
       }
-      bottomSheetRef.current?.close(); // Ensure the sheet is closed!
+      bottomSheetRef.current?.close();
     },
-    [metadataTypeData]
+    []
   );
 
-  // --- Rendering Functions --- (These are mostly the same)
+  // --- Rendering Functions ---
   const renderCardItem = useCallback(
     (
       metadata: string,
@@ -356,8 +296,8 @@ const QRForm: React.FC<QRFormProps> = ({
       <ThemedCardItem
         accountName={accountName}
         accountNumber={accountNumber}
-        code={codeProvider ? codeProvider : brand?.code || ''}  // Use codeProvider if available, otherwise brand code
-        type={category?.value || 'store'} // Default to 'store' if no category
+        code={codeProvider ? codeProvider : brand?.code || ''}
+        type={category?.value || 'store'}
         metadata={metadata}
         metadata_type={metadataType?.value}
         animatedStyle={cardStyle}
@@ -366,11 +306,6 @@ const QRForm: React.FC<QRFormProps> = ({
     ),
     [cardStyle, codeProvider]
   );
-
-  const onVisibilityToggle = useCallback((isVisible: boolean) => {
-    setIsToastVisible(isVisible);
-
-  }, []);
 
   const onEmptyInputPress = useCallback((inputType: string) => {
 
@@ -400,14 +335,12 @@ const QRForm: React.FC<QRFormProps> = ({
     ) => {
       if (!item) return null;
 
-      // Determine the type of item
       const isCategory =
         'value' in item && ['store', 'bank', 'ewallet'].includes(item.value);
       const isMetadataType =
         'value' in item && ['qr', 'barcode'].includes(item.value);
       const isBrand = 'code' in item;
 
-      // Check if the current item is selected
       const isSelected = isCategory
         ? category?.value === item.value
         : isBrand
@@ -423,7 +356,6 @@ const QRForm: React.FC<QRFormProps> = ({
         textColors: colors,
       };
 
-      // Render the appropriate sheet item component based on type
       switch (true) {
         case isCategory:
           return (
@@ -455,7 +387,6 @@ const QRForm: React.FC<QRFormProps> = ({
     [colors, handleSheetItemSelect, iconColors]
   );
 
-  // Category data for the bottom sheet
   const categoryData: CategoryItem[] = useMemo(
     () => [
       { display: t('addScreen.bankCategory'), value: 'bank' },
@@ -465,14 +396,12 @@ const QRForm: React.FC<QRFormProps> = ({
     [t]
   );
 
-  // Dynamically generate the data for the bottom sheet based on the sheet type
   const sheetData = useCallback(
     (category: CategoryItem | null) => {
       switch (sheetType) {
         case 'category':
           return categoryData;
         case 'brand':
-          // Only show brands of the selected category type.
           return category ? getItemsByTypeHelper(category.value as DataType, locale) : [];
         case 'metadataType':
           return metadataTypeData;
@@ -483,7 +412,6 @@ const QRForm: React.FC<QRFormProps> = ({
     [sheetType, categoryData, metadataTypeData, getItemsByTypeHelper, locale]
   );
 
-  // Key extractor for FlatList components
   const keyExtractor = useCallback((item: SheetItem | unknown) => {
     return 'value' in (item as SheetItem)
       ? (item as CategoryItem | MetadataTypeItem).value
@@ -493,10 +421,9 @@ const QRForm: React.FC<QRFormProps> = ({
   }, []);
 
   const handleSheetChange = useCallback((index: number) => {
+    isSheetVisible.current = !(index === -1)
     setIsSheetOpen(!(index === -1));
   }, []);
-  // --- Animation for Account/Number Section ---
-  // Determine whether to show the account details section
   const shouldShowAccountSection = useCallback(
     (category: CategoryItem | null) => {
       return (
@@ -508,13 +435,12 @@ const QRForm: React.FC<QRFormProps> = ({
     []
   );
 
-
   return (
     <Formik<FormParams>
       initialValues={initialValues}
       validationSchema={qrCodeSchema}
       onSubmit={onSubmit}
-      enableReinitialize={true} // Keep this for EditScreen
+      enableReinitialize={true}
     >
       {({
         handleChange,
@@ -529,9 +455,10 @@ const QRForm: React.FC<QRFormProps> = ({
       }) => (
         <ThemedView style={styles.container}>
           <ThemedTopToast
+            key={toastKey} // Key change forces remount
             message={toastMessage}
             isVisible={isToastVisible}
-            onVisibilityToggle={onVisibilityToggle} // Use the updated callback
+            onVisibilityToggle={onToastHidden} // Separate hide handler
             duration={2000}
           />
           <Animated.View style={[styles.titleContainer, titleContainerStyle]}>
@@ -542,7 +469,6 @@ const QRForm: React.FC<QRFormProps> = ({
                   style={styles.titleButton}
                   onPress={() => {
                     if (dirty) {
-                      // Call showModal on the ModalManager ref!
                       modalManagerRef.current?.showModal();
                     } else {
                       onNavigateBack();
@@ -551,7 +477,7 @@ const QRForm: React.FC<QRFormProps> = ({
                 />
               </View>
               <ThemedText style={styles.title} type="title">
-                {isEditing ? t('editScreen.title') : t('addScreen.title')} {/* Dynamic Title */}
+                {isEditing ? t('editScreen.title') : t('addScreen.title')}
               </ThemedText>
             </View>
           </Animated.View>
@@ -564,7 +490,6 @@ const QRForm: React.FC<QRFormProps> = ({
             onScroll={scrollHandler}
             scrollEnabled={true}
           >
-            {/* Card Preview */}
             {renderCardItem(
               values.metadata,
               values.accountName,
@@ -574,7 +499,6 @@ const QRForm: React.FC<QRFormProps> = ({
               values.metadataType
             )}
 
-            {/* Form Fields */}
             <ThemedView
               style={[styles.formContainer, { backgroundColor: sectionsColors }]}
             >
@@ -607,24 +531,33 @@ const QRForm: React.FC<QRFormProps> = ({
                 }
                 isError={touched.brand && !!errors.brand}
               />
-              <ThemedInput
-                iconName="credit-card-outline"
-                placeholder={t('addScreen.metadataPlaceholder')}
-                value={values.metadata}
-                onChangeText={handleChange('metadata')}
-                onBlur={handleBlur('metadata')}
-                backgroundColor={sectionsColors}
-                disabled={!!codeProvider && !isEditing || !values.category || !values.brand} // Disable based on edit mode
-                disableOpacityChange={true}
-                errorMessage={
-                  touched.metadata && errors.metadata
-                    ? String(errors.metadata)
-                    : undefined
-                }
-                isError={touched.metadata && !!errors.metadata}
-                onDisabledPress={() => onEmptyInputPress('metadata')}
-
-              />
+              {(values.category?.value === 'store' || values.category?.value === 'ewallet') && (
+                <Animated.View
+                style={[
+                  { backgroundColor: sectionsColors },
+                ]}
+                entering={FadeIn.duration(300)}
+                exiting={FadeOut.duration(300)}
+              >
+                <ThemedInput
+                  iconName="credit-card-outline"
+                  placeholder={t('addScreen.metadataPlaceholder')}
+                  value={values.metadata}
+                  onChangeText={handleChange('metadata')}
+                  onBlur={handleBlur('metadata')}
+                  backgroundColor={sectionsColors}
+                  disabled={!!codeProvider && !isEditing} // Simplified disabled condition
+                  disableOpacityChange={true}
+                  errorMessage={
+                    touched.metadata && errors.metadata
+                      ? String(errors.metadata)
+                      : undefined
+                  }
+                  isError={touched.metadata && !!errors.metadata}
+                  onDisabledPress={() => onEmptyInputPress('metadata')}
+                />
+                </Animated.View>
+              )}
               <ThemedDisplayInput
                 iconName="qrcode"
                 placeholder={t('addScreen.metadataTypePlaceholder')}
@@ -637,7 +570,6 @@ const QRForm: React.FC<QRFormProps> = ({
               />
             </ThemedView>
 
-            {/* Conditionally Render with Animation */}
             {shouldShowAccountSection(values.category) && (
               <Animated.View
                 style={[
@@ -717,7 +649,7 @@ const QRForm: React.FC<QRFormProps> = ({
             contentType="flat"
             contentProps={{
               flatListProps: {
-                data: sheetData(values.category),  // Pass the current category to sheetData
+                data: sheetData(values.category),
                 showsVerticalScrollIndicator: false,
                 renderItem: ({ item }) =>
                   renderSheetItem(
@@ -735,8 +667,7 @@ const QRForm: React.FC<QRFormProps> = ({
               },
             }}
           />
-          {/* Use the ModalManager component here */}
-          <ModalManager ref={modalManagerRef} onNavigateBack={onNavigateBack} dirty={dirty} />
+          <ModalManager ref={modalManagerRef} onNavigateBack={onNavigateBack} dirty={dirty} isSheetVisible={isSheetVisible} bottomSheetRef={bottomSheetRef} />
         </ThemedView>
       )}
     </Formik>

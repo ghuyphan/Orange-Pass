@@ -12,6 +12,7 @@ import { returnItemsByType } from '@/utils/returnItemData';
 import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
 import { MMKV } from 'react-native-mmkv';
 import { ThemedInput } from '@/components/Inputs';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 interface BankItem {
     code: string;
@@ -80,13 +81,11 @@ const BankSelectScreen = () => {
     }, [router]);
 
     const renderBankItem = useCallback(({ item }: { item: BankItem }) => {
-        const isSelected = item.code === selectedBankCode; // Check if selected
         return (
             <Pressable
                 style={[
                     styles.bankItem,
                     // { backgroundColor: currentTheme === 'light' ? Colors.light.buttonBackground : Colors.dark.buttonBackground },
-                    isSelected && styles.selectedBankItem, // Apply selected style
                 ]}
                 onPress={() => handleBankSelect(item.code)}
             >
@@ -94,10 +93,11 @@ const BankSelectScreen = () => {
                     <Image source={getIconPath(item.code)} style={styles.bankIcon} resizeMode="contain" />
                 </View>
                 <ThemedText style={[styles.bankName, { color: currentTheme === 'light' ? Colors.light.text : Colors.dark.text }]}>{item.name}</ThemedText>
-                {isSelected && (
-                    <View style={styles.selectedIconContainer}>
-                        <ThemedText style={styles.checkIcon}>✓</ThemedText>
-                    </View>)}
+                <MaterialCommunityIcons
+                    name="chevron-right"
+                    size={getResponsiveFontSize(16)}
+                    color={currentTheme === 'light' ? Colors.light.icon : Colors.dark.icon}
+                />
             </Pressable>
         );
     }, [currentTheme, handleBankSelect, selectedBankCode]);
@@ -124,16 +124,17 @@ const BankSelectScreen = () => {
                     placeholder={t('detailsScreen.searchBank')}
                     value={searchQuery}
                     onChangeText={setSearchQuery}
+                    style={{ borderRadius: getResponsiveWidth(16) }}
                 />
             </View>
 
             <FlatList
-                style={{ marginTop: getResponsiveHeight(1.8) }}
+                style={[styles.listStyle, {backgroundColor: currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground}]}
                 data={filteredBanks}
                 renderItem={renderBankItem}
                 keyExtractor={(item) => item.code}
                 ListEmptyComponent={renderEmptyComponent}
-                contentContainerStyle={[styles.listContent, { backgroundColor: currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground }]}
+                contentContainerStyle={[styles.listContent]}
                 showsVerticalScrollIndicator={false}
             />
         </ThemedView>
@@ -144,7 +145,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         paddingTop: getResponsiveHeight(10), // Adjusted paddingTop to match DetailScreen
-
     },
     headerWrapper: {
         flexDirection: 'column',
@@ -192,9 +192,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingTop: getResponsiveHeight(3.6),
     },
-    listContent: {
+    listStyle: {
         marginHorizontal: getResponsiveWidth(3.6),
-        marginBottom: getResponsiveHeight(4.8),
+        marginTop: getResponsiveHeight(1.8), 
+        borderRadius: getResponsiveWidth(4),
+        marginBottom: getResponsiveHeight(3.6),
+    },
+    listContent: {
         borderRadius: getResponsiveWidth(4),
     },
     selectedBankItem: {

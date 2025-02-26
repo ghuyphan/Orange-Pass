@@ -64,9 +64,9 @@ export const ThemedPinnedCard = ({
             styles.codeWrapper,
             metadata_type === 'barcode'
               ? {
-                  paddingHorizontal: getResponsiveWidth(3.6),
-                  paddingVertical: getResponsiveHeight(1.8),
-                }
+                paddingHorizontal: getResponsiveWidth(3.6),
+                paddingVertical: getResponsiveHeight(1.8),
+              }
               : {},
           ]}
         >
@@ -86,8 +86,25 @@ export const ThemedPinnedCard = ({
           )}
         </View>
 
+        {type === 'bank' && (
+          <View style={styles.brandContainer}>
+            <Image
+              style={styles.vietQRIcon}
+              source={require('@/assets/images/vietqr.png')}
+              resizeMode="contain"
+            />
+            <View style={styles.divider} />
+            <Image
+              style={styles.napasIcon}
+              source={require('@/assets/images/napas.png')}
+              resizeMode="contain"
+            />
+          </View>
+        )}
+
+
         <View style={styles.infoContainer}>
-          {(type === 'bank'  || type === "ewallet" ) && (
+          {(type === 'bank' || type === "ewallet") && (
             <ThemedText type="defaultSemiBold" style={styles.accountName} numberOfLines={1}>
               {accountName}
             </ThemedText>
@@ -138,10 +155,36 @@ const styles = StyleSheet.create({
   codeWrapper: {
     backgroundColor: 'white',
     borderRadius: getResponsiveWidth(4),
-    padding: getResponsiveWidth(2),
+    padding: getResponsiveWidth(2.5),
     marginBottom: getResponsiveHeight(1.8),
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  brandContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+    backgroundColor: 'rgba(255,255,255,0.4)',
+    borderRadius: getResponsiveWidth(2.5),
+    padding: getResponsiveWidth(1.2),
+    marginBottom: getResponsiveHeight(1.8),
+  },
+  vietQRIcon: {
+    width: '23%',
+    height: getResponsiveHeight(3.6),
+  },
+  divider: {
+    width: getResponsiveWidth(0.35),
+    height: '50%',
+    backgroundColor: '#535f78',
+    marginHorizontal: getResponsiveWidth(3.6),
+  },
+  napasIcon: {
+    width: '20%',
+    height: getResponsiveHeight(2.4),
+    marginTop: getResponsiveHeight(0.6),
+    marginRight: getResponsiveWidth(1.6),
   },
   infoContainer: {
     alignItems: 'center',

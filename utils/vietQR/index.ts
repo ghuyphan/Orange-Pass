@@ -4,7 +4,7 @@ export const getVietQRData = async (
   accountNo: string,
   accountName: string,
   acqId: string,
-  amount: number,
+  amount?: number,
   addInfo?: string // Make addInfo optional
 ) => {
   const vietQRUrl = process.env.EXPO_PUBLIC_VIETQR_API_URL_GENERATE || 'default_url';

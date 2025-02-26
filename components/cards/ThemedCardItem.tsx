@@ -170,11 +170,11 @@ const ThemedCardItem = memo(function ThemedCardItem(props: ThemedCardItemProps):
         <View style={styles.qrContainer}>
           {displayMetadata ? (
             metadata_type === 'qr' ? (
-              <QRCode value={displayMetadata} size={getResponsiveWidth(17)} />
+              <QRCode value={displayMetadata} size={getResponsiveWidth(18)} />
             ) : (
               <Barcode
-                height={getResponsiveHeight(8.4)}
-                maxWidth={getResponsiveWidth(33)}
+                height={getResponsiveHeight(8.5)}
+                maxWidth={getResponsiveWidth(31)}
                 value={displayMetadata}
                 format="CODE128"
               />
@@ -277,9 +277,9 @@ const styles = StyleSheet.create({
   },
   cardHolderName: {
     color: 'white',
-    fontSize: getResponsiveFontSize(16),
+    fontSize: getResponsiveFontSize(15),
     fontWeight: '600',
-    maxWidth: getResponsiveWidth(55), // Consider making this more dynamic
+    maxWidth: getResponsiveWidth(54), // Consider making this more dynamic
   },
   cardType: {
     color: 'rgba(255,255,255,0.7)',

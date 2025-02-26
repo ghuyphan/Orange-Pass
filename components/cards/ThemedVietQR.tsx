@@ -26,7 +26,7 @@ export const ThemedVietQRCard = ({
   style,
 }: ThemedVietQRProps): JSX.Element => {
   // Calculate dimensions with useMemo
-  const qrSize = useMemo(() => getResponsiveWidth(40), []);
+  const qrSize = useMemo(() => getResponsiveWidth(42), []);
 
   // Pre-calculate data with useMemo
   const itemData = useMemo(() => returnItemData(code, type), [code, type]);
@@ -70,7 +70,7 @@ export const ThemedVietQRCard = ({
     codeWrapper: {
       backgroundColor: 'white',
       borderRadius: getResponsiveWidth(4),
-      padding: getResponsiveWidth(2),
+      padding: getResponsiveWidth(2.5),
       marginBottom: getResponsiveHeight(1.8),
       alignItems: 'center',
       justifyContent: 'center',

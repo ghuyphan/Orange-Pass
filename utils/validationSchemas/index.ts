@@ -40,54 +40,53 @@ export const forgotPasswordSchema = yup.object().shape({
     .required('emailRequired'),
 });
 
-export const qrCodeSchema = yup.object().shape({
-  category: yup
-    .object()
-    .shape({
-      display: yup.string().required(() => t('addScreen.errors.categoryRequired')), // Use a FUNCTION here
-      value: yup.string().oneOf(['bank', 'ewallet', 'store']).required(() => t('addScreen.errors.categoryRequired')), // And here
-    })
-    .nullable()
-    .required(() => t('addScreen.errors.categoryRequired')), // And here
 
-  brand: yup
-    .object()
-    .shape({
-      code: yup.string().required(),  // These don't need t() because they are internal, not user-facing
+export const qrCodeSchema = yup.object({
+  category: yup.object().shape({
+    value: yup.string().oneOf(['bank', 'ewallet', 'store']).required(() => t('addScreen.errors.categoryRequired')),
+    display: yup.string().required(() => t('addScreen.errors.categoryRequired'))
+  }).required(() => t('addScreen.errors.categoryRequired')),
+
+  brand: yup.object().shape({
+    code: yup.string().required(),
+    name: yup.string().required(),
+    full_name: yup.string().required(),
+    type: yup.string().oneOf(['bank', 'ewallet', 'store']).required()
+  }).nullable().when('category.value', { // Correctly reference category.value
+    is: (categoryValue: string) => categoryValue !== 'store',
+    then: () => yup.object().shape({ // Re-define the shape for brand
+      code: yup.string().required(),
       name: yup.string().required(),
       full_name: yup.string().required(),
-      type: yup.string().oneOf(['bank', 'ewallet', 'store']).required(),
-    })
-    .nullable()
-    .when('category', {
-      is: (category: { value?: string }) => category?.value !== 'store',
-      then: (schema) => schema.required(() => t('addScreen.errors.brandRequired')), // Function here!
-      otherwise: (schema) => schema.nullable(),
-    }),
+      type: yup.string().oneOf(['bank', 'ewallet', 'store']).required()
+    }).required(() => t('addScreen.errors.brandRequired')),
+    otherwise: () => yup.object().shape({ //allow null for store
+      code: yup.string().nullable(),
+      name: yup.string().nullable(),
+      full_name: yup.string().nullable(),
+      type: yup.string().nullable()
+    }).nullable(),
+  }),
 
-  metadataType: yup
-    .object()
-    .shape({
-      display: yup.string().required(), // This likely *doesn't* need a message, as it's a display value
-      value: yup.string().oneOf(['qr', 'barcode']).required(),
-    })
-    .required(() => t('addScreen.errors.metadataTypeRequired')), // Function here!
+  metadataType: yup.object().shape({
+    value: yup.string().oneOf(['qr', 'barcode']).required(),
+    display: yup.string().required()
+  }).required(() => t('addScreen.errors.metadataTypeRequired')),
 
-  metadata: yup.string().required(() => t('addScreen.errors.metadataRequired')), // Function here!
+  metadata: yup.string().when('category.value', { // Conditional validation for metadata
+    is: (categoryValue: string) => categoryValue === 'store' || categoryValue === 'ewallet',
+    then: () => yup.string().required(() => t('addScreen.errors.metadataRequired')),
+    otherwise: () => yup.string().nullable(), // Allow null/empty for 'bank'
+  }),
 
-  accountName: yup.string()
-    .nullable()
-    .when('category', {
-      is: (category: { value?: string }) => category?.value !== 'store',
-      then: (schema) => schema.required(() => t('addScreen.errors.accountNameRequired')),
-      otherwise: (schema) => schema.nullable(),
-    }),
-
-  accountNumber: yup.string()
-    .nullable()
-    .when('category', {
-      is: (category: { value?: string }) => category?.value !== 'store',
-      then: (schema) => schema.required(() => t('addScreen.errors.accountNumberRequired')),
-      otherwise: (schema) => schema.nullable(),
-    }),
+  accountName: yup.string().when('category.value', {
+      is: (categoryValue:string) => categoryValue === 'bank',
+      then: () => yup.string().required(() => t('addScreen.errors.accountNameRequired')),
+      otherwise: () => yup.string().nullable()
+  }),
+  accountNumber: yup.string().when('category.value', {
+    is: (categoryValue:string) => categoryValue === 'bank',
+    then: () => yup.string().required(() => t('addScreen.errors.accountNumberRequired')),
+    otherwise: () => yup.string().nullable()
+}),
 });

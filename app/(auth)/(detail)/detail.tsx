@@ -36,7 +36,7 @@ import { ThemedTopToast } from '@/components/toast/ThemedTopToast';
 import SettingSheetContent from '@/components/bottomsheet/SettingSheetContent';
 
 // Constants
-const AMOUNT_SUGGESTIONS = ['10,000', '50,000', '100,000', '500,000', '1,000,000'];
+const AMOUNT_SUGGESTIONS = ['10,000', '20,000', '50,000', '100,000', '500,000', '1,000,000'];
 const LAST_USED_BANK_KEY = 'lastUsedBank';
 
 // Types
@@ -256,7 +256,7 @@ const DetailScreen = () => {
   const onNavigateToSelectScreen = useCallback(() => {
     router.push('/(auth)/(detail)/bank-select');
   },[])
-  
+
   const handleTransferAmount = useCallback(
     throttle(async () => {
       if (!item || !amount) return;

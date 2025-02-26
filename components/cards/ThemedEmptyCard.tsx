@@ -9,7 +9,6 @@ import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '
 import { t } from '@/i18n';
 import { Menu } from 'react-native-paper';
 import { useThemeColor } from '@/hooks/useThemeColor';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export type ThemedEmptyCardProps = {
   lightColor?: string;
