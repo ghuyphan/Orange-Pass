@@ -129,7 +129,7 @@ const BankSelectScreen = () => {
             </View>
 
             <FlatList
-                style={[styles.listStyle, {backgroundColor: currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground}]}
+                style={[styles.listStyle, { backgroundColor: currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground }]}
                 data={filteredBanks}
                 renderItem={renderBankItem}
                 keyExtractor={(item) => item.code}
@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
     },
     listStyle: {
         marginHorizontal: getResponsiveWidth(3.6),
-        marginTop: getResponsiveHeight(1.8), 
+        marginTop: getResponsiveHeight(1.8),
         borderRadius: getResponsiveWidth(4),
         marginBottom: getResponsiveHeight(3.6),
     },
