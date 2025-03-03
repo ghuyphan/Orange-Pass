@@ -14,7 +14,11 @@
         "resizeMode": "contain"
       },
       "supportsTablet": false,
-      "bundleIdentifier": "com.giahuyphan0110.orange2"
+      "bundleIdentifier": "com.giahuyphan0110.orange2",
+      "infoPlist": {
+        "NSLocalNetworkUsageDescription": "Orange⁺ needs to access your local network to connect to Wi-Fi devices.",
+        "NSLocationWhenInUseUsageDescription": "Orange⁺ needs access to your location to scan for nearby Wi-Fi networks."
+      }
     },
     "android": {
       "splash": {
@@ -26,7 +30,13 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#FFF5E1"
       },
-      "package": "com.giahuyphan0110.orange2"
+      "package": "com.giahuyphan0110.orange2",
+      "permissions": [
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_WIFI_STATE",
+        "android.permission.CHANGE_WIFI_STATE"
+
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -45,8 +55,12 @@
       ],
       "expo-localization",
       "expo-secure-store",
-      ["react-native-wifi-reborn"]
-
+      [
+        "react-native-wifi-reborn",
+          {
+            "fineLocationPermission": true
+          }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

@@ -6,7 +6,7 @@ import useHandleCodeScanned from '@/hooks/useHandleCodeScanned';
 import SheetType from '@/types/sheetType';
 
 type GalleryPickerOptions = {
-    onOpenSheet: (type: SheetType, id?: string, url?: string, ssid?: string, pass?: string) => void;
+    onOpenSheet: (type: SheetType, id?: string, url?: string, ssid?: string, pass?: string, isWep?: boolean) => void;
     onNavigateToAddScreen: (
         codeFormat?: number,
         codeValue?: string,
@@ -25,6 +25,7 @@ type ExtendedScanResult = {
     provider?: string;
     ssid?: string;
     pass?: string;
+    isWep?: boolean
 };
 
 export const useGalleryPicker = ({
@@ -59,7 +60,7 @@ export const useGalleryPicker = ({
 
                 if (result) {
                     const actionMap: Record<string, () => void> = {
-                        'WIFI': () => onOpenSheet('wifi', undefined, undefined, result.ssid, result.pass),
+                        'WIFI': () => onOpenSheet('wifi', undefined, undefined, result.ssid, result.pass, result.isWep),
                         'URL': () => onOpenSheet('linking', undefined, result.rawCodeValue),
                         // Handle bank and ewallet, passing bin and provider if they exist
                         'bank': () => onNavigateToAddScreen(result.codeFormat, result.rawCodeValue, result.bin, result.codeType, result.provider),

@@ -117,12 +117,10 @@ export default function ScanScreen() {
 
 
   const [isCameraReady, setIsCameraReady] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(false);
+  // const [isConnecting, setIsConnecting] = useState(false);
   const [isToastVisible, setIsToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [isDecoding, setIsDecoding] = useState(false);
-
-  const handleCodeScanned = useHandleCodeScanned();
 
 
   const showToast = (message: string) => {

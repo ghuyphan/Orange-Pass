@@ -1,4 +1,4 @@
-import React, { useState, useMemo, forwardRef, useCallback } from 'react';
+import React, { useState, useImperativeHandle, forwardRef, useCallback, useRef } from 'react';
 import {
   TextInput,
   StyleSheet,
@@ -10,12 +10,13 @@ import {
   TouchableWithoutFeedback,
   NativeSyntheticEvent,
   TextInputFocusEventData,
+  TextInputSelectionChangeEventData, // Import this
 } from 'react-native';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
 import { useTheme } from '@/context/ThemeContext';
-import { useLocale } from '@/context/LocaleContext';
+// import { useLocale } from '@/context/LocaleContext'; // Removed as not used
 import { Colors } from '@/constants/Colors';
 import { Tooltip } from 'react-native-paper';
 import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
@@ -31,17 +32,25 @@ export type ThemedInputProps = {
   secureTextEntry?: boolean;
   keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad';
   onChangeText?: (text: string) => void;
-  onBlur?: (event: NativeSyntheticEvent<TextInputFocusEventData>) => void; // Updated type
-  onFocus?: (event: NativeSyntheticEvent<TextInputFocusEventData>) => void; // Good practice for consistency
+  onBlur?: (event: NativeSyntheticEvent<TextInputFocusEventData>) => void;
+  onFocus?: (event: NativeSyntheticEvent<TextInputFocusEventData>) => void;
   onSubmitEditing?: () => void;
   disabled?: boolean;
   backgroundColor?: string;
   disableOpacityChange?: boolean;
   required?: boolean;
-  onDisabledPress?: () => void; // New prop
+  onDisabledPress?: () => void;
 };
 
-export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(
+type Selection = {
+  start: number;
+  end: number;
+};
+
+export const ThemedInput = forwardRef<
+  { focus: () => void }, // Define the type of the exposed ref
+  ThemedInputProps
+>(
   (
     {
       iconName,
@@ -54,31 +63,46 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(
       secureTextEntry = false,
       keyboardType = 'default',
       onChangeText = () => {},
-      onBlur = () => {}, // Provide default empty functions
-      onFocus = () => {},  // Provide default empty functions
+      onBlur = () => {},
+      onFocus = () => {},
       onSubmitEditing = () => {},
       disabled = false,
       backgroundColor,
       disableOpacityChange = false,
       required = false,
-      onDisabledPress, // Destructure the new prop
+      onDisabledPress,
     },
     ref
   ) => {
     const { currentTheme } = useTheme();
-    const { locale } = useLocale();
+    // const { locale } = useLocale(); // You're not using this, consider removing if not needed
     const [localValue, setLocalValue] = useState(value);
     const [isSecure, setIsSecure] = useState(secureTextEntry);
     const [isErrorModalVisible, setIsErrorModalVisible] = useState(false);
+    // Add state for selection
+    const [selection, setSelection] = useState<Selection>({ start: 0, end: 0 });
+    const [isFocused, setIsFocused] = useState(false);
 
     const color = currentTheme === 'light' ? Colors.light.text : Colors.dark.text;
     const placeholderColor =
       currentTheme === 'light' ? Colors.light.placeHolder : Colors.dark.placeHolder;
     const errorColor = currentTheme === 'light' ? Colors.light.error : Colors.dark.error;
 
+    // useRef to get a reference to the TextInput
+    const textInputRef = useRef<TextInput>(null);
+
+    // Use useImperativeHandle to expose only the focus method
+    useImperativeHandle(ref, () => ({
+      focus: () => {
+        textInputRef.current?.focus();
+      },
+    }));
+
     const onClearValue = useCallback(() => {
       setLocalValue('');
       onChangeText('');
+       // Reset selection when clearing
+      setSelection({ start: 0, end: 0 });
     }, [onChangeText]);
 
     const onToggleSecureValue = useCallback(() => setIsSecure((prevState) => !prevState), []);
@@ -86,16 +110,17 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(
     const handleChangeText = useCallback((text: string) => {
       setLocalValue(text);
       onChangeText(text);
+      // Important:  Do NOT update selection here.  Update it in onSelectionChange.
     }, [onChangeText]);
 
-    // Internal handler for onBlur
     const handleBlur = useCallback((event: NativeSyntheticEvent<TextInputFocusEventData>) => {
-        onBlur(event); // Call the *provided* onBlur handler.
+      onBlur(event);
+      setIsFocused(false);
     }, [onBlur]);
 
-      // Internal handler for onFocus
     const handleFocus = useCallback((event: NativeSyntheticEvent<TextInputFocusEventData>) => {
-        onFocus(event);
+      onFocus(event);
+      setIsFocused(true);
     }, [onFocus]);
 
     const handleDisabledPress = useCallback(() => {
@@ -104,22 +129,29 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(
       }
     }, [onDisabledPress]);
 
-
-    const inputContainerStyle = useMemo(
-      () => [
-        styles.inputContainer,
-        {
-          backgroundColor:
-            backgroundColor ??
-            (currentTheme === 'light'
-              ? Colors.light.inputBackground
-              : Colors.dark.inputBackground),
-          opacity: disabled && !disableOpacityChange ? 0.5 : 1,
+    // Add onSelectionChange handler
+    const handleSelectionChange = useCallback(
+        (event: NativeSyntheticEvent<TextInputSelectionChangeEventData>) => {
+          // Only update selection state if the input is focused. This prevents issues on Android.
+          if (isFocused) {
+            setSelection(event.nativeEvent.selection);
+          }
         },
-        style,
-      ],
-      [currentTheme, style, backgroundColor, disabled, disableOpacityChange]
+        [isFocused]
     );
+
+    const inputContainerStyle = [
+      styles.inputContainer,
+      {
+        backgroundColor:
+          backgroundColor ??
+          (currentTheme === 'light'
+            ? Colors.light.inputBackground
+            : Colors.dark.inputBackground),
+        opacity: disabled && !disableOpacityChange ? 0.5 : 1,
+      },
+      style,
+    ];
 
     const ErrorTooltip = useCallback(() => (
       <Modal
@@ -137,114 +169,116 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(
         </TouchableWithoutFeedback>
       </Modal>
     ), [isErrorModalVisible, errorMessage, errorColor]);
-
+    
     return (
       <View style={[styles.container, style]}>
-        <Pressable  // Wrap the entire input area with Pressable
-          style={{ width: '100%' }} // Ensure Pressable covers the whole area
-          onPress={disabled ? handleDisabledPress : undefined} // Conditional onPress
-          disabled={!disabled} // Only enable press when disabled
+        <Pressable
+          style={{ width: '100%' }}
+          onPress={disabled ? handleDisabledPress : undefined}
+          disabled={!disabled} // Corrected disabled logic
         >
-        <ThemedView style={inputContainerStyle}>
-          {!iconName && (
-            <ThemedText style={[styles.label, { color }]} type="defaultSemiBold">
-              {label}
-              {required && <ThemedText style={{ color: 'red' }}> *</ThemedText>}
-            </ThemedText>
-          )}
-
-          <View
-            style={[
-              styles.inputRow,
-              {
-                borderBottomColor: errorColor,
-                borderBottomWidth: isError && errorMessage ? getResponsiveWidth(0.3) : 0,
-              },
-            ]}
-          >
-            {iconName && (
-              <MaterialCommunityIcons
-                name={iconName}
-                size={getResponsiveFontSize(16)}
-                color={placeholderColor}
-              />
+          <ThemedView style={inputContainerStyle}>
+            {!iconName && (
+              <ThemedText style={[styles.label, { color }]} type="defaultSemiBold">
+                {label}
+                {required && <ThemedText style={{ color: 'red' }}> *</ThemedText>}
+              </ThemedText>
             )}
-            <TextInput
-              ref={ref}
-              onSubmitEditing={onSubmitEditing}
+
+            <View
               style={[
-                styles.input,
+                styles.inputRow,
                 {
-                  color: disabled ? placeholderColor : color,
-                  marginLeft: iconName ? getResponsiveWidth(2.5) : 0,
+                  borderBottomColor: errorColor,
+                  borderBottomWidth: isError && errorMessage ? getResponsiveWidth(0.3) : 0,
                 },
               ]}
-              secureTextEntry={isSecure}
-              value={localValue}
-              onChangeText={handleChangeText}
-              onBlur={handleBlur} // Use the internal handler
-              onFocus={handleFocus}
-              placeholder={placeholder}
-              placeholderTextColor={placeholderColor}
-              accessible={true}
-              accessibilityLabel={label}
-              keyboardType={keyboardType}
-              editable={!disabled}
-            />
-
-            <View style={styles.rightContainer}>
-              {localValue.length > 0 && (
-                <Pressable
-                  onPress={disabled ? undefined : onClearValue}
-                  style={styles.iconTouchable}
-                  hitSlop={{
-                    top: getResponsiveHeight(0.6),
-                    bottom: getResponsiveHeight(0.6),
-                    left: getResponsiveWidth(1.2),
-                    right: getResponsiveWidth(1.2),
-                  }}
-                  disabled={disabled}
-                >
-                  <MaterialIcons name={'cancel'} color={color} size={getResponsiveFontSize(16)} />
-                </Pressable>
+            >
+              {iconName && (
+                <MaterialCommunityIcons
+                  name={iconName}
+                  size={getResponsiveFontSize(16)}
+                  color={placeholderColor}
+                />
               )}
+              <TextInput
+                ref={textInputRef} // Assign the ref to the TextInput
+                onSubmitEditing={onSubmitEditing}
+                style={[
+                  styles.input,
+                  {
+                    color: disabled ? placeholderColor : color,
+                    marginLeft: iconName ? getResponsiveWidth(2.5) : 0,
+                  },
+                ]}
+                secureTextEntry={isSecure}
+                value={localValue}
+                onChangeText={handleChangeText}
+                onBlur={handleBlur}
+                onFocus={handleFocus}
+                placeholder={placeholder}
+                placeholderTextColor={placeholderColor}
+                accessible={true}
+                accessibilityLabel={label}
+                keyboardType={keyboardType}
+                editable={!disabled}
+                selection={selection} // Set the selection prop
+                onSelectionChange={handleSelectionChange} // Handle selection changes
+              />
 
-              {localValue.length > 0 && secureTextEntry && (
-                <Pressable
-                  onPress={disabled ? undefined : onToggleSecureValue}
-                  style={[styles.iconTouchable]}
-                  hitSlop={{
-                    top: getResponsiveHeight(0.6),
-                    bottom: getResponsiveHeight(0.6),
-                    left: getResponsiveWidth(1.2),
-                    right: getResponsiveWidth(1.2),
-                  }}
-                  disabled={disabled}
-                >
-                  <MaterialIcons
-                    name={isSecure ? 'visibility' : 'visibility-off'}
-                    size={getResponsiveWidth(4)}
-                    color={color}
-                  />
-                </Pressable>
-              )}
-
-              {isError && errorMessage && (
-                <Tooltip
-                  title={errorMessage}
-                  enterTouchDelay={0}
-                  leaveTouchDelay={1500}
-                  theme={{ colors: { onSurface: errorColor } }}
-                >
-                  <Pressable onPress={() => {}} style={styles.errorIconContainer}>
-                    <MaterialIcons name="error" size={getResponsiveWidth(4)} color={errorColor} />
+              <View style={styles.rightContainer}>
+                {localValue.length > 0 && (
+                  <Pressable
+                    onPress={disabled ? undefined : onClearValue}
+                    style={styles.iconTouchable}
+                    hitSlop={{
+                      top: getResponsiveHeight(0.6),
+                      bottom: getResponsiveHeight(0.6),
+                      left: getResponsiveWidth(1.2),
+                      right: getResponsiveWidth(1.2),
+                    }}
+                    disabled={disabled}
+                  >
+                    <MaterialIcons name={'cancel'} color={color} size={getResponsiveFontSize(16)} />
                   </Pressable>
-                </Tooltip>
-              )}
+                )}
+
+                {localValue.length > 0 && secureTextEntry && (
+                  <Pressable
+                    onPress={disabled ? undefined : onToggleSecureValue}
+                    style={[styles.iconTouchable]}
+                    hitSlop={{
+                      top: getResponsiveHeight(0.6),
+                      bottom: getResponsiveHeight(0.6),
+                      left: getResponsiveWidth(1.2),
+                      right: getResponsiveWidth(1.2),
+                    }}
+                    disabled={disabled}
+                  >
+                    <MaterialIcons
+                      name={isSecure ? 'visibility' : 'visibility-off'}
+                      size={getResponsiveWidth(4)}
+                      color={color}
+                    />
+                  </Pressable>
+                )}
+
+                {isError && errorMessage && (
+                  <Tooltip
+                    title={errorMessage}
+                    enterTouchDelay={0}
+                    leaveTouchDelay={1500}
+                    theme={{ colors: { onSurface: errorColor } }}
+                  >
+                    <Pressable onPress={() => {}} style={styles.errorIconContainer}>
+                      <MaterialIcons name="error" size={getResponsiveWidth(4)} color={errorColor} />
+                    </Pressable>
+                  </Tooltip>
+                )}
+              </View>
             </View>
-          </View>
-        </ThemedView>
-      </Pressable>
+          </ThemedView>
+        </Pressable>
 
         <ErrorTooltip />
       </View>
@@ -253,6 +287,17 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(
 );
 
 ThemedInput.displayName = 'ThemedInput';
+
+// Add default props for easier usage
+ThemedInput.defaultProps = {
+  placeholder: '',
+  secureTextEntry: false,
+  keyboardType: 'default',
+  disabled: false,
+  disableOpacityChange: false,
+  required: false,
+};
+
 
 const styles = StyleSheet.create({
   container: {

@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { View, StyleSheet, Alert, StyleProp, ViewStyle, Pressable, TextInput, findNodeHandle } from 'react-native'; // Import findNodeHandle
+import React, { useState, useRef, useEffect } from 'react';
+import { View, StyleSheet, Alert, StyleProp, ViewStyle, Pressable, TextInput } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { ThemedText } from '@/components/ThemedText';
@@ -7,32 +7,74 @@ import { ThemedButton } from '@/components/buttons';
 import { ThemedModal } from '../modals/ThemedIconModal';
 import { useTheme } from '@/context/ThemeContext';
 import { Colors } from '@/constants/Colors';
-import { getResponsiveHeight, getResponsiveWidth } from '@/utils/responsive';
+import { getResponsiveHeight, getResponsiveWidth, getResponsiveFontSize } from '@/utils/responsive';
 import { t } from '@/i18n';
-import { TextInput as NativeTextInput } from 'react-native'; // Import TextInput from react-native
+import WifiManager from 'react-native-wifi-reborn';
+import { PermissionsAndroid } from 'react-native'; // Import PermissionsAndroid
 
 interface WifiSheetContentProps {
   ssid: string;
   password?: string;
+  isWep?: boolean;
+  isHidden: boolean; // Add isHidden prop
   style?: StyleProp<ViewStyle>;
   onConnectSuccess?: () => void;
-  onConnect: (ssid: string, password?: string) => Promise<boolean>;
+  // onConnect: (ssid: string, password?: string) => Promise<boolean>; // Remove this
 }
 
 const WifiSheetContent: React.FC<WifiSheetContentProps> = ({
   ssid,
   password: initialPassword,
+  isWep,
+  isHidden, // Receive isHidden
   style,
   onConnectSuccess,
-  onConnect,
+  // onConnect, // Remove this
 }) => {
   const { currentTheme } = useTheme();
   const [showPassword, setShowPassword] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
   const [modalIcon, setModalIcon] = useState<keyof typeof MaterialIcons.glyphMap>();
   const [modalTitle, setModalTitle] = useState<string | null>(null);
   const [modalDescription, setModalDescription] = useState<string | null>(null);
-  const passwordInputRef = useRef<TextInput>(null);
+  const [password, setPassword] = useState<string>(initialPassword || ''); // Local password state
+  const passwordInputRef = useRef<TextInput>(null); // Keep the ref
+
+    // Request permissions on component mount
+    useEffect(() => {
+        const requestLocationPermission = async () => {
+            try {
+                const granted = await PermissionsAndroid.request(
+                    PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+                    {
+                        title: t('locationPermission.title'),
+                        message: t('locationPermission.message'),
+                        buttonNegative: t('locationPermission.buttonNegative'),
+                        buttonPositive: t('locationPermission.buttonPositive'),
+                    },
+                );
+                if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+                    console.log('Location permission granted');
+                } else {
+                    console.log('Location permission denied');
+                     setIsModalVisible(true);
+                    setModalIcon('warning');
+                    setModalTitle(t('locationPermission.title'));
+                    setModalDescription(t('locationPermission.message'));
+                }
+            } catch (err) {
+                console.warn(err);
+                 setIsModalVisible(true);
+                setModalIcon('error');
+                setModalTitle('Error');
+                setModalDescription(String(err)); // Ensure error is displayed
+            }
+        };
+
+        requestLocationPermission();
+    }, []);
+
 
   const colors = {
     error: currentTheme === 'light' ? Colors.light.error : Colors.dark.error,
@@ -46,42 +88,48 @@ const WifiSheetContent: React.FC<WifiSheetContentProps> = ({
   const handleCopySSID = async () => {
     try {
       await Clipboard.setStringAsync(ssid);
+        Alert.alert(t('wifiSheet.copySSIDModal.successTitle'), t('wifiSheet.copySSIDModal.successDescription')); // success alert
     } catch (error) {
       console.error('Error copying SSID:', error);
-      Alert.alert('Error', 'Failed to copy SSID');
+      Alert.alert(t('wifiSheet.copySSIDModal.errorTitle'), t('wifiSheet.copySSIDModal.errorDescription'));
     }
   };
 
-    const handleConnect = async () => {
-        if (!ssid) return;
+    const onConnectToWifi = async () => {
+     if (!ssid) return;
 
-        let currentPassword = '';
-        if (passwordInputRef.current) {
-            const nativeComponent = findNodeHandle(passwordInputRef.current);
-            if (nativeComponent) {
-                // Use a type assertion to tell TypeScript that it's a NativeTextInput
-                currentPassword = (passwordInputRef.current as any)._nativeText || '';
-            }
-        }
+    if (!password || password.length < 8) {
+      setIsModalVisible(true);
+      setModalIcon('warning');
+      setModalTitle(t('wifiSheet.invalidPasswordModal.title'));
+      setModalDescription(t('wifiSheet.invalidPasswordModal.description'));
+      return;
+    }
 
-        if (currentPassword.length < 8) {
-            setIsModalVisible(true);
-            setModalIcon('warning');
-            setModalTitle(t('wifiSheet.invalidPasswordModal.title'));
-            setModalDescription(t('wifiSheet.invalidPasswordModal.description'));
-            return;
-        }
+    setIsConnecting(true); // Set loading state
 
-        const success = await onConnect(ssid, currentPassword);
-        if (success) {
-            onConnectSuccess?.();
-        } else {
-            setIsModalVisible(true);
-            setModalIcon('error');
-            setModalTitle(t('wifiSheet.connectionErrorModal.title'));
-            setModalDescription(t('wifiSheet.connectionErrorModal.description'));
+    try {
+      await WifiManager.connectToProtectedSSID(ssid, password, !!isWep, isHidden); // Use isHidden, ensure isWep is boolean
+      console.log("Connected successfully!");
+      Alert.alert(t('wifiSheet.connectionSuccessModal.title'), t('wifiSheet.connectionSuccessModal.description'));
+      onConnectSuccess?.(); // Call success callback
+    } catch (error: any) {
+      console.error('Error connecting to WiFi:', error);
+      // Show specific error messages:
+       if (error === 'didNotFindNetwork') {
+            Alert.alert(t('wifiSheet.networkNotFoundModal.title'), t('wifiSheet.networkNotFoundModal.description'));
+        } else if (error === 'authenticationErrorOccurred') {
+            Alert.alert(t('wifiSheet.authErrorModal.title'), t('wifiSheet.authErrorModal.description'));
+        } else if (error === 'locationPermissionMissing' || error === 'locationServicesOff') {
+            Alert.alert(t('locationPermission.title'), t('locationPermission.message'))
         }
-    };
+      else {
+        Alert.alert(t('wifiSheet.connectionErrorModal.title'), t('wifiSheet.connectionErrorModal.description'));
+      }
+    } finally {
+      setIsConnecting(false); // Reset loading state
+    }
+  };
 
 
   const toggleShowPassword = () => {
@@ -91,6 +139,10 @@ const WifiSheetContent: React.FC<WifiSheetContentProps> = ({
   const onConnectAction = () => {
     setIsModalVisible(false);
   }
+
+  const handlePasswordChange = (text: string) => {
+    setPassword(text);
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.cardBg }, style]}>
@@ -112,7 +164,7 @@ const WifiSheetContent: React.FC<WifiSheetContentProps> = ({
 
       {/* Password Input */}
       <View style={[styles.passwordInputContainer, { borderColor: colors.border, backgroundColor: colors.inputBg }]}>
-      <MaterialCommunityIcons name="lock" size={16} color={colors.icon} />
+        <MaterialCommunityIcons name="lock" size={16} color={colors.icon} />
         <TextInput
           ref={passwordInputRef}
           style={[styles.passwordInput, { color: colors.icon }]}
@@ -120,6 +172,9 @@ const WifiSheetContent: React.FC<WifiSheetContentProps> = ({
           placeholder={t('homeScreen.passwordPlaceholder')}
           defaultValue={initialPassword}
           secureTextEntry={!showPassword}
+          onChangeText={handlePasswordChange} // Use onChangeText
+          value={password} // Control the input value
+
         />
         <Pressable onPress={toggleShowPassword}>
           <MaterialCommunityIcons name={showPassword ? "eye-off" : "eye"} size={20} color={colors.icon} />
@@ -128,13 +183,13 @@ const WifiSheetContent: React.FC<WifiSheetContentProps> = ({
 
       {/* Action Buttons */}
       <View style={styles.actionButtons}>
-        <ThemedButton iconName="wifi" onPress={handleConnect} label={t('homeScreen.connectButton')} style={styles.actionButton} />
+        <ThemedButton iconName="wifi" onPress={onConnectToWifi} label={t('homeScreen.connectButton')} style={styles.actionButton} loading={isConnecting} loadingLabel='Connecting' />
       </View>
     </View>
   );
 };
 const styles = StyleSheet.create({
-    container: {
+  container: {
     borderRadius: 16,
     paddingHorizontal: getResponsiveWidth(4.8),
     paddingVertical: getResponsiveHeight(1.8),

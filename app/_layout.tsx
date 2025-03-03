@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { StyleSheet, UIManager, Platform } from 'react-native';
+import { StyleSheet, UIManager, Platform, AppState } from 'react-native'; // Import AppState
 import { Stack, useRouter } from 'expo-router';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
@@ -21,7 +21,10 @@ import { ThemeProvider } from '@/context/ThemeContext';
 
 // Import components
 import { ThemedView } from '@/components/ThemedView';
-import 'react-native-get-random-values'
+import 'react-native-get-random-values';
+
+// Import cleanup function for ResponsiveManager
+import { cleanupResponsiveManager } from '@/utils/responsive';
 
 // Prevent auto-hide of splash screen
 SplashScreen.preventAutoHideAsync();
@@ -80,49 +83,58 @@ export default function RootLayout() {
     }
   }, [appState.isAppReady]);
 
-  // App initialization effect
-  useEffect(() => {
-    const prepareApp = async () => {
-      try {
-        // Create local database table
-        await createTable();
+    // App initialization effect
+    useEffect(() => {
+        const prepareApp = async () => {
+            try {
+                // Create local database tables
+                await createTable();
+                await createQrTable();
 
-        await createQrTable();
+                // Check onboarding status
+                const onboardingStatus = storage.getBoolean('hasSeenOnboarding') ?? false;
 
-        // Check onboarding status
-        const onboardingStatus = storage.getBoolean('hasSeenOnboarding') ?? false;
+                // Determine authentication status
+                const authStatus = onboardingStatus
+                    ? await checkInitialAuth().catch(() => false)
+                    : false;
 
-        // Determine authentication status
-        const authStatus = onboardingStatus 
-          ? await checkInitialAuth().catch(() => false)
-          : false;
+                // Update app state
+                setAppState({
+                    isAppReady: fontsLoaded && !fontError,
+                    isAuthenticated: authStatus,
+                    hasSeenOnboarding: onboardingStatus,
+                });
+            } catch (error) {
+                console.error("App initialization error:", error);
 
-        // Update app state
-        setAppState({
-          isAppReady: fontsLoaded && !fontError,
-          isAuthenticated: authStatus,
-          hasSeenOnboarding: onboardingStatus,
-        });
-      } catch (error) {
-        console.error("App initialization error:", error);
-        
-        // Fallback state in case of initialization failure
-        setAppState(prev => ({
-          ...prev,
-          isAppReady: true,
-          isAuthenticated: false,
-          hasSeenOnboarding: false,
-        }));
+                // Fallback state in case of initialization failure
+                setAppState(prev => ({
+                    ...prev,
+                    isAppReady: true,
+                    isAuthenticated: false,
+                    hasSeenOnboarding: false,
+                }));
+            }
+        };
+
+
+    // Setup for AppState change handling
+    const handleAppStateChange = (nextAppState: string) => {
+      if (nextAppState === 'inactive' || nextAppState === 'background') {
+        cleanupResponsiveManager();
       }
     };
 
     // Run preparation and set up offline status check
     prepareApp();
     const unsubscribe = checkOfflineStatus();
-    
-    // Cleanup subscription
+    const appStateSub = AppState.addEventListener('change', handleAppStateChange);
+
+    // Cleanup subscriptions
     return () => {
       unsubscribe();
+      appStateSub.remove(); // Clean up AppState listener
     };
   }, [fontsLoaded, fontError]);
 
@@ -130,8 +142,8 @@ export default function RootLayout() {
   useEffect(() => {
     const { isAppReady, hasSeenOnboarding, isAuthenticated } = appState;
 
-    if (isAppReady && 
-        hasSeenOnboarding !== null && 
+    if (isAppReady &&
+        hasSeenOnboarding !== null &&
         isAuthenticated !== null) {
       try {
         if (!hasSeenOnboarding) {
@@ -148,15 +160,10 @@ export default function RootLayout() {
   }, [appState, router]);
 
   // Show loading state while app is initializing
-  if (!appState.isAppReady || 
-      appState.isAuthenticated === null || 
+  if (!appState.isAppReady ||
+      appState.isAuthenticated === null ||
       appState.hasSeenOnboarding === null) {
-    return (
-      // <ThemedView style={styles.loadingContainer}>
-        // <ActivityIndicator size="large" />
-      // </ThemedView>
-      null
-    );
+    return null; // Or a loading indicator
   }
 
   return (
@@ -165,8 +172,8 @@ export default function RootLayout() {
         <GestureHandlerRootView style={styles.container}>
           <PaperProvider>
             <LocaleProvider>
-              <ThemedView 
-                style={styles.root} 
+              <ThemedView
+                style={styles.root}
                 onLayout={onLayoutRootView}
               >
                 <Stack
@@ -176,9 +183,9 @@ export default function RootLayout() {
                   }}
                 >
                   <Stack.Screen name="(public)" />
-                  <Stack.Screen 
-                    name="(auth)" 
-                    options={{ animation: 'none' }} 
+                  <Stack.Screen
+                    name="(auth)"
+                    options={{ animation: 'none' }}
                   />
                   <Stack.Screen name="+not-found" />
                   <Stack.Screen name="onboard" />
@@ -192,17 +199,12 @@ export default function RootLayout() {
   );
 }
 
-// Styles with added loading container
+// Styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
   root: {
     flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
 });

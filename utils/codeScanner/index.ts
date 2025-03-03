@@ -27,6 +27,7 @@ export const processScannedCode = ({
     WIFI: {
       pattern: /^WIFI:/,
       handler: () => {
+        console.log('WIFI:', codeMetadata);
         const ssidMatch = codeMetadata.match(/S:([^;]*)/);
         const passMatch = codeMetadata.match(/P:([^;]*)/);
         const isWepMatch = codeMetadata.match(/T:([^;]*)/);
@@ -36,24 +37,25 @@ export const processScannedCode = ({
         setIconName('wifi');
         setCodeValue(`${t('scanScreen.join')} "${ssid}" ${t('scanScreen.join2')}`);
 
-        if (quickScan) {
+        // if (quickScan) {
           const password = passMatch ? passMatch[1] : '';
           const isWep = isWepMatch ? isWepMatch[1] === 'WEP' : undefined;
+          console.log('WIFI:', ssid, password, isWep);
 
-          setIsConnecting(true);
-          WifiManager.connectToProtectedWifiSSID({
-            ssid,
-            password,
-            isWEP: isWep,
-          }).then(
-            () => {
-              setIsConnecting(false);
-            },
-            (error) => {
-              setIsConnecting(false);
-            }
-          );
-        }
+          // setIsConnecting(true);
+          // WifiManager.connectToProtectedWifiSSID({
+          //   ssid,
+          //   password,
+          //   isWEP: isWep,
+          // }).then(
+          //   () => {
+          //     setIsConnecting(false);
+          //   },
+          //   (error) => {
+          //     setIsConnecting(false);
+          //   }
+          // );
+        // }
       },
     },
     URL: {

@@ -102,6 +102,7 @@ function HomeScreen() {
   const [linkingUrl, setLinkingUrl] = useState<string | null>(null);
   const [wifiSsid, setWifiSsid] = useState<string | null>(null);
   const [wifiPassword, setWifiPassword] = useState<string | null>(null);
+  const [wifiIsWep, setWifiIsWep] = useState(false);
 
   // 6. Data and Filtering
   const [filter, setFilter] = useState('all');
@@ -438,12 +439,10 @@ function HomeScreen() {
     [selectedItemId, router] // Depend on selectedItemId and router
   );
 
-  const onOpenSheet = useCallback((type: SheetType, id?: string, url?: string, ssid?: string, password?: string) => {
+  const onOpenSheet = useCallback((type: SheetType, id?: string, url?: string, ssid?: string, password?: string, isWep?: boolean) => {
     setSheetType(type);
     setIsSheetOpen(true);
     setSelectedItemId(id || null);
-
-    console.log('onOpenSheet', type, id, url, ssid);
 
     switch (type) {
       case 'wifi':
@@ -451,6 +450,7 @@ function HomeScreen() {
         if (ssid && password) {
           setWifiSsid(ssid);
           setWifiPassword(password);
+          setIsWep(isWep);
         }
         break;
       case 'setting':
@@ -627,6 +627,7 @@ function HomeScreen() {
             <WifiSheetContent
               ssid={wifiSsid || ''}
               password={wifiPassword || ''}
+              isWep={wifiIsWep}
             />
           </>
         );

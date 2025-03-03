@@ -1,29 +1,26 @@
+// QRResult.tsx
 import React, { useCallback } from 'react';
-import {
-    StyleSheet,
-    TouchableWithoutFeedback,
-    Linking,
-    View, // Import View
-} from 'react-native';
+import { StyleSheet, TouchableWithoutFeedback, Linking, Alert } from 'react-native'; // Import Alert
 import { MaterialIcons } from '@expo/vector-icons';
 import Animated, { StyleProps } from 'react-native-reanimated';
-import { ThemedText } from '@/components/ThemedText'; // Use your themed text component
+import { ThemedText } from '@/components/ThemedText';
+import { analyzeCode } from '@/utils/qrUtils'; // Import only necessary functions
+import WifiManager from 'react-native-wifi-reborn';
 
-// Types
 type QRResultProps = {
     codeValue: string;
-    codeType: string;
-    codeFormat?: number; // Add codeFormat
+    codeType: string;          // Consider removing this if it's always derived from scanResult
+    codeFormat?: number;
     iconName?: keyof typeof MaterialIcons.glyphMap;
     animatedStyle: StyleProps;
-    onNavigateToAdd: (codeFormat?: number, codeValue?: string, bin?: string, codeType?: string, codeProvider?: string) => void; // Add this prop
+    onNavigateToAdd: (codeFormat?: number, codeValue?: string, bin?: string, codeType?: string, codeProvider?: string) => void;
     bin?: string;
     codeProvider?: string;
 };
 
 export const QRResult: React.FC<QRResultProps> = ({
     codeValue,
-    codeType,
+    codeType,  // Consider removing if unused
     codeFormat,
     iconName,
     animatedStyle,
@@ -32,85 +29,68 @@ export const QRResult: React.FC<QRResultProps> = ({
     codeProvider
 }) => {
 
+    const scanResult = analyzeCode(codeValue, { codeFormat });
+    // console.log('scanResult:', scanResult); // Keep for debugging during development
+
     const getFormattedText = useCallback(() => {
-        switch (codeType) {
+        switch (scanResult.codeType) {
             case 'URL':
-                try {
-                    const urlObject = new URL(codeValue);
-                    let domain = urlObject.hostname;
-                    domain = domain.replace(/^www\./, '');
-                    domain = domain.replace(/^en\.m\./, ''); //remove en.m.  Consider other subdomains too.
-                    const domainParts = domain.split('.');
-                    const siteName = domainParts[0];
-                    const capitalizedSiteName = siteName.charAt(0).toUpperCase() + siteName.slice(1);
-                    return `Navigate to ${capitalizedSiteName}?`;
-                } catch (error) {
-                    console.error("Error parsing URL:", error);
-                    return `Open link?`; // Fallback text
-                }
-
+                return `Navigate to ${new URL(scanResult.rawCodeValue).hostname.replace(/^www\./, '')}?`;
             case 'WIFI':
-                try {
-                    const match = codeValue.match(/WIFI:S:([^;]+)/);  // Extract SSID directly
-                    if (match) {
-                        const ssid = match[1];
-                        return `Connect to Wi-Fi ${ssid}?`;
-                    } else {
-                        return "Connect to Wi-Fi?"; // Handle malformed WiFi strings
-                    }
-                } catch (error) {
-                    console.error("Error parsing WIFI data:", error);
-                    return "Connect to Wi-Fi?";
-                }
-
+                return `Connect to Wi-Fi ${scanResult.ssid}?`;
             case 'bank':
-                try {
-                    console.log(codeValue); 
-                    const bankData = codeValue.substring(5);
-                    const bankParts = bankData.split(';');
-                    let bankName = '';
-                    for (const part of bankParts) {
-                        if (part.startsWith('bank:')) {
-                            bankName = part.substring(5);
-                            break;
-                        }
-                    }
-                    return `Add QR Code.`;
-                } catch (error) {
-                    console.error('Error parsing bank data', error)
-                    return `Open bank application.`;
-                }
+            case 'ewallet':
+                return `Add QR Code.`;
             default:
-                return codeValue; // Display raw value for unknown types
+                return scanResult.rawCodeValue;
         }
-    }, [codeValue, codeType]);
+    }, [scanResult]);
 
+    const onConnectToWifi = async (ssid: string, password: string, isWep: boolean, isHidden: boolean) => {
+        try {
+            await WifiManager.connectToProtectedSSID(ssid, password, isWep, isHidden);
+            console.log("Connected successfully!");
+            Alert.alert("Success", "Connected to Wi-Fi network!"); // User feedback
+        } catch (error: any) {
+            console.error("Connection failed:", error);
+            // Handle specific errors and give user feedback:
+            if (error === 'didNotFindNetwork') {
+                Alert.alert("Error", "Wi-Fi network not found.");
+            } else if (error === 'authenticationErrorOccurred') {
+                Alert.alert("Error", "Incorrect Wi-Fi password.");
+            } else if (error === 'locationPermissionMissing') {
+                Alert.alert("Error", "Location permission is required to scan for Wi-Fi networks. Please enable it in settings.");
+            } else {
+                Alert.alert("Error", "Failed to connect to Wi-Fi."); // Generic error
+            }
+        }
+    };
 
 
     const onResultTap = useCallback(() => {
-        switch (codeType) {
+        switch (scanResult.codeType) {
             case 'URL':
-                Linking.openURL(codeValue);
+                Linking.openURL(scanResult.rawCodeValue);
                 break;
             case 'WIFI':
-                // No action (as per your requirement)
+                // Pass all necessary parameters, including isHidden:
+                onConnectToWifi(scanResult.ssid, scanResult.password, scanResult.isWEP, scanResult.isHidden);
                 break;
             case 'bank':
-                onNavigateToAdd(codeFormat, codeValue, bin, codeType, codeProvider); // Pass all necessary data
-                break;
-            default:
-                // If it's not a special type, navigate to the add screen
-              
+            case 'ewallet':
+                onNavigateToAdd(scanResult.codeFormat, scanResult.rawCodeValue, scanResult.bin, scanResult.codeType, scanResult.provider);
                 break;
         }
-    }, [codeValue, codeType, codeFormat, onNavigateToAdd, bin, codeProvider]);
+    }, [scanResult, onNavigateToAdd]);  // Correct dependencies
+
 
     const formattedText = getFormattedText();
+    const resolvedIconName = iconName || scanResult.iconName;
 
     return (
         <TouchableWithoutFeedback onPress={onResultTap}>
             <Animated.View style={[styles.qrResultContainer, animatedStyle]}>
-                <MaterialIcons name={iconName} size={18} color="black" />
+                <MaterialIcons name={resolvedIconName} size={18} color="black" />
                 <ThemedText type='defaultSemiBold' numberOfLines={1} style={styles.qrResultText}>
                     {formattedText}
                 </ThemedText>
@@ -125,14 +105,14 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         alignSelf: 'center',
         justifyContent: 'space-between',
-        backgroundColor: '#FFCC00',
+        backgroundColor: '#FFCC00', // Consider using themed colors
         borderRadius: 25,
         gap: 5,
         paddingVertical: 3,
         paddingHorizontal: 12,
     },
     qrResultText: {
-        color: 'black',
+        color: 'black',  // Consider using themed colors
         fontSize: 12,
         overflow: 'hidden',
         maxWidth: 200,
