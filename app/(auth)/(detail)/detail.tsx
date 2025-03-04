@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import { StyleSheet, View, Linking, FlatList, TextInput, Pressable, Image, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, FlatList, TextInput, Pressable, Image, ActivityIndicator } from 'react-native';
+import * as Linking from 'expo-linking';
 import { useDispatch, useSelector } from 'react-redux';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -214,36 +215,57 @@ const DetailScreen = () => {
       setToastMessage(t('detailsScreen.failedToOpenGoogleMaps'));
     });
   }, [item]);
-
   const handleOpenBank = useCallback(
     async (code: string) => {
       let lowerCaseCode = code.toLowerCase();
-
+  
+      // Handle special cases for bank codes
       if (lowerCaseCode === 'vib') {
         lowerCaseCode = 'vib-2';
       } else if (lowerCaseCode === 'acb') {
         lowerCaseCode = 'acb-biz';
       }
-
+  
       const url = `https://dl.vietqr.io/pay?app=${lowerCaseCode}`;
+      console.log("Attempting to open URL:", url); // Log the URL
+  
       try {
-        await Linking.openURL(url);
-        storage.set(LAST_USED_BANK_KEY, code);
-
-        if (item?.type === 'store') {
-          const updatedBanks = [...vietQRBanks];
-          const bankIndex = updatedBanks.findIndex((bank) => bank.code === code);
-          if (bankIndex !== -1) {
-            const selectedBank = updatedBanks.splice(bankIndex, 1)[0];
-            updatedBanks.unshift(selectedBank);
-            setVietQRBanks(updatedBanks);
+        const canOpen = await Linking.canOpenURL(url);
+        console.log("Can open URL:", canOpen); // Log canOpenURL result
+  
+        if (canOpen) {
+          await Linking.openURL(url);
+          console.log("URL opened successfully"); // Log successful opening
+  
+          storage.set(LAST_USED_BANK_KEY, code); // Store the last used bank
+  
+          // Update the bank list only for store type items
+          if (item?.type === 'store') {
+            const updatedBanks = [...vietQRBanks];
+            const bankIndex = updatedBanks.findIndex((bank) => bank.code === code);
+  
+            // Move the selected bank to the front of the list
+            if (bankIndex !== -1) {
+              const [selectedBank] = updatedBanks.splice(bankIndex, 1);
+              updatedBanks.unshift(selectedBank);
+              setVietQRBanks(updatedBanks);
+            }
           }
+        } else {
+          // If the bank app cannot be opened, show a toast and open VietQR's website as a fallback.
+          console.warn(`Cannot open URL: ${url}`);
+          setIsToastVisible(true);
+          setToastMessage(t('detailsScreen.cannotOpenBankApp', { bankName: code }));
+          await Linking.openURL('https://vietqr.io'); // Await the fallback
         }
       } catch (err) {
-        console.error('Failed to open URL:', err);
+        // If there's an error, show a toast.
+        console.error('Failed to open bank app:', err);
+        setIsToastVisible(true);
+        setToastMessage(t('detailsScreen.failedToOpenBankApp', { bankName: code }));
       }
     },
-    [vietQRBanks, item?.type]
+    [vietQRBanks, item?.type, setIsToastVisible, setToastMessage, storage] // Include 'storage'
   );
 
   const showTopToast = useCallback((message: string) => {
@@ -258,7 +280,7 @@ const DetailScreen = () => {
 
   const onNavigateToSelectScreen = useCallback(() => {
     router.push('/(auth)/(detail)/bank-select');
-  },[])
+  }, [])
 
   const handleTransferAmount = useCallback(
     throttle(async () => {
@@ -308,7 +330,7 @@ const DetailScreen = () => {
   const onCopyAccountNumber = useCallback(() => {
     Clipboard.setStringAsync(item?.account_number ?? '');
     showTopToast(t('detailsScreen.copiedToClipboard'));
-  },[])
+  }, [])
 
   const renderSuggestionItem = useCallback(
     ({ item: suggestionItem }: { item: string }) => (
@@ -605,7 +627,7 @@ const DetailScreen = () => {
         iconName="delete-outline"
       />
       <ThemedTopToast
-      key={toastKey}
+        key={toastKey}
         isVisible={isTopToastVisible}
         message={topToastMessage}
         onVisibilityToggle={onVisibilityToggle}
@@ -780,7 +802,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     borderRadius: getResponsiveWidth(4),
   },
-  bankTransferHeader:{
+  bankTransferHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: getResponsiveWidth(2.4),

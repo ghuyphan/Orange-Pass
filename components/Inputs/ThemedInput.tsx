@@ -3,23 +3,29 @@ import {
   TextInput,
   StyleSheet,
   StyleProp,
-  ViewStyle,
   View,
   Pressable,
   Modal,
   TouchableWithoutFeedback,
   NativeSyntheticEvent,
   TextInputFocusEventData,
-  TextInputSelectionChangeEventData, // Import this
+  TextInputSelectionChangeEventData,
 } from 'react-native';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
 import { useTheme } from '@/context/ThemeContext';
-// import { useLocale } from '@/context/LocaleContext'; // Removed as not used
 import { Colors } from '@/constants/Colors';
 import { Tooltip } from 'react-native-paper';
 import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
+
+// --- Reanimated Imports ---
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withSpring,
+} from 'react-native-reanimated';
 
 export type ThemedInputProps = {
   iconName?: keyof typeof MaterialCommunityIcons.glyphMap;
@@ -75,11 +81,9 @@ export const ThemedInput = forwardRef<
     ref
   ) => {
     const { currentTheme } = useTheme();
-    // const { locale } = useLocale(); // You're not using this, consider removing if not needed
     const [localValue, setLocalValue] = useState(value);
     const [isSecure, setIsSecure] = useState(secureTextEntry);
     const [isErrorModalVisible, setIsErrorModalVisible] = useState(false);
-    // Add state for selection
     const [selection, setSelection] = useState<Selection>({ start: 0, end: 0 });
     const [isFocused, setIsFocused] = useState(false);
 
@@ -88,20 +92,29 @@ export const ThemedInput = forwardRef<
       currentTheme === 'light' ? Colors.light.placeHolder : Colors.dark.placeHolder;
     const errorColor = currentTheme === 'light' ? Colors.light.error : Colors.dark.error;
 
-    // useRef to get a reference to the TextInput
     const textInputRef = useRef<TextInput>(null);
 
-    // Use useImperativeHandle to expose only the focus method
     useImperativeHandle(ref, () => ({
       focus: () => {
         textInputRef.current?.focus();
       },
     }));
 
+    // --- Reanimated: Create Shared Values ---
+    const animatedOpacity = useSharedValue(disabled && !disableOpacityChange ? 0.5 : 1);
+    const animatedBorderWidth = useSharedValue(0);
+
+     // --- Reanimated: Create Animated Styles ---
+    const animatedContainerStyle = useAnimatedStyle(() => {
+        return {
+          opacity: animatedOpacity.value,
+          borderBottomWidth: animatedBorderWidth.value,
+        };
+      });
+
     const onClearValue = useCallback(() => {
       setLocalValue('');
       onChangeText('');
-       // Reset selection when clearing
       setSelection({ start: 0, end: 0 });
     }, [onChangeText]);
 
@@ -110,18 +123,25 @@ export const ThemedInput = forwardRef<
     const handleChangeText = useCallback((text: string) => {
       setLocalValue(text);
       onChangeText(text);
-      // Important:  Do NOT update selection here.  Update it in onSelectionChange.
     }, [onChangeText]);
 
     const handleBlur = useCallback((event: NativeSyntheticEvent<TextInputFocusEventData>) => {
       onBlur(event);
       setIsFocused(false);
-    }, [onBlur]);
+        // --- Reanimated: Trigger Animation on Blur ---
+        animatedOpacity.value = withTiming(disabled && !disableOpacityChange ? 0.5 : 1, { duration: 200 });
+        animatedBorderWidth.value = withTiming(isError && errorMessage ? getResponsiveWidth(0.3) : 0, { duration: 200 });
+
+    }, [onBlur, disabled, disableOpacityChange, isError, errorMessage]);
 
     const handleFocus = useCallback((event: NativeSyntheticEvent<TextInputFocusEventData>) => {
       onFocus(event);
       setIsFocused(true);
-    }, [onFocus]);
+        // --- Reanimated: Trigger Animation on Focus ---
+      animatedOpacity.value = withTiming(1, { duration: 200 }); // Ensure full opacity on focus
+      animatedBorderWidth.value = withTiming(isError && errorMessage ? getResponsiveWidth(0.3) : 0, {duration: 200});
+
+    }, [onFocus, isError, errorMessage]);
 
     const handleDisabledPress = useCallback(() => {
       if (onDisabledPress) {
@@ -129,16 +149,15 @@ export const ThemedInput = forwardRef<
       }
     }, [onDisabledPress]);
 
-    // Add onSelectionChange handler
     const handleSelectionChange = useCallback(
-        (event: NativeSyntheticEvent<TextInputSelectionChangeEventData>) => {
-          // Only update selection state if the input is focused. This prevents issues on Android.
-          if (isFocused) {
-            setSelection(event.nativeEvent.selection);
-          }
-        },
-        [isFocused]
+      (event: NativeSyntheticEvent<TextInputSelectionChangeEventData>) => {
+        if (isFocused) {
+          setSelection(event.nativeEvent.selection);
+        }
+      },
+      [isFocused]
     );
+
 
     const inputContainerStyle = [
       styles.inputContainer,
@@ -148,7 +167,9 @@ export const ThemedInput = forwardRef<
           (currentTheme === 'light'
             ? Colors.light.inputBackground
             : Colors.dark.inputBackground),
-        opacity: disabled && !disableOpacityChange ? 0.5 : 1,
+            // opacity is now handled by animatedOpacity
+        borderBottomColor: errorColor, //border color now handled in animated styles
+
       },
       style,
     ];
@@ -169,15 +190,16 @@ export const ThemedInput = forwardRef<
         </TouchableWithoutFeedback>
       </Modal>
     ), [isErrorModalVisible, errorMessage, errorColor]);
-    
+
     return (
       <View style={[styles.container, style]}>
         <Pressable
           style={{ width: '100%' }}
           onPress={disabled ? handleDisabledPress : undefined}
-          disabled={!disabled} // Corrected disabled logic
+          disabled={!disabled}
         >
-          <ThemedView style={inputContainerStyle}>
+            {/* Use Animated.View */}
+          <Animated.View style={[inputContainerStyle, animatedContainerStyle]}>
             {!iconName && (
               <ThemedText style={[styles.label, { color }]} type="defaultSemiBold">
                 {label}
@@ -188,10 +210,7 @@ export const ThemedInput = forwardRef<
             <View
               style={[
                 styles.inputRow,
-                {
-                  borderBottomColor: errorColor,
-                  borderBottomWidth: isError && errorMessage ? getResponsiveWidth(0.3) : 0,
-                },
+                // borderBottom styling now handled in animatedContainerStyle
               ]}
             >
               {iconName && (
@@ -202,7 +221,7 @@ export const ThemedInput = forwardRef<
                 />
               )}
               <TextInput
-                ref={textInputRef} // Assign the ref to the TextInput
+                ref={textInputRef}
                 onSubmitEditing={onSubmitEditing}
                 style={[
                   styles.input,
@@ -222,8 +241,8 @@ export const ThemedInput = forwardRef<
                 accessibilityLabel={label}
                 keyboardType={keyboardType}
                 editable={!disabled}
-                selection={selection} // Set the selection prop
-                onSelectionChange={handleSelectionChange} // Handle selection changes
+                selection={selection}
+                onSelectionChange={handleSelectionChange}
               />
 
               <View style={styles.rightContainer}>
@@ -277,7 +296,7 @@ export const ThemedInput = forwardRef<
                 )}
               </View>
             </View>
-          </ThemedView>
+          </Animated.View>
         </Pressable>
 
         <ErrorTooltip />
@@ -288,7 +307,6 @@ export const ThemedInput = forwardRef<
 
 ThemedInput.displayName = 'ThemedInput';
 
-// Add default props for easier usage
 ThemedInput.defaultProps = {
   placeholder: '',
   secureTextEntry: false,
@@ -297,7 +315,6 @@ ThemedInput.defaultProps = {
   disableOpacityChange: false,
   required: false,
 };
-
 
 const styles = StyleSheet.create({
   container: {
