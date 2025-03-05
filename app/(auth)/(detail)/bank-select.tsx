@@ -116,7 +116,7 @@ const BankSelectScreen = () => {
     return (
         <ThemedView style={styles.container}>
             <View style={styles.headerWrapper}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: getResponsiveHeight(3.8) }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: getResponsiveHeight(4) }}>
                     <ThemedButton onPress={router.back} iconName="chevron-left" />
                 </View>
                 <ThemedInput

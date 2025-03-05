@@ -114,7 +114,6 @@ const AddScreen: React.FC = () => {
             0,
             '',
           );
-          console.log('VietQR Response:', response);
           metadata = response.data.qrCode; // Update metadata from VietQR
         }
 
@@ -136,12 +135,12 @@ const AddScreen: React.FC = () => {
 
         dispatch(addQrData(newQrRecord));
         await insertOrUpdateQrCodes([newQrRecord]);
-        router.replace('/(auth)/home');
       } catch (error) {
         console.error('Submission error:', error);
         dispatch(removeQrData(newId));
         // Consider using a toast or other UI feedback instead of console.error
       } finally {
+        router.replace('/(auth)/home');
         formikHelpers.setSubmitting(false);
       }
     },

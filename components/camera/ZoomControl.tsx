@@ -1,13 +1,13 @@
 import React, { useCallback, useMemo } from 'react';
-import { StyleSheet, View, TouchableOpacity, Platform } from 'react-native';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  withTiming,
+  interpolate,
   runOnJS,
   SharedValue,
-  interpolate,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
 } from 'react-native-reanimated';
 import { getResponsiveFontSize, getResponsiveWidth } from '@/utils/responsive';
 import { triggerHapticFeedback } from '@/utils/haptic';
@@ -17,95 +17,62 @@ interface ZoomControlProps {
   minZoom: number;
   maxZoom: number;
   onZoomChange?: (level: number) => void;
+  scale?: number;
 }
 
-const SPRING_CONFIG = {
-  damping: 15,
-  stiffness: 200,
+// Unified configuration for better performance and readability
+const CONFIG = {
+  spring: { damping: 15, stiffness: 200 },
+  timing: { duration: 250 },
+  colors: {
+    background: Platform.select({
+      ios: 'rgba(255, 255, 255, 0.15)',
+      android: 'rgba(255, 255, 255, 0.2)',
+    }),
+    activeBackground: 'rgba(0, 0, 0, 0.3)',
+    inactiveBackground: 'rgba(0, 0, 0, 0.2)',
+    activeText: '#FFCC00',
+    inactiveText: '#FFF',
+    xContainer: '#FFCC00',
+  },
 };
 
-const TIMING_CONFIG = {
-  duration: 250,
-};
+// Memoized dimension calculations
+const useDimensions = (scale = 1) => useMemo(() => ({
+  container: {
+    height: getResponsiveWidth(10 * scale),
+    borderRadius: getResponsiveWidth(6 * scale),
+  },
+  button: {
+    inactiveSize: getResponsiveWidth(7 * scale),
+    activeSize: getResponsiveWidth(9 * scale),
+  },
+  text: {
+    inactive: getResponsiveFontSize(10 * scale),
+    active: getResponsiveFontSize(12 * scale),
+  },
+  x: {
+    size: getResponsiveWidth(4 * scale),
+    offset: getResponsiveWidth(2 * scale),
+    borderRadius: getResponsiveWidth(2 * scale),
+    textSize: getResponsiveFontSize(8 * scale),
+  },
+}), [scale]);
 
-// Pre-calculate sizes to avoid calling these in worklets
-const createDimensions = (scale: number = 1) => ({
-  containerHeight: getResponsiveWidth(10 * scale),
-  containerBorderRadius: getResponsiveWidth(6 * scale),
-  containerPadding: getResponsiveWidth(1.5 * scale),
-  buttonWidth: getResponsiveWidth(10 * scale),
-  inactiveSize: getResponsiveWidth(7 * scale),
-  activeSize: getResponsiveWidth(9 * scale),
-  xContainerSize: getResponsiveWidth(4 * scale),
-  xContainerOffset: getResponsiveWidth(2 * scale),
-  xContainerBorderRadius: getResponsiveWidth(2 * scale),
-  xTextSize: getResponsiveFontSize(8 * scale),
-  inactiveFontSize: getResponsiveFontSize(10 * scale),
-  activeFontSize: getResponsiveFontSize(12 * scale),
-});
-
-const createStyles = (scale: number = 1) => {
-  const dimensions = createDimensions(scale);
-  
-  return StyleSheet.create({
-    container: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: Platform.select({
-        ios: 'rgba(255, 255, 255, 0.15)',
-        android: 'rgba(255, 255, 255, 0.2)',
-      }),
-      borderRadius: dimensions.containerBorderRadius,
-      height: dimensions.containerHeight,
-      gap: 3,
-      // paddingHorizontal: dimensions.containerPadding,
-    },
-    buttonContainer: {
-      alignItems: 'center',
-      justifyContent: 'center',
-      width: dimensions.buttonWidth,
-      height: '100%',
-    },
-    circle: {
-      justifyContent: 'center',
-      alignItems: 'center',
-      borderRadius: dimensions.containerBorderRadius,
-    },
-    xContainer: {
-      position: 'absolute',
-      top: -dimensions.xContainerOffset,
-      right: -dimensions.xContainerOffset,
-      backgroundColor: '#FFCC00',
-      width: dimensions.xContainerSize,
-      height: dimensions.xContainerSize,
-      borderRadius: dimensions.xContainerBorderRadius,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    xText: {
-      color: '#000',
-      fontSize: dimensions.xTextSize,
-      fontWeight: '900',
-    },
-  });
-};
-
-const ZoomButton = React.memo(({ 
-  level, 
-  targetZoom, 
-  onZoomChange,
-  scale = 1,
-}: {
+const ZoomButton = React.memo<{
   level: number;
   targetZoom: SharedValue<number>;
   onZoomChange: (level: number) => void;
   scale?: number;
+}>(({ 
+  level, 
+  targetZoom, 
+  onZoomChange,
+  scale = 1,
 }) => {
   const isActive = useSharedValue(false);
-  const styles = useMemo(() => createStyles(scale), [scale]);
-  const dimensions = useMemo(() => createDimensions(scale), [scale]);
-  
+  const dimensions = useDimensions(scale);
+
   const animatedStyle = useAnimatedStyle(() => {
     const active = Math.abs(targetZoom.value - level) < 0.5;
     isActive.value = active;
@@ -113,30 +80,32 @@ const ZoomButton = React.memo(({
     const size = interpolate(
       active ? 1 : 0,
       [0, 1],
-      [dimensions.inactiveSize, dimensions.activeSize]
+      [dimensions.button.inactiveSize, dimensions.button.activeSize]
     );
 
     return {
-      transform: [{ scale: withSpring(active ? 1.1 : 1, SPRING_CONFIG) }],
+      transform: [{ scale: withSpring(active ? 1.1 : 1, CONFIG.spring) }],
       width: size,
       height: size,
-      backgroundColor: active ? 'rgba(0, 0, 0, 0.3)' : 'rgba(0, 0, 0, 0.2)',
+      backgroundColor: active 
+        ? CONFIG.colors.activeBackground 
+        : CONFIG.colors.inactiveBackground,
     };
-  }, []);
+  }, [level, targetZoom]);
 
   const textStyle = useAnimatedStyle(() => ({
-    color: isActive.value ? '#FFCC00' : '#FFF',
+    color: isActive.value ? CONFIG.colors.activeText : CONFIG.colors.inactiveText,
     fontSize: interpolate(
       isActive.value ? 1 : 0,
       [0, 1],
-      [dimensions.inactiveFontSize, dimensions.activeFontSize]
+      [dimensions.text.inactive, dimensions.text.active]
     ),
     fontWeight: '600',
   }));
 
   const xStyle = useAnimatedStyle(() => ({
-    opacity: withSpring(isActive.value ? 1 : 0, SPRING_CONFIG),
-    transform: [{ scale: withSpring(isActive.value ? 1 : 0, SPRING_CONFIG) }],
+    opacity: withSpring(isActive.value ? 1 : 0, CONFIG.spring),
+    transform: [{ scale: withSpring(isActive.value ? 1 : 0, CONFIG.spring) }],
   }));
 
   const handlePress = useCallback(() => {
@@ -144,18 +113,54 @@ const ZoomButton = React.memo(({
   }, [level, onZoomChange]);
 
   return (
-    <TouchableOpacity
-      style={styles.buttonContainer}
+    <Pressable
       onPress={handlePress}
-      activeOpacity={0.7}
+      style={{ 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        width: dimensions.button.activeSize, 
+        height: '100%' 
+      }}
     >
-      <Animated.View style={[styles.circle, animatedStyle]}>
+      <Animated.View 
+        style={[
+          { 
+            justifyContent: 'center', 
+            alignItems: 'center', 
+            borderRadius: dimensions.container.borderRadius 
+          }, 
+          animatedStyle
+        ]}
+      >
         <Animated.Text style={textStyle}>{level}</Animated.Text>
-        <Animated.View style={[styles.xContainer, xStyle]}>
-          <Animated.Text style={styles.xText}>×</Animated.Text>
+        <Animated.View 
+          style={[
+            {
+              position: 'absolute',
+              top: -dimensions.x.offset,
+              right: -dimensions.x.offset,
+              backgroundColor: CONFIG.colors.xContainer,
+              width: dimensions.x.size,
+              height: dimensions.x.size,
+              borderRadius: dimensions.x.borderRadius,
+              justifyContent: 'center',
+              alignItems: 'center',
+            }, 
+            xStyle
+          ]}
+        >
+          <Animated.Text 
+            style={{ 
+              color: '#000', 
+              fontSize: dimensions.x.textSize, 
+              fontWeight: '900' 
+            }}
+          >
+            ×
+          </Animated.Text>
         </Animated.View>
       </Animated.View>
-    </TouchableOpacity>
+    </Pressable>
   );
 });
 
@@ -166,9 +171,10 @@ export const ZoomControl: React.FC<ZoomControlProps> = ({
   minZoom,
   maxZoom,
   onZoomChange,
+  scale = 1,
 }) => {
   const targetZoom = useSharedValue(zoom.value);
-  const styles = useMemo(() => createStyles(), []);
+  const dimensions = useDimensions(scale);
 
   const zoomLevels = useMemo(
     () => [1, 2, 3, 5].filter(level => level >= minZoom && level <= maxZoom),
@@ -180,7 +186,7 @@ export const ZoomControl: React.FC<ZoomControlProps> = ({
       'worklet';
       const clampedLevel = Math.max(minZoom, Math.min(maxZoom, level));
       targetZoom.value = clampedLevel;
-      zoom.value = withTiming(clampedLevel, TIMING_CONFIG);
+      zoom.value = withTiming(clampedLevel, CONFIG.timing);
       runOnJS(triggerHapticFeedback)();
       onZoomChange?.(clampedLevel);
     },
@@ -188,13 +194,24 @@ export const ZoomControl: React.FC<ZoomControlProps> = ({
   );
 
   return (
-    <View style={styles.container}>
+    <View 
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: CONFIG.colors.background,
+        borderRadius: dimensions.container.borderRadius,
+        height: dimensions.container.height,
+        gap: 3,
+      }}
+    >
       {zoomLevels.map((level) => (
         <ZoomButton
           key={level}
           level={level}
           targetZoom={targetZoom}
           onZoomChange={handleZoomChange}
+          scale={scale}
         />
       ))}
     </View>

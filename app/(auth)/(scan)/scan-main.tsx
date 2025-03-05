@@ -7,6 +7,7 @@ import {
   LayoutChangeEvent,
   SafeAreaView,
   StatusBar,
+  AppState, // Import AppState
 } from 'react-native';
 import {
   Camera,
@@ -122,6 +123,7 @@ export default function ScanScreen() {
   const [toastMessage, setToastMessage] = useState('');
   const [isDecoding, setIsDecoding] = useState(false);
 
+    const [cameraIsActive, setCameraIsActive] = useState(true); // Add state for camera activation
 
   const showToast = (message: string) => {
     setToastMessage(message);
@@ -212,6 +214,23 @@ export default function ScanScreen() {
     opacity: withTiming(cameraOpacity.value, { duration: 500 }),
   }));
 
+
+    useEffect(() => {
+        const handleAppStateChange = (nextAppState: string) => {
+            if (nextAppState === 'active') {
+                setCameraIsActive(true); // Activate camera on becoming active
+            } else {
+                setCameraIsActive(false); // Deactivate camera on becoming inactive/background
+            }
+        };
+
+        const subscription = AppState.addEventListener('change', handleAppStateChange);
+
+        return () => {
+            subscription.remove();
+        };
+    }, []);
+
   useEffect(() => {
     if (device) {
       const timeout = setTimeout(() => {
@@ -251,7 +270,7 @@ export default function ScanScreen() {
                 style={StyleSheet.absoluteFill}
                 device={device}
                 // onLayout={onLayout}
-                isActive={true}
+                isActive={cameraIsActive} // Use the isActive prop!
                 codeScanner={codeScanner}
                 resizeMode='cover'
                 videoStabilizationMode='auto'

@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
     marginBottom: getResponsiveHeight(3.6),
   },
   pinnedCardWrapper: {
-    marginTop: getResponsiveHeight(0.6),
+    marginTop: getResponsiveHeight(0.3),
     marginBottom: getResponsiveHeight(3.6),
   },
   cardWrapper: {

@@ -105,9 +105,6 @@
     "searchPlaceholder": "Tìm kiếm thẻ của bạn",
     "noItemFound": "Không tìm thấy thẻ. Vui lòng thử lại",
     "manage": "Quản lý thẻ",
-    "wifi": "Chi tiết Wi-Fi",
-    "connectButton": "Kết nối",
-    "passwordPlaceholder": "Nhập mật khẩu",
     "linking": "Chi tiết Liên kết",
     "edit": "Sửa thẻ",
     "delete": "Xóa",
@@ -139,7 +136,17 @@
       "add": "Thêm thẻ",
       "scan": "Quét mã",
       "gallery": "Chọn ảnh"
-    }
+    },
+    "linkingSheet": {
+      "title": "Liên kết thẻ",
+      "share": "Chia sẻ",
+      "open": "Mở",
+      "copy": "Sao chép",
+      "warning": "Liên kết này không bảo mật"
+    },
+    "wifi": "Chi tiết Wi-Fi",
+    "connectButton": "Kết nối",
+    "passwordPlaceholder": "Nhập mật khẩu"
   },
   "addScreen": {
     "title": "Thêm thẻ mới",
@@ -280,7 +287,7 @@
       "privacyPolicyPrefix": "và đã xem qua",
       "privacyPolicyLink": "Chính sách bảo mật",
       "termsOfServiceSheetTitle": "Điều khoản dịch vụ",
-"termsOfServiceTitle": "Chào mừng bạn đến với Orange⁺",
+      "termsOfServiceTitle": "Chào mừng bạn đến với Orange⁺",
       "termsOfServiceDescription": "Nguyên tắc cộng đồng",
       "termsOfServiceContent1": "Để đảm bảo trải nghiệm tích cực cho tất cả người dùng, vui lòng tuân thủ các nguyên tắc cộng đồng sau đây:",
       "termsOfServiceContent2": "Tóm lại:\n* Không thực hiện hành vi bất hợp pháp hoặc gây hại. Không đăng tải nội dung không phù hợp.\n* Tôn trọng quyền riêng tư. Không chia sẻ mã QR của người khác mà không có sự cho phép.\n* Bảo vệ tài khoản của bạn. Không chia sẻ thông tin đăng nhập.",
@@ -301,8 +308,8 @@
     "generatingQRCode": "Đang tạo mã QR...",
     "failedToOpenGoogleMaps": "Không thể mở Google Maps.",
     "bankTransfer": "Chuyển khoản với",
-    "transferMessage": "Chuyển tiền tới",
     "searchBank": "Nhập tên ngân hàng",
+    "transferMessage": "Chuyển tiền tới",
     "copiedToClipboard": "Đã sao chép"
   },
   "settingsScreen": {

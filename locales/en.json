@@ -119,6 +119,9 @@
     "copied": "Link copied",
     "fetchError": "Failed to load data. Please try again.",
     "syncError": "Failed to sync. Please try again.",
+    "wifi": "Wi-Fi Details",
+    "connectButton": "Connect",
+    "passwordPlaceholder": "Enter password",
     "filters": {
       "all": "All",
       "bank": "Bank",
@@ -246,7 +249,10 @@
       "invalidResponse": "Invalid server response. Please try again later.",
       "storageError": "An error occurred while saving card information. Please try again.",
       "databaseError": "A database error occurred. Please try again later.",
-      "selectCategoryFirstMessage": "Please select a card type first."
+      "selectCategoryFirstMessage": "Please select a card type first.",
+      "submissionErrorTitle": "Submission Error",
+      "submissionErrorMessage": "Unable to save changes. Please try again.",
+      "ok": "OK"
     }
   },
   "scanScreen": {

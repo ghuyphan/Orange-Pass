@@ -11,6 +11,7 @@ import {
   TextInputFocusEventData,
   TextInputSelectionChangeEventData,
 } from 'react-native';
+import { ViewStyle } from 'react-native';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
