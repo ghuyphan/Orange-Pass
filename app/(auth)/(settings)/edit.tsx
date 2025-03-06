@@ -28,7 +28,6 @@ import Animated, {
   } from 'react-native-reanimated';
 
 const EditProfileScreen = () => {
-    const { user, updateUser } = useAuth();
     const { currentTheme: theme } = useTheme();
     const cardColor = theme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground;
 
@@ -92,13 +91,13 @@ const EditProfileScreen = () => {
     return (
         <Formik
             initialValues={{
-                fullName: user?.fullName || '',
-                email: user?.email || '',
+                fullName: '',
+                email: '',
                 currentPassword: '',
                 newPassword: '',
                 confirmNewPassword: ''
             }}
-            validationSchema={profileSchema}
+            // validationSchema={profileSchema}
             onSubmit={async (values, { setSubmitting }) => {
                 setSubmitting(true);
                 try {

@@ -300,10 +300,7 @@ export default function ScanScreen() {
 
           </Reanimated.View>
         </GestureDetector>
-
-
       </SafeAreaView>
-
 
       <View style={styles.bottomContainer}>
         <View style={{ flexDirection: 'column', alignItems: 'center', paddingTop: 20, }}>

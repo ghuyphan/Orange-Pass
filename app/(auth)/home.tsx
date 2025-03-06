@@ -381,7 +381,7 @@ function HomeScreen() {
           user_id: userId,
         },
       });
-    }, 1000),
+    }, 300),
     [] // Empty dependencies if item structure is stable; adjust if props change frequently
   );
 
@@ -413,7 +413,7 @@ function HomeScreen() {
           },
         });
       },
-      1000
+      300
     ), []
   );
 
@@ -435,11 +435,12 @@ function HomeScreen() {
         });
       }, 200);
 
-    }, 1000),
+    }, 300),
     [selectedItemId, router] // Depend on selectedItemId and router
   );
 
-  const onOpenSheet = useCallback((type: SheetType, id?: string, url?: string, ssid?: string, password?: string, isWep?: boolean) => {
+  const onOpenSheet = useCallback((type: SheetType, id?: string, url?: string, ssid?: string, password?: string, isWep?: boolean, isHidden?: boolean) => {
+    console.log("onOpenSheet called with:", { type, id, url, ssid, password, isWep, isHidden });
     setSheetType(type);
     setIsSheetOpen(true);
     setSelectedItemId(id || null);
@@ -450,7 +451,7 @@ function HomeScreen() {
         if (ssid && password) {
           setWifiSsid(ssid);
           setWifiPassword(password);
-          setIsWep(isWep);
+          setWifiIsWep(isWep ?? false);
         }
         break;
       case 'setting':
@@ -628,6 +629,7 @@ function HomeScreen() {
               ssid={wifiSsid || ''}
               password={wifiPassword || ''}
               isWep={wifiIsWep}
+              // isHidden={wifiIsHidden}
             />
           </>
         );
@@ -725,6 +727,7 @@ function HomeScreen() {
                 </ThemedText>
               </View>
             }
+            initialNumToRender={15}
             automaticallyAdjustKeyboardInsets
             keyboardDismissMode="on-drag"
             data={[...qrData]}
@@ -740,6 +743,9 @@ function HomeScreen() {
             onScrollOffsetChange={onScrollOffsetChange}
             decelerationRate={'fast'}
             scrollEnabled={!fabOpen}
+            windowSize={10} 
+            removeClippedSubviews={true}
+            maxToRenderPerBatch={10}
           />
         </Animated.View>
       )}

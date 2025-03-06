@@ -79,7 +79,7 @@ function SettingsScreen() {
   }, []);
 
   const onNavigateToEditScreen = useCallback(() => {
-    router.push()
+    router.push('/(auth)/(settings)/edit');
   }, [])
 
   const logout = useCallback(async () => {
@@ -113,7 +113,7 @@ function SettingsScreen() {
       {
         leftIcon: 'person-outline',
         settingsTitle: t('settingsScreen.editProfile'),
-        onPress: () => router.push('/edit'),
+        onPress: () => onNavigateToEditScreen(),
       },
       {
         leftIcon: 'lock-outline',
