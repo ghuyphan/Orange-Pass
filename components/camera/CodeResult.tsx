@@ -6,6 +6,7 @@ import Animated, { StyleProps } from 'react-native-reanimated';
 import { ThemedText } from '@/components/ThemedText';
 import { analyzeCode } from '@/utils/qrUtils'; // Import only necessary functions
 import WifiManager from 'react-native-wifi-reborn';
+import { getResponsiveFontSize } from '@/utils/responsive';
 
 type QRResultProps = {
     codeValue: string;
@@ -113,7 +114,7 @@ const styles = StyleSheet.create({
     },
     qrResultText: {
         color: 'black',  // Consider using themed colors
-        fontSize: 12,
+        fontSize: getResponsiveFontSize(12),
         overflow: 'hidden',
         maxWidth: 200,
     },

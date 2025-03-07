@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { View, StyleSheet, Alert, StyleProp, ViewStyle, Pressable, TextInput } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, StyleProp, ViewStyle, Pressable } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { ThemedText } from '@/components/ThemedText';
@@ -10,7 +10,18 @@ import { Colors } from '@/constants/Colors';
 import { getResponsiveHeight, getResponsiveWidth } from '@/utils/responsive';
 import { t } from '@/i18n';
 import WifiManager from 'react-native-wifi-reborn';
-import { PermissionsAndroid } from 'react-native';
+import { PermissionsAndroid, Platform } from 'react-native';
+
+// Define notification types for better type safety
+export type NotificationType = 'success' | 'error' | 'warning' | 'info';
+
+// Define notification interface
+export interface NotificationConfig {
+  type: NotificationType;
+  title: string;
+  message: string;
+  duration?: number;
+}
 
 interface WifiSheetContentProps {
   ssid: string;
@@ -18,16 +29,18 @@ interface WifiSheetContentProps {
   isWep?: boolean;
   isHidden: boolean;
   style?: StyleProp<ViewStyle>;
-  onConnectSuccess?: () => void;  // Optional callback for success
+  onConnectSuccess?: () => void;
+  onNotification?: (notification: NotificationConfig) => void;
 }
 
 const WifiSheetContent: React.FC<WifiSheetContentProps> = ({
   ssid,
-  password: initialPassword, // Renamed for clarity
+  password: initialPassword,
   isWep,
   isHidden,
   style,
-  onConnectSuccess, // Optional success callback
+  onConnectSuccess,
+  onNotification,
 }) => {
   const { currentTheme } = useTheme();
   const [showPassword, setShowPassword] = useState(false);
@@ -36,44 +49,16 @@ const WifiSheetContent: React.FC<WifiSheetContentProps> = ({
   const [modalIcon, setModalIcon] = useState<keyof typeof MaterialIcons.glyphMap>();
   const [modalTitle, setModalTitle] = useState<string | null>(null);
   const [modalDescription, setModalDescription] = useState<string | null>(null);
-  const [password, setPassword] = useState<string>(initialPassword || ''); // Local password state
-  const passwordInputRef = useRef<TextInput>(null);
+  const [password, setPassword] = useState<string>(initialPassword || '');
+  const [hasLocationPermission, setHasLocationPermission] = useState<boolean>(false);
 
-  // KEY CHANGE: Update local password state whenever initialPassword changes
   useEffect(() => {
     setPassword(initialPassword || '');
   }, [initialPassword]);
 
-  // Request permissions on component mount and handle errors/denials gracefully
+  // Request location permissions on component mount
   useEffect(() => {
-    const requestLocationPermission = async () => {
-      try {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-          {
-            title: t('locationPermission.title'),
-            message: t('locationPermission.message'),
-            buttonNegative: t('locationPermission.buttonNegative'),
-            buttonPositive: t('locationPermission.buttonPositive'),
-          },
-        );
-        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-          // Handle permission denial gracefully.  Show a modal, disable connect button, etc.
-          setIsModalVisible(true);
-          setModalIcon('warning');
-          setModalTitle(t('locationPermission.title'));
-          setModalDescription(t('locationPermission.message'));
-        }
-      } catch (err) {
-        console.warn(err);
-        setIsModalVisible(true);
-        setModalIcon('error');
-        setModalTitle(t('error'));
-        setModalDescription(String(err)); // Display error message
-      }
-    };
-
-    requestLocationPermission();
+    checkAndRequestLocationPermission();
   }, []);
 
   const colors = {
@@ -82,67 +67,227 @@ const WifiSheetContent: React.FC<WifiSheetContentProps> = ({
     background: currentTheme === 'light' ? Colors.light.background : Colors.dark.background,
     border: currentTheme === 'light' ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)',
     cardBg: currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground,
-    inputBg: currentTheme === 'light' ? Colors.light.inputBackground : Colors.dark.inputBackground
+    inputBg: currentTheme === 'light' ? Colors.light.inputBackground : Colors.dark.inputBackground,
+    text: currentTheme === 'light' ? Colors.light.text : Colors.dark.text
+  };
+
+  // Helper function to show notifications
+  const showNotification = (config: NotificationConfig) => {
+    if (onNotification) {
+      onNotification(config);
+    } else {
+      // Fallback to modal if no notification handler is provided
+      setIsModalVisible(true);
+      setModalIcon(config.type === 'success' ? 'check-circle' : 
+                  config.type === 'error' ? 'error' : 
+                  config.type === 'warning' ? 'warning' : 'info');
+      setModalTitle(config.title);
+      setModalDescription(config.message);
+    }
+  };
+
+  // Check and request location permissions (for Android)
+  const checkAndRequestLocationPermission = async () => {
+    if (Platform.OS !== 'android') {
+      setHasLocationPermission(true);
+      return true;
+    }
+
+    try {
+      // First check for coarse location
+      let coarseGranted = await PermissionsAndroid.check(
+        PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION
+      );
+
+      // Check for fine location (precise)
+      let fineGranted = await PermissionsAndroid.check(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+      );
+
+      // If both permissions are already granted, return early
+      if (coarseGranted && fineGranted) {
+        setHasLocationPermission(true);
+        return true;
+      }
+
+      // Request the permissions we need
+      const results = await PermissionsAndroid.requestMultiple([
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+        PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
+      ]);
+
+      const hasRequiredPermissions = 
+        results[PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION] === PermissionsAndroid.RESULTS.GRANTED &&
+        results[PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION] === PermissionsAndroid.RESULTS.GRANTED;
+
+      setHasLocationPermission(hasRequiredPermissions);
+
+      if (!hasRequiredPermissions) {
+        showNotification({
+          type: 'warning',
+          title: t('locationPermission.title'),
+          message: t('locationPermission.message'),
+        });
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.warn('Error checking/requesting location permission:', err);
+      showNotification({
+        type: 'error',
+        title: t('error'),
+        message: String(err),
+      });
+      return false;
+    }
   };
 
   const handleCopySSID = async () => {
     try {
       await Clipboard.setStringAsync(ssid);
-      Alert.alert(t('wifiSheet.copySSIDModal.successTitle'), t('wifiSheet.copySSIDModal.successDescription'));
+      showNotification({
+        type: 'success',
+        title: t('wifiSheet.copySSIDModal.successTitle'),
+        message: t('wifiSheet.copySSIDModal.successDescription'),
+        duration: 3000,
+      });
     } catch (error) {
       console.error('Error copying SSID:', error);
-      Alert.alert(t('wifiSheet.copySSIDModal.errorTitle'), t('wifiSheet.copySSIDModal.errorDescription'));
+      showNotification({
+        type: 'error',
+        title: t('wifiSheet.copySSIDModal.errorTitle'),
+        message: t('wifiSheet.copySSIDModal.errorDescription'),
+      });
     }
   };
 
-  // KEY CHANGE:  This function now ONLY handles the connection.
+  const handleCopyPassword = async () => {
+    try {
+      await Clipboard.setStringAsync(password);
+      showNotification({
+        type: 'success',
+        title: t('wifiSheet.copyPasswordModal.successTitle') || 'Password Copied',
+        message: t('wifiSheet.copyPasswordModal.successDescription') || 'Password has been copied to clipboard',
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error('Error copying password:', error);
+      showNotification({
+        type: 'error',
+        title: t('wifiSheet.copyPasswordModal.errorTitle') || 'Copy Failed',
+        message: t('wifiSheet.copyPasswordModal.errorDescription') || 'Failed to copy password to clipboard',
+      });
+    }
+  };
+
+  // Refined connect to WiFi function
   const onConnectToWifi = async () => {
+    // Check for SSID
     if (!ssid) {
-      Alert.alert(t('error'), t('wifiSheet.noSSIDError')); // Handle missing SSID
+      showNotification({
+        type: 'error',
+        title: t('error'),
+        message: t('wifiSheet.noSSIDError'),
+      });
       return;
     }
 
+    // Check for password
     if (!password) {
-      setIsModalVisible(true);
-      setModalIcon('warning');
-      setModalTitle(t('wifiSheet.invalidPasswordModal.title'));
-      setModalDescription(t('wifiSheet.invalidPasswordModal.description')); // Handle missing password
+      showNotification({
+        type: 'warning',
+        title: t('wifiSheet.invalidPasswordModal.title'),
+        message: t('wifiSheet.invalidPasswordModal.description'),
+      });
       return;
     }
-    // Basic password validation (you might want more robust checks)
-        if (password.length < 8) {
-            setIsModalVisible(true);
-            setModalIcon('warning');
-            setModalTitle(t('wifiSheet.invalidPasswordModal.title'));
-            setModalDescription(t('wifiSheet.invalidPasswordModal.description'));
-            return;
-        }
 
-    setIsConnecting(true); // Show loading indicator
+    // Basic password validation
+    if (password.length < 8) {
+      showNotification({
+        type: 'warning',
+        title: t('wifiSheet.invalidPasswordModal.title'),
+        message: t('wifiSheet.invalidPasswordModal.description'),
+      });
+      return;
+    }
+
+    // Check location permission
+    if (Platform.OS === 'android' && !hasLocationPermission) {
+      const permissionGranted = await checkAndRequestLocationPermission();
+      if (!permissionGranted) {
+        return;
+      }
+    }
+
+    setIsConnecting(true);
 
     try {
-      // await WifiManager.connectToProtectedSSID(ssid, password, !!isWep, isHidden);
-      console.log('Connecting to WiFi:', ssid, password, !!isWep, isHidden);
-      console.log("Connected successfully!");
-      Alert.alert(t('wifiSheet.connectionSuccessModal.title'), t('wifiSheet.connectionSuccessModal.description'));
-      onConnectSuccess?.(); // Notify parent component of success
+      if (Platform.OS === 'android') {
+        // For Android, we need additional checks
+        const locationEnabled = await WifiManager.isEnabled();
+        
+        if (!locationEnabled) {
+          showNotification({
+            type: 'warning',
+            title: t('wifiSheet.wifiDisabledModal.title'),
+            message: t('wifiSheet.wifiDisabledModal.description'),
+          });
+          setIsConnecting(false);
+          return;
+        }
+      }
+
+      // Connect to WiFi network
+      await WifiManager.connectToProtectedSSID(ssid, password, !!isWep, isHidden);
+      
+      // Show success notification
+      showNotification({
+        type: 'success',
+        title: t('wifiSheet.connectionSuccessModal.title'),
+        message: t('wifiSheet.connectionSuccessModal.description'),
+        duration: 3000,
+      });
+      
+      // Call success callback
+      onConnectSuccess?.();
     } catch (error: any) {
       console.error('Error connecting to WiFi:', error);
-       if (error === 'didNotFindNetwork') {
-            Alert.alert(t('wifiSheet.networkNotFoundModal.title'), t('wifiSheet.networkNotFoundModal.description'));
-        } else if (error === 'authenticationErrorOccurred') {
-            Alert.alert(t('wifiSheet.authErrorModal.title'), t('wifiSheet.authErrorModal.description'));
-        } else if (error === 'locationPermissionMissing' || error === 'locationServicesOff') {
-            Alert.alert(t('locationPermission.title'), t('locationPermission.message'))
-        }
-        else if (error === 'alreadyConnected') {
-            Alert.alert("Already connected!", "You are already connected to this network.");
-      }
-      else {
-        Alert.alert(t('wifiSheet.connectionErrorModal.title'), t('wifiSheet.connectionErrorModal.description'));
+      
+      // Handle specific error cases
+      if (error === 'didNotFindNetwork') {
+        showNotification({
+          type: 'error',
+          title: t('wifiSheet.networkNotFoundModal.title'),
+          message: t('wifiSheet.networkNotFoundModal.description'),
+        });
+      } else if (error === 'authenticationErrorOccurred') {
+        showNotification({
+          type: 'error',
+          title: t('wifiSheet.authErrorModal.title'),
+          message: t('wifiSheet.authErrorModal.description'),
+        });
+      } else if (error === 'locationPermissionMissing' || error === 'locationServicesOff') {
+        showNotification({
+          type: 'warning',
+          title: t('locationPermission.title'),
+          message: t('locationPermission.message'),
+        });
+      } else if (error === 'alreadyConnected') {
+        showNotification({
+          type: 'info',
+          title: t('wifiSheet.alreadyConnectedModal.title') || "Already connected!",
+          message: t('wifiSheet.alreadyConnectedModal.description') || "You are already connected to this network.",
+        });
+      } else {
+        showNotification({
+          type: 'error',
+          title: t('wifiSheet.connectionErrorModal.title'),
+          message: typeof error === 'string' ? error : t('wifiSheet.connectionErrorModal.description'),
+        });
       }
     } finally {
-      setIsConnecting(false); // Hide loading indicator
+      setIsConnecting(false);
     }
   };
 
@@ -150,9 +295,15 @@ const WifiSheetContent: React.FC<WifiSheetContentProps> = ({
     setShowPassword(!showPassword);
   };
 
-    const onConnectAction = () => {
+  const onConnectAction = () => {
     setIsModalVisible(false);
-  }
+  };
+
+  // Display masked password or actual password based on showPassword state
+  const displayPassword = () => {
+    if (!password) return '';
+    return showPassword ? password : '•'.repeat(password.length);
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.cardBg }, style]}>
@@ -162,7 +313,10 @@ const WifiSheetContent: React.FC<WifiSheetContentProps> = ({
         title={modalTitle || ''}
         message={modalDescription || ''}
         isVisible={isModalVisible}
-        onDismiss={() => setIsModalVisible(false)} />
+        onDismiss={() => setIsModalVisible(false)} 
+        onSecondaryAction={() => setIsModalVisible(false)}
+      />
+      
       {/* SSID Display (Copyable) */}
       <Pressable onPress={handleCopySSID} style={[styles.urlCard, { borderColor: colors.border, backgroundColor: colors.inputBg }]}>
         <View style={styles.urlRow}>
@@ -171,28 +325,31 @@ const WifiSheetContent: React.FC<WifiSheetContentProps> = ({
         </View>
       </Pressable>
 
-      {/* Password Input */}
-      <View style={[styles.passwordInputContainer, { borderColor: colors.border, backgroundColor: colors.inputBg }]}>
-        <MaterialCommunityIcons name="lock" size={16} color={colors.icon} />
-        <TextInput
-          ref={passwordInputRef}
-          style={[styles.passwordInput, { color: colors.icon }]}
-          placeholderTextColor={colors.icon}
-          placeholder={t('homeScreen.passwordPlaceholder')}
-          value={password} // Controlled component
-          onChangeText={setPassword} // Update local state
-          secureTextEntry={!showPassword}
-        />
-        <Pressable onPress={toggleShowPassword} hitSlop={40}>
-          <MaterialCommunityIcons name={showPassword ? "eye-off" : "eye"} size={20} color={colors.icon} />
-        </Pressable>
-      </View>
+      {/* Password Display (replaced TextInput with display-only view) */}
+      <Pressable 
+        onPress={handleCopyPassword}
+        style={[styles.passwordContainer, { borderColor: colors.border, backgroundColor: colors.inputBg }]}
+      >
+        <View style={styles.passwordRow}>
+          <MaterialCommunityIcons name="lock" size={16} color={colors.icon} />
+          <ThemedText style={styles.passwordText} numberOfLines={1}>
+            {displayPassword()}
+          </ThemedText>
+          <Pressable onPress={toggleShowPassword} hitSlop={40}>
+            <MaterialCommunityIcons 
+              name={showPassword ? "eye-off" : "eye"} 
+              size={20} 
+              color={colors.icon} 
+            />
+          </Pressable>
+        </View>
+      </Pressable>
 
       {/* Connect Button */}
       <View style={styles.actionButtons}>
         <ThemedButton
           iconName="wifi"
-          onPress={onConnectToWifi} // Connect only when pressed
+          onPress={onConnectToWifi}
           label={t('homeScreen.connectButton')}
           style={styles.actionButton}
           loading={isConnecting}
@@ -231,19 +388,25 @@ const styles = StyleSheet.create({
     fontSize: 15,
     flex: 1,
   },
-  passwordInputContainer: {
+  passwordContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: getResponsiveWidth(4.8),
+    paddingVertical: getResponsiveHeight(1.8),
     borderRadius: 16,
     borderWidth: 1,
     gap: 12,
   },
-  passwordInput: {
+  passwordRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    gap: 8,
+  },
+  passwordText: {
+    fontSize: 15,
     flex: 1,
-    height: 44,
-    fontSize: 16,
   },
   actionButtons: {
     flexDirection: 'row',
