@@ -135,7 +135,7 @@ export default function ScanScreen() {
   const [sheetType, setSheetType] = useState(null);
 
   // Toast handler
-  const showToast = useCallback((message) => { 
+  const showToast = useCallback((message: string) => { 
     setToastMessage(message); 
     setIsToastVisible(true); 
     setTimeout(() => { 
@@ -247,7 +247,7 @@ export default function ScanScreen() {
           cameraOpacity.value = 1; 
           setIsCameraReady(true);
         }
-      }, 300); // Reduced timeout from 800ms to 300ms
+      }, 200); // Reduced timeout from 800ms to 300ms
       
       return () => clearTimeout(timeout); 
     } 

@@ -1,3 +1,4 @@
+import React, { forwardRef } from 'react';
 import { Text, type TextProps, StyleSheet } from 'react-native';
 
 import { useThemeColor } from '@/hooks/useThemeColor';
@@ -8,17 +9,18 @@ export type ThemedTextProps = TextProps & {
   type?: 'default' | 'title' | 'defaultSemiBold' | 'subtitle' | 'link';
 };
 
-export function ThemedText({
+export const ThemedText = forwardRef<Text, ThemedTextProps>(({
   style,
   lightColor,
   darkColor,
   type = 'default',
   ...rest
-}: ThemedTextProps) {
+}, ref) => {  // Added forwardRef here
   const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
 
   return (
     <Text
+      ref={ref} // Pass the ref down to the Text component
       style={[
         { color },
         type === 'default' ? styles.default : undefined,
@@ -31,7 +33,10 @@ export function ThemedText({
       {...rest}
     />
   );
-}
+});
+
+ThemedText.displayName = 'ThemedText'; // Add displayName for better debugging
+
 
 const styles = StyleSheet.create({
   default: {

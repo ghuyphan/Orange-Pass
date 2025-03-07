@@ -1,5 +1,6 @@
-import React, { useState, useImperativeHandle, forwardRef, useCallback, useRef } from 'react';
+import React, { useState, useImperativeHandle, forwardRef, useCallback, useRef, useEffect } from 'react';
 import {
+  Text,
   TextInput,
   StyleSheet,
   StyleProp,
@@ -10,14 +11,14 @@ import {
   NativeSyntheticEvent,
   TextInputFocusEventData,
   TextInputSelectionChangeEventData,
+  Dimensions,
+  TextStyle, // Import TextStyle
 } from 'react-native';
 import { ViewStyle } from 'react-native';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { ThemedText } from '../ThemedText';
-import { ThemedView } from '../ThemedView';
 import { useTheme } from '@/context/ThemeContext';
 import { Colors } from '@/constants/Colors';
-import { Tooltip } from 'react-native-paper';
 import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
 
 // --- Reanimated Imports ---
@@ -25,7 +26,6 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
-  withSpring,
 } from 'react-native-reanimated';
 
 export type ThemedInputProps = {
@@ -34,6 +34,9 @@ export type ThemedInputProps = {
   value?: string;
   placeholder?: string;
   style?: StyleProp<ViewStyle>;
+  inputStyle?: StyleProp<TextStyle>; // Added for TextInput customization
+  labelStyle?: StyleProp<TextStyle>;  // Added for label customization
+  iconStyle?: StyleProp<TextStyle>;   // Added for icon customization
   isError?: boolean;
   errorMessage?: string;
   secureTextEntry?: boolean;
@@ -55,7 +58,7 @@ type Selection = {
 };
 
 export const ThemedInput = forwardRef<
-  { focus: () => void }, // Define the type of the exposed ref
+  { focus: () => void; }, // Define the type of the exposed ref
   ThemedInputProps
 >(
   (
@@ -65,14 +68,17 @@ export const ThemedInput = forwardRef<
       placeholder,
       value = '',
       style,
+      inputStyle,  // Added
+      labelStyle,   // Added
+      iconStyle,    // Added
       isError = false,
       errorMessage = '',
       secureTextEntry = false,
       keyboardType = 'default',
-      onChangeText = () => {},
-      onBlur = () => {},
-      onFocus = () => {},
-      onSubmitEditing = () => {},
+      onChangeText = () => { },
+      onBlur = () => { },
+      onFocus = () => { },
+      onSubmitEditing = () => { },
       disabled = false,
       backgroundColor,
       disableOpacityChange = false,
@@ -87,11 +93,20 @@ export const ThemedInput = forwardRef<
     const [isErrorModalVisible, setIsErrorModalVisible] = useState(false);
     const [selection, setSelection] = useState<Selection>({ start: 0, end: 0 });
     const [isFocused, setIsFocused] = useState(false);
+    const [errorIconPosition, setErrorIconPosition] = useState({ x: 0, y: 0, width: 0, height: 0 });
+    const [errorTooltipWidth, setErrorTooltipWidth] = useState(0);
+
+    // Properly typed ref for the error icon
+    const errorIconRef = useRef<View>(null);
+    const errorTextRef = useRef<View>(null);
+    const textToMeasureRef = useRef<Text>(null);
+    const screenWidth = Dimensions.get('window').width;
 
     const color = currentTheme === 'light' ? Colors.light.text : Colors.dark.text;
     const placeholderColor =
       currentTheme === 'light' ? Colors.light.placeHolder : Colors.dark.placeHolder;
     const errorColor = currentTheme === 'light' ? Colors.light.error : Colors.dark.error;
+    const tooltipBackgroundColor = currentTheme === 'light' ? '#222222' : '#333333';
 
     const textInputRef = useRef<TextInput>(null);
 
@@ -103,15 +118,57 @@ export const ThemedInput = forwardRef<
 
     // --- Reanimated: Create Shared Values ---
     const animatedOpacity = useSharedValue(disabled && !disableOpacityChange ? 0.5 : 1);
-    const animatedBorderWidth = useSharedValue(0);
+    const animatedBorderWidth = useSharedValue(isError && errorMessage ? getResponsiveWidth(0.3) : 0);
 
-     // --- Reanimated: Create Animated Styles ---
+    // Use effect to update border width when error state changes
+    useEffect(() => {
+      animatedBorderWidth.value = withTiming(
+        isError && errorMessage ? getResponsiveWidth(0.3) : 0,
+        { duration: 200 }
+      );
+    }, [isError, errorMessage, animatedBorderWidth]);
+
+    // --- Reanimated: Create Animated Styles ---
     const animatedContainerStyle = useAnimatedStyle(() => {
-        return {
-          opacity: animatedOpacity.value,
-          borderBottomWidth: animatedBorderWidth.value,
-        };
-      });
+      return {
+        opacity: animatedOpacity.value,
+        borderBottomWidth: animatedBorderWidth.value,
+      };
+    });
+
+    // Calculate tooltip width based on text length - improved accuracy
+    useEffect(() => {
+      if (errorMessage) {
+        // More accurate estimation with adjusted character width
+        const estimatedWidth = Math.min(
+          screenWidth * 0.8, // Max width as 80% of screen
+          Math.max(
+            getResponsiveWidth(30), // Minimum width
+            errorMessage.length * getResponsiveFontSize(5) + getResponsiveWidth(16) // Better character width estimate
+          )
+        );
+        setErrorTooltipWidth(estimatedWidth);
+      }
+    }, [errorMessage, screenWidth]);
+
+    // Function to measure text when tooltip becomes visible
+    const measureErrorText = useCallback(() => {
+      if (textToMeasureRef.current && errorTextRef.current) {
+        errorTextRef.current.measure((x, y, width, height) => {
+          if (width > 0) {
+            // Add some padding to the measured width
+            setErrorTooltipWidth(width + getResponsiveWidth(12));
+          }
+        });
+      }
+    }, []);
+
+    useEffect(() => {
+      if (isErrorModalVisible) {
+        // Slight delay to ensure the text has rendered
+        setTimeout(measureErrorText, 100);
+      }
+    }, [isErrorModalVisible, measureErrorText]);
 
     const onClearValue = useCallback(() => {
       setLocalValue('');
@@ -129,20 +186,16 @@ export const ThemedInput = forwardRef<
     const handleBlur = useCallback((event: NativeSyntheticEvent<TextInputFocusEventData>) => {
       onBlur(event);
       setIsFocused(false);
-        // --- Reanimated: Trigger Animation on Blur ---
-        animatedOpacity.value = withTiming(disabled && !disableOpacityChange ? 0.5 : 1, { duration: 200 });
-        animatedBorderWidth.value = withTiming(isError && errorMessage ? getResponsiveWidth(0.3) : 0, { duration: 200 });
-
-    }, [onBlur, disabled, disableOpacityChange, isError, errorMessage]);
+      // --- Reanimated: Maintain error border on blur if there is an error ---
+      animatedOpacity.value = withTiming(disabled && !disableOpacityChange ? 0.5 : 1, { duration: 200 });
+    }, [onBlur, disabled, disableOpacityChange, animatedOpacity]);
 
     const handleFocus = useCallback((event: NativeSyntheticEvent<TextInputFocusEventData>) => {
       onFocus(event);
       setIsFocused(true);
-        // --- Reanimated: Trigger Animation on Focus ---
+      // --- Reanimated: Trigger Animation on Focus ---
       animatedOpacity.value = withTiming(1, { duration: 200 }); // Ensure full opacity on focus
-      animatedBorderWidth.value = withTiming(isError && errorMessage ? getResponsiveWidth(0.3) : 0, {duration: 200});
-
-    }, [onFocus, isError, errorMessage]);
+    }, [onFocus, animatedOpacity]);
 
     const handleDisabledPress = useCallback(() => {
       if (onDisabledPress) {
@@ -159,6 +212,14 @@ export const ThemedInput = forwardRef<
       [isFocused]
     );
 
+    const showErrorTooltip = useCallback(() => {
+      if (errorIconRef.current) {
+        errorIconRef.current.measureInWindow((x, y, width, height) => {
+          setErrorIconPosition({ x, y, width, height });
+          setIsErrorModalVisible(true);
+        });
+      }
+    }, []);
 
     const inputContainerStyle = [
       styles.inputContainer,
@@ -168,12 +229,63 @@ export const ThemedInput = forwardRef<
           (currentTheme === 'light'
             ? Colors.light.inputBackground
             : Colors.dark.inputBackground),
-            // opacity is now handled by animatedOpacity
-        borderBottomColor: errorColor, //border color now handled in animated styles
-
+        borderBottomColor: errorColor,
       },
       style,
     ];
+
+    // Calculate tooltip position and direction - improved to handle auto-width better
+    const getTooltipPosition = useCallback(() => {
+      const tooltipWidth = errorTooltipWidth;
+      const tooltipMargin = getResponsiveWidth(5);
+      const tooltipHeight = getResponsiveHeight(8); // Approximate height of tooltip
+      const arrowHeight = getResponsiveHeight(1.5); // Height of the arrow
+
+      // Center of the error icon
+      const iconCenterX = errorIconPosition.x + (errorIconPosition.width / 2);
+
+      // Default position centers the tooltip over the icon
+      let left = iconCenterX - (tooltipWidth / 2);
+
+      // Check if tooltip would go off right edge
+      if (left + tooltipWidth > screenWidth - tooltipMargin) {
+        left = screenWidth - tooltipWidth - tooltipMargin;
+      }
+
+      // Check if tooltip would go off left edge
+      if (left < tooltipMargin) {
+        left = tooltipMargin;
+      }
+
+      // Position the tooltip above the icon with space for the arrow
+      const top = errorIconPosition.y - tooltipHeight - arrowHeight;
+
+      // Calculate where the arrow should point (relative to tooltip)
+      const arrowPosition = {
+        left: iconCenterX - left,
+      };
+
+      // Make sure arrow stays within tooltip bounds (with padding)
+      const arrowPadding = getResponsiveWidth(5);
+      if (arrowPosition.left < arrowPadding) {
+        arrowPosition.left = arrowPadding;
+      } else if (arrowPosition.left > tooltipWidth - arrowPadding) {
+        arrowPosition.left = tooltipWidth - arrowPadding;
+      }
+
+      return {
+        tooltip: {
+          top,
+          left,
+          width: tooltipWidth,
+        },
+        arrow: {
+          left: arrowPosition.left,
+        },
+      };
+    }, [errorIconPosition, screenWidth, errorTooltipWidth]);
+
+    const tooltipPosition = getTooltipPosition();
 
     const ErrorTooltip = useCallback(() => (
       <Modal
@@ -184,13 +296,38 @@ export const ThemedInput = forwardRef<
       >
         <TouchableWithoutFeedback onPress={() => setIsErrorModalVisible(false)}>
           <View style={styles.errorModalOverlay}>
-            <View style={[styles.errorTooltip, { backgroundColor: errorColor }]}>
-              <ThemedText style={styles.errorTooltipText}>{errorMessage}</ThemedText>
+            <View
+              style={[
+                styles.errorTooltip,
+                {
+                  backgroundColor: errorColor,
+                  top: tooltipPosition.tooltip.top,
+                  left: tooltipPosition.tooltip.left,
+                }
+              ]}
+            >
+              <View ref={errorTextRef}>
+                <ThemedText
+                  ref={textToMeasureRef}
+                  style={styles.errorTooltipText}
+                >
+                  {errorMessage}
+                </ThemedText>
+              </View>
+              <View
+                style={[
+                  styles.tooltipArrow,
+                  {
+                    borderTopColor: errorColor,
+                    left: tooltipPosition.arrow.left,
+                  }
+                ]}
+              />
             </View>
           </View>
         </TouchableWithoutFeedback>
       </Modal>
-    ), [isErrorModalVisible, errorMessage, errorColor]);
+    ), [isErrorModalVisible, errorMessage, tooltipBackgroundColor, tooltipPosition]);
 
     return (
       <View style={[styles.container, style]}>
@@ -199,26 +336,22 @@ export const ThemedInput = forwardRef<
           onPress={disabled ? handleDisabledPress : undefined}
           disabled={!disabled}
         >
-            {/* Use Animated.View */}
+          {/* Use Animated.View */}
           <Animated.View style={[inputContainerStyle, animatedContainerStyle]}>
             {!iconName && (
-              <ThemedText style={[styles.label, { color }]} type="defaultSemiBold">
+              <ThemedText style={[styles.label, { color }, labelStyle]} type="defaultSemiBold">
                 {label}
                 {required && <ThemedText style={{ color: 'red' }}> *</ThemedText>}
               </ThemedText>
             )}
 
-            <View
-              style={[
-                styles.inputRow,
-                // borderBottom styling now handled in animatedContainerStyle
-              ]}
-            >
+            <View style={styles.inputRow}>
               {iconName && (
                 <MaterialCommunityIcons
                   name={iconName}
                   size={getResponsiveFontSize(16)}
                   color={placeholderColor}
+                  style={iconStyle}
                 />
               )}
               <TextInput
@@ -230,6 +363,7 @@ export const ThemedInput = forwardRef<
                     color: disabled ? placeholderColor : color,
                     marginLeft: iconName ? getResponsiveWidth(2.5) : 0,
                   },
+                  inputStyle,
                 ]}
                 secureTextEntry={isSecure}
                 value={localValue}
@@ -284,16 +418,13 @@ export const ThemedInput = forwardRef<
                 )}
 
                 {isError && errorMessage && (
-                  <Tooltip
-                    title={errorMessage}
-                    enterTouchDelay={0}
-                    leaveTouchDelay={1500}
-                    theme={{ colors: { onSurface: errorColor } }}
+                  <Pressable
+                    onPress={showErrorTooltip}
+                    style={styles.errorIconContainer}
+                    ref={errorIconRef}
                   >
-                    <Pressable onPress={() => {}} style={styles.errorIconContainer}>
-                      <MaterialIcons name="error" size={getResponsiveWidth(4)} color={errorColor} />
-                    </Pressable>
-                  </Tooltip>
+                    <MaterialIcons name="error-outline" size={getResponsiveWidth(5)} color={errorColor} />
+                  </Pressable>
                 )}
               </View>
             </View>
@@ -355,23 +486,35 @@ const styles = StyleSheet.create({
   },
   errorModalOverlay: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'transparent',
   },
   errorTooltip: {
-    maxWidth: '80%',
-    padding: getResponsiveWidth(2.4),
+    position: 'absolute',
+    padding: getResponsiveWidth(3),
     borderRadius: getResponsiveWidth(2),
     shadowColor: '#000',
     shadowOffset: { width: 0, height: getResponsiveHeight(0.25) },
     shadowOpacity: 0.25,
     shadowRadius: getResponsiveWidth(0.92),
     elevation: 5,
+    alignSelf: 'flex-start', // Added to make tooltip wrap content tightly
+  },
+  tooltipArrow: {
+    position: 'absolute',
+    bottom: -getResponsiveHeight(1.2),
+    width: 0,
+    height: 0,
+    borderLeftWidth: getResponsiveWidth(2),
+    borderRightWidth: getResponsiveWidth(2),
+    borderTopWidth: getResponsiveHeight(1.5),
+    borderStyle: 'solid',
+    backgroundColor: 'transparent',
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
   },
   errorTooltipText: {
     color: 'white',
-    textAlign: 'center',
+    fontSize: getResponsiveFontSize(14),
   },
 });
 
