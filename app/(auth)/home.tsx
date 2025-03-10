@@ -155,6 +155,7 @@ function HomeScreen() {
       setIsEmpty(!hasLocal);
 
       setSyncStatus('synced'); // Sync successful
+      showToast(t('homeScreen.synced'));
       setTimeout(() => {
         setSyncStatus('idle'); // Reset to idle after a delay
       }, 3000);
@@ -164,6 +165,7 @@ function HomeScreen() {
       //   setToastMessage(t('homeScreen.syncError')); // Keep error toasts
       //   setIsToastVisible(true);
       setSyncStatus('error'); // Set error status
+      showToast(t('homeScreen.syncError'));
 
       const hasLocal = await hasLocalData(userId);
       setIsEmpty(!hasLocal);
@@ -497,7 +499,6 @@ function HomeScreen() {
   );
 
   const onOpenSheet = useCallback((type: SheetType, id?: string, url?: string, ssid?: string, password?: string, isWep?: boolean, isHidden?: boolean) => {
-    console.log("onOpenSheet called with:", { type, id, url, ssid, password, isWep, isHidden });
     setSheetType(type);
     setIsSheetOpen(true);
     setSelectedItemId(id || null);
@@ -849,6 +850,7 @@ function HomeScreen() {
         message={topToastMessage}
         isVisible={isTopToastVisible}
         onVisibilityToggle={(isVisible) => setIsTopToastVisible(isVisible)}
+        duration={2000}
       />
 
       <ThemedBottomToast

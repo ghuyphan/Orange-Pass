@@ -97,7 +97,7 @@ export function ThemedButton({
     return {
       transform: [
         {
-          rotate: syncStatus === 'syncing' ? withRepeat(withTiming(`${360}deg`, { duration: 2000 }), -1, false) : '0deg',
+          rotate: syncStatus === 'syncing' ? withRepeat(withTiming(`${-360}deg`, { duration: 1000 }), -1, false) : '0deg',
         },
       ],
     };
@@ -131,11 +131,10 @@ export function ThemedButton({
                 color={displayedIconColor}
                 style={styles.baseIcon}
               />
-              {/* Always show the sync indicator, but only animate it when syncing */}
               <Animated.View style={[styles.syncIndicator, syncStatus === 'syncing' ? syncAnimatedStyle : undefined]}>
                 <MaterialCommunityIcons
                   name="sync"
-                  size={iconSize * 0.5} // Smaller indicator
+                  size={iconSize * 0.58} 
                   color={displayedIconColor}
                 />
               </Animated.View>
