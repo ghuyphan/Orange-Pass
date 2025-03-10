@@ -36,7 +36,6 @@ import DataType from '@/types/dataType';
 import { ThemedTopToast } from '@/components/toast/ThemedTopToast';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import ModalManager from '../modals/ModalManager';
-import { debounce } from 'lodash';
 
 const AnimatedKeyboardAwareScrollView = Animated.createAnimatedComponent(
   KeyboardAwareScrollView
@@ -226,14 +225,37 @@ const QRForm: React.FC<QRFormProps> = ({
     setFieldValue('metadataType', metadataTypeData[0]);
   };
 
-  const debouncedSnapToIndex = useRef(
-    debounce((index: number) => {
-      bottomSheetRef.current?.snapToIndex(index);
-    }, 50) // 250ms delay - adjust as needed
-  ).current;
+  const onOpenSheet = useCallback(
+    (
+      type: SheetType,
+      category: CategoryItem | null,
+      setFieldValue: (
+        field: string,
+        value: any,
+        shouldValidate?: boolean | undefined
+      ) => void
+    ) => {
+      setIsSheetOpen(true);
+      if (type === 'brand' && !category) {
 
+        showToast(t('addScreen.errors.selectCategoryFirstMessage'));
+        return;
+      } else
+        if (type === 'metadataType' && !category) {
+          showToast(t('addScreen.errors.selectCategoryFirstMessage'));
+          return;
+        }
 
-    const handleSheetItemSelect = useCallback(
+      setSheetType(type);
+      setTimeout(() => {
+        bottomSheetRef.current?.snapToIndex(0);
+      }, 100);
+      Keyboard.dismiss();
+    },
+    [t, showToast]
+  );
+
+  const handleSheetItemSelect = useCallback(
     (
       item: SheetItem,
       type: SheetType,
@@ -257,38 +279,9 @@ const QRForm: React.FC<QRFormProps> = ({
           setFieldValue('metadataType', item as MetadataTypeItem);
           break;
       }
-      // bottomSheetRef.current?.close(); //Close directly
-      debouncedSnapToIndex(-1); // Use the debounced function
+      bottomSheetRef.current?.close();
     },
-    [debouncedSnapToIndex]
-  );
-
-  const onOpenSheet = useCallback(
-    (
-      type: SheetType,
-      category: CategoryItem | null,
-      setFieldValue: (
-        field: string,
-        value: any,
-        shouldValidate?: boolean | undefined
-      ) => void
-    ) => {
-      setIsSheetOpen(true);
-      if (type === 'brand' && !category) {
-        showToast(t('addScreen.errors.selectCategoryFirstMessage'));
-        return;
-      } else if (type === 'metadataType' && !category) {
-        showToast(t('addScreen.errors.selectCategoryFirstMessage'));
-        return;
-      }
-
-      setSheetType(type);
-        // Use the debounced function
-      debouncedSnapToIndex(0)
-
-      Keyboard.dismiss();
-    },
-    [t, showToast, debouncedSnapToIndex]
+    []
   );
 
   // --- Rendering Functions ---

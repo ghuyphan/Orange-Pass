@@ -244,7 +244,7 @@
     "confirmLogoutTitle": "Выйти?",
     "confirmLogoutMessage": "Вы уверены, что хотите выйти?",
     "confirmLogoutButton": "Выйти",
-    "appVersion": "версия"
+    "appVersion": "версия:"
   },
   "scanScreen": {
     "join": "Подключиться",

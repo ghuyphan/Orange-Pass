@@ -31,12 +31,24 @@ export const QRResult: React.FC<QRResultProps> = ({
 }) => {
 
     const scanResult = analyzeCode(codeValue, { codeFormat });
-    // console.log('scanResult:', scanResult); // Keep for debugging during development
 
     const getFormattedText = useCallback(() => {
         switch (scanResult.codeType) {
             case 'URL':
-                return `Navigate to ${new URL(scanResult.rawCodeValue).hostname.replace(/^www\./, '')}?`;
+                const hostname = new URL(scanResult.rawCodeValue).hostname.replace(/^www\./, '');
+                const domainParts = hostname.split('.');
+                let result;
+                if (domainParts.length >= 2) {
+                    // Get the last two parts at minimum
+                    result = domainParts.slice(-2).join('.');
+                    // If it's a known country code TLD with structure like .co.uk, get three parts
+                    if (domainParts.length >= 3 && domainParts[domainParts.length - 2].length <= 3) {
+                        result = domainParts.slice(-3).join('.');
+                    }
+                } else {
+                    result = hostname;
+                }
+                return result;
             case 'WIFI':
                 return `Connect to Wi-Fi ${scanResult.ssid}?`;
             case 'bank':

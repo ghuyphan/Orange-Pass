@@ -41,7 +41,8 @@ import { QRResult } from '@/components/camera/CodeResult';
 import { ThemedView } from '@/components/ThemedView'; 
 import { ThemedStatusToast } from '@/components/toast/ThemedStatusToast'; 
 // Lazy load the bottom sheet as it's not immediately visible
-const ThemedReuseableSheet = React.lazy(() => import('@/components/bottomsheet/ThemedReusableSheet'));
+// const ThemedReuseableSheet = React.lazy(() => import('@/components/bottomsheet/ThemedReusableSheet'));
+import ThemedReuseableSheet from '@/components/bottomsheet/ThemedReusableSheet';
 
 // Hooks 
 import { useMMKVBoolean } from 'react-native-mmkv'; 

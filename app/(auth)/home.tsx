@@ -13,7 +13,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { router } from 'expo-router';
 import DraggableFlatList, { ScaleDecorator } from 'react-native-draggable-flatlist';
-import { throttle } from 'lodash';
+import { throttle, debounce } from 'lodash';
 import BottomSheet from '@gorhom/bottom-sheet';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 
@@ -103,6 +103,7 @@ function HomeScreen() {
   const [wifiSsid, setWifiSsid] = useState<string | null>(null);
   const [wifiPassword, setWifiPassword] = useState<string | null>(null);
   const [wifiIsWep, setWifiIsWep] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced' | 'error'>('idle');
 
   // 6. Data and Filtering
   const [filter, setFilter] = useState('all');
@@ -128,58 +129,58 @@ function HomeScreen() {
   const scrollY = useSharedValue(0);
 
   const syncWithServer = useCallback(async (userId: string) => {
-    // Early Exit: Offline Mode
-
-    if (isOffline) {
-      const hasLocal = await hasLocalData(userId);
-      setIsEmpty(!hasLocal);
-      setIsLoading(false);
-      return;
-    }
-
-    // Early Exit: Already Syncing
-    if (isSyncing) {
+    if (isOffline || isSyncing) {
+      if (isOffline) {
+        const hasLocal = await hasLocalData(userId);
+        setIsEmpty(!hasLocal);
+        setIsLoading(false);
+      }
       return;
     }
 
     setIsSyncing(true);
-    setToastMessage(t('homeScreen.syncing'));
-    setIsToastVisible(true);
+    setSyncStatus('syncing'); // Start syncing
+    //   setToastMessage(t('homeScreen.syncing')); // Remove this toast
+    //   setIsToastVisible(true);
 
     try {
-      // 1. Prioritize Local Changes: Sync to Server First
       await syncQrCodes(userId);
-
-      // 2. Fetch and Update from Server: Get the latest from the server
       const serverData: ServerRecord[] = await fetchServerData(userId);
       if (serverData.length > 0) {
         await insertOrUpdateQrCodes(serverData);
       }
-
-      // 3. Refresh UI with Local Data: Ensures consistency, regardless of sync success
       const localData = await getQrCodesByUserId(userId);
       dispatch(setQrData(localData));
-
-      // 4. Update isEmpty: Check using the most reliable method
       const hasLocal = await hasLocalData(userId);
       setIsEmpty(!hasLocal);
 
+      setSyncStatus('synced'); // Sync successful
+      setTimeout(() => {
+        setSyncStatus('idle'); // Reset to idle after a delay
+      }, 3000);
+
     } catch (error) {
       console.error('Error during sync process:', error);
-      setToastMessage(t('homeScreen.syncError'));
-      setIsToastVisible(true);
+      //   setToastMessage(t('homeScreen.syncError')); // Keep error toasts
+      //   setIsToastVisible(true);
+      setSyncStatus('error'); // Set error status
 
-      // Fallback: Ensure isEmpty is updated even on error
       const hasLocal = await hasLocalData(userId);
       setIsEmpty(!hasLocal);
 
     } finally {
-      // Reset states regardless of success or failure
       setIsLoading(false);
-      setIsToastVisible(false);
+      //   setIsToastVisible(false); // Remove this toast
       setIsSyncing(false);
     }
   }, [isOffline, isSyncing, dispatch]);
+
+  const debouncedSyncWithServer = useCallback(
+    debounce(async (userId: string) => {
+      await syncWithServer(userId);
+    }, 500), // 500ms debounce time
+    [syncWithServer] // Dependencies of syncWithServer
+  );
 
   useEffect(() => {
     if (!userId) {
@@ -189,40 +190,96 @@ function HomeScreen() {
     const initializeData = async () => {
       setIsLoading(true);
       try {
-        let localData = qrData; // Start with what's in Redux
+        let localData = qrData;
 
         if (localData.length === 0) {
           localData = await getQrCodesByUserId(userId);
-          dispatch(setQrData(localData)); 
+          dispatch(setQrData(localData));
         }
 
-      // Update Redux (if needed)
-        setIsEmpty(localData.length === 0); // Set isEmpty
+        setIsEmpty(localData.length === 0);
 
-        // 3. Sync logic (only if online and needed) - unchanged
         if (!isOffline) {
           if (localData.length === 0) {
-            await syncWithServer(userId);
+            // Initial sync (if no local data)
+            await syncWithServer(userId); // syncWithServer already handles setting syncStatus
           } else {
             const unSyncedData = await getUnsyncedQrCodes(userId);
             if (unSyncedData.length > 0) {
-              await syncWithServer(userId);
+              // Sync unsynced changes
+              await syncWithServer(userId); // syncWithServer already handles setting syncStatus
+            } else {
+              // If there's local data AND no unsynced changes,
+              // we can assume we are already synced.
+              setSyncStatus('synced');  // Set synced here!
+              setTimeout(() => {  //Added Timeout
+                setSyncStatus('idle');
+              }, 3000);
             }
           }
+        } else {
+          //If Offline, set status to Idle.
+          setSyncStatus('idle');
         }
-        //AFTER the sync, refresh Local data to show the updated state
+        // Fetch the updated local data to refresh the UI
         const updatedLocalData = await getQrCodesByUserId(userId);
         dispatch(setQrData(updatedLocalData));
         setIsEmpty(updatedLocalData.length === 0);
+
       } catch (error) {
         console.error('Error during data initialization:', error);
+        setSyncStatus('error'); // Set error status in case of initialization error
+
       } finally {
         setIsLoading(false);
       }
     };
 
     initializeData();
-  }, [userId]); // Add qrData to dependencies
+  }, [userId]); // Correct dependencies
+
+  // useEffect(() => {
+  //   if (!userId) {
+  //     return;
+  //   }
+
+  //   const initializeData = async () => {
+  //     setIsLoading(true);
+  //     try {
+  //       let localData = qrData; // Start with what's in Redux
+
+  //       if (localData.length === 0) {
+  //         localData = await getQrCodesByUserId(userId);
+  //         dispatch(setQrData(localData)); 
+  //       }
+
+  //     // Update Redux (if needed)
+  //       setIsEmpty(localData.length === 0); // Set isEmpty
+
+  //       // 3. Sync logic (only if online and needed) - unchanged
+  //       if (!isOffline) {
+  //         if (localData.length === 0) {
+  //           await syncWithServer(userId);
+  //         } else {
+  //           const unSyncedData = await getUnsyncedQrCodes(userId);
+  //           if (unSyncedData.length > 0) {
+  //             await syncWithServer(userId);
+  //           }
+  //         }
+  //       }
+  //       //AFTER the sync, refresh Local data to show the updated state
+  //       const updatedLocalData = await getQrCodesByUserId(userId);
+  //       dispatch(setQrData(updatedLocalData));
+  //       setIsEmpty(updatedLocalData.length === 0);
+  //     } catch (error) {
+  //       console.error('Error during data initialization:', error);
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
+
+  //   initializeData();
+  // }, [userId]); // Add qrData to dependencies
 
   useEffect(() => {
     // Only show online/offline toast if there's an actual change in network state
@@ -425,7 +482,7 @@ function HomeScreen() {
       }
 
       bottomSheetRef.current?.close();
-    
+
       setTimeout(() => {
         router.push({
           pathname: `/(edit)/edit`,  // Correct path
@@ -629,7 +686,7 @@ function HomeScreen() {
               ssid={wifiSsid || ''}
               password={wifiPassword || ''}
               isWep={wifiIsWep}
-              // isHidden={wifiIsHidden}
+            // isHidden={wifiIsHidden}
             />
           </>
         );
@@ -671,7 +728,14 @@ function HomeScreen() {
             style={styles.titleButtonContainer}
           >
             <ThemedButton
-              iconName="qrcode-scan"
+              iconName="cloud-sync"
+              syncStatus={syncStatus}
+              style={styles.titleButton}
+              onPress={() => debouncedSyncWithServer(userId)}
+              disabled={syncStatus === 'syncing'} // Use the new prop
+            />
+            <ThemedButton
+              iconName="camera"
               style={styles.titleButton}
               onPress={onNavigateToScanScreen}
               disabled={isLoading}
@@ -711,7 +775,7 @@ function HomeScreen() {
             bounces={true}
             ListHeaderComponent={
               <Animated.View
-                style={[listHeaderStyle, { marginBottom: getResponsiveHeight(3.6)}]}
+                style={[listHeaderStyle, { marginBottom: getResponsiveHeight(3.6) }]}
               >
                 <ThemedFilter
                   selectedFilter={filter}
@@ -743,7 +807,7 @@ function HomeScreen() {
             onScrollOffsetChange={onScrollOffsetChange}
             decelerationRate={'fast'}
             scrollEnabled={!fabOpen}
-            windowSize={10} 
+            windowSize={10}
             removeClippedSubviews={true}
             maxToRenderPerBatch={10}
           />
