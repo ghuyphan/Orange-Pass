@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { StyleSheet, Keyboard, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { Formik } from 'formik';
@@ -22,6 +22,7 @@ export default function ForgotPasswordScreen() {
   const [isToastVisible, setIsToastVisible] = useState(false);
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const inputRef = useRef(null);
 
   const { locale } = useLocale();
 
@@ -32,6 +33,13 @@ export default function ForgotPasswordScreen() {
     const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
       setKeyboardVisible(false);
     });
+
+    // Focus the input when component mounts
+    if (inputRef.current) {
+      setTimeout(() => {
+        inputRef.current.focus();
+      }, 100); // Small delay to ensure component is fully mounted
+    }
 
     return () => {
       keyboardDidHideListener.remove();
@@ -83,13 +91,13 @@ export default function ForgotPasswordScreen() {
               {t('forgotPasswordScreen.forgotPassword')}
             </ThemedText>
             <View style={styles.logoContainer}>
-              <Logo size={getResponsiveWidth(4)} />
+              <Logo size={getResponsiveWidth(3.5)} />
             </View>
           </View>
-          
+
           <View style={styles.inputContainer}>
             <ThemedInput
-              label={t('forgotPasswordScreen.email')}
+              // label={t('forgotPasswordScreen.email')}
               placeholder={t('forgotPasswordScreen.emailPlaceholder')}
               onChangeText={handleChange('email')}
               isError={touched.email && errors.email ? true : false}
@@ -100,6 +108,7 @@ export default function ForgotPasswordScreen() {
               }
               disabled={isSubmitting}
               disableOpacityChange={true}
+              ref={inputRef}
             />
           </View>
           <ThemedButton

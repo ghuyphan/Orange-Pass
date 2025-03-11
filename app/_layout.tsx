@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { StyleSheet, UIManager, Platform, AppState } from 'react-native'; // Import AppState
+import { StyleSheet, UIManager, Platform, AppState } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
@@ -14,6 +14,7 @@ import { createQrTable } from '@/services/localDB/qrDB';
 import { checkInitialAuth } from '@/services/auth';
 import { checkOfflineStatus } from '@/services/network';
 import { storage } from '@/utils/storage';
+import * as SecureStore from 'expo-secure-store';
 
 // Import context providers
 import { LocaleProvider } from '@/context/LocaleContext';
@@ -34,6 +35,7 @@ interface AppInitState {
   isAppReady: boolean;
   isAuthenticated: boolean | null;
   hasSeenOnboarding: boolean | null;
+  hasSavedCredentials: boolean | null; // New state to track saved credentials
 }
 
 export default function RootLayout() {
@@ -61,6 +63,7 @@ export default function RootLayout() {
     isAppReady: false,
     isAuthenticated: null,
     hasSeenOnboarding: null,
+    hasSavedCredentials: null,
   });
 
   const router = useRouter();
@@ -83,41 +86,60 @@ export default function RootLayout() {
     }
   }, [appState.isAppReady]);
 
-    // App initialization effect
-    useEffect(() => {
-        const prepareApp = async () => {
-            try {
-                // Create local database tables
-                await createTable();
-                await createQrTable();
+  // Check if user has saved credentials
+  const checkSavedCredentials = async () => {
+    try {
+      const [savedEmail, rememberMe] = await Promise.all([
+        SecureStore.getItemAsync('savedEmail'),
+        SecureStore.getItemAsync('rememberMe')
+      ]);
+      
+      return Boolean(savedEmail && rememberMe === 'true');
+    } catch (error) {
+      console.error('Error checking saved credentials:', error);
+      return false;
+    }
+  };
 
-                // Check onboarding status
-                const onboardingStatus = storage.getBoolean('hasSeenOnboarding') ?? false;
+  // App initialization effect
+  useEffect(() => {
+    const prepareApp = async () => {
+      try {
+        // Create local database tables
+        await createTable();
+        await createQrTable();
 
-                // Determine authentication status
-                const authStatus = onboardingStatus
-                    ? await checkInitialAuth().catch(() => false)
-                    : false;
+        // Check onboarding status
+        const onboardingStatus = storage.getBoolean('hasSeenOnboarding') ?? false;
 
-                // Update app state
-                setAppState({
-                    isAppReady: fontsLoaded && !fontError,
-                    isAuthenticated: authStatus,
-                    hasSeenOnboarding: onboardingStatus,
-                });
-            } catch (error) {
-                console.error("App initialization error:", error);
+        // Determine authentication status
+        const authStatus = onboardingStatus
+          ? await checkInitialAuth().catch(() => false)
+          : false;
 
-                // Fallback state in case of initialization failure
-                setAppState(prev => ({
-                    ...prev,
-                    isAppReady: true,
-                    isAuthenticated: false,
-                    hasSeenOnboarding: false,
-                }));
-            }
-        };
+        // Check if user has saved credentials
+        const hasSavedCreds = await checkSavedCredentials();
 
+        // Update app state
+        setAppState({
+          isAppReady: fontsLoaded && !fontError,
+          isAuthenticated: authStatus,
+          hasSeenOnboarding: onboardingStatus,
+          hasSavedCredentials: hasSavedCreds,
+        });
+      } catch (error) {
+        console.error("App initialization error:", error);
+
+        // Fallback state in case of initialization failure
+        setAppState(prev => ({
+          ...prev,
+          isAppReady: true,
+          isAuthenticated: false,
+          hasSeenOnboarding: false,
+          hasSavedCredentials: false,
+        }));
+      }
+    };
 
     // Setup for AppState change handling
     const handleAppStateChange = (nextAppState: string) => {
@@ -140,17 +162,22 @@ export default function RootLayout() {
 
   // Navigation effect based on app state
   useEffect(() => {
-    const { isAppReady, hasSeenOnboarding, isAuthenticated } = appState;
+    const { isAppReady, hasSeenOnboarding, isAuthenticated, hasSavedCredentials } = appState;
 
     if (isAppReady &&
         hasSeenOnboarding !== null &&
-        isAuthenticated !== null) {
+        isAuthenticated !== null &&
+        hasSavedCredentials !== null) {
       try {
         if (!hasSeenOnboarding) {
           router.replace('/onboard');
         } else if (isAuthenticated) {
           router.replace('/home');
+        } else if (hasSavedCredentials) {
+          // Go to quick login if user has saved credentials but isn't authenticated
+          router.replace('/quick-login');
         } else {
+          // Regular login if no saved credentials
           router.replace('/login');
         }
       } catch (navigationError) {
@@ -162,7 +189,8 @@ export default function RootLayout() {
   // Show loading state while app is initializing
   if (!appState.isAppReady ||
       appState.isAuthenticated === null ||
-      appState.hasSeenOnboarding === null) {
+      appState.hasSeenOnboarding === null ||
+      appState.hasSavedCredentials === null) {
     return null; // Or a loading indicator
   }
 
@@ -189,6 +217,7 @@ export default function RootLayout() {
                   />
                   <Stack.Screen name="+not-found" />
                   <Stack.Screen name="onboard" />
+                  <Stack.Screen name="quickLogin" />
                 </Stack>
               </ThemedView>
             </LocaleProvider>

@@ -82,7 +82,7 @@ export default function LoginScreen() {
 
   const onNavigateToRegister = () => {
     Keyboard.dismiss();
-    router.push('/register');
+    router.push('/quick-login');
   };
 
   const onNavigateToForgot = () => {
@@ -199,7 +199,7 @@ export default function LoginScreen() {
 
             {/* Logo Centered */}
             <View style={styles.logoContainer}>
-              <Logo size={getResponsiveWidth(4)} />
+              <Logo size={getResponsiveWidth(3.5)} />
             </View>
 
             {/* Input Fields */}

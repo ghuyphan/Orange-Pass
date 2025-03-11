@@ -92,7 +92,7 @@ export default function RegisterScreen() {
                                 {t('registerScreen.registerNewAccount')}
                             </ThemedText>
                             <View style={styles.logoContainer}>
-                                <Logo size={getResponsiveWidth(4)} />
+                                <Logo size={getResponsiveWidth(3.5)} />
                             </View>
                         </View>
 
