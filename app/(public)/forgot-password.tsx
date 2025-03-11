@@ -79,11 +79,14 @@ export default function ForgotPasswordScreen() {
           scrollEnabled={isKeyboardVisible}
         >
           <View style={styles.topContainer}>
-            <Logo size={getResponsiveWidth(4)}/>
             <ThemedText style={styles.title} type="title">
               {t('forgotPasswordScreen.forgotPassword')}
             </ThemedText>
+            <View style={styles.logoContainer}>
+              <Logo size={getResponsiveWidth(4)} />
+            </View>
           </View>
+          
           <View style={styles.inputContainer}>
             <ThemedInput
               label={t('forgotPasswordScreen.email')}
@@ -134,13 +137,18 @@ const styles = StyleSheet.create({
     fontSize: getResponsiveFontSize(25),
     textAlign: 'center',
   },
+  logoContainer: {
+    alignItems: 'center',
+    marginTop: getResponsiveHeight(2),
+  },
   inputContainer: {
     borderRadius: getResponsiveWidth(4),
     marginBottom: getResponsiveHeight(2.4),
     marginTop: getResponsiveHeight(3.6),
   },
   forgotButton: {
-    marginTop: getResponsiveHeight(2.4),
+    height: getResponsiveHeight(6),
+    marginBottom: getResponsiveHeight(2.5),
   },
   registerContainer: {
     flexDirection: 'row',

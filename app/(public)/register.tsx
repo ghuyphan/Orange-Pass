@@ -1,11 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, Keyboard, View } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import { StyleSheet, View, Keyboard, Platform } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { Formik } from 'formik';
 import { router } from 'expo-router';
 
 import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
 import { ThemedInput } from '@/components/Inputs/ThemedInput';
 import { ThemedButton } from '@/components/buttons/ThemedButton';
 import { ThemedToast } from '@/components/toast/ThemedToast';
@@ -15,18 +14,17 @@ import { registrationSchema } from '@/utils/validationSchemas';
 import { register } from '@/services/auth';
 import { useLocale } from '@/context/LocaleContext';
 import { genConfig } from '@zamplyy/react-native-nice-avatar';
-import LOGO from '@/assets/svgs/orange-logo.svg';
 import { useTheme } from '@/context/ThemeContext';
 import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
 import { Logo } from '@/components/AppLogo';
 
 export default function RegisterScreen() {
-    const { currentTheme } = useTheme();
     const { locale } = useLocale();
+    const { currentTheme } = useTheme();
     const [isToastVisible, setIsToastVisible] = useState(false);
     const [isKeyboardVisible, setKeyboardVisible] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
-    const cardColor = currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground;
+    const scrollViewRef = useRef<KeyboardAwareScrollView>(null);
 
     useEffect(() => {
         const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
@@ -76,98 +74,108 @@ export default function RegisterScreen() {
         >
             {({ handleChange, handleBlur, handleSubmit, values, errors, touched, isSubmitting }) => (
                 <KeyboardAwareScrollView
+                    ref={scrollViewRef}
                     keyboardShouldPersistTaps="handled"
-                    style={[
-                        {
-                            backgroundColor:
-                                currentTheme === 'light' ? Colors.light.background : Colors.dark.background,
-                        },
-                    ]}
+                    style={{ backgroundColor: currentTheme === 'light' ? Colors.light.background : Colors.dark.background }}
                     contentContainerStyle={styles.container}
-                    extraScrollHeight={getResponsiveHeight(12)}
-                    scrollEnabled={isKeyboardVisible}
+                    extraScrollHeight={Platform.OS === 'ios' ? getResponsiveHeight(4) : 0}
+                    enableOnAndroid={true}
+                    enableResetScrollToCoords={false}
                     showsVerticalScrollIndicator={false}
-                    enableOnAndroid
+                    scrollEnabled={true}
+                    keyboardOpeningTime={0}
                 >
-                    <View style={styles.topContainer}>
-                        <Logo size={getResponsiveWidth(4)} />
-                        <ThemedText style={styles.title} type="title">
-                            {t('registerScreen.registerNewAccount')}
-                        </ThemedText>
+                    <View style={styles.contentContainer}>
+                        {/* Logo Centered */}
+                        <View style={styles.topContainer}>
+                            <ThemedText style={styles.title} type="title">
+                                {t('registerScreen.registerNewAccount')}
+                            </ThemedText>
+                            <View style={styles.logoContainer}>
+                                <Logo size={getResponsiveWidth(4)} />
+                            </View>
+                        </View>
+
+                        {/* Input Fields */}
+                        <View style={styles.inputsWrapper}>
+                            <ThemedInput
+                                placeholder={t('registerScreen.emailPlaceholder')}
+                                onChangeText={handleChange('email')}
+                                isError={touched.email && errors.email ? true : false}
+                                onBlur={handleBlur('email')}
+                                value={values.email}
+                                errorMessage={
+                                    touched.email && errors.email ? t(`registerScreen.errors.${errors.email}`) : ''
+                                }
+                                disabled={isSubmitting}
+                                disableOpacityChange={true}
+                            />
+
+                            <ThemedInput
+                                placeholder={t('registerScreen.fullNamePlaceholder')}
+                                onChangeText={handleChange('fullName')}
+                                isError={touched.fullName && errors.fullName ? true : false}
+                                onBlur={handleBlur('fullName')}
+                                value={values.fullName}
+                                errorMessage={
+                                    touched.fullName && errors.fullName
+                                        ? t(`registerScreen.errors.${errors.fullName}`)
+                                        : ''
+                                }
+                                disabled={isSubmitting}
+                                disableOpacityChange={true}
+                            />
+
+                            <ThemedInput
+                                placeholder={t('registerScreen.passwordPlaceholder')}
+                                secureTextEntry={true}
+                                onChangeText={handleChange('password')}
+                                isError={touched.password && errors.password ? true : false}
+                                onBlur={handleBlur('password')}
+                                value={values.password}
+                                errorMessage={
+                                    touched.password && errors.password
+                                        ? t(`registerScreen.errors.${errors.password}`)
+                                        : ''
+                                }
+                                disabled={isSubmitting}
+                                disableOpacityChange={true}
+                            />
+
+                            <ThemedInput
+                                placeholder={t('registerScreen.confirmPasswordPlaceholder')}
+                                secureTextEntry={true}
+                                onChangeText={handleChange('confirmPassword')}
+                                isError={touched.confirmPassword && errors.confirmPassword ? true : false}
+                                onBlur={handleBlur('confirmPassword')}
+                                value={values.confirmPassword}
+                                errorMessage={
+                                    touched.confirmPassword && errors.confirmPassword
+                                        ? t(`registerScreen.errors.${errors.confirmPassword}`)
+                                        : ''
+                                }
+                                disabled={isSubmitting}
+                                disableOpacityChange={true}
+                            />
+                        </View>
+
+                        {/* Register Button */}
+                        <ThemedButton
+                            label={t('registerScreen.register')}
+                            style={styles.registerButton}
+                            onPress={() => {
+                                Keyboard.dismiss();
+                                handleSubmit();
+                            }}
+                            loading={isSubmitting}
+                            loadingLabel={t('registerScreen.registering')}
+                            textStyle={styles.registerButtonText}
+                        />
                     </View>
-                    <View style={[styles.inputContainer, { backgroundColor: cardColor }]}>
-                        <ThemedInput
-                            label={t('registerScreen.email')}
-                            placeholder={t('registerScreen.emailPlaceholder')}
-                            onChangeText={handleChange('email')}
-                            isError={touched.email && errors.email ? true : false}
-                            onBlur={handleBlur('email')}
-                            value={values.email}
-                            errorMessage={
-                                touched.email && errors.email ? t(`registerScreen.errors.${errors.email}`) : ''
-                            }
-                            disabled={isSubmitting}
-                            disableOpacityChange={true}
-                        />
-                        <ThemedView style={styles.divider} />
-                        <ThemedInput
-                            label={t('registerScreen.fullName')}
-                            placeholder={t('registerScreen.fullNamePlaceholder')}
-                            onChangeText={handleChange('fullName')}
-                            isError={touched.fullName && errors.fullName ? true : false}
-                            onBlur={handleBlur('fullName')}
-                            value={values.fullName}
-                            errorMessage={
-                                touched.fullName && errors.fullName
-                                    ? t(`registerScreen.errors.${errors.fullName}`)
-                                    : ''
-                            }
-                            disabled={isSubmitting}
-                            disableOpacityChange={true}
-                        />
-                        <ThemedView style={styles.divider} />
-                        <ThemedInput
-                            label={t('registerScreen.password')}
-                            placeholder={t('registerScreen.passwordPlaceholder')}
-                            secureTextEntry={true}
-                            onChangeText={handleChange('password')}
-                            isError={touched.password && errors.password ? true : false}
-                            onBlur={handleBlur('password')}
-                            value={values.password}
-                            errorMessage={
-                                touched.password && errors.password
-                                    ? t(`registerScreen.errors.${errors.password}`)
-                                    : ''
-                            }
-                            disabled={isSubmitting}
-                            disableOpacityChange={true}
-                        />
-                        <ThemedView style={styles.divider} />
-                        <ThemedInput
-                            label={t('registerScreen.confirmPassword')}
-                            placeholder={t('registerScreen.confirmPasswordPlaceholder')}
-                            secureTextEntry={true}
-                            onChangeText={handleChange('confirmPassword')}
-                            isError={touched.confirmPassword && errors.confirmPassword ? true : false}
-                            onBlur={handleBlur('confirmPassword')}
-                            value={values.confirmPassword}
-                            errorMessage={
-                                touched.confirmPassword && errors.confirmPassword
-                                    ? t(`registerScreen.errors.${errors.confirmPassword}`)
-                                    : ''
-                            }
-                            disabled={isSubmitting}
-                            disableOpacityChange={true}
-                        />
-                    </View>
-                    <ThemedButton
-                        label={t('registerScreen.register')}
-                        style={styles.registerButton}
-                        onPress={handleSubmit}
-                        loading={isSubmitting}
-                        loadingLabel={t('registerScreen.registering')}
-                    />
+
+                    {/* Toast for errors/success */}
                     <ThemedToast
+                        duration={5000}
                         message={errorMessage}
                         isVisible={isToastVisible}
                         style={styles.toastContainer}
@@ -184,37 +192,39 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
     container: {
         flexGrow: 1,
-        marginHorizontal: getResponsiveWidth(3.6),
+        paddingHorizontal: getResponsiveWidth(3.6),
+    },
+    contentContainer: {
+        flex: 1,
     },
     topContainer: {
         marginTop: getResponsiveHeight(10),
         gap: getResponsiveHeight(2.4),
         alignItems: 'center',
+      },
+    logoContainer: {
+        alignItems: 'center',
+        marginBottom: getResponsiveHeight(6),
     },
     title: {
-        marginBottom: getResponsiveHeight(3.6),
         fontSize: getResponsiveFontSize(25),
         textAlign: 'center',
-    },
-    inputContainer: {
-        borderRadius: getResponsiveWidth(4),
         marginBottom: getResponsiveHeight(2.4),
     },
-    divider: {
-        height: getResponsiveHeight(0.3),
+    inputsWrapper: {
+        gap: getResponsiveHeight(2),
+        width: '100%',
+        marginBottom: getResponsiveHeight(2.5),
     },
     registerButton: {
-        marginTop: getResponsiveHeight(2.4),
+        height: getResponsiveHeight(6),
     },
-    registerContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginTop: getResponsiveHeight(2.4),
+    registerButtonText: {
+        fontWeight: 'bold',
     },
     toastContainer: {
         position: 'absolute',
-        bottom: getResponsiveHeight(3.6),
+        bottom: getResponsiveHeight(1.8),
         left: 0,
         right: 0,
         marginHorizontal: getResponsiveWidth(3.6),

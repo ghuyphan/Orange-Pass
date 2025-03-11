@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { StyleSheet, View, Keyboard, Pressable } from 'react-native';
+import { StyleSheet, View, Keyboard, Pressable, Platform } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { Formik } from 'formik';
 import { router } from 'expo-router';
@@ -27,7 +27,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useMMKVString } from 'react-native-mmkv';
 import ThemedReuseableSheet from '@/components/bottomsheet/ThemedReusableSheet';
 
-// Define the valid language keys:  VERY IMPORTANT
+// Define the valid language keys
 type LanguageKey = 'vi' | 'ru' | 'en';
 
 // Define the LanguageOption type
@@ -36,25 +36,24 @@ interface LanguageOption {
   flag: React.ReactNode;
 }
 
-// Use the LanguageKey type in the languageOptions object:
+// Use the LanguageKey type in the languageOptions object
 const languageOptions: Record<LanguageKey, LanguageOption> = {
   vi: { label: 'Tiếng Việt', flag: <VN width={getResponsiveWidth(7.2)} height={getResponsiveHeight(3)} /> },
   ru: { label: 'Русский', flag: <RU width={getResponsiveWidth(7.2)} height={getResponsiveHeight(3)} /> },
   en: { label: 'English', flag: <GB width={getResponsiveWidth(7.2)} height={getResponsiveHeight(3)} /> },
 };
 
-
 export default function LoginScreen() {
   const { locale, updateLocale } = useLocale();
-  const [storedLocale, setStoredLocale] = useMMKVString('locale'); // Use MMKV to get stored locale
+  const [storedLocale, setStoredLocale] = useMMKVString('locale');
   const { currentTheme } = useTheme();
   const cardColor = currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground;
   const authRefreshError = useSelector((state: RootState) => state.error.message);
   const [isToastVisible, setIsToastVisible] = useState(false);
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const bottomSheetRef = useRef<any>(null); // Ref for the bottom sheet
-
+  const bottomSheetRef = useRef<any>(null);
+  const scrollViewRef = useRef<KeyboardAwareScrollView>(null);
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
@@ -68,7 +67,7 @@ export default function LoginScreen() {
       keyboardDidHideListener.remove();
       keyboardDidShowListener.remove();
     };
-  }, [isKeyboardVisible]);
+  }, []);
 
   useEffect(() => {
     if (authRefreshError !== null) {
@@ -92,22 +91,23 @@ export default function LoginScreen() {
   };
 
   const handleLanguageChange = useCallback(
-    (newLocale: LanguageKey) => {  // Use LanguageKey here
+    (newLocale: LanguageKey) => {
       updateLocale(newLocale);
-      setStoredLocale(newLocale);  //  Save to MMKV **********************
-      bottomSheetRef.current?.close(); // Close the bottom sheet
+      setStoredLocale(newLocale);
+      bottomSheetRef.current?.close();
     },
     [updateLocale, setStoredLocale]
   );
 
   const handleSystemLocale = useCallback(() => {
     updateLocale(undefined);
-    setStoredLocale(undefined); // Save to MMKV ***********************
-    bottomSheetRef.current?.close(); // Close the bottom sheet
+    setStoredLocale(undefined);
+    bottomSheetRef.current?.close();
   }, [updateLocale, setStoredLocale]);
 
   const toggleLanguageDropdown = () => {
-    bottomSheetRef.current?.expand(); // Open the bottom sheet
+    Keyboard.dismiss();
+    bottomSheetRef.current?.expand();
   };
 
   const renderLanguageOptions = () => {
@@ -117,7 +117,14 @@ export default function LoginScreen() {
     return (
       <View style={[styles.languageOptionsContainer, { backgroundColor: cardColor }]}>
         {Object.entries(languageOptions).map(([key, { label, flag }]) => (
-          <Pressable key={key} onPress={() => handleLanguageChange(key as LanguageKey)} style={styles.languageOption}>
+          <Pressable 
+            key={key} 
+            onPress={() => handleLanguageChange(key as LanguageKey)} 
+            style={({pressed}) => [
+              styles.languageOption,
+              pressed && styles.pressedItem
+            ]}
+          >
             <View style={styles.leftSectionContainer}>
               <View style={styles.flagIconContainer}>{flag}</View>
               <ThemedText style={{ color: textColors }}>{label}</ThemedText>
@@ -127,7 +134,13 @@ export default function LoginScreen() {
             )}
           </Pressable>
         ))}
-        <Pressable onPress={handleSystemLocale} style={styles.languageOption}>
+        <Pressable 
+          onPress={handleSystemLocale} 
+          style={({pressed}) => [
+            styles.languageOption,
+            pressed && styles.pressedItem
+          ]}
+        >
           <View style={styles.leftSectionContainer}>
             <MaterialCommunityIcons
               name="cog-outline"
@@ -164,75 +177,81 @@ export default function LoginScreen() {
     >
       {({ handleChange, handleBlur, handleSubmit, values, errors, touched, isSubmitting }) => (
         <KeyboardAwareScrollView
+          ref={scrollViewRef}
           keyboardShouldPersistTaps="handled"
-          style={[{ backgroundColor: currentTheme === 'light' ? Colors.light.background : Colors.dark.background }]}
+          style={{ backgroundColor: currentTheme === 'light' ? Colors.light.background : Colors.dark.background }}
           contentContainerStyle={styles.container}
-          extraScrollHeight={getResponsiveHeight(8.5)}
-          extraHeight={getResponsiveHeight(24)}
+          extraScrollHeight={Platform.OS === 'ios' ? getResponsiveHeight(4) : 0}
           enableOnAndroid={true}
+          enableResetScrollToCoords={false}
           showsVerticalScrollIndicator={false}
-          scrollEnabled={isKeyboardVisible}
+          scrollEnabled={true}
+          keyboardOpeningTime={0}
         >
-          <View style={styles.languageSelectorContainer}>
-            <ThemedTextButton
-              onPress={toggleLanguageDropdown}
-              label={storedLocale ? (languageOptions[storedLocale as LanguageKey]?.label || t('languageScreen.system')) : t('languageScreen.system')} // Cast storedLocale
-              rightIconName='chevron-down'
+          <View style={styles.contentContainer}>
+            <View style={styles.languageSelectorContainer}>
+              <ThemedTextButton
+                onPress={toggleLanguageDropdown}
+                label={storedLocale ? (languageOptions[storedLocale as LanguageKey]?.label || t('languageScreen.system')) : t('languageScreen.system')}
+                rightIconName='chevron-down'
+              />
+            </View>
+
+            {/* Logo Centered */}
+            <View style={styles.logoContainer}>
+              <Logo size={getResponsiveWidth(4)} />
+            </View>
+
+            {/* Input Fields */}
+            <View style={styles.inputsWrapper}>
+              <ThemedInput
+                placeholder={t('loginScreen.emailPlaceholder')}
+                onChangeText={handleChange('email')}
+                isError={touched.email && errors.email ? true : false}
+                onBlur={handleBlur('email')}
+                value={values.email}
+                errorMessage={touched.email && errors.email ? t(`loginScreen.errors.${errors.email}`) : ''}
+                disabled={isSubmitting}
+                disableOpacityChange={true}
+              />
+
+              <ThemedInput
+                placeholder={t('loginScreen.passwordPlaceholder')}
+                secureTextEntry={true}
+                onChangeText={handleChange('password')}
+                isError={touched.password && errors.password ? true : false}
+                onBlur={handleBlur('password')}
+                value={values.password}
+                errorMessage={touched.password && errors.password ? t(`loginScreen.errors.${errors.password}`) : ''}
+                disabled={isSubmitting}
+                disableOpacityChange={true}
+              />
+            </View>
+
+            {/* Login Button */}
+            <ThemedButton
+              label={t('loginScreen.login')}
+              style={styles.loginButton}
+              onPress={() => {
+                Keyboard.dismiss();
+                handleSubmit();
+              }}
+              loadingLabel={t('loginScreen.loggingIn')}
+              loading={isSubmitting}
+              textStyle={styles.loginButtonText}
             />
+
+            {/* Forgot Password */}
+            <View style={styles.forgotButtonContainer}>
+              <ThemedTextButton
+                label={t('loginScreen.forgotPassword')}
+                onPress={onNavigateToForgot}
+                style={{opacity: 0.7}}
+              />
+            </View>
           </View>
 
-          {/* Logo Centered */}
-          <View style={styles.logoContainer}>
-            <Logo size={getResponsiveWidth(4)} />
-          </View>
-
-          {/* Input Fields */}
-          <View style={styles.inputsWrapper}>
-            <ThemedInput
-              placeholder={t('loginScreen.emailPlaceholder')}
-              onChangeText={handleChange('email')}
-              isError={touched.email && errors.email ? true : false}
-              onBlur={handleBlur('email')}
-              value={values.email}
-              errorMessage={touched.email && errors.email ? t(`loginScreen.errors.${errors.email}`) : ''}
-              disabled={isSubmitting}
-              disableOpacityChange={true}
-            />
-
-            <ThemedInput
-              placeholder={t('loginScreen.passwordPlaceholder')}
-              secureTextEntry={true}
-              onChangeText={handleChange('password')}
-              isError={touched.password && errors.password ? true : false}
-              onBlur={handleBlur('password')}
-              value={values.password}
-              errorMessage={touched.password && errors.password ? t(`loginScreen.errors.${errors.password}`) : ''}
-              disabled={isSubmitting}
-              disableOpacityChange={true}
-            />
-          </View>
-
-          {/* Login Button */}
-          <ThemedButton
-            label={t('loginScreen.login')}
-            style={styles.loginButton}
-            onPress={handleSubmit}
-            loadingLabel={t('loginScreen.loggingIn')}
-            loading={isSubmitting}
-            textStyle={styles.loginButtonText}
-          />
-
-          {/* Forgot Password */}
-          <View style={styles.forgotButtonContainer}>
-            <ThemedTextButton
-              label={t('loginScreen.forgotPassword')}
-              onPress={onNavigateToForgot}
-              style={{opacity: 0.7}}
-            />
-          </View>
-
-          {/* Meta Logo */}
-          <View style={styles.metaLogoContainer}>
+          <View style={styles.appNameContainer}>
             <ThemedButton
               label={t('loginScreen.registerNow')}
               onPress={onNavigateToRegister}
@@ -253,11 +272,12 @@ export default function LoginScreen() {
             onVisibilityToggle={setIsToastVisible}
             iconName="error"
           />
+          
           {/* Bottom Sheet for Language Selection */}
           <ThemedReuseableSheet
             ref={bottomSheetRef}
             title={t('loginScreen.selectLanguage')}
-            snapPoints={['40%']} // Adjust the height as needed
+            snapPoints={['40%']}
             showCloseButton={true}
             contentType='custom'
             customContent={renderLanguageOptions()}
@@ -272,43 +292,35 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     paddingHorizontal: getResponsiveWidth(3.6),
+    justifyContent: 'space-between',
+  },
+  contentContainer: {
+    flex: 1,
   },
   languageSelectorContainer: {
     alignItems: 'center',
-    marginTop: getResponsiveHeight(13),
-    position: 'relative',
-  },
-  languageText: {
-    fontSize: getResponsiveFontSize(16),
+    marginTop: getResponsiveHeight(10),
   },
   logoContainer: {
     alignItems: 'center',
     marginTop: getResponsiveHeight(6),
-    marginBottom: getResponsiveHeight(8),
+    marginBottom: getResponsiveHeight(6),
   },
   inputsWrapper: {
     gap: getResponsiveHeight(2),
     width: '100%',
-    marginBottom: getResponsiveHeight(2),
-  },
-  passwordContainer: {
-    marginBottom: getResponsiveHeight(3),
+    marginBottom: getResponsiveHeight(2.5),
   },
   loginButton: {
     height: getResponsiveHeight(6),
     marginBottom: getResponsiveHeight(2),
   },
   loginButtonText: {
-    fontSize: getResponsiveFontSize(16),
     fontWeight: 'bold',
   },
   forgotButtonContainer: {
     alignItems: 'center',
     marginBottom: getResponsiveHeight(4),
-  },
-  createAccountContainer: {
-    alignItems: 'center',
-    marginTop: getResponsiveHeight(2),
   },
   createAccountButton: {
     borderRadius: getResponsiveWidth(8),
@@ -320,14 +332,14 @@ const styles = StyleSheet.create({
     fontSize: getResponsiveFontSize(16),
     fontWeight: 'bold',
   },
-  metaLogoContainer: {
+  appNameContainer: {
     alignItems: 'center',
-    marginTop: 'auto',
-    marginBottom: getResponsiveHeight(4),
+    marginBottom: Platform.OS === 'ios' ? getResponsiveHeight(4) : getResponsiveHeight(3),
+    paddingBottom: Platform.OS === 'android' ? getResponsiveHeight(1) : 0,
   },
   metaText: {
     fontSize: getResponsiveFontSize(16),
-    color: '#999',
+    opacity: 0.7,
   },
   toastContainer: {
     position: 'absolute',
@@ -336,7 +348,6 @@ const styles = StyleSheet.create({
     right: 0,
     marginHorizontal: getResponsiveWidth(3.6),
   },
-
   flagIconContainer: {
     width: getResponsiveWidth(4.8),
     aspectRatio: 1,
@@ -346,7 +357,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   languageOptionsContainer: {
-    marginTop: getResponsiveHeight(1.8),
+    marginVertical: getResponsiveHeight(1),
     marginHorizontal: getResponsiveWidth(3.6),
     borderRadius: getResponsiveWidth(4),
   },
@@ -354,9 +365,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderRadius: getResponsiveWidth(4),
+    borderRadius: getResponsiveWidth(2),
     paddingHorizontal: getResponsiveWidth(4.8),
     paddingVertical: getResponsiveHeight(1.8),
+  },
+  pressedItem: {
+    opacity: 0.7,
+    backgroundColor: Platform.OS === 'ios' ? 'rgba(0,0,0,0.05)' : 'rgba(0,0,0,0.1)',
   },
   leftSectionContainer: {
     flexDirection: 'row',

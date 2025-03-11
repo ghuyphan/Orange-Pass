@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
 import { useMemo } from 'react';
 import { ThemedView } from '@/components/ThemedView';
+import { getResponsiveHeight } from '@/utils/responsive';
 export default function AuthLayout() {
   const segments = useSegments() as string[];
   const router = useRouter();
@@ -48,7 +49,7 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     position: 'absolute',
-    top: STATUSBAR_HEIGHT + 25,
+    top: getResponsiveHeight(10),
     left: 15,
     zIndex: 10,
   },
