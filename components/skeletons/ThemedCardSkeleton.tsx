@@ -7,97 +7,60 @@ import { useTheme } from '@/context/ThemeContext';
 import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
 
 export function ThemedCardSkeleton({ show = true, index = 0 }) {
-  const { currentTheme: colorScheme } = useTheme();
-  
-  const colorsArray = colorScheme === 'dark'
-    ? [
-        '#45383A', // Darkest brown with a red tint
-        '#5A484A', // Slightly lighter brown with red tint
-        '#6F585A', // Medium brown with red tint
-        '#84686A', // Lighter brown with red tint
-        '#99787A'  // Lightest brown with red tint
-      ]
-    : [
-        '#F0E5D8', // Light beige
-        '#E5D6C5', // Slightly darker beige
-        '#DAC7B2', // Medium beige
-        '#CFB89F', // Darker beige
-        '#C4A98C'  // Lightest beige
-      ];
+  const { currentTheme } = useTheme();
 
-  // Alternate between QR and barcode dimensions based on index
+  // Simplified color arrays
+  const darkColors = ['#45383A', '#5A484A', '#6F585A', '#84686A', '#99787A'];
+  const lightColors = ['#F0E5D8', '#E5D6C5', '#DAC7B2', '#CFB89F', '#C4A98C'];
+  const colorsArray = currentTheme === 'dark' ? darkColors : lightColors;
+
+  // Alternate between QR and barcode dimensions based on index, using a ternary for conciseness
   const isQRCode = index % 2 === 0;
   const codeWidth = isQRCode ? getResponsiveWidth(16.8) : getResponsiveWidth(30);
   const codeHeight = isQRCode ? getResponsiveWidth(16.8) : getResponsiveHeight(8.4);
 
+  // Pre-calculate common style values to avoid repetition
+  const logoSize = getResponsiveWidth(9.6);
+  const headerTextWidth = getResponsiveWidth(36);
+  const headerTextHeight = getResponsiveFontSize(16);
+  const iconSize = getResponsiveFontSize(20);
+  const footerTextWidth = getResponsiveWidth(40);
+  const footerTextHeight = getResponsiveFontSize(16);
+  const cardTypeWidth = getResponsiveWidth(28.8);
+  const cardTypeHeight = getResponsiveFontSize(12);
+  const codeRadius = getResponsiveWidth(2);
+    const cardBackgroundColor = currentTheme === 'dark' ? Colors.dark.cardBackground : Colors.light.cardBackground;
+
+
   return (
-    <View style={[
-      styles.outerContainer,
-      { 
-        marginBottom: getResponsiveHeight(1.8) 
-      }
-    ]}>
+    <View style={[styles.outerContainer, { marginBottom: getResponsiveHeight(1.8) }]}>
       <MotiView
-        transition={{
-          type: 'timing',
-          duration: 50,
-        }}
-        style={[styles.cardContainer]}
-        animate={{ 
-          backgroundColor: colorScheme === 'dark' 
-            ? Colors.dark.cardBackground 
-            : Colors.light.cardBackground 
-        }}
+        transition={{ type: 'timing', duration: 50 }}
+        style={[styles.cardContainer, {backgroundColor: cardBackgroundColor}]} // Apply background color here
+        // Removed animate prop, as it's redundant with the backgroundColor style
       >
         <Skeleton.Group show={show}>
           {/* Card Header */}
           <View style={styles.cardHeader}>
             <View style={styles.leftHeaderContainer}>
               <View style={styles.logoContainer}>
-                <Skeleton 
-                  colors={colorsArray} 
-                  radius="round" 
-                  height={getResponsiveWidth(9.6)} 
-                  width={getResponsiveWidth(9.6)} 
-                />
+                <Skeleton colors={colorsArray} radius="round" height={logoSize} width={logoSize} />
               </View>
-              <Skeleton 
-                colors={colorsArray} 
-                width={getResponsiveWidth(36)} 
-                height={getResponsiveFontSize(16)} 
-              />
+              <Skeleton colors={colorsArray} width={headerTextWidth} height={headerTextHeight} />
             </View>
-            <Skeleton 
-              colors={colorsArray} 
-              radius="round" 
-              height={getResponsiveFontSize(20)} 
-              width={getResponsiveFontSize(20)} 
-            />
+            <Skeleton colors={colorsArray} radius="round" height={iconSize} width={iconSize} />
           </View>
 
           {/* Card Footer */}
           <View style={styles.cardFooter}>
             <View style={styles.footerLeft}>
-              <Skeleton 
-                colors={colorsArray} 
-                width={getResponsiveWidth(40)} 
-                height={getResponsiveFontSize(16)} 
-              />
+              <Skeleton colors={colorsArray} width={footerTextWidth} height={footerTextHeight} />
               <View style={styles.cardTypeContainer}>
-                <Skeleton 
-                  colors={colorsArray} 
-                  width={getResponsiveWidth(28.8)} 
-                  height={getResponsiveFontSize(12)} 
-                />
+                <Skeleton colors={colorsArray} width={cardTypeWidth} height={cardTypeHeight} />
               </View>
             </View>
             <View style={styles.qrContainer}>
-              <Skeleton 
-                colors={colorsArray} 
-                radius={getResponsiveWidth(2)} 
-                height={codeHeight}
-                width={codeWidth}
-              />
+              <Skeleton colors={colorsArray} radius={codeRadius} height={codeHeight} width={codeWidth} />
             </View>
           </View>
         </Skeleton.Group>
@@ -108,7 +71,7 @@ export function ThemedCardSkeleton({ show = true, index = 0 }) {
 
 const styles = StyleSheet.create({
   outerContainer: {
-    // Matching the original card's outer container
+    //  marginBottom is now handled directly in the component
   },
   cardContainer: {
     borderRadius: getResponsiveWidth(4),
@@ -116,6 +79,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: getResponsiveWidth(4.8),
     aspectRatio: 1.65,
     justifyContent: 'space-between',
+      //backgroundColor is now handled directly in the component
+
   },
   cardHeader: {
     flexDirection: 'row',
@@ -128,10 +93,8 @@ const styles = StyleSheet.create({
     gap: getResponsiveWidth(2.4),
   },
   logoContainer: {
-    width: getResponsiveWidth(9.6),
-    height: getResponsiveWidth(9.6),
-    borderRadius: getResponsiveWidth(6),
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    // Removed width, height, borderRadius as they are now defined via props
+    backgroundColor: 'rgba(255,255,255,0.2)', // Consider moving this to a constant or theme
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -139,24 +102,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
-    pointerEvents: 'none',
+    pointerEvents: 'none', // Consider if this is necessary, might be removable
   },
   footerLeft: {
-    flexDirection: 'column',
+    // flexDirection: 'column' is the default, so it's redundant
   },
   cardTypeContainer: {
     marginTop: getResponsiveHeight(0.6),
   },
   qrContainer: {
-    borderRadius: getResponsiveWidth(2),
-    padding: getResponsiveWidth(2),
+    borderRadius: getResponsiveWidth(2), //  defined via props
+    padding: getResponsiveWidth(2),  // Consider if this padding is needed, or if the skeleton should fill the container
   },
-  dragHandle: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    pointerEvents: 'none',
+  dragHandle: { // This style isn't used in the component, so it's removed
+    // Removed unused style
   },
 });

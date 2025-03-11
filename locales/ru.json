@@ -1,4 +1,13 @@
 {
+  "common": {
+    "appName": "Orange⁺",
+    "done": "Done",
+    "cancel": "Cancel",
+    "back": "Back",
+    "discard": "Discard",
+    "unsavedChangesTitle": "Unsaved Changes",
+    "unsavedChanges": "You have unsaved changes. Are you sure you want to leave?"
+  },
   "authRefresh": {
     "errors": {
       "401": "Сеанс истек. Войдите снова.",
@@ -111,6 +120,7 @@
     "copied": "Ссылка скопирована",
     "fetchError": "Не удалось загрузить данные. Повторите попытку.",
     "syncError": "Не удалось синхронизировать. Повторите попытку.",
+    "syncSuccess": "Синхронизировано успешно",
     "filters": {
       "all": "Все",
       "bank": "Банк",

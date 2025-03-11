@@ -14,7 +14,7 @@ interface ModalManagerProps {
     onNavigateBack: () => void;
     dirty: boolean;
     isSheetVisible: React.MutableRefObject<boolean>;
-    bottomSheetRef: React.RefObject<BottomSheet>; 
+    bottomSheetRef: React.RefObject<BottomSheet>;
 }
 
 const ModalManager = forwardRef<ModalManagerRef, ModalManagerProps>((props, ref) => {
@@ -38,7 +38,9 @@ const ModalManager = forwardRef<ModalManagerRef, ModalManagerProps>((props, ref)
                 }
 
                 if (isSheetVisible.current) {
-                    bottomSheetRef.current.close();
+                    if (bottomSheetRef.current) {
+                        bottomSheetRef.current.close();
+                    }
                     return true;
                 }
 

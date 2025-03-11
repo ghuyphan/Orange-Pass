@@ -9,28 +9,20 @@ import { useTheme } from '@/context/ThemeContext';
 export type ThemedBottomToastProps = {
   /** The icon to display in the toast */
   iconName?: keyof typeof MaterialCommunityIcons.glyphMap;
-  
   /** The message to display in the toast */
   message: string;
-  
   /** Whether the toast is visible */
   isVisible?: boolean;
-  
   /** Determines the type of indicator to show */
   indicatorType?: 'none' | 'spinner' | 'icon';
-  
   /** Optional icon to show instead of spinner */
   indicatorIcon?: ReactNode;
-  
   /** Background color for the toast */
   backgroundColor?: string;
-  
   /** Style for the toast container */
   style?: StyleProp<ViewStyle>;
-  
   /** The duration of the toast in milliseconds */
   duration?: number;
-  
   /** Callback function to toggle the visibility of the toast */
   onVisibilityToggle?: (isVisible: boolean) => void;
 };

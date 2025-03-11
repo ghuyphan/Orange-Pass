@@ -32,6 +32,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { MaterialIcons } from '@expo/vector-icons';
 import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
 import * as Application from 'expo-application';
+import { Logo } from '@/components/AppLogo';
 
 // Define the type for your settings card items
 interface SettingsCardItem {
@@ -91,8 +92,8 @@ function SettingsScreen() {
 
       // Dispatch actions immediately *before* navigation.
       dispatch(clearErrorMessage());
-      dispatch(removeAllQrData());  
-      dispatch(clearAuthData());    
+      dispatch(removeAllQrData());
+      dispatch(clearAuthData());
 
       router.replace('/login');
 
@@ -215,9 +216,20 @@ function SettingsScreen() {
               onPress={onLogout}
               style={{ marginTop: getResponsiveHeight(1.8) }}
             />
-            <ThemedText style={styles.versionText}>
+            {/* <ThemedText style={styles.versionText}>
               {t('settingsScreen.appVersion') + ' ' + appVersion}
-            </ThemedText>
+            </ThemedText> */}
+            <View style={{ backgroundColor: sectionsColors, paddingVertical: getResponsiveHeight(1.8), paddingHorizontal: getResponsiveWidth(4.8), gap: getResponsiveHeight(1.8), marginTop: getResponsiveHeight(2.4), borderRadius: getResponsiveWidth(4), flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start' }}>
+              <Logo size={9} />
+              <View style={{ flexDirection: 'column' }}>
+                <ThemedText style={{ fontSize: getResponsiveFontSize(16), fontWeight: 'bold' }}>
+                  {t('common.appName')}
+                </ThemedText>
+                <ThemedText style={styles.versionText}>
+                  {t('settingsScreen.appVersion') + ' ' + appVersion}
+                </ThemedText>
+              </View>
+            </View>
           </>
         }
         scrollEventThrottle={16}
@@ -326,7 +338,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   versionText: {
-    marginTop: getResponsiveHeight(0.9),
+    // marginTop: getResponsiveHeight(0.9),
     fontSize: getResponsiveFontSize(12),
     opacity: 0.6,
     textAlign: 'center',

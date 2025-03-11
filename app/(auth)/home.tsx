@@ -13,7 +13,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { router } from 'expo-router';
 import DraggableFlatList, { ScaleDecorator } from 'react-native-draggable-flatlist';
-import { throttle, debounce } from 'lodash';
+import { throttle } from 'lodash';
 import BottomSheet from '@gorhom/bottom-sheet';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 
@@ -155,7 +155,7 @@ function HomeScreen() {
       setIsEmpty(!hasLocal);
 
       setSyncStatus('synced'); // Sync successful
-      showToast(t('homeScreen.synced'));
+      showToast(t('homeScreen.syncSuccess'));
       setTimeout(() => {
         setSyncStatus('idle'); // Reset to idle after a delay
       }, 3000);
@@ -177,12 +177,9 @@ function HomeScreen() {
     }
   }, [isOffline, isSyncing, dispatch]);
 
-  const debouncedSyncWithServer = useCallback(
-    debounce(async (userId: string) => {
-      await syncWithServer(userId);
-    }, 500), // 500ms debounce time
-    [syncWithServer] // Dependencies of syncWithServer
-  );
+  const debouncedSyncWithServer = useCallback(async (userId: string) => {
+    await syncWithServer(userId);
+  }, [syncWithServer]); // Keep syncWithServer in the dependencies array
 
   useEffect(() => {
     if (!userId) {
@@ -211,8 +208,6 @@ function HomeScreen() {
               // Sync unsynced changes
               await syncWithServer(userId); // syncWithServer already handles setting syncStatus
             } else {
-              // If there's local data AND no unsynced changes,
-              // we can assume we are already synced.
               setSyncStatus('synced');  // Set synced here!
               setTimeout(() => {  //Added Timeout
                 setSyncStatus('idle');
@@ -239,49 +234,6 @@ function HomeScreen() {
 
     initializeData();
   }, [userId]); // Correct dependencies
-
-  // useEffect(() => {
-  //   if (!userId) {
-  //     return;
-  //   }
-
-  //   const initializeData = async () => {
-  //     setIsLoading(true);
-  //     try {
-  //       let localData = qrData; // Start with what's in Redux
-
-  //       if (localData.length === 0) {
-  //         localData = await getQrCodesByUserId(userId);
-  //         dispatch(setQrData(localData)); 
-  //       }
-
-  //     // Update Redux (if needed)
-  //       setIsEmpty(localData.length === 0); // Set isEmpty
-
-  //       // 3. Sync logic (only if online and needed) - unchanged
-  //       if (!isOffline) {
-  //         if (localData.length === 0) {
-  //           await syncWithServer(userId);
-  //         } else {
-  //           const unSyncedData = await getUnsyncedQrCodes(userId);
-  //           if (unSyncedData.length > 0) {
-  //             await syncWithServer(userId);
-  //           }
-  //         }
-  //       }
-  //       //AFTER the sync, refresh Local data to show the updated state
-  //       const updatedLocalData = await getQrCodesByUserId(userId);
-  //       dispatch(setQrData(updatedLocalData));
-  //       setIsEmpty(updatedLocalData.length === 0);
-  //     } catch (error) {
-  //       console.error('Error during data initialization:', error);
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
-  //   };
-
-  //   initializeData();
-  // }, [userId]); // Add qrData to dependencies
 
   useEffect(() => {
     // Only show online/offline toast if there's an actual change in network state
@@ -884,7 +836,6 @@ function HomeScreen() {
           customContent: {
             borderRadius: getResponsiveWidth(4),
             marginHorizontal: getResponsiveWidth(3.6),
-            backgroundColor: 'red'
           }
         }}
         // enableDynamicSizing={true}

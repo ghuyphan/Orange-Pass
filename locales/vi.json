@@ -1,5 +1,6 @@
 {
   "common": {
+    "appName": "Orange⁺",
     "back": "Quay lại",
     "discard": "Hủy bỏ",
     "unsavedChangesTitle": "Thay đổi chưa lưu",
@@ -26,15 +27,16 @@
     }
   },
   "loginScreen": {
+    "selectLanguage": "Chọn ngôn ngữ",
     "email": "Email",
     "emailPlaceholder": "Nhập email",
     "password": "Mật khẩu",
     "passwordPlaceholder": "Nhập mật khẩu",
     "login": "Đăng nhập",
-    "forgotPassword": "Quên mật khẩu?",
+    "forgotPassword": "Bạn quên mật khẩu ư?",
     "dontHaveAnAccount": "Chưa có tài khoản?",
     "register": "Đăng ký",
-    "registerNow": "Đăng ký ngay!",
+    "registerNow": "Tạo tài khoản mới",
     "loggingIn": "Đang đăng nhập...",
     "errors": {
       "invalidEmail": "Email không hợp lệ",
@@ -88,10 +90,10 @@
     }
   },
   "forgotPasswordScreen": {
-    "forgotPassword": "Quên mật khẩu?",
+    "forgotPassword": "Tìm tài khoản",
     "email": "Email",
     "emailPlaceholder": "Nhập email",
-    "sendResetLink": "Gửi link đặt lại mật khẩu",
+    "sendResetLink": "Tiếp tục",
     "sendingResetLink": "Đang gửi...",
     "successMessage": "Link đặt lại mật khẩu đã được gửi tới email của bạn rồi đó. Kiểm tra ngay nhé!",
     "errors": {
@@ -119,6 +121,7 @@
     "move": "Chuyển",
     "fetchError": "Không thể tải dữ liệu. Vui lòng thử lại.",
     "syncError": "Không thể đồng bộ. Vui lòng thử lại.",
+    "syncSuccess": "Đồng bộ thành công",
     "copied": "Đã sao chép liên kết",
     "filters": {
       "all": "Tất cả",

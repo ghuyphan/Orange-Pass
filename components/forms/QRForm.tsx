@@ -1,5 +1,5 @@
 // QRForm.tsx
-import React, { useCallback, useMemo, useRef, useState } from 'react'; // Import forwardRef
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View, Keyboard } from 'react-native';
 import { Formik, FormikHelpers } from 'formik';
 import Animated, {
@@ -27,9 +27,7 @@ import {
   MetadataTypeSheetItem,
 } from '@/components/bottomsheet/SheetItem';
 import { qrCodeSchema } from '@/utils/validationSchemas';
-import {
-  returnItemsByType,
-} from '@/utils/returnItemData';
+import { returnItemsByType } from '@/utils/returnItemData';
 import { useLocale } from '@/context/LocaleContext';
 import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
 import DataType from '@/types/dataType';
@@ -37,9 +35,7 @@ import { ThemedTopToast } from '@/components/toast/ThemedTopToast';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import ModalManager from '../modals/ModalManager';
 
-const AnimatedKeyboardAwareScrollView = Animated.createAnimatedComponent(
-  KeyboardAwareScrollView
-);
+const AnimatedKeyboardAwareScrollView = Animated.createAnimatedComponent(KeyboardAwareScrollView);
 
 export interface CategoryItem {
   display: string;
@@ -51,7 +47,7 @@ export interface BrandItem {
   name: string;
   full_name: string;
   type: 'bank' | 'ewallet' | 'store';
-  bin?: string
+  bin?: string;
 }
 
 export interface MetadataTypeItem {
@@ -86,52 +82,41 @@ const QRForm: React.FC<QRFormProps> = ({
   onNavigateBack,
   codeProvider
 }) => {
+  // Context and theme setup
   const { currentTheme } = useTheme();
   const { locale: currentLocale } = useLocale();
   const locale = currentLocale ?? 'en';
   const { text: colors, icon: iconColors, cardBackground: sectionsColors } = Colors[currentTheme];
+  
+  // State management
   const isSheetVisible = useRef(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [sheetType, setSheetType] = useState<SheetType | null>(null);
   const [isToastVisible, setIsToastVisible] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');  // Keep this for display logic
-  const [toastKey, setToastKey] = useState(0); // Add a key
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastKey, setToastKey] = useState(0);
+  
+  // Refs
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const scrollY = useSharedValue(0);
   const modalManagerRef = useRef<any>(null);
+  
+  // Animation setup
+  const scrollY = useSharedValue(0);
+  const scrollThreshold = getResponsiveHeight(7);
+  const animationRange = getResponsiveHeight(5);
+  const translateYValue = -getResponsiveHeight(3);
+  const scaleValue = 0.8;
 
-  // --- Helper Functions ---
-  const getItemsByTypeHelper = useCallback(
-    (type: DataType, locale: string): BrandItem[] =>
-      returnItemsByType(type).map((item) => {
-        if (type === 'bank' || type === 'store' || type === 'ewallet') {
-          return {
-            code: item.code,
-            name: item.name,
-            full_name: item.full_name[locale],
-            type: type,
-            bin: item.bin
-          };
-        } else {
-          return {
-            code: item.code,
-            name: item.name,
-            full_name: item.full_name[locale],
-            type: 'bank',
-          };
-        }
-      }),
-    []
+  // Memoized data
+  const categoryData: CategoryItem[] = useMemo(
+    () => [
+      { display: t('addScreen.bankCategory'), value: 'bank' },
+      { display: t('addScreen.ewalletCategory'), value: 'ewallet' },
+      { display: t('addScreen.storeCategory'), value: 'store' },
+    ],
+    [t]
   );
-  const showToast = useCallback((message: string) => {
-    setToastMessage(message);
-    setIsToastVisible(true); // Show the toast
-    setToastKey(prevKey => prevKey + 1); // Increment key on *new* toast
-  }, []);
 
-  const onToastHidden = useCallback(() => { // Use a separate callback for hiding
-    setIsToastVisible(false);
-  }, []);
   const metadataTypeData: MetadataTypeItem[] = useMemo(
     () => [
       { display: t('addScreen.qr'), value: 'qr' },
@@ -139,17 +124,168 @@ const QRForm: React.FC<QRFormProps> = ({
     ],
     [t]
   );
-  // --- Animation ---
+
+  // Callbacks
+// Helper function to map DataType to BrandItem.type
+function mapDataTypeToBrandItemType(dataType: DataType): 'bank' | 'ewallet' | 'store' {
+  switch (dataType) {
+    case 'bank':
+      return 'bank';
+    case 'ewallet':
+      return 'ewallet';
+    case 'store':
+      return 'store';
+    case 'vietqr':  //Example of handling the vietqr case
+        return 'bank'; //Or whatever type is logical
+    // Add other cases as needed
+    default:
+      // Handle unexpected DataType values.  Throwing an error
+      // is usually a good idea to catch configuration issues early.
+      throw new Error(`Unexpected DataType: ${dataType}`);
+  }
+}
+
+const getItemsByTypeHelper = useCallback(
+  (type: DataType, locale: string): BrandItem[] =>
+    returnItemsByType(type).map((item) => ({
+      code: item.code,
+      name: item.name,
+      full_name: item.full_name[locale],
+      type: mapDataTypeToBrandItemType(type), // Use the mapping function
+      ...(type === 'bank' || type === 'store' || type === 'ewallet' ? { bin: item.bin } : {})
+    })),
+  [returnItemsByType] // Add returnItemsByType to the dependency array
+);
+  
+  const showToast = useCallback((message: string) => {
+    setToastMessage(message);
+    setIsToastVisible(true);
+    setToastKey(prevKey => prevKey + 1);
+  }, []);
+
+  const onToastHidden = useCallback(() => {
+    setIsToastVisible(false);
+  }, []);
+
+  const handleFieldClear = useCallback((
+    field: 'category' | 'brand' | 'metadataType',
+    setFieldValue: (field: string, value: any, shouldValidate?: boolean) => void
+  ) => {
+    switch(field) {
+      case 'category':
+        setFieldValue('category', null);
+        setFieldValue('brand', null);
+        setFieldValue('accountName', '');
+        setFieldValue('accountNumber', '');
+        setFieldValue('metadata', '');
+        break;
+      case 'brand':
+        setFieldValue('brand', null);
+        break;
+      case 'metadataType':
+        setFieldValue('metadataType', metadataTypeData[0]);
+        break;
+    }
+  }, [metadataTypeData]);
+
+  const onEmptyInputPress = useCallback((inputType: string) => {
+    showToast(t('addScreen.errors.emptyInputMessage'));
+  }, [t, showToast]);
+
+  const shouldShowAccountSection = useCallback(
+    (category: CategoryItem | null) => 
+      category?.value !== 'store' && 
+      typeof category?.value === 'string' && 
+      category.value.length > 0,
+    []
+  );
+
+  const sheetData = useCallback(
+    (category: CategoryItem | null) => {
+      switch (sheetType) {
+        case 'category':
+          return categoryData;
+        case 'brand':
+          return category ? getItemsByTypeHelper(category.value as DataType, locale) : [];
+        case 'metadataType':
+          return metadataTypeData;
+        default:
+          return [];
+      }
+    },
+    [sheetType, categoryData, metadataTypeData, getItemsByTypeHelper, locale]
+  );
+
+  const onOpenSheet = useCallback(
+    (
+      type: SheetType,
+      category: CategoryItem | null,
+      setFieldValue: (field: string, value: any, shouldValidate?: boolean) => void
+    ) => {
+      // Validate category first before opening brand or metadata type sheet
+      if ((type === 'brand' || type === 'metadataType') && !category) {
+        showToast(t('addScreen.errors.selectCategoryFirstMessage'));
+        return;
+      }
+      
+      setSheetType(type);
+      Keyboard.dismiss();
+      
+      requestAnimationFrame(() => {
+        setIsSheetOpen(true);
+        setTimeout(() => {
+          bottomSheetRef.current?.snapToIndex(0);
+        }, 150);
+      });
+    },
+    [t, showToast]
+  );
+
+  const handleSheetItemSelect = useCallback(
+    (
+      item: SheetItem,
+      type: SheetType,
+      setFieldValue: (field: string, value: any, shouldValidate?: boolean) => void
+    ) => {
+      switch (type) {
+        case 'category':
+          setFieldValue('category', item as CategoryItem);
+          setFieldValue('brand', null);
+          setFieldValue('accountName', '');
+          setFieldValue('accountNumber', '');
+          break;
+        case 'brand':
+          setFieldValue('brand', item as BrandItem);
+          break;
+        case 'metadataType':
+          setFieldValue('metadataType', item as MetadataTypeItem);
+          break;
+      }
+      bottomSheetRef.current?.close();
+    },
+    []
+  );
+
+  const handleSheetChange = useCallback((index: number) => {
+    isSheetVisible.current = index !== -1;
+    setIsSheetOpen(index !== -1);
+  }, []);
+
+  const keyExtractor = useCallback((item: SheetItem | unknown) => 
+    'value' in (item as SheetItem)
+      ? (item as CategoryItem | MetadataTypeItem).value
+      : 'code' in (item as SheetItem)
+        ? (item as BrandItem).code
+        : String(item),
+    []
+  );
+
+  // Animation handlers
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
       scrollY.value = event.contentOffset.y;
     },
   });
-
-  const scrollThreshold = getResponsiveHeight(7);
-  const animationRange = getResponsiveHeight(5);
-  const translateYValue = -getResponsiveHeight(3);
-  const scaleValue = 0.8;
 
   const titleContainerStyle = useAnimatedStyle(
     () => ({
@@ -190,101 +326,7 @@ const QRForm: React.FC<QRFormProps> = ({
     []
   );
 
-  // --- Event Handlers ---
-  const handleClearCategory = (
-    setFieldValue: (
-      field: string,
-      value: any,
-      shouldValidate?: boolean | undefined
-    ) => void
-  ) => {
-    setFieldValue('category', null);
-    setFieldValue('brand', null);
-    setFieldValue('accountName', '');
-    setFieldValue('accountNumber', '');
-    setFieldValue('metadata', '');
-  };
-
-  const handleClearBrand = (
-    setFieldValue: (
-      field: string,
-      value: any,
-      shouldValidate?: boolean | undefined
-    ) => void
-  ) => {
-    setFieldValue('brand', null);
-  };
-
-  const handleClearMetadataType = (
-    setFieldValue: (
-      field: string,
-      value: any,
-      shouldValidate?: boolean | undefined
-    ) => void
-  ) => {
-    setFieldValue('metadataType', metadataTypeData[0]);
-  };
-
-  const onOpenSheet = useCallback(
-    (
-      type: SheetType,
-      category: CategoryItem | null,
-      setFieldValue: (
-        field: string,
-        value: any,
-        shouldValidate?: boolean | undefined
-      ) => void
-    ) => {
-      setIsSheetOpen(true);
-      if (type === 'brand' && !category) {
-
-        showToast(t('addScreen.errors.selectCategoryFirstMessage'));
-        return;
-      } else
-        if (type === 'metadataType' && !category) {
-          showToast(t('addScreen.errors.selectCategoryFirstMessage'));
-          return;
-        }
-
-      setSheetType(type);
-      setTimeout(() => {
-        bottomSheetRef.current?.snapToIndex(0);
-      }, 100);
-      Keyboard.dismiss();
-    },
-    [t, showToast]
-  );
-
-  const handleSheetItemSelect = useCallback(
-    (
-      item: SheetItem,
-      type: SheetType,
-      setFieldValue: (
-        field: string,
-        value: any,
-        shouldValidate?: boolean | undefined
-      ) => void
-    ) => {
-      switch (type) {
-        case 'category':
-          setFieldValue('category', item as CategoryItem);
-          setFieldValue('brand', null);
-          setFieldValue('accountName', '');
-          setFieldValue('accountNumber', '');
-          break;
-        case 'brand':
-          setFieldValue('brand', item as BrandItem);
-          break;
-        case 'metadataType':
-          setFieldValue('metadataType', item as MetadataTypeItem);
-          break;
-      }
-      bottomSheetRef.current?.close();
-    },
-    []
-  );
-
-  // --- Rendering Functions ---
+  // Rendering functions
   const renderCardItem = useCallback(
     (
       metadata: string,
@@ -308,38 +350,18 @@ const QRForm: React.FC<QRFormProps> = ({
     [cardStyle, codeProvider]
   );
 
-  const onEmptyInputPress = useCallback((inputType: string) => {
-
-    switch (inputType) {
-      case 'metadata':
-        showToast(t('addScreen.errors.emptyInputMessage'));
-        break;
-      case 'account':
-        showToast(t('addScreen.errors.emptyInputMessage'));
-        break;
-      default:
-        break;
-    }
-  }, [t, showToast]);
-
   const renderSheetItem = useCallback(
     (
       item: SheetItem,
       category: CategoryItem | null,
       brand: BrandItem | null,
       metadataType: MetadataTypeItem | null,
-      setFieldValue: (
-        field: string,
-        value: any,
-        shouldValidate?: boolean | undefined
-      ) => void
+      setFieldValue: (field: string, value: any, shouldValidate?: boolean) => void
     ) => {
       if (!item) return null;
 
-      const isCategory =
-        'value' in item && ['store', 'bank', 'ewallet'].includes(item.value);
-      const isMetadataType =
-        'value' in item && ['qr', 'barcode'].includes(item.value);
+      const isCategory = 'value' in item && ['store', 'bank', 'ewallet'].includes(item.value);
+      const isMetadataType = 'value' in item && ['qr', 'barcode'].includes(item.value);
       const isBrand = 'code' in item;
 
       const isSelected = isCategory
@@ -357,83 +379,32 @@ const QRForm: React.FC<QRFormProps> = ({
         textColors: colors,
       };
 
-      switch (true) {
-        case isCategory:
-          return (
-            <CategorySheetItem
-              {...commonProps}
-              onPress={() => handleSheetItemSelect(item, 'category', setFieldValue)}
-            />
-          );
-        case isBrand:
-          return (
-            <BrandSheetItem
-              {...commonProps}
-              onPress={() => handleSheetItemSelect(item, 'brand', setFieldValue)}
-            />
-          );
-        case isMetadataType:
-          return (
-            <MetadataTypeSheetItem
-              {...commonProps}
-              onPress={() =>
-                handleSheetItemSelect(item, 'metadataType', setFieldValue)
-              }
-            />
-          );
-        default:
-          return null;
+      if (isCategory) {
+        return (
+          <CategorySheetItem
+            {...commonProps}
+            onPress={() => handleSheetItemSelect(item, 'category', setFieldValue)}
+          />
+        );
+      } else if (isBrand) {
+        return (
+          <BrandSheetItem
+            {...commonProps}
+            onPress={() => handleSheetItemSelect(item, 'brand', setFieldValue)}
+          />
+        );
+      } else if (isMetadataType) {
+        return (
+          <MetadataTypeSheetItem
+            {...commonProps}
+            onPress={() => handleSheetItemSelect(item, 'metadataType', setFieldValue)}
+          />
+        );
       }
+      
+      return null;
     },
     [colors, handleSheetItemSelect, iconColors]
-  );
-
-  const categoryData: CategoryItem[] = useMemo(
-    () => [
-      { display: t('addScreen.bankCategory'), value: 'bank' },
-      { display: t('addScreen.ewalletCategory'), value: 'ewallet' },
-      { display: t('addScreen.storeCategory'), value: 'store' },
-    ],
-    [t]
-  );
-
-  const sheetData = useCallback(
-    (category: CategoryItem | null) => {
-      switch (sheetType) {
-        case 'category':
-          return categoryData;
-        case 'brand':
-          return category ? getItemsByTypeHelper(category.value as DataType, locale) : [];
-        case 'metadataType':
-          return metadataTypeData;
-        default:
-          return [];
-      }
-    },
-    [sheetType, categoryData, metadataTypeData, getItemsByTypeHelper, locale]
-  );
-
-  const keyExtractor = useCallback((item: SheetItem | unknown) => {
-    return 'value' in (item as SheetItem)
-      ? (item as CategoryItem | MetadataTypeItem).value
-      : 'code' in (item as SheetItem)
-        ? (item as BrandItem).code
-        : String(item);
-  }, []);
-
-  const handleSheetChange = useCallback((index: number) => {
-    isSheetVisible.current = !(index === -1)
-    setIsSheetOpen(!(index === -1));
-  }, []);
-  const shouldShowAccountSection = useCallback(
-    (category: CategoryItem | null) => {
-      return (
-        category?.value !== 'store' &&
-        typeof category?.value === 'string' &&
-        category.value.length > 0
-      );
-    },
-    []
   );
 
   return (
@@ -456,12 +427,14 @@ const QRForm: React.FC<QRFormProps> = ({
       }) => (
         <ThemedView style={styles.container}>
           <ThemedTopToast
-            key={toastKey} // Key change forces remount
+            key={toastKey}
             message={toastMessage}
             isVisible={isToastVisible}
-            onVisibilityToggle={onToastHidden} // Separate hide handler
+            onVisibilityToggle={onToastHidden}
             duration={2000}
           />
+          
+          {/* Title container with animation */}
           <Animated.View style={[styles.titleContainer, titleContainerStyle]}>
             <View style={styles.headerContainer}>
               <View style={styles.titleButtonContainer}>
@@ -483,6 +456,7 @@ const QRForm: React.FC<QRFormProps> = ({
             </View>
           </Animated.View>
 
+          {/* Main content scroll view */}
           <AnimatedKeyboardAwareScrollView
             contentContainerStyle={styles.scrollViewContent}
             enableOnAndroid={true}
@@ -491,6 +465,7 @@ const QRForm: React.FC<QRFormProps> = ({
             onScroll={scrollHandler}
             scrollEnabled={true}
           >
+            {/* Card preview */}
             {renderCardItem(
               values.metadata,
               values.accountName,
@@ -500,83 +475,66 @@ const QRForm: React.FC<QRFormProps> = ({
               values.metadataType
             )}
 
-            <ThemedView
-              style={[styles.formContainer, { backgroundColor: sectionsColors }]}
-            >
+            {/* Main form section */}
+            <ThemedView style={[styles.formContainer, { backgroundColor: sectionsColors }]}>
               <ThemedDisplayInput
                 iconName="format-list-bulleted-type"
                 placeholder={t('addScreen.categoryPlaceholder')}
                 value={values.category?.display}
-                onPress={() =>
-                  onOpenSheet('category', values.category, setFieldValue)
-                }
-                onClear={() => handleClearCategory(setFieldValue)}
-                errorMessage={
-                  touched.category && errors.category
-                    ? String(errors.category)
-                    : undefined
-                }
+                onPress={() => onOpenSheet('category', values.category, setFieldValue)}
+                onClear={() => handleFieldClear('category', setFieldValue)}
+                errorMessage={touched.category && errors.category ? String(errors.category) : undefined}
                 isError={touched.category && !!errors.category}
               />
+              
               <ThemedDisplayInput
                 iconName="domain"
                 placeholder={t('addScreen.brandPlaceholder')}
                 logoCode={codeProvider ? codeProvider : values.brand?.code}
                 value={values.brand?.full_name}
-                onPress={() =>
-                  onOpenSheet('brand', values.category, setFieldValue)
-                }
-                onClear={() => handleClearBrand(setFieldValue)}
-                errorMessage={
-                  touched.brand && errors.brand ? String(errors.brand) : undefined
-                }
+                onPress={() => onOpenSheet('brand', values.category, setFieldValue)}
+                onClear={() => handleFieldClear('brand', setFieldValue)}
+                errorMessage={touched.brand && errors.brand ? String(errors.brand) : undefined}
                 isError={touched.brand && !!errors.brand}
               />
+              
+              {/* Conditional metadata input for store or ewallet */}
               {(values.category?.value === 'store' || values.category?.value === 'ewallet') && (
                 <Animated.View
-                style={[
-                  { backgroundColor: sectionsColors },
-                ]}
-                entering={FadeIn.duration(300)}
-                exiting={FadeOut.duration(300)}
-              >
-                <ThemedInput
-                  iconName="credit-card-outline"
-                  placeholder={t('addScreen.metadataPlaceholder')}
-                  value={values.metadata}
-                  onChangeText={handleChange('metadata')}
-                  onBlur={handleBlur('metadata')}
-                  backgroundColor={sectionsColors}
-                  disabled={!!codeProvider && !isEditing} // Simplified disabled condition
-                  disableOpacityChange={true}
-                  errorMessage={
-                    touched.metadata && errors.metadata
-                      ? String(errors.metadata)
-                      : undefined
-                  }
-                  isError={touched.metadata && !!errors.metadata}
-                  onDisabledPress={() => onEmptyInputPress('metadata')}
-                />
+                  style={{ backgroundColor: sectionsColors }}
+                  entering={FadeIn.duration(300)}
+                  exiting={FadeOut.duration(300)}
+                >
+                  <ThemedInput
+                    iconName="credit-card-outline"
+                    placeholder={t('addScreen.metadataPlaceholder')}
+                    value={values.metadata}
+                    onChangeText={handleChange('metadata')}
+                    onBlur={handleBlur('metadata')}
+                    backgroundColor={sectionsColors}
+                    disabled={!!codeProvider && !isEditing}
+                    disableOpacityChange={true}
+                    errorMessage={touched.metadata && errors.metadata ? String(errors.metadata) : undefined}
+                    isError={touched.metadata && !!errors.metadata}
+                    onDisabledPress={() => onEmptyInputPress('metadata')}
+                  />
                 </Animated.View>
               )}
+              
               <ThemedDisplayInput
                 iconName="qrcode"
                 placeholder={t('addScreen.metadataTypePlaceholder')}
                 value={values.metadataType?.display}
-                onPress={() =>
-                  onOpenSheet('metadataType', values.category, setFieldValue)
-                }
-                onClear={() => handleClearMetadataType(setFieldValue)}
+                onPress={() => onOpenSheet('metadataType', values.category, setFieldValue)}
+                onClear={() => handleFieldClear('metadataType', setFieldValue)}
                 showClearButton={false}
               />
             </ThemedView>
 
+            {/* Account section (conditionally rendered) */}
             {shouldShowAccountSection(values.category) && (
               <Animated.View
-                style={[
-                  styles.formContainer,
-                  { backgroundColor: sectionsColors },
-                ]}
+                style={[styles.formContainer, { backgroundColor: sectionsColors }]}
                 entering={FadeIn.duration(300)}
                 exiting={FadeOut.duration(300)}
               >
@@ -587,16 +545,12 @@ const QRForm: React.FC<QRFormProps> = ({
                   onChangeText={handleChange('accountName')}
                   onBlur={handleBlur('accountName')}
                   backgroundColor={sectionsColors}
-                  // disabled={!values.metadata}
                   disableOpacityChange={true}
-                  errorMessage={
-                    touched.accountName && errors.accountName
-                      ? String(errors.accountName)
-                      : undefined
-                  }
+                  errorMessage={touched.accountName && errors.accountName ? String(errors.accountName) : undefined}
                   isError={touched.accountName && !!errors.accountName}
                   onDisabledPress={() => onEmptyInputPress('account')}
                 />
+                
                 <ThemedInput
                   iconName="account-cash"
                   placeholder={t('addScreen.accountNumberPlaceholder')}
@@ -605,19 +559,15 @@ const QRForm: React.FC<QRFormProps> = ({
                   onBlur={handleBlur('accountNumber')}
                   backgroundColor={sectionsColors}
                   keyboardType="numeric"
-                  // disabled={!values.metadata}
                   disableOpacityChange={true}
-                  errorMessage={
-                    touched.accountNumber && errors.accountNumber
-                      ? String(errors.accountNumber)
-                      : undefined
-                  }
+                  errorMessage={touched.accountNumber && errors.accountNumber ? String(errors.accountNumber) : undefined}
                   isError={touched.accountNumber && !!errors.accountNumber}
                   onDisabledPress={() => onEmptyInputPress('account')}
                 />
               </Animated.View>
             )}
 
+            {/* Save button */}
             <ThemedButton
               label={isEditing ? t('editScreen.saveButton') : t('addScreen.saveButton')}
               onPress={handleSubmit}
@@ -628,6 +578,7 @@ const QRForm: React.FC<QRFormProps> = ({
             />
           </AnimatedKeyboardAwareScrollView>
 
+          {/* Bottom sheet */}
           <ThemedReuseableSheet
             ref={bottomSheetRef}
             showSearchBar={sheetType === 'brand'}
@@ -669,12 +620,21 @@ const QRForm: React.FC<QRFormProps> = ({
               },
             }}
           />
-          <ModalManager ref={modalManagerRef} onNavigateBack={onNavigateBack} dirty={dirty} isSheetVisible={isSheetVisible} bottomSheetRef={bottomSheetRef} />
+          
+          {/* Modal manager for unsaved changes */}
+          <ModalManager 
+            ref={modalManagerRef} 
+            onNavigateBack={onNavigateBack} 
+            dirty={dirty} 
+            isSheetVisible={isSheetVisible} 
+            bottomSheetRef={bottomSheetRef} 
+          />
         </ThemedView>
       )}
     </Formik>
   );
 };
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,

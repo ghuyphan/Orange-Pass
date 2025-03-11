@@ -1,5 +1,5 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useCallback, useRef, useEffect } from 'react';
 import { StyleSheet, StyleProp, ViewStyle, ActivityIndicator, Pressable, TextStyle, View } from 'react-native';
 import { ThemedText } from '../ThemedText';
 import { useThemeColor } from '@/hooks/useThemeColor';
@@ -7,7 +7,6 @@ import { useTheme } from '@/context/ThemeContext';
 import { Colors } from '@/constants/Colors';
 import Animated, { useAnimatedStyle, withRepeat, withTiming } from 'react-native-reanimated';
 import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
-import { get } from 'lodash';
 
 /**
  * ThemedButtonProps defines the properties for the ThemedButton component.
@@ -47,12 +46,22 @@ export type ThemedButtonProps = {
   pointerEvents?: 'auto' | 'none';
   textStyle?: StyleProp<TextStyle>;
   syncStatus?: 'idle' | 'syncing' | 'synced' | 'error'; // Optional sync status
+  /** Debounce time in milliseconds (default: 300) */
+  debounceTime?: number;
+  /** Whether to display the button as an outline button */
+  outline?: boolean;
+  /** Border color for outline button (defaults to text color if not provided) */
+  borderColor?: string;
+  /** Border width for outline button (defaults to 1) */
+  borderWidth?: number;
+  /** Opacity for outline button (defaults to 0.7) */
+  outlineOpacity?: number;
 };
 
 /**
  * ThemedButton is a reusable button component that adapts to the current theme.
  * It supports light and dark color themes, displays an optional icon, and handles
- * press events with customizable styles.
+ * press events with customizable styles. Can be rendered as a filled button or an outline button.
  *
  * @param {ThemedButtonProps} props - The properties for the ThemedButton component.
  * @returns {JSX.Element} The ThemedButton component.
@@ -75,121 +84,225 @@ export function ThemedButton({
   pointerEvents = 'auto',
   textStyle,
   syncStatus, // Receive syncStatus as a prop
+  debounceTime = 300, // Default debounce time of 300ms
+  outline = false, // Default to filled button
+  borderColor,
+  borderWidth = 1,
+  outlineOpacity = 0.5, // Default opacity for outline mode
 }: ThemedButtonProps): JSX.Element {
   const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
   const icon = useThemeColor({ light: Colors.light.icon, dark: Colors.dark.icon }, 'icon');
-
-  // Get the currentTheme from useTheme
   const { currentTheme } = useTheme();
 
+  // State to track if the button is currently in a cooldown period
+  const [isDebouncing, setIsDebouncing] = useState(false);
+  // Ref to hold the timeout ID for cleanup
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Cleanup the timeout when component unmounts
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
+
   // Determine colors based on theme and props
-  let displayedIconColor = iconColor ? iconColor : icon;
-  let buttonBackgroundColor =
-    currentTheme === 'light' ? Colors.light.buttonBackground : Colors.dark.buttonBackground;
+  const displayedIconColor = useMemo(() => {
+    if (syncStatus === 'error') {
+      return currentTheme === 'light' ? Colors.light.error : Colors.dark.error;
+    }
+    return iconColor ? iconColor : icon;
+  }, [syncStatus, currentTheme, iconColor, icon]);
 
-  // Special color handling for error state
-  if (syncStatus === 'error') {
-    displayedIconColor = currentTheme === 'light' ? Colors.light.error : Colors.dark.error;
-    // buttonBackgroundColor = 'lightgray';
-  }
+  const buttonBackgroundColor = useMemo(
+    () =>
+      currentTheme === 'light'
+        ? Colors.light.buttonBackground
+        : Colors.dark.buttonBackground,
+    [currentTheme],
+  );
 
-  const syncAnimatedStyle = useAnimatedStyle(() => {
-    return {
+    // Text and icon color for outline mode (use borderColor if provided, otherwise use the text color)
+    const outlineColor = useMemo(() => {
+      return borderColor || color;
+    }, [borderColor, color]);
+
+
+  // Animation style for rotating sync icon
+  const syncAnimatedStyle = useAnimatedStyle(
+    () => ({
       transform: [
         {
-          rotate: syncStatus === 'syncing' ? withRepeat(withTiming(`${-360}deg`, { duration: 1000 }), -1, false) : '0deg',
+          rotate:
+            syncStatus === 'syncing'
+              ? withRepeat(withTiming(`${-360}deg`, { duration: 1000 }), -1, false)
+              : '0deg',
         },
       ],
-    };
-  }, [syncStatus]);
+    }),
+    [syncStatus],
+  );
 
-  // Modified buttonStyle to keep full opacity when syncStatus is 'syncing' and button is disabled
-  const buttonStyle = useMemo(
-    () => [
-      {
-        backgroundColor: buttonBackgroundColor,
-        opacity: (syncStatus === 'syncing' && disabled) ? 1 : (disabled || loading || syncStatus === 'syncing' ? 0.7 : 1),
-      },
-      styles.touchable,
-    ],
-    [currentTheme, disabled, loading, syncStatus, buttonBackgroundColor]
+  // Debounced onPress handler
+  const handlePress = useCallback(() => {
+    if (isDebouncing) {
+      return; // Ignore press during cooldown
+    }
+
+    // Call the original onPress function
+    onPress();
+
+    // Set debouncing state to true
+    setIsDebouncing(true);
+
+    // Set a timeout to reset the debouncing state
+    debounceTimerRef.current = setTimeout(() => {
+      setIsDebouncing(false);
+    }, debounceTime);
+  }, [onPress, isDebouncing, debounceTime]);
+
+  // Button style with appropriate opacity
+  const buttonStyle = useMemo(() => {
+    const baseStyle = {
+      opacity:
+        syncStatus === 'syncing' && disabled
+          ? 1
+          : disabled || loading || syncStatus === 'syncing' || isDebouncing
+          ? 0.7
+          : 1,
+    };
+
+    if (outline) {
+      return [
+        {
+          ...baseStyle,
+          backgroundColor: 'transparent',
+          borderWidth: borderWidth,
+          borderColor: outlineColor,
+            opacity: outlineOpacity, //Apply the outline Opacity
+        },
+        styles.touchable,
+      ];
+    } else {
+      return [
+        {
+          ...baseStyle,
+          backgroundColor: buttonBackgroundColor,
+        },
+        styles.touchable,
+      ];
+    }
+  }, [
+    disabled,
+    loading,
+    syncStatus,
+    buttonBackgroundColor,
+    isDebouncing,
+    outline,
+    borderWidth,
+    outlineColor,
+    outlineOpacity
+  ]);
+
+  // Component to render cloud with an indicator
+  type CloudWithIndicatorProps = {
+    indicatorName: keyof typeof MaterialCommunityIcons.glyphMap;
+    animated?: boolean;
+  };
+
+  const CloudWithIndicator: React.FC<CloudWithIndicatorProps> = ({
+    indicatorName,
+    animated = false,
+  }) => (
+    <View style={styles.iconContainer}>
+      <MaterialCommunityIcons
+        name="cloud"
+        size={iconSize}
+        color={outline ? outlineColor : displayedIconColor}
+        style={styles.baseIcon}
+      />
+      <Animated.View
+        style={[
+          styles.syncIndicator,
+          animated ? syncAnimatedStyle : undefined,
+          outline && { backgroundColor: 'transparent' }, // Transparent background for outline mode
+        ]}
+      >
+        <MaterialCommunityIcons
+          name={indicatorName}
+          size={iconSize * 0.58}
+          color={outline ? outlineColor : displayedIconColor}
+        />
+      </Animated.View>
+    </View>
   );
 
   // Render icon based on syncStatus
   const renderIcon = () => {
-    // If we have a syncStatus, use cloud-based icons
     if (syncStatus) {
       switch (syncStatus) {
         case 'idle':
+          return <CloudWithIndicator indicatorName="sync" />;
         case 'syncing':
-          return (
-            <View style={styles.iconContainer}>
-              {/* Base cloud icon (static) */}
-              <MaterialCommunityIcons
-                name="cloud"
-                size={iconSize}
-                color={displayedIconColor}
-                style={styles.baseIcon}
-              />
-              <Animated.View style={[styles.syncIndicator, syncStatus === 'syncing' ? syncAnimatedStyle : undefined]}>
-                <MaterialCommunityIcons
-                  name="sync"
-                  size={iconSize * 0.58} 
-                  color={displayedIconColor}
-                />
-              </Animated.View>
-            </View>
-          );
+          return <CloudWithIndicator indicatorName="sync" animated />;
         case 'synced':
-          return (
-            <MaterialCommunityIcons
-              name="cloud-check"
-              size={iconSize}
-              color={displayedIconColor}
-            />
-          );
+          return <CloudWithIndicator indicatorName="check" />;
         case 'error':
           return (
             <MaterialCommunityIcons
               name="cloud-alert"
               size={iconSize}
-              color={displayedIconColor}
+              color={outline ? outlineColor : displayedIconColor}
             />
           );
       }
     }
-    
+
     // Default icon (no sync status)
     return iconName ? (
       <MaterialCommunityIcons
         name={iconName}
         size={iconSize}
-        color={displayedIconColor}
+        color={outline ? outlineColor : displayedIconColor}
       />
     ) : null;
   };
+
+  const isButtonDisabled =
+    disabled || loading || syncStatus === 'syncing' || isDebouncing;
+  const textColor = outline ? outlineColor : color;
 
   return (
     <AnimatedPressable
       ref={ref}
       pointerEvents={pointerEvents}
-      onPress={onPress}
-      disabled={disabled || loading || syncStatus === 'syncing'}
+      onPress={handlePress}
+      disabled={isButtonDisabled}
       accessible
       accessibilityLabel={label}
       accessibilityRole="button"
       accessibilityHint={`Press to ${label}`}
       style={[buttonStyle, style, animatedStyle]}
-      hitSlop={{ top: getResponsiveHeight(1.2), bottom: getResponsiveHeight(1.2), left: getResponsiveWidth(2.4), right: getResponsiveWidth(2.4) }}
+      hitSlop={{
+        top: getResponsiveHeight(1.2),
+        bottom: getResponsiveHeight(1.2),
+        left: getResponsiveWidth(2.4),
+        right: getResponsiveWidth(2.4),
+      }}
     >
       {loading ? (
         <>
           <ActivityIndicator
             size={iconSize}
-            color={loadingColor ? loadingColor : color}
+            color={loadingColor ? loadingColor : textColor}
           />
           {loadingLabel && (
-            <ThemedText style={[styles.label, { color }, textStyle]} type="defaultSemiBold">
+            <ThemedText
+              style={[styles.label, { color: textColor }, textStyle]}
+              type="defaultSemiBold"
+            >
               {loadingLabel}
             </ThemedText>
           )}
@@ -198,7 +311,10 @@ export function ThemedButton({
         <>
           {renderIcon()}
           {label && (
-            <ThemedText style={[styles.label, { color: icon }, textStyle]} type="defaultSemiBold">
+            <ThemedText
+              style={[styles.label, { color: textColor }, textStyle]}
+              type="defaultSemiBold"
+            >
               {label}
             </ThemedText>
           )}
@@ -239,7 +355,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: getResponsiveWidth(-0.5),
     right: getResponsiveWidth(-0.5),
-    padding: getResponsiveWidth(0.05), 
+    padding: getResponsiveWidth(0.05),
     backgroundColor: Colors.light.buttonBackground,
     borderRadius: getResponsiveWidth(100),
   },

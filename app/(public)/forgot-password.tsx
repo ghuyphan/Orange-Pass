@@ -13,9 +13,9 @@ import { forgotPasswordSchema } from '@/utils/validationSchemas';
 import { forgot } from '@/services/auth';
 import { ThemedText } from '@/components/ThemedText';
 import { useLocale } from '@/context/LocaleContext';
-import LOGO from '@/assets/svgs/orange-logo.svg';
 import { useTheme } from '@/context/ThemeContext';
 import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
+import { Logo } from '@/components/AppLogo';
 
 export default function ForgotPasswordScreen() {
   const { currentTheme } = useTheme();
@@ -79,9 +79,7 @@ export default function ForgotPasswordScreen() {
           scrollEnabled={isKeyboardVisible}
         >
           <View style={styles.topContainer}>
-            <View style={styles.logoContainer}>
-              <LOGO width={getResponsiveWidth(14)} height={getResponsiveWidth(14)} />
-            </View>
+            <Logo size={getResponsiveWidth(4)}/>
             <ThemedText style={styles.title} type="title">
               {t('forgotPasswordScreen.forgotPassword')}
             </ThemedText>
@@ -131,12 +129,6 @@ const styles = StyleSheet.create({
     marginTop: getResponsiveHeight(10),
     gap: getResponsiveHeight(2.4),
     alignItems: 'center',
-  },
-  logoContainer: {
-    backgroundColor: '#FFF5E1',
-    padding: getResponsiveWidth(3.5),
-    borderRadius: getResponsiveWidth(5),
-    alignSelf: 'center',
   },
   title: {
     fontSize: getResponsiveFontSize(25),

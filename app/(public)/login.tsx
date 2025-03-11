@@ -1,11 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Keyboard } from 'react-native';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { StyleSheet, View, Keyboard, Pressable } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { Formik } from 'formik';
 import { router } from 'expo-router';
 
 import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
 import { ThemedInput } from '@/components/Inputs/ThemedInput';
 import { ThemedButton } from '@/components/buttons/ThemedButton';
 import { ThemedTextButton } from '@/components/buttons/ThemedTextButton';
@@ -17,18 +16,45 @@ import { t } from '@/i18n';
 import { loginSchema } from '@/utils/validationSchemas';
 import { login } from '@/services/auth';
 import { useLocale } from '@/context/LocaleContext';
-import LOGO from '@/assets/svgs/orange-logo.svg';
 import { useTheme } from '@/context/ThemeContext';
 import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
+import { Logo } from '@/components/AppLogo';
+import GB from '@/assets/svgs/GB.svg';
+import VN from '@/assets/svgs/VN.svg';
+import RU from '@/assets/svgs/RU.svg';
+import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useMMKVString } from 'react-native-mmkv';
+import ThemedReuseableSheet from '@/components/bottomsheet/ThemedReusableSheet';
+
+// Define the valid language keys:  VERY IMPORTANT
+type LanguageKey = 'vi' | 'ru' | 'en';
+
+// Define the LanguageOption type
+interface LanguageOption {
+  label: string;
+  flag: React.ReactNode;
+}
+
+// Use the LanguageKey type in the languageOptions object:
+const languageOptions: Record<LanguageKey, LanguageOption> = {
+  vi: { label: 'Tiếng Việt', flag: <VN width={getResponsiveWidth(7.2)} height={getResponsiveHeight(3)} /> },
+  ru: { label: 'Русский', flag: <RU width={getResponsiveWidth(7.2)} height={getResponsiveHeight(3)} /> },
+  en: { label: 'English', flag: <GB width={getResponsiveWidth(7.2)} height={getResponsiveHeight(3)} /> },
+};
+
 
 export default function LoginScreen() {
-  const { locale } = useLocale();
+  const { locale, updateLocale } = useLocale();
+  const [storedLocale, setStoredLocale] = useMMKVString('locale'); // Use MMKV to get stored locale
   const { currentTheme } = useTheme();
   const cardColor = currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground;
   const authRefreshError = useSelector((state: RootState) => state.error.message);
   const [isToastVisible, setIsToastVisible] = useState(false);
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const bottomSheetRef = useRef<any>(null); // Ref for the bottom sheet
+
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
@@ -65,6 +91,59 @@ export default function LoginScreen() {
     router.push('/forgot-password');
   };
 
+  const handleLanguageChange = useCallback(
+    (newLocale: LanguageKey) => {  // Use LanguageKey here
+      updateLocale(newLocale);
+      setStoredLocale(newLocale);  //  Save to MMKV **********************
+      bottomSheetRef.current?.close(); // Close the bottom sheet
+    },
+    [updateLocale, setStoredLocale]
+  );
+
+  const handleSystemLocale = useCallback(() => {
+    updateLocale(undefined);
+    setStoredLocale(undefined); // Save to MMKV ***********************
+    bottomSheetRef.current?.close(); // Close the bottom sheet
+  }, [updateLocale, setStoredLocale]);
+
+  const toggleLanguageDropdown = () => {
+    bottomSheetRef.current?.expand(); // Open the bottom sheet
+  };
+
+  const renderLanguageOptions = () => {
+    const colors = currentTheme === 'light' ? Colors.light.icon : Colors.dark.icon;
+    const textColors = currentTheme === 'light' ? Colors.light.text : Colors.dark.text;
+
+    return (
+      <View style={[styles.languageOptionsContainer, { backgroundColor: cardColor }]}>
+        {Object.entries(languageOptions).map(([key, { label, flag }]) => (
+          <Pressable key={key} onPress={() => handleLanguageChange(key as LanguageKey)} style={styles.languageOption}>
+            <View style={styles.leftSectionContainer}>
+              <View style={styles.flagIconContainer}>{flag}</View>
+              <ThemedText style={{ color: textColors }}>{label}</ThemedText>
+            </View>
+            {storedLocale === key && (
+              <MaterialIcons name="check" size={getResponsiveFontSize(18)} color={colors} />
+            )}
+          </Pressable>
+        ))}
+        <Pressable onPress={handleSystemLocale} style={styles.languageOption}>
+          <View style={styles.leftSectionContainer}>
+            <MaterialCommunityIcons
+              name="cog-outline"
+              size={getResponsiveFontSize(18)}
+              color={colors}
+            />
+            <ThemedText style={{ color: textColors }}>{t('languageScreen.system')}</ThemedText>
+          </View>
+          {storedLocale === undefined && (
+            <MaterialIcons name="check" size={getResponsiveFontSize(18)} color={colors} />
+          )}
+        </Pressable>
+      </View>
+    );
+  };
+
   return (
     <Formik
       initialValues={{ email: '', password: '' }}
@@ -94,17 +173,22 @@ export default function LoginScreen() {
           showsVerticalScrollIndicator={false}
           scrollEnabled={isKeyboardVisible}
         >
-          <View style={styles.topContainer}>
-            <View style={styles.logoContainer}>
-              <LOGO width={getResponsiveWidth(14)} height={getResponsiveWidth(14)} />
-            </View>
-            <ThemedText style={styles.title} type="title">
-              {t('onboardingScreen.title')}
-            </ThemedText>
+          <View style={styles.languageSelectorContainer}>
+            <ThemedTextButton
+              onPress={toggleLanguageDropdown}
+              label={storedLocale ? (languageOptions[storedLocale as LanguageKey]?.label || t('languageScreen.system')) : t('languageScreen.system')} // Cast storedLocale
+              rightIconName='chevron-down'
+            />
           </View>
-          <View style={[styles.inputContainer, { backgroundColor: cardColor }]}>
+
+          {/* Logo Centered */}
+          <View style={styles.logoContainer}>
+            <Logo size={getResponsiveWidth(4)} />
+          </View>
+
+          {/* Input Fields */}
+          <View style={styles.inputsWrapper}>
             <ThemedInput
-              label={t('loginScreen.email')}
               placeholder={t('loginScreen.emailPlaceholder')}
               onChangeText={handleChange('email')}
               isError={touched.email && errors.email ? true : false}
@@ -114,9 +198,8 @@ export default function LoginScreen() {
               disabled={isSubmitting}
               disableOpacityChange={true}
             />
-            <ThemedView style={styles.divider} />
+
             <ThemedInput
-              label={t('loginScreen.password')}
               placeholder={t('loginScreen.passwordPlaceholder')}
               secureTextEntry={true}
               onChangeText={handleChange('password')}
@@ -128,21 +211,39 @@ export default function LoginScreen() {
               disableOpacityChange={true}
             />
           </View>
-          <View style={styles.forgotButton}>
-            <ThemedTextButton label={t('loginScreen.forgotPassword')} onPress={onNavigateToForgot} />
-          </View>
+
+          {/* Login Button */}
           <ThemedButton
-            iconName="login"
             label={t('loginScreen.login')}
             style={styles.loginButton}
             onPress={handleSubmit}
             loadingLabel={t('loginScreen.loggingIn')}
             loading={isSubmitting}
+            textStyle={styles.loginButtonText}
           />
-          <ThemedView style={styles.registerContainer}>
-            <ThemedText>{t('loginScreen.dontHaveAnAccount')}</ThemedText>
-            <ThemedTextButton label={t('loginScreen.registerNow')} onPress={onNavigateToRegister} />
-          </ThemedView>
+
+          {/* Forgot Password */}
+          <View style={styles.forgotButtonContainer}>
+            <ThemedTextButton
+              label={t('loginScreen.forgotPassword')}
+              onPress={onNavigateToForgot}
+              style={{opacity: 0.7}}
+            />
+          </View>
+
+          {/* Meta Logo */}
+          <View style={styles.metaLogoContainer}>
+            <ThemedButton
+              label={t('loginScreen.registerNow')}
+              onPress={onNavigateToRegister}
+              style={styles.createAccountButton}
+              textStyle={styles.createAccountButtonText}
+              outline
+            />
+            <ThemedText type='defaultSemiBold' style={styles.metaText}>{t('common.appName')}</ThemedText>
+          </View>
+
+          {/* Toast for errors */}
           <ThemedToast
             duration={5000}
             message={errorMessage}
@@ -151,6 +252,15 @@ export default function LoginScreen() {
             onDismiss={onDismissToast}
             onVisibilityToggle={setIsToastVisible}
             iconName="error"
+          />
+          {/* Bottom Sheet for Language Selection */}
+          <ThemedReuseableSheet
+            ref={bottomSheetRef}
+            title={t('loginScreen.selectLanguage')}
+            snapPoints={['40%']} // Adjust the height as needed
+            showCloseButton={true}
+            contentType='custom'
+            customContent={renderLanguageOptions()}
           />
         </KeyboardAwareScrollView>
       )}
@@ -161,42 +271,63 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    marginHorizontal: getResponsiveWidth(3.6),
+    paddingHorizontal: getResponsiveWidth(3.6),
   },
-  topContainer: {
-    marginTop: getResponsiveHeight(10),
-    gap: getResponsiveHeight(2.4),
+  languageSelectorContainer: {
     alignItems: 'center',
+    marginTop: getResponsiveHeight(13),
+    position: 'relative',
+  },
+  languageText: {
+    fontSize: getResponsiveFontSize(16),
   },
   logoContainer: {
-    backgroundColor: '#FFF5E1',
-    padding: getResponsiveWidth(3.5),
-    borderRadius: getResponsiveWidth(5),
-    alignSelf: 'center',
+    alignItems: 'center',
+    marginTop: getResponsiveHeight(6),
+    marginBottom: getResponsiveHeight(8),
   },
-  title: {
-    fontSize: getResponsiveFontSize(25),
+  inputsWrapper: {
+    gap: getResponsiveHeight(2),
+    width: '100%',
+    marginBottom: getResponsiveHeight(2),
   },
-  inputContainer: {
-    borderRadius: getResponsiveWidth(4),
-    marginBottom: getResponsiveHeight(1.2),
-    marginTop: getResponsiveHeight(3.6),
-  },
-  divider: {
-    height: getResponsiveHeight(0.3),
-  },
-  forgotButton: {
-    alignSelf: 'flex-end',
-
+  passwordContainer: {
+    marginBottom: getResponsiveHeight(3),
   },
   loginButton: {
-    marginVertical: getResponsiveHeight(3.6),
+    height: getResponsiveHeight(6),
+    marginBottom: getResponsiveHeight(2),
   },
-  registerContainer: {
-    flexDirection: 'row',
+  loginButtonText: {
+    fontSize: getResponsiveFontSize(16),
+    fontWeight: 'bold',
+  },
+  forgotButtonContainer: {
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: getResponsiveWidth(1.2),
+    marginBottom: getResponsiveHeight(4),
+  },
+  createAccountContainer: {
+    alignItems: 'center',
+    marginTop: getResponsiveHeight(2),
+  },
+  createAccountButton: {
+    borderRadius: getResponsiveWidth(8),
+    height: getResponsiveHeight(6),
+    width: '100%',
+    marginBottom: getResponsiveHeight(2),
+  },
+  createAccountButtonText: {
+    fontSize: getResponsiveFontSize(16),
+    fontWeight: 'bold',
+  },
+  metaLogoContainer: {
+    alignItems: 'center',
+    marginTop: 'auto',
+    marginBottom: getResponsiveHeight(4),
+  },
+  metaText: {
+    fontSize: getResponsiveFontSize(16),
+    color: '#999',
   },
   toastContainer: {
     position: 'absolute',
@@ -204,5 +335,32 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     marginHorizontal: getResponsiveWidth(3.6),
+  },
+
+  flagIconContainer: {
+    width: getResponsiveWidth(4.8),
+    aspectRatio: 1,
+    borderRadius: getResponsiveWidth(12),
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  languageOptionsContainer: {
+    marginTop: getResponsiveHeight(1.8),
+    marginHorizontal: getResponsiveWidth(3.6),
+    borderRadius: getResponsiveWidth(4),
+  },
+  languageOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderRadius: getResponsiveWidth(4),
+    paddingHorizontal: getResponsiveWidth(4.8),
+    paddingVertical: getResponsiveHeight(1.8),
+  },
+  leftSectionContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getResponsiveWidth(2.4),
   },
 });

@@ -1,5 +1,6 @@
 {
   "common": {
+    "appName": "Orange⁺",
     "done": "Done",
     "cancel": "Cancel",
     "back": "Back",
@@ -119,6 +120,7 @@
     "copied": "Link copied",
     "fetchError": "Failed to load data. Please try again.",
     "syncError": "Failed to sync. Please try again.",
+    "syncSuccess": "Synced successfully",
     "wifi": "Wi-Fi Details",
     "connectButton": "Connect",
     "passwordPlaceholder": "Enter password",

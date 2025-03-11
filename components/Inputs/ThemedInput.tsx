@@ -338,7 +338,8 @@ export const ThemedInput = forwardRef<
         >
           {/* Use Animated.View */}
           <Animated.View style={[inputContainerStyle, animatedContainerStyle]}>
-            {!iconName && (
+            {/* Conditionally render the label */}
+            {label && (
               <ThemedText style={[styles.label, { color }, labelStyle]} type="defaultSemiBold">
                 {label}
                 {required && <ThemedText style={{ color: 'red' }}> *</ThemedText>}
@@ -460,6 +461,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: getResponsiveFontSize(13),
+    opacity: 0.6,
   },
   inputRow: {
     flexDirection: 'row',
