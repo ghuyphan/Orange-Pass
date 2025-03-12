@@ -30,12 +30,17 @@ import { cleanupResponsiveManager } from '@/utils/responsive';
 // Prevent auto-hide of splash screen
 SplashScreen.preventAutoHideAsync();
 
+// Interface for quick login preferences
+interface QuickLoginPreferences {
+  [email: string]: boolean;
+}
+
 // Type for app initialization state
 interface AppInitState {
   isAppReady: boolean;
   isAuthenticated: boolean | null;
   hasSeenOnboarding: boolean | null;
-  hasSavedCredentials: boolean | null; // New state to track saved credentials
+  hasQuickLoginEnabled: boolean | null; // Renamed to better reflect what we're checking
 }
 
 export default function RootLayout() {
@@ -63,7 +68,7 @@ export default function RootLayout() {
     isAppReady: false,
     isAuthenticated: null,
     hasSeenOnboarding: null,
-    hasSavedCredentials: null,
+    hasQuickLoginEnabled: null,
   });
 
   const router = useRouter();
@@ -86,21 +91,43 @@ export default function RootLayout() {
     }
   }, [appState.isAppReady]);
 
-  // Check if user has saved credentials
-  const checkSavedCredentials = async () => {
+  // Check if user has quick login enabled
+  const checkQuickLoginEnabled = async () => {
     try {
-      const [savedEmail, rememberMe] = await Promise.all([
-        SecureStore.getItemAsync('savedEmail'),
-        SecureStore.getItemAsync('rememberMe')
-      ]);
+      // Get the saved email from SecureStore
+      const savedEmail = await SecureStore.getItemAsync('savedEmail');
+      console.log('Checking quick login for email:', savedEmail);
       
-      return Boolean(savedEmail && rememberMe === 'true');
+      // Get quick login preferences from storage
+      const prefsString = storage.getString('quickLoginPreferences');
+      console.log('Quick login prefs string:', prefsString);
+      
+      if (!prefsString) {
+        return false;
+      }
+      
+      try {
+        const quickLoginPrefs: QuickLoginPreferences = JSON.parse(prefsString);
+        
+        // If we don't have a saved email, check if any email has quick login enabled
+        if (!savedEmail) {
+          // Check if any email has quick login enabled
+          const anyEmailEnabled = Object.values(quickLoginPrefs).some(value => value === true);
+          return anyEmailEnabled;
+        }
+        
+        // Check if this specific user has quick login enabled
+        const isEnabled = Boolean(quickLoginPrefs && quickLoginPrefs[savedEmail] === true);
+        
+        return isEnabled;
+      } catch (parseError) {
+        return false;
+      }
     } catch (error) {
-      console.error('Error checking saved credentials:', error);
       return false;
     }
   };
-
+  
   // App initialization effect
   useEffect(() => {
     const prepareApp = async () => {
@@ -117,15 +144,16 @@ export default function RootLayout() {
           ? await checkInitialAuth().catch(() => false)
           : false;
 
-        // Check if user has saved credentials
-        const hasSavedCreds = await checkSavedCredentials();
+        // Check if user has quick login enabled
+        const quickLoginEnabled = await checkQuickLoginEnabled();
+        console.log(quickLoginEnabled);
 
         // Update app state
         setAppState({
           isAppReady: fontsLoaded && !fontError,
           isAuthenticated: authStatus,
           hasSeenOnboarding: onboardingStatus,
-          hasSavedCredentials: hasSavedCreds,
+          hasQuickLoginEnabled: quickLoginEnabled,
         });
       } catch (error) {
         console.error("App initialization error:", error);
@@ -136,7 +164,7 @@ export default function RootLayout() {
           isAppReady: true,
           isAuthenticated: false,
           hasSeenOnboarding: false,
-          hasSavedCredentials: false,
+          hasQuickLoginEnabled: false,
         }));
       }
     };
@@ -162,22 +190,22 @@ export default function RootLayout() {
 
   // Navigation effect based on app state
   useEffect(() => {
-    const { isAppReady, hasSeenOnboarding, isAuthenticated, hasSavedCredentials } = appState;
+    const { isAppReady, hasSeenOnboarding, isAuthenticated, hasQuickLoginEnabled } = appState;
 
     if (isAppReady &&
         hasSeenOnboarding !== null &&
         isAuthenticated !== null &&
-        hasSavedCredentials !== null) {
+        hasQuickLoginEnabled !== null) {
       try {
         if (!hasSeenOnboarding) {
           router.replace('/onboard');
         } else if (isAuthenticated) {
           router.replace('/home');
-        } else if (hasSavedCredentials) {
-          // Go to quick login if user has saved credentials but isn't authenticated
+        } else if (hasQuickLoginEnabled) {
+          // Go to quick login if user has enabled it but isn't authenticated
           router.replace('/quick-login');
         } else {
-          // Regular login if no saved credentials
+          // Regular login if quick login not enabled
           router.replace('/login');
         }
       } catch (navigationError) {
@@ -190,7 +218,7 @@ export default function RootLayout() {
   if (!appState.isAppReady ||
       appState.isAuthenticated === null ||
       appState.hasSeenOnboarding === null ||
-      appState.hasSavedCredentials === null) {
+      appState.hasQuickLoginEnabled === null) {
     return null; // Or a loading indicator
   }
 
@@ -217,7 +245,6 @@ export default function RootLayout() {
                   />
                   <Stack.Screen name="+not-found" />
                   <Stack.Screen name="onboard" />
-                  <Stack.Screen name="quickLogin" />
                 </Stack>
               </ThemedView>
             </LocaleProvider>

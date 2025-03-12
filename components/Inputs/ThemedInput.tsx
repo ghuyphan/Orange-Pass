@@ -506,7 +506,7 @@ const styles = StyleSheet.create({
     bottom: -getResponsiveHeight(1.2),
     width: 0,
     height: 0,
-    borderLeftWidth: getResponsiveWidth(1.5),
+    borderLeftWidth: getResponsiveWidth(1),
     borderRightWidth: getResponsiveWidth(2),
     borderTopWidth: getResponsiveHeight(1.5),
     borderStyle: 'solid',

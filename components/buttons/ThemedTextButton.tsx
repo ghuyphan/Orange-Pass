@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   label: {
-    fontSize: getResponsiveFontSize(15),
+    fontSize: getResponsiveFontSize(16),
   },
   icon: {
     // You can add margin here if needed for spacing

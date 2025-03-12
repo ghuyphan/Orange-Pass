@@ -39,6 +39,13 @@
       "invalidCredentials": "Thông tin đăng nhập không chính xác."
     }
   },
+  "quickLoginPrompt": {
+    "saveLoginInfo": "Lưu thông tin đăng nhập?",
+    "saveDescription": "Chúng tôi sẽ lưu thông tin đăng nhập của {name} vào bản sao lưu đám mây của thiết bị, để bạn không cần nhập lại trên thiết bị này hoặc bất kỳ thiết bị nào bạn khôi phục.",
+    "save": "Lưu",
+    "saving": "Đang lưu...",
+    "notNow": "Để sau"
+  },
   "loginScreen": {
     "selectLanguage": "Chọn ngôn ngữ",
     "email": "Email",

@@ -24,7 +24,7 @@ import VN from '@/assets/svgs/VN.svg';
 import RU from '@/assets/svgs/RU.svg';
 import { MaterialIcons } from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useMMKVString } from 'react-native-mmkv';
+import { useMMKVString, useMMKVObject } from 'react-native-mmkv';
 import ThemedReuseableSheet from '@/components/bottomsheet/ThemedReusableSheet';
 
 // Define the valid language keys
@@ -34,6 +34,11 @@ type LanguageKey = 'vi' | 'ru' | 'en';
 interface LanguageOption {
   label: string;
   flag: React.ReactNode;
+}
+
+// Interface for quick login preferences
+interface QuickLoginPreferences {
+  [email: string]: boolean;
 }
 
 // Use the LanguageKey type in the languageOptions object
@@ -54,6 +59,7 @@ export default function LoginScreen() {
   const [errorMessage, setErrorMessage] = useState('');
   const bottomSheetRef = useRef<any>(null);
   const scrollViewRef = useRef<KeyboardAwareScrollView>(null);
+  const [quickLoginPrefs] = useMMKVObject<QuickLoginPreferences>('quickLoginPreferences');
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
@@ -82,7 +88,7 @@ export default function LoginScreen() {
 
   const onNavigateToRegister = () => {
     Keyboard.dismiss();
-    router.push('/quick-login');
+    router.push('/register');
   };
 
   const onNavigateToForgot = () => {
@@ -165,7 +171,15 @@ export default function LoginScreen() {
         setSubmitting(true);
         try {
           await login(values.email, values.password);
-          router.replace('/(auth)/home');
+          
+          // Check if user has already made a decision about quick login
+          if (quickLoginPrefs && quickLoginPrefs[values.email] !== undefined) {
+            // User has already decided, go directly to home
+            router.replace('/(auth)/home');
+          } else {
+            // User hasn't decided yet, show the quick login prompt
+            router.replace('/(auth)/quick-login-prompt');
+          }
         } catch (error) {
           const errorAsError = error as Error;
           setIsToastVisible(true);

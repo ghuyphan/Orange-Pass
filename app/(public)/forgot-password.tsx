@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { StyleSheet, Keyboard, View } from 'react-native';
+import { StyleSheet, Keyboard, View, TextInput } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { Formik } from 'formik';
 
@@ -22,7 +22,7 @@ export default function ForgotPasswordScreen() {
   const [isToastVisible, setIsToastVisible] = useState(false);
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const inputRef = useRef(null);
+  const inputRef = useRef<TextInput | null>(null); 
 
   const { locale } = useLocale();
 
@@ -37,7 +37,7 @@ export default function ForgotPasswordScreen() {
     // Focus the input when component mounts
     if (inputRef.current) {
       setTimeout(() => {
-        inputRef.current.focus();
+        inputRef.current?.focus();
       }, 100); // Small delay to ensure component is fully mounted
     }
 
@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    fontSize: getResponsiveFontSize(25),
+    fontSize: getResponsiveFontSize(26),
     textAlign: 'center',
   },
   logoContainer: {

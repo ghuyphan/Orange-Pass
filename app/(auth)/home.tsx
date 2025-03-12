@@ -66,7 +66,7 @@ import EmptyListItem from '@/components/lists/EmptyListItem';
 import LinkingSheetContent from '@/components/bottomsheet/LinkingSheetContent';
 import SettingSheetContent from '@/components/bottomsheet/SettingSheetContent';
 import WifiSheetContent from '@/components/bottomsheet/WifiSheetContent';
-import { getResponsiveHeight, getResponsiveWidth } from '@/utils/responsive';
+import { getResponsiveHeight, getResponsiveWidth, getResponsiveFontSize} from '@/utils/responsive';
 
 // 5. Internationalization
 import { t } from '@/i18n';
@@ -884,7 +884,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: getResponsiveWidth(3.6),
   },
   titleText: {
-    fontSize: 28,
+    fontSize: getResponsiveFontSize(28),
   },
   titleButtonContainer: {
     flexDirection: 'row',

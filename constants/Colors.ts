@@ -13,7 +13,7 @@ export const Colors = {
     tabIconSelected: tintColorLight,
     error: '#f2726f', 
     toastBackground: '#EADFD7', 
-    buttonBackground: '#F2E9E1', 
+    buttonBackground: '#ebded3', 
     buttonHighlight: '#FFECB3', 
     cardBackground: '#FEF8F3',
     cardFooter: '#F2EAE2', 

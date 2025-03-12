@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
         marginBottom: getResponsiveHeight(6),
     },
     title: {
-        fontSize: getResponsiveFontSize(25),
+        fontSize: getResponsiveFontSize(26),
         textAlign: 'center',
         marginBottom: getResponsiveHeight(2.4),
     },
