@@ -216,7 +216,7 @@ const ThemedCardItem = memo(function ThemedCardItem({
 const styles = StyleSheet.create({
   outerContainer: {
     marginHorizontal: getResponsiveWidth(3.6),
-    marginBottom: getResponsiveHeight(1.8),
+    marginBottom: getResponsiveHeight(2),
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,

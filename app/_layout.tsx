@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { StyleSheet, UIManager, Platform, AppState } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { useFonts } from 'expo-font';
@@ -11,10 +11,12 @@ import { PaperProvider } from 'react-native-paper';
 import { store } from '@/store';
 import { createTable } from '@/services/localDB/userDB';
 import { createQrTable } from '@/services/localDB/qrDB';
-import { checkInitialAuth } from '@/services/auth';
+import { 
+  checkInitialAuth, 
+  getQuickLoginStatus 
+} from '@/services/auth';
 import { checkOfflineStatus } from '@/services/network';
 import { storage } from '@/utils/storage';
-import * as SecureStore from 'expo-secure-store';
 
 // Import context providers
 import { LocaleProvider } from '@/context/LocaleContext';
@@ -30,38 +32,36 @@ import { cleanupResponsiveManager } from '@/utils/responsive';
 // Prevent auto-hide of splash screen
 SplashScreen.preventAutoHideAsync();
 
-// Interface for quick login preferences
-interface QuickLoginPreferences {
-  [email: string]: boolean;
-}
-
 // Type for app initialization state
 interface AppInitState {
   isAppReady: boolean;
   isAuthenticated: boolean | null;
   hasSeenOnboarding: boolean | null;
-  hasQuickLoginEnabled: boolean | null; // Renamed to better reflect what we're checking
+  hasQuickLoginEnabled: boolean | null;
 }
 
+// Pre-load fonts configuration
+const fontAssets = {
+  'HelveticaNeue-Bold': require('../assets/fonts/HelveticaNeueBold.ttf'),
+  'OpenSans-Regular': require('../assets/fonts/OpenSans-VariableFont_wdth,wght.ttf'),
+  'OpenSans-Italic': require('../assets/fonts/OpenSans-Italic-VariableFont_wdth,wght.ttf'),
+  'Roboto-Black': require('../assets/fonts/Roboto-Black.ttf'),
+  'Roboto-BlackItalic': require('../assets/fonts/Roboto-BlackItalic.ttf'),
+  'Roboto-Bold': require('../assets/fonts/Roboto-Bold.ttf'),
+  'Roboto-BoldItalic': require('../assets/fonts/Roboto-BoldItalic.ttf'),
+  'Roboto-Italic': require('../assets/fonts/Roboto-Italic.ttf'),
+  'Roboto-Light': require('../assets/fonts/Roboto-Light.ttf'),
+  'Roboto-LightItalic': require('../assets/fonts/Roboto-LightItalic.ttf'),
+  'Roboto-Medium': require('../assets/fonts/Roboto-Medium.ttf'),
+  'Roboto-MediumItalic': require('../assets/fonts/Roboto-MediumItalic.ttf'),
+  'Roboto-Regular': require('../assets/fonts/Roboto-Regular.ttf'),
+  'Roboto-Thin': require('../assets/fonts/Roboto-Thin.ttf'),
+  'Roboto-ThinItalic': require('../assets/fonts/Roboto-ThinItalic.ttf'),
+};
+
 export default function RootLayout() {
-  // Font loading
-  const [fontsLoaded, fontError] = useFonts({
-    'HelveticaNeue-Bold': require('../assets/fonts/HelveticaNeueBold.ttf'),
-    'OpenSans-Regular': require('../assets/fonts/OpenSans-VariableFont_wdth,wght.ttf'),
-    'OpenSans-Italic': require('../assets/fonts/OpenSans-Italic-VariableFont_wdth,wght.ttf'),
-    'Roboto-Black': require('../assets/fonts/Roboto-Black.ttf'),
-    'Roboto-BlackItalic': require('../assets/fonts/Roboto-BlackItalic.ttf'),
-    'Roboto-Bold': require('../assets/fonts/Roboto-Bold.ttf'),
-    'Roboto-BoldItalic': require('../assets/fonts/Roboto-BoldItalic.ttf'),
-    'Roboto-Italic': require('../assets/fonts/Roboto-Italic.ttf'),
-    'Roboto-Light': require('../assets/fonts/Roboto-Light.ttf'),
-    'Roboto-LightItalic': require('../assets/fonts/Roboto-LightItalic.ttf'),
-    'Roboto-Medium': require('../assets/fonts/Roboto-Medium.ttf'),
-    'Roboto-MediumItalic': require('../assets/fonts/Roboto-MediumItalic.ttf'),
-    'Roboto-Regular': require('../assets/fonts/Roboto-Regular.ttf'),
-    'Roboto-Thin': require('../assets/fonts/Roboto-Thin.ttf'),
-    'Roboto-ThinItalic': require('../assets/fonts/Roboto-ThinItalic.ttf'),
-  });
+  // Font loading - memoize to prevent unnecessary re-renders
+  const [fontsLoaded, fontError] = useFonts(fontAssets);
 
   // App initialization state
   const [appState, setAppState] = useState<AppInitState>({
@@ -73,82 +73,49 @@ export default function RootLayout() {
 
   const router = useRouter();
 
-  // Enable layout animation on Android
+  // Enable layout animation on Android - only run once
   useEffect(() => {
     if (Platform.OS === 'android') {
       UIManager.setLayoutAnimationEnabledExperimental?.(true);
     }
   }, []);
 
-  // Callback to hide splash screen when app is ready
-  const onLayoutRootView = useCallback(async () => {
-    if (appState.isAppReady) {
-      try {
-        await SplashScreen.hideAsync();
-      } catch (error) {
-        console.error('Failed to hide splash screen', error);
-      }
-    }
-  }, [appState.isAppReady]);
+  // Memoized check for quick login to prevent recreating on each render
+  const checkQuickLoginEnabled = useCallback(async () => {
+    // Use the helper function from auth service that checks MMKV_KEYS.QUICK_LOGIN_ENABLED
+    return Promise.resolve(getQuickLoginStatus());
+  }, []);
 
-  // Check if user has quick login enabled
-  const checkQuickLoginEnabled = async () => {
-    try {
-      // Get the saved email from SecureStore
-      const savedEmail = await SecureStore.getItemAsync('savedEmail');
-      console.log('Checking quick login for email:', savedEmail);
-      
-      // Get quick login preferences from storage
-      const prefsString = storage.getString('quickLoginPreferences');
-      console.log('Quick login prefs string:', prefsString);
-      
-      if (!prefsString) {
-        return false;
-      }
-      
-      try {
-        const quickLoginPrefs: QuickLoginPreferences = JSON.parse(prefsString);
-        
-        // If we don't have a saved email, check if any email has quick login enabled
-        if (!savedEmail) {
-          // Check if any email has quick login enabled
-          const anyEmailEnabled = Object.values(quickLoginPrefs).some(value => value === true);
-          return anyEmailEnabled;
-        }
-        
-        // Check if this specific user has quick login enabled
-        const isEnabled = Boolean(quickLoginPrefs && quickLoginPrefs[savedEmail] === true);
-        
-        return isEnabled;
-      } catch (parseError) {
-        return false;
-      }
-    } catch (error) {
-      return false;
+  // Memoized handler for app state changes
+  const handleAppStateChange = useCallback((nextAppState: string) => {
+    if (nextAppState === 'inactive' || nextAppState === 'background') {
+      cleanupResponsiveManager();
     }
-  };
-  
-  // App initialization effect
+  }, []);
+
+  // App initialization effect - optimize with Promise.all for parallel execution
   useEffect(() => {
     const prepareApp = async () => {
       try {
-        // Create local database tables
-        await createTable();
-        await createQrTable();
+        // Run database creation in parallel
+        const [, , onboardingStatus] = await Promise.all([
+          createTable(),
+          createQrTable(),
+          Promise.resolve(storage.getBoolean('hasSeenOnboarding') ?? false)
+        ]);
 
-        // Check onboarding status
-        const onboardingStatus = storage.getBoolean('hasSeenOnboarding') ?? false;
+        // Only check auth if onboarding is complete
+        const authStatusPromise = onboardingStatus
+          ? checkInitialAuth().catch(() => false)
+          : Promise.resolve(false);
 
-        // Determine authentication status
-        const authStatus = onboardingStatus
-          ? await checkInitialAuth().catch(() => false)
-          : false;
+        // Run auth check and quick login check in parallel
+        const [authStatus, quickLoginEnabled] = await Promise.all([
+          authStatusPromise,
+          checkQuickLoginEnabled()
+        ]);
 
-        // Check if user has quick login enabled
-        const quickLoginEnabled = await checkQuickLoginEnabled();
-        console.log(quickLoginEnabled);
-
-        // Update app state
+        // Update app state once with all values
         setAppState({
           isAppReady: fontsLoaded && !fontError,
           isAuthenticated: authStatus,
@@ -159,67 +126,97 @@ export default function RootLayout() {
         console.error("App initialization error:", error);
 
         // Fallback state in case of initialization failure
-        setAppState(prev => ({
-          ...prev,
-          isAppReady: true,
+        setAppState({
+          isAppReady: fontsLoaded && !fontError,
           isAuthenticated: false,
           hasSeenOnboarding: false,
           hasQuickLoginEnabled: false,
-        }));
+        });
       }
     };
 
-    // Setup for AppState change handling
-    const handleAppStateChange = (nextAppState: string) => {
-      if (nextAppState === 'inactive' || nextAppState === 'background') {
-        cleanupResponsiveManager();
-      }
-    };
+    // Only run preparation when fonts are loaded
+    if (fontsLoaded && !fontError) {
+      prepareApp();
+    }
+  }, [fontsLoaded, fontError, checkQuickLoginEnabled]);
 
-    // Run preparation and set up offline status check
-    prepareApp();
+  // Setup AppState change handling
+  useEffect(() => {
+    // Set up offline status check
     const unsubscribe = checkOfflineStatus();
     const appStateSub = AppState.addEventListener('change', handleAppStateChange);
 
     // Cleanup subscriptions
     return () => {
       unsubscribe();
-      appStateSub.remove(); // Clean up AppState listener
+      appStateSub.remove();
     };
-  }, [fontsLoaded, fontError]);
+  }, [handleAppStateChange]);
 
-  // Navigation effect based on app state
+  // Callback to hide splash screen when app is ready - memoized
+  const onLayoutRootView = useCallback(async () => {
+    if (appState.isAppReady) {
+      try {
+        await SplashScreen.hideAsync();
+      } catch (error) {
+        console.error('Failed to hide splash screen', error);
+      }
+    }
+  }, [appState.isAppReady]);
+
+  // Navigation effect based on app state - use a single navigation call
   useEffect(() => {
     const { isAppReady, hasSeenOnboarding, isAuthenticated, hasQuickLoginEnabled } = appState;
 
+    // Only navigate when all states are determined
     if (isAppReady &&
-        hasSeenOnboarding !== null &&
-        isAuthenticated !== null &&
-        hasQuickLoginEnabled !== null) {
-      try {
-        if (!hasSeenOnboarding) {
-          router.replace('/onboard');
-        } else if (isAuthenticated) {
-          router.replace('/home');
-        } else if (hasQuickLoginEnabled) {
-          // Go to quick login if user has enabled it but isn't authenticated
-          router.replace('/quick-login');
-        } else {
-          // Regular login if quick login not enabled
-          router.replace('/login');
-        }
-      } catch (navigationError) {
-        console.error('Navigation error:', navigationError);
+      hasSeenOnboarding !== null &&
+      isAuthenticated !== null &&
+      hasQuickLoginEnabled !== null) {
+
+      // Determine the target route once with proper typing
+      type RouteDestination = '/onboard' | '/home' | '/quick-login' | '/login';
+      let targetRoute: RouteDestination = '/login'; // Default route
+
+      if (!hasSeenOnboarding) {
+        targetRoute = '/onboard';
+      } else if (isAuthenticated) {
+        targetRoute = '/home';
+      } else if (hasQuickLoginEnabled) {
+        targetRoute = '/quick-login';
       }
+
+      // Navigate once with the determined route
+      router.replace(targetRoute);
     }
   }, [appState, router]);
 
+
+  // Memoize the stack component to prevent unnecessary re-renders
+  const stackNavigator = useMemo(() => (
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        animation: 'ios',
+      }}
+    >
+      <Stack.Screen name="(public)" />
+      <Stack.Screen
+        name="(auth)"
+        options={{ animation: 'none' }}
+      />
+      <Stack.Screen name="+not-found" />
+      <Stack.Screen name="onboard" />
+    </Stack>
+  ), []);
+
   // Show loading state while app is initializing
   if (!appState.isAppReady ||
-      appState.isAuthenticated === null ||
-      appState.hasSeenOnboarding === null ||
-      appState.hasQuickLoginEnabled === null) {
-    return null; // Or a loading indicator
+    appState.isAuthenticated === null ||
+    appState.hasSeenOnboarding === null ||
+    appState.hasQuickLoginEnabled === null) {
+    return null;
   }
 
   return (
@@ -232,20 +229,7 @@ export default function RootLayout() {
                 style={styles.root}
                 onLayout={onLayoutRootView}
               >
-                <Stack
-                  screenOptions={{
-                    headerShown: false,
-                    animation: 'ios',
-                  }}
-                >
-                  <Stack.Screen name="(public)" />
-                  <Stack.Screen
-                    name="(auth)"
-                    options={{ animation: 'none' }}
-                  />
-                  <Stack.Screen name="+not-found" />
-                  <Stack.Screen name="onboard" />
-                </Stack>
+                {stackNavigator}
               </ThemedView>
             </LocaleProvider>
           </PaperProvider>
@@ -255,7 +239,7 @@ export default function RootLayout() {
   );
 }
 
-// Styles
+// Styles - memoize with StyleSheet.create
 const styles = StyleSheet.create({
   container: {
     flex: 1,

@@ -93,8 +93,6 @@ const styles = StyleSheet.create({
     gap: getResponsiveWidth(2.4),
   },
   logoContainer: {
-    // Removed width, height, borderRadius as they are now defined via props
-    backgroundColor: 'rgba(255,255,255,0.2)', // Consider moving this to a constant or theme
     justifyContent: 'center',
     alignItems: 'center',
   },

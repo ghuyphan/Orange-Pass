@@ -340,7 +340,7 @@ const ThemedReuseableSheet = forwardRef<BottomSheet, ReuseableSheetProps>(
         animateOnMount={true}
         onClose={handleClose}
         onChange={handleSheetChange}
-        containerStyle={{ zIndex: 10 }}
+        containerStyle={{ zIndex: 1000 }} // High zIndex for the bottom sheet container
         enableDynamicSizing={enableDynamicSizing}
         backgroundStyle={[
           styles.background,
@@ -380,6 +380,7 @@ const ThemedReuseableSheet = forwardRef<BottomSheet, ReuseableSheetProps>(
       >
         {renderContent()}
       </BottomSheet>
+
     );
   }
 );

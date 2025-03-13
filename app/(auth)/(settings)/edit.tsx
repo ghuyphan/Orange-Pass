@@ -182,7 +182,7 @@ const EditProfileScreen = () => {
                                         : ''
                                 }
                                 disabled={isSubmitting}
-                                disableOpacityChange={true}
+                                 disableOpacityChange={false}
                             />
 
                             <ThemedView style={styles.divider} />
@@ -200,7 +200,7 @@ const EditProfileScreen = () => {
                                         : ''
                                 }
                                 disabled={isSubmitting}
-                                disableOpacityChange={true}
+                                 disableOpacityChange={false}
                             />
 
                             <ThemedView style={styles.divider} />
@@ -218,7 +218,7 @@ const EditProfileScreen = () => {
                                         : ''
                                 }
                                 disabled={isSubmitting}
-                                disableOpacityChange={true}
+                                 disableOpacityChange={false}
                             />
                             <ThemedView style={styles.divider} />
                             <ThemedInput
@@ -234,7 +234,7 @@ const EditProfileScreen = () => {
                                         : ''
                                 }
                                 disabled={isSubmitting}
-                                disableOpacityChange={true}
+                                 disableOpacityChange={false}
                             />
                             <ThemedView style={styles.divider} />
                             <ThemedInput
@@ -250,7 +250,7 @@ const EditProfileScreen = () => {
                                         : ''
                                 }
                                 disabled={isSubmitting}
-                                disableOpacityChange={true}
+                                 disableOpacityChange={false}
                             />
 
                         </View>

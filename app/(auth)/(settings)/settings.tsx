@@ -33,6 +33,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
 import * as Application from 'expo-application';
 import { Logo } from '@/components/AppLogo';
+import { MMKV_KEYS, SECURE_KEYS } from '@/services/auth';
+
 
 // Define the type for your settings card items
 interface SettingsCardItem {
@@ -87,24 +89,35 @@ function SettingsScreen() {
     try {
       setIsModalVisible(false);
       setIsLoading(true);
-      await SecureStore.deleteItemAsync('authToken');
+      
+      // Clear auth tokens but keep quick login credentials
+      await SecureStore.deleteItemAsync(SECURE_KEYS.AUTH_TOKEN);
+      await SecureStore.deleteItemAsync(SECURE_KEYS.USER_ID);
       pb.authStore.clear();
-
-      // Dispatch actions immediately *before* navigation.
+      
+      // Dispatch actions immediately *before* navigation
       dispatch(clearErrorMessage());
       dispatch(removeAllQrData());
       dispatch(clearAuthData());
-
-      router.replace('/login');
-
+      
+      // Check if quick login is enabled
+      const quickLoginEnabled = storage.getBoolean(MMKV_KEYS.QUICK_LOGIN_ENABLED) ?? false;
+      
+      // Navigate to the appropriate screen based on quick login status
+      if (quickLoginEnabled) {
+        router.replace('/quick-login');
+      } else {
+        router.replace('/login');
+      }
+      
     } catch (error) {
       console.error('Logout error:', error);
-      // Consider dispatching an error action here to show an error message.
+      // Consider dispatching an error action here to show an error message
     } finally {
-      setIsLoading(false); // Set loading to false *after* everything is done.
+      setIsLoading(false); // Set loading to false *after* everything is done
     }
   }, [dispatch]);
-
+  
   const onLogout = useCallback(() => {
     setIsModalVisible(true);
   }, []);
@@ -214,12 +227,12 @@ function SettingsScreen() {
               loadingLabel={t('settingsScreen.logingOut')}
               loading={isLoading}
               onPress={onLogout}
-              style={{ marginTop: getResponsiveHeight(1.8) }}
+              // style={{ marginTop: getResponsiveHeight(2) }}
             />
             {/* <ThemedText style={styles.versionText}>
               {t('settingsScreen.appVersion') + ' ' + appVersion}
             </ThemedText> */}
-            <View style={{ backgroundColor: sectionsColors, paddingVertical: getResponsiveHeight(1.8), paddingHorizontal: getResponsiveWidth(4.8), gap: getResponsiveHeight(1.8), marginTop: getResponsiveHeight(2.4), borderRadius: getResponsiveWidth(4), flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start' }}>
+            <View style={{ backgroundColor: sectionsColors, paddingVertical: getResponsiveHeight(1.8), paddingHorizontal: getResponsiveWidth(4.8), gap: getResponsiveHeight(1.8), marginTop: getResponsiveHeight(6), borderRadius: getResponsiveWidth(4), flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start' }}>
               <Logo size={9} />
               <View style={{ flexDirection: 'column' }}>
                 <ThemedText style={{ fontSize: getResponsiveFontSize(16), fontWeight: 'bold' }}>
@@ -304,7 +317,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     paddingVertical: getResponsiveHeight(1.8),
     paddingHorizontal: getResponsiveWidth(4.8),
-    marginBottom: getResponsiveHeight(3.6),
+    marginBottom: getResponsiveHeight(2),
     borderRadius: getResponsiveWidth(4),
     gap: 0,
   },
@@ -334,7 +347,7 @@ const styles = StyleSheet.create({
   },
   sectionContainer: {
     borderRadius: getResponsiveWidth(4),
-    marginBottom: getResponsiveHeight(1.8),
+    marginBottom: getResponsiveHeight(2),
     overflow: 'hidden',
   },
   versionText: {

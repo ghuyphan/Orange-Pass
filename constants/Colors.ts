@@ -15,7 +15,7 @@ export const Colors = {
     toastBackground: '#EADFD7', 
     buttonBackground: '#ebded3', 
     buttonHighlight: '#FFECB3', 
-    cardBackground: '#FEF8F3',
+    cardBackground: '#fcf3ed',
     cardFooter: '#F2EAE2', 
     logoIcon: '#FF8A65', 
   },

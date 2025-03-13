@@ -513,7 +513,7 @@ const getItemsByTypeHelper = useCallback(
                     onBlur={handleBlur('metadata')}
                     backgroundColor={sectionsColors}
                     disabled={!!codeProvider && !isEditing}
-                    disableOpacityChange={true}
+                     disableOpacityChange={false}
                     errorMessage={touched.metadata && errors.metadata ? String(errors.metadata) : undefined}
                     isError={touched.metadata && !!errors.metadata}
                     onDisabledPress={() => onEmptyInputPress('metadata')}
@@ -545,7 +545,7 @@ const getItemsByTypeHelper = useCallback(
                   onChangeText={handleChange('accountName')}
                   onBlur={handleBlur('accountName')}
                   backgroundColor={sectionsColors}
-                  disableOpacityChange={true}
+                   disableOpacityChange={false}
                   errorMessage={touched.accountName && errors.accountName ? String(errors.accountName) : undefined}
                   isError={touched.accountName && !!errors.accountName}
                   onDisabledPress={() => onEmptyInputPress('account')}
@@ -559,7 +559,7 @@ const getItemsByTypeHelper = useCallback(
                   onBlur={handleBlur('accountNumber')}
                   backgroundColor={sectionsColors}
                   keyboardType="numeric"
-                  disableOpacityChange={true}
+                   disableOpacityChange={false}
                   errorMessage={touched.accountNumber && errors.accountNumber ? String(errors.accountNumber) : undefined}
                   isError={touched.accountNumber && !!errors.accountNumber}
                   onDisabledPress={() => onEmptyInputPress('account')}

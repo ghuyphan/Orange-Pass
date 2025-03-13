@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
   },
   accountName: {
     color: 'white',
-    fontSize: getResponsiveFontSize(19),
+    fontSize: getResponsiveFontSize(16),
     fontWeight: '600',
   },
   accountNumber: {

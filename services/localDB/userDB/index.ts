@@ -159,6 +159,19 @@ export async function getUserById(userId: string) {
     }
 }
 
+export async function getEmailByUserID(userID: string): Promise<string | null> {
+    const db = await openDatabase();
+    try {
+      const user = await db.getFirstAsync<{ email: string }>(
+        'SELECT email FROM users WHERE id = ?',
+        userID
+      );
+      return user?.email || null;
+    } catch (error) {
+      console.error('Error retrieving email by userID:', error);
+      return null;
+    }
+  }
 // Function to close the database
 export async function closeDatabase() {
     const db = await openDatabase();

@@ -1,7 +1,8 @@
 import React, { useRef, useState, useCallback, useMemo } from 'react';
-import { StyleSheet, View, TouchableWithoutFeedback } from 'react-native';
+import { StyleSheet, View, TouchableWithoutFeedback, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 import { ThemedButton } from '@/components/buttons/ThemedButton';
 import { ThemedText } from '@/components/ThemedText';
@@ -15,6 +16,7 @@ import LOGO from '@/assets/svgs/orange-logo.svg';
 import ThemedReuseableSheet from '@/components/bottomsheet/ThemedReusableSheet';
 import BottomSheet from '@gorhom/bottom-sheet';
 import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
+import { useTheme } from '@/context/ThemeContext';
 
 // Define a type for features
 type Feature = {
@@ -90,6 +92,7 @@ const PrivacyPolicyContent = ({ cardColor }: { cardColor: string }) => (
 
 const OnBoardScreen = () => {
   const router = useRouter();
+  const { currentTheme } = useTheme();
   const iconColor = useThemeColor({ light: Colors.light.icon, dark: Colors.dark.icon }, 'buttonBackground');
   const cardColor = useThemeColor({ light: Colors.light.cardBackground, dark: Colors.dark.cardBackground }, 'buttonBackground');
   const bottomSheetRef = useRef<BottomSheet>(null);
@@ -143,35 +146,53 @@ const OnBoardScreen = () => {
   }, [sheetType, cardColor]);
 
   return (
-    <ThemedView style={styles.container}>
-      <View style={styles.topContainer}>
+    <KeyboardAwareScrollView
+      keyboardShouldPersistTaps="handled"
+      style={{
+        backgroundColor:
+          currentTheme === "light"
+            ? Colors.light.background
+            : Colors.dark.background,
+      }}
+      contentContainerStyle={styles.container}
+      extraScrollHeight={Platform.OS === "ios" ? getResponsiveHeight(4) : 0}
+      enableOnAndroid={true}
+      enableResetScrollToCoords={false}
+      showsVerticalScrollIndicator={false}
+      scrollEnabled={true}
+      keyboardOpeningTime={0}
+    >
+      <View style={styles.contentContainer}>
         <View style={styles.logoContainer}>
           <LOGO width={getResponsiveWidth(14)} height={getResponsiveWidth(14)} />
         </View>
-        <ThemedText style={styles.screenTitle} type="title">{t('onboardingScreen.title')}</ThemedText>
-      </View>
+        
+        {/* <ThemedText style={styles.screenTitle} type="title">
+          {t('onboardingScreen.title')}
+        </ThemedText> */}
 
-      <View style={styles.contentContainer}>
-        {features.map((feature, index) => (
-          <View key={index} style={styles.featureContainer}>
-            <MaterialCommunityIcons name={feature.icon as any} size={getResponsiveWidth(9)} color={iconColor} />
-            <View style={styles.featureTextContainer}>
-              <ThemedText type="defaultSemiBold" style={styles.title}>
-                {feature.title}
-              </ThemedText>
-              <ThemedText style={styles.subtitle}>{feature.subtitle}</ThemedText>
+        <View style={styles.featuresContainer}>
+          {features.map((feature, index) => (
+            <View key={index} style={styles.featureContainer}>
+              <View style={[styles.iconContainer, { backgroundColor: cardColor }]}>
+                <MaterialCommunityIcons 
+                  name={feature.icon as any} 
+                  size={getResponsiveWidth(7)} 
+                  color={iconColor} 
+                />
+              </View>
+              <View style={styles.featureTextContainer}>
+                <ThemedText type="defaultSemiBold" style={styles.title}>
+                  {feature.title}
+                </ThemedText>
+                <ThemedText style={styles.subtitle}>{feature.subtitle}</ThemedText>
+              </View>
             </View>
-          </View>
-        ))}
+          ))}
+        </View>
       </View>
 
       <View style={styles.bottomContainer}>
-        <MaterialCommunityIcons
-          name="account-multiple"
-          size={getResponsiveWidth(6)}
-          color={iconColor}
-          style={styles.bottomIcon}
-        />
         <View style={styles.termsContainer}>
           <View style={styles.termsTextContainer}>
             <ThemedText style={styles.termsText}>
@@ -204,9 +225,15 @@ const OnBoardScreen = () => {
         <ThemedButton
           label={t('onboardingScreen.finishButton')}
           style={styles.button}
+          textStyle={styles.buttonText}
           onPress={onFinish}
         />
+        
+        <ThemedText type="defaultSemiBold" style={styles.metaText}>
+          {t("common.appName")}
+        </ThemedText>
       </View>
+      
       <ThemedReuseableSheet
         ref={bottomSheetRef}
         title={
@@ -217,55 +244,64 @@ const OnBoardScreen = () => {
         contentType="scroll"
         styles={{
           scrollViewContent: {
-            // paddingHorizontal: getResponsiveWidth(4.8),
-            // gap: getResponsiveHeight(2.4)
-            // backgroundColor: sectionsColors,
             borderRadius: getResponsiveWidth(4),
             marginHorizontal: getResponsiveWidth(3.6),
           }
         }}
         snapPoints={['65%']}
-        customContent={renderSheetContent()} // Pass customContent directly
+        customContent={renderSheetContent()}
+        showCloseButton={true}
       />
-    </ThemedView>
+    </KeyboardAwareScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
+    paddingHorizontal: getResponsiveWidth(3.6),
+    justifyContent: "space-between",
   },
-  topContainer: {
-    marginTop: getResponsiveHeight(10),
-    gap: getResponsiveHeight(2.4),
+  contentContainer: {
+    flex: 1,
     alignItems: 'center',
   },
   logoContainer: {
     backgroundColor: '#FFF5E1',
     padding: getResponsiveWidth(3.5),
     borderRadius: getResponsiveWidth(5),
+    marginTop: getResponsiveHeight(10),
+    // marginBottom: getResponsiveHeight(3),
+    marginBottom: getResponsiveHeight(9),
   },
   screenTitle: {
-    fontSize: getResponsiveFontSize(25),
+    fontSize: getResponsiveFontSize(24),
+    textAlign: 'center',
+    marginBottom: getResponsiveHeight(6),
   },
-  contentContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    gap: getResponsiveHeight(5),
+  featuresContainer: {
+    width: '100%',
+    gap: getResponsiveHeight(4),
+    paddingHorizontal: getResponsiveWidth(2),
   },
   featureContainer: {
     flexDirection: 'row',
-    gap: getResponsiveWidth(5),
-    marginHorizontal: getResponsiveWidth(7.5),
+    alignItems: 'center',
+    gap: getResponsiveWidth(4),
+  },
+  iconContainer: {
+    width: getResponsiveWidth(12),
+    height: getResponsiveWidth(12),
+    borderRadius: getResponsiveWidth(6),
+    justifyContent: 'center',
     alignItems: 'center',
   },
   featureTextContainer: {
-    flexDirection: 'column',
     flex: 1,
-    width: '100%',
   },
   title: {
     fontSize: getResponsiveFontSize(16),
+    marginBottom: getResponsiveHeight(0.8),
   },
   subtitle: {
     fontSize: getResponsiveFontSize(14),
@@ -273,18 +309,13 @@ const styles = StyleSheet.create({
     lineHeight: getResponsiveFontSize(20),
   },
   bottomContainer: {
-    paddingTop: getResponsiveHeight(1.8),
-    paddingBottom: getResponsiveHeight(3.6),
-    gap: getResponsiveHeight(1.8),
-    justifyContent: 'center',
-  },
-  bottomIcon: {
-    alignSelf: 'center',
-    marginBottom: -getResponsiveWidth(2.4),
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: Platform.OS === 'ios' ? getResponsiveHeight(4) : getResponsiveHeight(3),
   },
   termsContainer: {
     alignItems: 'center',
-    paddingHorizontal: getResponsiveWidth(4.8),
+    marginBottom: getResponsiveHeight(2.5),
   },
   termsText: {
     fontSize: getResponsiveFontSize(12),
@@ -294,21 +325,35 @@ const styles = StyleSheet.create({
   termsTextContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: getResponsiveWidth(1.2),
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: getResponsiveWidth(1),
+    marginBottom: getResponsiveHeight(0.5),
   },
   privacyPolicyTextContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: getResponsiveWidth(1.2),
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: getResponsiveWidth(1),
   },
   highlightText: {
     color: '#FFC107',
     fontSize: getResponsiveFontSize(12),
     letterSpacing: 0.5,
-    lineHeight: getResponsiveFontSize(20),
   },
   button: {
-    marginHorizontal: getResponsiveWidth(3.6),
+    width: '100%',
+ 
+    marginBottom: getResponsiveHeight(2),
+  },
+  buttonText: {
+    fontWeight: 'bold',
+    fontSize: getResponsiveFontSize(16),
+  },
+  metaText: {
+    fontSize: getResponsiveFontSize(16),
+    opacity: 0.7,
   },
   sectionContainer: {
     borderRadius: getResponsiveWidth(4),
@@ -324,13 +369,11 @@ const styles = StyleSheet.create({
     lineHeight: getResponsiveFontSize(22),
   },
   bulletContainer: {
-    // marginTop: getResponsiveHeight(1.2),
     gap: getResponsiveHeight(1.2),
   },
   bulletPoint: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    // marginBottom: getResponsiveHeight(1.2),
   },
   bulletIcon: {
     fontSize: getResponsiveFontSize(20),

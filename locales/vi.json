@@ -26,22 +26,28 @@
       "qr.localFetchFailed": "Không tìm thấy dữ liệu QR. Một số tính năng không khả dụng."
     }
   },
-  "quickLoginScreen": {
-    "continue": "Tiếp tục",
-    "usernamePlaceholder": "Tên người dùng",
-    "loggingIn": "Đang đăng nhập...",
-    "passwordPlaceholder": "Mật khẩu",
-    "createAccount": "Tạo tài khoản mới",
-    "useOtherAccount": "Dùng trang cá nhân khác",
-    "errors": {
-      "required": "Vui lòng nhập mật khẩu",
-      "passwordTooShort": "Mật khẩu quá ngắn",
-      "invalidCredentials": "Thông tin đăng nhập không chính xác."
-    }
-  },
+"quickLoginScreen": {
+  "continue": "Tiếp tục",
+  "usernamePlaceholder": "Tên người dùng",
+  "loggingIn": "Đang đăng nhập...",
+  "passwordPlaceholder": "Mật khẩu",
+  "createAccount": "Tạo tài khoản mới",
+  "useOtherAccount": "Dùng trang cá nhân khác",
+  "chooseAccount": "Chọn tài khoản",
+  "switchAccount": "Chuyển tài khoản",
+  "errors": {
+    "required": "Vui lòng nhập mật khẩu",
+    "passwordTooShort": "Mật khẩu quá ngắn",
+    "invalidCredentials": "Thông tin đăng nhập không chính xác.",
+    "quickLoginFailed": "Đăng nhập nhanh thất bại. Vui lòng nhập mật khẩu.",
+    "noAccountSelected": "Vui lòng chọn một tài khoản.",
+    "noUserIDSelected": "Không có tài khoản nào được chọn.",
+    "passwordRequired": "Vui lòng nhập mật khẩu."
+  }
+},
   "quickLoginPrompt": {
     "saveLoginInfo": "Lưu thông tin đăng nhập?",
-    "saveDescription": "Chúng tôi sẽ lưu thông tin đăng nhập của {name} vào bản sao lưu đám mây của thiết bị, để bạn không cần nhập lại trên thiết bị này hoặc bất kỳ thiết bị nào bạn khôi phục.",
+    "saveDescription": "Chúng tôi sẽ lưu thông tin đăng nhập của bạn một cách an toàn trong thiết bị này, để bạn có thể đăng nhập nhanh chóng mà không cần nhập lại mật khẩu trong những lần sau.",
     "save": "Lưu",
     "saving": "Đang lưu...",
     "notNow": "Để sau"
@@ -110,7 +116,7 @@
     }
   },
   "forgotPasswordScreen": {
-    "forgotPassword": "Tìm tài khoản",
+    "forgotPassword": "Bạn quên mật khẩu?",
     "email": "Email",
     "emailPlaceholder": "Nhập email",
     "sendResetLink": "Tiếp tục",

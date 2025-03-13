@@ -268,14 +268,14 @@ export function ThemedButton({
       {loading ? (
         <>
           <ActivityIndicator
-            size={iconSize}
+            size={getResponsiveFontSize(23)}
             color={loadingColor ? loadingColor : textColor}
           />
-          {loadingLabel && (
+          {/* {loadingLabel && (
             <ThemedText style={[styles.label, { color: textColor }, textStyle]} type="defaultSemiBold">
               {loadingLabel}
             </ThemedText>
-          )}
+          )} */}
         </>
       ) : (
         <>
@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
     gap: getResponsiveWidth(1.2),
   },
   label: {
-    fontSize: getResponsiveFontSize(15),
+    fontSize: getResponsiveFontSize(16),
   },
   iconContainer: {
     position: 'relative',

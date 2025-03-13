@@ -157,6 +157,7 @@ const styles = StyleSheet.create({
   titleContainer: {
     position: 'absolute',
     top: getResponsiveHeight(10),
+    // marginTop: getResponsiveHeight(10),
     left: 0,
     right: 0,
   },

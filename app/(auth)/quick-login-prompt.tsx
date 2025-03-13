@@ -1,458 +1,305 @@
-import React, { useState, useRef, useEffect } from 'react';
-import {
-    StyleSheet,
-    View,
-    Keyboard,
-    Platform,
-    TextInput,
-    TouchableOpacity,
-    FlatList,
-    ActivityIndicator
-} from 'react-native';
+import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
+import { StyleSheet, View, Platform, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSelector } from 'react-redux';
-import Avatar from '@zamplyy/react-native-nice-avatar';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedButton } from '@/components/buttons/ThemedButton';
-import { ThemedToast } from '@/components/toast/ThemedToast';
-import { ThemedTextButton } from '@/components/buttons';
-import { Logo } from '@/components/AppLogo';
-import { Colors } from '@/constants/Colors';
+import { ThemedView } from '@/components/ThemedView';
 import { t } from '@/i18n';
-import { attemptAutoLogin } from '@/services/auth';
-import { useTheme } from '@/context/ThemeContext';
+import {
+  getResponsiveFontSize,
+  getResponsiveWidth,
+  getResponsiveHeight,
+} from '@/utils/responsive';
 import { RootState } from '@/store/rootReducer';
 import {
-    getResponsiveFontSize,
-    getResponsiveWidth,
-    getResponsiveHeight
-} from '@/utils/responsive';
-import {
-    getSavedEmail,
-    getRememberMeStatus,
-    //   getAllSavedAccounts 
-} from '@/services/auth';
-import { useLocale } from '@/context/LocaleContext';
+  SECURE_KEYS,
+  MMKV_KEYS,
+  getTemporaryPassword,
+  hasQuickLoginPreference,
+  cleanupTemporaryPassword,
+  getPasswordKeyForUserID,
+} from '@/services/auth/login';
+import * as SecureStore from 'expo-secure-store';
+import { storage } from '@/utils/storage';
+// import Avatar
+import Avatar, { AvatarFullConfig } from '@zamplyy/react-native-nice-avatar';
+// Lazy load the avatar component
+// const Avatar = lazy(() => import('@zamplyy/react-native-nice-avatar'));
 
-// Define a type for saved accounts
-interface SavedAccount {
-    email: string;
-    displayName?: string;
-    avatarUrl?: string;
-    avatarConfig?: any;
+// Interface for quick login preferences
+interface QuickLoginPreferences {
+  [email: string]: boolean;
 }
 
-export default function QuickLoginScreen() {
-    const { currentTheme } = useTheme();
-    const [isToastVisible, setIsToastVisible] = useState(false);
-    const [errorMessage, setErrorMessage] = useState('');
-    const insets = useSafeAreaInsets();
-    const [savedEmail, setSavedEmail] = useState<string | null>(null);
-    const [rememberMe, setRememberMe] = useState<boolean>(false);
-    const [password, setPassword] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const passwordInputRef = useRef<TextInput>(null);
-    const [savedAccounts, setSavedAccounts] = useState<SavedAccount[]>([]);
-    const [selectedAccount, setSelectedAccount] = useState<SavedAccount | null>(null);
-    const [showMultipleAccounts, setShowMultipleAccounts] = useState(false);
-    const { locale, updateLocale } = useLocale();
+export default function QuickLoginPromptScreen() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDeclining, setIsDeclining] = useState(false);
+  const [shouldShowPrompt, setShouldShowPrompt] = useState(true);
 
-    // Get avatar config from Redux store
-    const avatarConfig = useSelector((state: RootState) => state.auth.avatarConfig);
+  const userData = useSelector((state: RootState) => state.auth.user);
+  const avatarConfig = useSelector((state: RootState) => state.auth.user?.avatar) as AvatarFullConfig;
 
-    useEffect(() => {
-        const loadSavedCredentials = async () => {
-            const email = await getSavedEmail();
-            const remember = await getRememberMeStatus();
-            const accounts = await getAllSavedAccounts();
+  // Memoize the avatar configuration to prevent re-renders when other parts of state change
+  const memoizedAvatarConfig = useMemo(() => avatarConfig, [
+    // Only include properties that would affect the visual appearance
+    avatarConfig?.hairColor,
+    avatarConfig?.hatColor,
+    avatarConfig?.faceColor,
+    // Add other critical avatar properties here
+  ]);
 
-            setSavedEmail(email);
-            setRememberMe(remember);
-            setSavedAccounts(accounts);
+  useEffect(() => {
+    // Check if user has already made a decision about quick login
+    const checkQuickLoginPreference = async () => {
+      if (userData?.id) {
+        const hasPreference = await hasQuickLoginPreference(userData.id);
+        if (hasPreference) {
+          // User already made a decision, skip prompt and go to home
+          cleanupTemporaryPassword();
+          router.replace('/(auth)/home');
+        }
+      }
+    };
 
-            // If there are multiple accounts, show the multiple accounts view
-            if (accounts.length > 1) {
-                setShowMultipleAccounts(true);
-            } else if (accounts.length === 1) {
-                setSelectedAccount(accounts[0]);
-            }
+    checkQuickLoginPreference();
+  }, [userData?.id]);
 
-            // If rememberMe is true, focus the password input automatically
-            if (remember && email) {
-                passwordInputRef.current?.focus();
-            }
+  const handleEnableQuickLogin = async () => {
+    setIsLoading(true);
+    try {
+      if (!userData?.id) {
+        throw new Error('User ID not available');
+      }
+
+      // Get temporary password stored during login
+      const password = await getTemporaryPassword();
+      if (!password) {
+        throw new Error('Password not available for quick login setup');
+      }
+
+      // Store userID securely
+      await SecureStore.setItemAsync(SECURE_KEYS.SAVED_USER_ID, userData.id);
+
+      // Store password using the safe key format
+      const passwordKey = getPasswordKeyForUserID(userData.id);
+      await SecureStore.setItemAsync(passwordKey, password);
+
+      // Enable quick login in MMKV
+      storage.set(MMKV_KEYS.QUICK_LOGIN_ENABLED, 'true');
+
+      // Update quick login preferences for this userID
+      const prefsString = storage.getString(MMKV_KEYS.QUICK_LOGIN_PREFERENCES) || '{}';
+      try {
+        const currentPrefs: QuickLoginPreferences = JSON.parse(prefsString);
+        const updatedPrefs = {
+          ...currentPrefs,
+          [userData.id]: true,
         };
 
-        loadSavedCredentials();
-    }, []);
+        storage.set(
+          MMKV_KEYS.QUICK_LOGIN_PREFERENCES,
+          JSON.stringify(updatedPrefs)
+        );
+      } catch (e) {
+        // If parsing fails, create a new preferences object
+        const newPrefs = { [userData.id]: true };
+        storage.set(
+          MMKV_KEYS.QUICK_LOGIN_PREFERENCES,
+          JSON.stringify(newPrefs)
+        );
+      }
 
-    const onDismissToast = () => {
-        setIsToastVisible(false);
-    };
+      // Clean up temporary password
+      await cleanupTemporaryPassword();
 
-    const onNavigateToRegister = () => {
-        Keyboard.dismiss();
-        router.push('/register');
-    };
+      // Navigate to home screen
+      router.replace('/(auth)/home');
+    } catch (error) {
+      console.error('Error setting up quick login:', error);
+      // Navigate to home anyway if there's an error
+      router.replace('/(auth)/home');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    const handleLogin = async () => {
-        Keyboard.dismiss();
-        setIsLoading(true);
-        setErrorMessage(''); // Clear any previous errors
+  const handleDeclineQuickLogin = async () => {
+    setIsDeclining(true); // Set loading state
+    try {
+      if (!userData?.id) {
+        throw new Error('User ID not available');
+      }
 
-        try {
-            const loginSuccess = await attemptAutoLogin(password);
-            if (loginSuccess) {
-                router.replace('/(auth)/home');
-            } else {
-                // Handle the case where auto-login fails (e.g., wrong password)
-                setErrorMessage(t('quickLoginScreen.errors.invalidCredentials'));
-                setIsToastVisible(true);
-            }
-        } catch (error) {
-            const errorAsError = error as Error;
-            setErrorMessage(errorAsError.message); // Show detailed error
-            setIsToastVisible(true);
-        } finally {
-            setIsLoading(false);
-        }
-    };
+      // Update quick login preferences for this userID
+      const prefsString = storage.getString(MMKV_KEYS.QUICK_LOGIN_PREFERENCES) || '{}';
+      try {
+        const currentPrefs: QuickLoginPreferences = JSON.parse(prefsString);
+        const updatedPrefs = {
+          ...currentPrefs,
+          [userData.id]: false,
+        };
 
-    const handleAccountSelect = (account: SavedAccount) => {
-        setSelectedAccount(account);
-        setSavedEmail(account.email);
-        setShowMultipleAccounts(false);
-        // Focus password input after selecting account
-        setTimeout(() => passwordInputRef.current?.focus(), 300);
-    };
+        storage.set(
+          MMKV_KEYS.QUICK_LOGIN_PREFERENCES,
+          JSON.stringify(updatedPrefs)
+        );
+      } catch (e) {
+        // If parsing fails, create a new preferences object
+        const newPrefs = { [userData.id]: false };
+        storage.set(
+          MMKV_KEYS.QUICK_LOGIN_PREFERENCES,
+          JSON.stringify(newPrefs)
+        );
+      }
 
-    const toggleAccountsView = () => {
-        setShowMultipleAccounts(!showMultipleAccounts);
-    };
+      // Clean up temporary password
+      await cleanupTemporaryPassword();
 
-    // Render a single account for the multiple accounts view
-    const renderAccountItem = ({ item }: { item: SavedAccount }) => (
-        <TouchableOpacity
-            style={styles.accountItem}
-            onPress={() => handleAccountSelect(item)}
-        >
-            <View style={styles.accountAvatarContainer}>
-                <LinearGradient
-                    colors={['#ff9a9e', '#fad0c4', '#fad0c4', '#fbc2eb', '#a18cd1']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.accountAvatar}
-                >
-                    {item.avatarConfig ? (
-                        <Avatar size={getResponsiveWidth(12)} {...item.avatarConfig} />
-                    ) : (
-                        <View style={styles.avatarLoadContainer}>
-                            <ActivityIndicator size={getResponsiveFontSize(6)} color="white" />
-                        </View>
-                    )}
-                </LinearGradient>
-            </View>
-            <ThemedText style={styles.accountEmail}>{item.email}</ThemedText>
-        </TouchableOpacity>
-    );
+      // Navigate to home screen
+      router.replace('/(auth)/home');
+    } catch (error) {
+      console.error('Error saving quick login preference:', error);
+      router.replace('/(auth)/home');
+    } finally {
+      setIsLoading(false); // Reset loading state
+    }
+  };
 
-    // Render the multiple accounts view
-    const renderMultipleAccountsView = () => (
-        <View style={styles.multipleAccountsContainer}>
-            {/* Logo */}
-            <View style={styles.logoContainer}>
-                <Logo size={getResponsiveWidth(3.5)} />
-            </View>
+  // Simple placeholder component to show while avatar is loading
+  const AvatarPlaceholder = () => (
+    <View style={[styles.avatar, { backgroundColor: '#f0f0f0', justifyContent: 'center', alignItems: 'center' }]}>
+      <ActivityIndicator color="#a18cd1" />
+    </View>
+  );
 
-            <ThemedText style={styles.accountsTitle}>
-                {t('quickLoginScreen.chooseAccount')}
-            </ThemedText>
+  if (!shouldShowPrompt) {
+    return null;
+  }
 
-            <FlatList
-                data={savedAccounts}
-                renderItem={renderAccountItem}
-                keyExtractor={(item) => item.email}
-                contentContainerStyle={styles.accountsList}
-            />
+  return (
+    <ThemedView style={styles.container}>
+      <View style={styles.contentContainer}>
+        <View style={styles.headerContainer}>
+          <ThemedText type="defaultSemiBold" style={styles.title}>
+            {t('quickLoginPrompt.saveLoginInfo')}
+          </ThemedText>
 
-            <ThemedButton
-                label={t('quickLoginScreen.useOtherAccount')}
-                onPress={() => router.push('/login')}
-                style={styles.otherAccountFullButton}
-                textStyle={styles.otherAccountButtonText}
-                outline
-            />
+          <ThemedText style={styles.description}>
+            {t('quickLoginPrompt.saveDescription')}
+          </ThemedText>
         </View>
-    );
 
-    // Render the single account view
-    const renderSingleAccountView = () => (
-        <View style={styles.contentContainer}>
-            {/* Logo */}
-            <View style={styles.logoContainer}>
-                <Logo size={getResponsiveWidth(3.5)} />
-            </View>
-
-            {/* Avatar */}
-            <View style={styles.avatarContainer}>
-                <LinearGradient
-                    colors={['#ff9a9e', '#fad0c4', '#fad0c4', '#fbc2eb', '#a18cd1']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.gradient}
-                >
-                    {avatarConfig ? (
-                        <Avatar size={getResponsiveWidth(40)} {...avatarConfig} />
-                    ) : (
-                        <View style={styles.avatarLoadContainer}>
-                            <ActivityIndicator size={getResponsiveFontSize(20)} color="white" />
-                        </View>
-                    )}
-                </LinearGradient>
-            </View>
-
-            {/* Username */}
-            <ThemedText style={styles.usernamePlaceholder}>
-                {savedEmail || t('quickLoginScreen.usernamePlaceholder')}
-            </ThemedText>
-
-            {/* Hidden Password Input */}
-            <TextInput
-                ref={passwordInputRef}
-                style={styles.passwordInput}
-                placeholder={t('quickLoginScreen.passwordPlaceholder')}
-                secureTextEntry
-                value={password}
-                onChangeText={setPassword}
-                onSubmitEditing={handleLogin}
-                placeholderTextColor={
-                    currentTheme === 'light'
-                        ? Colors.light.placeholderText
-                        : Colors.dark.placeholderText
-                }
-            />
-
-            {/* Continue Button */}
-            <ThemedButton
-                label={t('quickLoginScreen.continue')}
-                onPress={handleLogin}
-                loading={isLoading}
-                loadingLabel={t('quickLoginScreen.loggingIn')}
-                style={styles.continueButton}
-                textStyle={styles.continueButtonText}
-            />
-
-            {/* Other Actions */}
-            <View style={styles.otherActionsContainer}>
-                {savedAccounts.length > 1 ? (
-                    <ThemedTextButton
-                        label={t('quickLoginScreen.switchAccount')}
-                        onPress={toggleAccountsView}
-                        style={styles.otherAccountButton}
-                        textStyle={styles.otherAccountButtonText}
-                    />
-                ) : (
-                    <ThemedTextButton
-                        label={t('quickLoginScreen.useOtherAccount')}
-                        onPress={() => router.push('/login')}
-                        style={styles.otherAccountButton}
-                        textStyle={styles.otherAccountButtonText}
-                    />
-                )}
-            </View>
-        </View>
-    );
-
-    return (
-        <View
-            style={[
-                styles.container,
-                {
-                    backgroundColor:
-                        currentTheme === 'light'
-                            ? Colors.light.background
-                            : Colors.dark.background,
-                    paddingTop: insets.top,
-                },
-            ]}
-        >
-            {/* Main Content - Either Multiple Accounts or Single Account View */}
-            {showMultipleAccounts
-                ? renderMultipleAccountsView()
-                : renderSingleAccountView()}
-
-            {/* Footer */}
-            <View style={styles.appNameContainer}>
-                <ThemedButton
-                    label={t('loginScreen.registerNow')}
-                    onPress={onNavigateToRegister}
-                    style={styles.createAccountButton}
-                    textStyle={styles.createAccountButtonText}
-                    outline
+        <View style={styles.avatarContainer}>
+          <LinearGradient
+            colors={['#ff9a9e', '#fad0c4', '#fad0c4', '#fbc2eb', '#a18cd1']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.gradient}
+          >
+            {memoizedAvatarConfig && (
+              <Suspense fallback={<AvatarPlaceholder />}>
+                <Avatar
+                  style={styles.avatar}
+                  size={getResponsiveWidth(40)}
+                  {...memoizedAvatarConfig}
                 />
-                <ThemedText type="defaultSemiBold" style={styles.metaText}>
-                    {t('common.appName')}
-                </ThemedText>
-            </View>
-
-            {/* Toast for errors */}
-            <ThemedToast
-                duration={5000}
-                message={errorMessage}
-                isVisible={isToastVisible}
-                onDismiss={onDismissToast}
-                style={styles.toastContainer}
-                iconName="error"
-                onVisibilityToggle={setIsToastVisible}
-            />
+              </Suspense>
+            )}
+          </LinearGradient>
         </View>
-    );
+      </View>
+
+      <View style={styles.buttonContainer}>
+        <ThemedButton
+          label={t('quickLoginPrompt.save')}
+          style={styles.saveButton}
+          onPress={handleEnableQuickLogin}
+          loading={isLoading}
+          loadingLabel={t('quickLoginPrompt.saving')}
+          textStyle={styles.saveButtonText}
+        />
+
+        <ThemedButton
+          label={t('quickLoginPrompt.notNow')}
+          style={styles.notNowButton}
+          onPress={handleDeclineQuickLogin}
+          textStyle={styles.notNowButtonText}
+          loading={isDeclining} // Add loading prop
+          loadingLabel={t('quickLoginPrompt.saving')} // Optional: Add loading label
+          outline
+        />
+
+      </View>
+    </ThemedView>
+  );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        paddingHorizontal: getResponsiveWidth(3.6),
-        justifyContent: 'space-between',
-    },
-    contentContainer: {
-        flex: 1,
-        alignItems: 'center',
-    },
-    logoContainer: {
-        alignItems: 'center',
-        marginTop: getResponsiveHeight(10),
-        marginBottom: getResponsiveHeight(6),
-        width: '100%',
-    },
-    avatarContainer: {
-        width: getResponsiveWidth(40),
-        aspectRatio: 1,
-        borderRadius: getResponsiveWidth(20),
-        marginBottom: getResponsiveHeight(3),
-        overflow: 'hidden',
-    },
-    gradient: {
-        width: '100%',
-        height: '100%',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    avatarLoadContainer: {
-        width: '100%',
-        height: '100%',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    usernamePlaceholder: {
-        fontSize: getResponsiveFontSize(20),
-        fontWeight: '600',
-        marginBottom: getResponsiveHeight(3),
-        textAlign: 'center',
-    },
-    passwordInput: {
-        height: 0,
-        width: 0,
-        opacity: 0,
-        position: 'absolute',
-    },
-    continueButton: {
-        width: '100%',
-        height: getResponsiveHeight(6),
-        marginBottom: getResponsiveHeight(2),
-    },
-    continueButtonText: {
-        fontWeight: 'bold',
-        fontSize: getResponsiveFontSize(16),
-    },
-    otherActionsContainer: {
-        alignItems: 'center',
-        marginTop: getResponsiveHeight(1),
-    },
-    otherAccountButton: {
-        paddingVertical: getResponsiveHeight(1),
-    },
-    otherAccountButtonText: {
-        fontWeight: 'bold',
-        textAlign: 'center',
-        opacity: 0.7,
-        fontSize: getResponsiveFontSize(16),
-    },
-    appNameContainer: {
-        alignItems: 'center',
-        marginBottom: Platform.OS === 'ios' ? getResponsiveHeight(4) : getResponsiveHeight(3),
-        paddingBottom: Platform.OS === 'android' ? getResponsiveHeight(1) : 0,
-        width: '100%',
-    },
-    metaText: {
-        fontSize: getResponsiveFontSize(16),
-        opacity: 0.7,
-    },
-    createAccountButton: {
-        borderRadius: getResponsiveWidth(8),
-        height: getResponsiveHeight(6),
-        width: '100%',
-        marginBottom: getResponsiveHeight(2),
-    },
-    createAccountButtonText: {
-        fontSize: getResponsiveFontSize(16),
-        fontWeight: 'bold',
-    },
-    toastContainer: {
-        position: 'absolute',
-        bottom: getResponsiveHeight(1.8),
-        left: 0,
-        right: 0,
-        marginHorizontal: getResponsiveWidth(3.6),
-    },
+  container: {
+    flex: 1,
+    paddingHorizontal: getResponsiveWidth(3.6),
+    justifyContent: 'space-between',
+  },
+  contentContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerContainer: {
+    alignItems: 'center',
+    marginBottom: getResponsiveHeight(6),
+    paddingHorizontal: getResponsiveWidth(2),
+  },
+  title: {
+    fontSize: getResponsiveFontSize(24),
+    lineHeight: getResponsiveFontSize(32),
+    marginBottom: getResponsiveHeight(2),
+    textAlign: 'center',
+  },
+  description: {
+    fontSize: getResponsiveFontSize(16),
+    textAlign: 'center',
+    lineHeight: getResponsiveFontSize(24),
+    opacity: 0.8,
+  },
+  avatarContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  gradient: {
+    borderRadius: getResponsiveWidth(40),
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: getResponsiveWidth(1.2),
+  },
+  avatar: {
+    borderRadius: getResponsiveWidth(40),
+    overflow: 'hidden',
+    width: getResponsiveWidth(40),
+    height: getResponsiveWidth(40),
+  },
+  buttonContainer: {
+    width: '100%',
+    marginBottom: Platform.OS === 'ios' ? getResponsiveHeight(4) : getResponsiveHeight(3),
+    paddingBottom: Platform.OS === 'android' ? getResponsiveHeight(1) : 0,
+    gap: getResponsiveHeight(1.5),
+  },
+  saveButton: {
 
-    // Multiple accounts view styles
-    multipleAccountsContainer: {
-        flex: 1,
-        width: '100%',
-    },
-    accountsTitle: {
-        fontSize: getResponsiveFontSize(22),
-        fontWeight: 'bold',
-        marginBottom: getResponsiveHeight(3),
-        textAlign: 'center',
-    },
-    accountsList: {
-        paddingBottom: getResponsiveHeight(2),
-    },
-    accountItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: getResponsiveHeight(1.5),
-        paddingHorizontal: getResponsiveWidth(2),
-        borderRadius: getResponsiveWidth(2),
-        marginBottom: getResponsiveHeight(1),
-        borderBottomWidth: 1,
-        borderBottomColor: 'rgba(0,0,0,0.1)',
-    },
-    accountAvatarContainer: {
-        width: getResponsiveWidth(12),
-        height: getResponsiveWidth(12),
-        borderRadius: getResponsiveWidth(6),
-        overflow: 'hidden',
-        marginRight: getResponsiveWidth(3),
-    },
-    accountAvatar: {
-        width: '100%',
-        height: '100%',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    accountEmail: {
-        fontSize: getResponsiveFontSize(16),
-        flex: 1,
-    },
-    otherAccountFullButton: {
-        width: '100%',
-        height: getResponsiveHeight(6),
-        marginTop: getResponsiveHeight(2),
-    },
+    borderRadius: getResponsiveWidth(8),
+  },
+  saveButtonText: {
+    fontWeight: 'bold',
+    fontSize: getResponsiveFontSize(16),
+  },
+  notNowButton: {
+
+    borderRadius: getResponsiveWidth(8),
+  },
+  notNowButtonText: {
+    fontSize: getResponsiveFontSize(16),
+  },
 });

@@ -1,34 +1,38 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { StyleSheet, View, Keyboard, Pressable, Platform } from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { Formik } from 'formik';
-import { router } from 'expo-router';
+import React, { useEffect, useState, useCallback, useRef } from "react";
+import { StyleSheet, View, Keyboard, Pressable, Platform } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { Formik } from "formik";
+import { router } from "expo-router";
 
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedInput } from '@/components/Inputs/ThemedInput';
-import { ThemedButton } from '@/components/buttons/ThemedButton';
-import { ThemedTextButton } from '@/components/buttons/ThemedTextButton';
-import { ThemedToast } from '@/components/toast/ThemedToast';
-import { Colors } from '@/constants/Colors';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/store/rootReducer';
-import { t } from '@/i18n';
-import { loginSchema } from '@/utils/validationSchemas';
-import { login } from '@/services/auth';
-import { useLocale } from '@/context/LocaleContext';
-import { useTheme } from '@/context/ThemeContext';
-import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
-import { Logo } from '@/components/AppLogo';
-import GB from '@/assets/svgs/GB.svg';
-import VN from '@/assets/svgs/VN.svg';
-import RU from '@/assets/svgs/RU.svg';
-import { MaterialIcons } from '@expo/vector-icons';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useMMKVString, useMMKVObject } from 'react-native-mmkv';
-import ThemedReuseableSheet from '@/components/bottomsheet/ThemedReusableSheet';
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedInput } from "@/components/Inputs/ThemedInput";
+import { ThemedButton } from "@/components/buttons/ThemedButton";
+import { ThemedTextButton } from "@/components/buttons/ThemedTextButton";
+import { ThemedToast } from "@/components/toast/ThemedToast";
+import { Colors } from "@/constants/Colors";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/rootReducer";
+import { t } from "@/i18n";
+import { loginSchema } from "@/utils/validationSchemas";
+import { login, hasQuickLoginPreference } from "@/services/auth";
+import { useLocale } from "@/context/LocaleContext";
+import { useTheme } from "@/context/ThemeContext";
+import {
+  getResponsiveFontSize,
+  getResponsiveWidth,
+  getResponsiveHeight,
+} from "@/utils/responsive";
+import { Logo } from "@/components/AppLogo";
+import GB from "@/assets/svgs/GB.svg";
+import VN from "@/assets/svgs/VN.svg";
+import RU from "@/assets/svgs/RU.svg";
+import { MaterialIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useMMKVString } from "react-native-mmkv";
+import ThemedReuseableSheet from "@/components/bottomsheet/ThemedReusableSheet";
 
 // Define the valid language keys
-type LanguageKey = 'vi' | 'ru' | 'en';
+type LanguageKey = "vi" | "ru" | "en";
 
 // Define the LanguageOption type
 interface LanguageOption {
@@ -36,38 +40,67 @@ interface LanguageOption {
   flag: React.ReactNode;
 }
 
-// Interface for quick login preferences
-interface QuickLoginPreferences {
-  [email: string]: boolean;
-}
-
 // Use the LanguageKey type in the languageOptions object
 const languageOptions: Record<LanguageKey, LanguageOption> = {
-  vi: { label: 'Tiếng Việt', flag: <VN width={getResponsiveWidth(7.2)} height={getResponsiveHeight(3)} /> },
-  ru: { label: 'Русский', flag: <RU width={getResponsiveWidth(7.2)} height={getResponsiveHeight(3)} /> },
-  en: { label: 'English', flag: <GB width={getResponsiveWidth(7.2)} height={getResponsiveHeight(3)} /> },
+  vi: {
+    label: "Tiếng Việt",
+    flag: (
+      <VN
+        width={getResponsiveWidth(7.2)}
+        height={getResponsiveHeight(3)}
+      />
+    ),
+  },
+  ru: {
+    label: "Русский",
+    flag: (
+      <RU
+        width={getResponsiveWidth(7.2)}
+        height={getResponsiveHeight(3)}
+      />
+    ),
+  },
+  en: {
+    label: "English",
+    flag: (
+      <GB
+        width={getResponsiveWidth(7.2)}
+        height={getResponsiveHeight(3)}
+      />
+    ),
+  },
 };
 
 export default function LoginScreen() {
   const { locale, updateLocale } = useLocale();
-  const [storedLocale, setStoredLocale] = useMMKVString('locale');
+  const [storedLocale, setStoredLocale] = useMMKVString("locale");
   const { currentTheme } = useTheme();
-  const cardColor = currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground;
-  const authRefreshError = useSelector((state: RootState) => state.error.message);
+  const cardColor =
+    currentTheme === "light"
+      ? Colors.light.cardBackground
+      : Colors.dark.cardBackground;
+  const authRefreshError = useSelector(
+    (state: RootState) => state.error.message
+  );
   const [isToastVisible, setIsToastVisible] = useState(false);
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState("");
   const bottomSheetRef = useRef<any>(null);
   const scrollViewRef = useRef<KeyboardAwareScrollView>(null);
-  const [quickLoginPrefs] = useMMKVObject<QuickLoginPreferences>('quickLoginPreferences');
 
   useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
-      setKeyboardVisible(true);
-    });
-    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
-      setKeyboardVisible(false);
-    });
+    const keyboardDidShowListener = Keyboard.addListener(
+      "keyboardDidShow",
+      () => {
+        setKeyboardVisible(true);
+      }
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      "keyboardDidHide",
+      () => {
+        setKeyboardVisible(false);
+      }
+    );
 
     return () => {
       keyboardDidHideListener.remove();
@@ -88,12 +121,12 @@ export default function LoginScreen() {
 
   const onNavigateToRegister = () => {
     Keyboard.dismiss();
-    router.push('/register');
+    router.push("/register");
   };
 
   const onNavigateToForgot = () => {
     Keyboard.dismiss();
-    router.push('/forgot-password');
+    router.push("/forgot-password");
   };
 
   const handleLanguageChange = useCallback(
@@ -117,18 +150,25 @@ export default function LoginScreen() {
   };
 
   const renderLanguageOptions = () => {
-    const colors = currentTheme === 'light' ? Colors.light.icon : Colors.dark.icon;
-    const textColors = currentTheme === 'light' ? Colors.light.text : Colors.dark.text;
+    const colors =
+      currentTheme === "light" ? Colors.light.icon : Colors.dark.icon;
+    const textColors =
+      currentTheme === "light" ? Colors.light.text : Colors.dark.text;
 
     return (
-      <View style={[styles.languageOptionsContainer, { backgroundColor: cardColor }]}>
+      <View
+        style={[
+          styles.languageOptionsContainer,
+          { backgroundColor: cardColor },
+        ]}
+      >
         {Object.entries(languageOptions).map(([key, { label, flag }]) => (
-          <Pressable 
-            key={key} 
-            onPress={() => handleLanguageChange(key as LanguageKey)} 
-            style={({pressed}) => [
+          <Pressable
+            key={key}
+            onPress={() => handleLanguageChange(key as LanguageKey)}
+            style={({ pressed }) => [
               styles.languageOption,
-              pressed && styles.pressedItem
+              pressed && styles.pressedItem,
             ]}
           >
             <View style={styles.leftSectionContainer}>
@@ -136,15 +176,19 @@ export default function LoginScreen() {
               <ThemedText style={{ color: textColors }}>{label}</ThemedText>
             </View>
             {storedLocale === key && (
-              <MaterialIcons name="check" size={getResponsiveFontSize(18)} color={colors} />
+              <MaterialIcons
+                name="check"
+                size={getResponsiveFontSize(18)}
+                color={colors}
+              />
             )}
           </Pressable>
         ))}
-        <Pressable 
-          onPress={handleSystemLocale} 
-          style={({pressed}) => [
+        <Pressable
+          onPress={handleSystemLocale}
+          style={({ pressed }) => [
             styles.languageOption,
-            pressed && styles.pressedItem
+            pressed && styles.pressedItem,
           ]}
         >
           <View style={styles.leftSectionContainer}>
@@ -153,10 +197,16 @@ export default function LoginScreen() {
               size={getResponsiveFontSize(18)}
               color={colors}
             />
-            <ThemedText style={{ color: textColors }}>{t('languageScreen.system')}</ThemedText>
+            <ThemedText style={{ color: textColors }}>
+              {t("languageScreen.system")}
+            </ThemedText>
           </View>
           {storedLocale === undefined && (
-            <MaterialIcons name="check" size={getResponsiveFontSize(18)} color={colors} />
+            <MaterialIcons
+              name="check"
+              size={getResponsiveFontSize(18)}
+              color={colors}
+            />
           )}
         </Pressable>
       </View>
@@ -165,20 +215,23 @@ export default function LoginScreen() {
 
   return (
     <Formik
-      initialValues={{ email: '', password: '' }}
+      initialValues={{ email: "", password: "" }}
       validationSchema={loginSchema}
       onSubmit={async (values, { setSubmitting }) => {
         setSubmitting(true);
         try {
-          await login(values.email, values.password);
-          
+          // Login with the provided credentials
+          const authData = await login(values.email, values.password);
+
           // Check if user has already made a decision about quick login
-          if (quickLoginPrefs && quickLoginPrefs[values.email] !== undefined) {
+          const hasPreference = await hasQuickLoginPreference(authData.record.id); // Use userID instead of email
+
+          if (hasPreference) {
             // User has already decided, go directly to home
-            router.replace('/(auth)/home');
+            router.replace("/(auth)/home");
           } else {
             // User hasn't decided yet, show the quick login prompt
-            router.replace('/(auth)/quick-login-prompt');
+            router.replace("/(auth)/quick-login-prompt");
           }
         } catch (error) {
           const errorAsError = error as Error;
@@ -189,13 +242,28 @@ export default function LoginScreen() {
         }
       }}
     >
-      {({ handleChange, handleBlur, handleSubmit, values, errors, touched, isSubmitting }) => (
+      {({
+        handleChange,
+        handleBlur,
+        handleSubmit,
+        values,
+        errors,
+        touched,
+        isSubmitting,
+      }) => (
         <KeyboardAwareScrollView
           ref={scrollViewRef}
           keyboardShouldPersistTaps="handled"
-          style={{ backgroundColor: currentTheme === 'light' ? Colors.light.background : Colors.dark.background }}
+          style={{
+            backgroundColor:
+              currentTheme === "light"
+                ? Colors.light.background
+                : Colors.dark.background,
+          }}
           contentContainerStyle={styles.container}
-          extraScrollHeight={Platform.OS === 'ios' ? getResponsiveHeight(4) : 0}
+          extraScrollHeight={
+            Platform.OS === "ios" ? getResponsiveHeight(4) : 0
+          }
           enableOnAndroid={true}
           enableResetScrollToCoords={false}
           showsVerticalScrollIndicator={false}
@@ -206,8 +274,13 @@ export default function LoginScreen() {
             <View style={styles.languageSelectorContainer}>
               <ThemedTextButton
                 onPress={toggleLanguageDropdown}
-                label={storedLocale ? (languageOptions[storedLocale as LanguageKey]?.label || t('languageScreen.system')) : t('languageScreen.system')}
-                rightIconName='chevron-down'
+                label={
+                  storedLocale
+                    ? languageOptions[storedLocale as LanguageKey]?.label ||
+                    t("languageScreen.system")
+                    : t("languageScreen.system")
+                }
+                rightIconName="chevron-down"
               />
             </View>
 
@@ -219,38 +292,46 @@ export default function LoginScreen() {
             {/* Input Fields */}
             <View style={styles.inputsWrapper}>
               <ThemedInput
-                placeholder={t('loginScreen.emailPlaceholder')}
-                onChangeText={handleChange('email')}
+                placeholder={t("loginScreen.email")}
+                onChangeText={handleChange("email")}
                 isError={touched.email && errors.email ? true : false}
-                onBlur={handleBlur('email')}
+                onBlur={handleBlur("email")}
                 value={values.email}
-                errorMessage={touched.email && errors.email ? t(`loginScreen.errors.${errors.email}`) : ''}
+                errorMessage={
+                  touched.email && errors.email
+                    ? t(`loginScreen.errors.${errors.email}`)
+                    : ""
+                }
                 disabled={isSubmitting}
-                disableOpacityChange={true}
+                 disableOpacityChange={false}
               />
 
               <ThemedInput
-                placeholder={t('loginScreen.passwordPlaceholder')}
+                placeholder={t("loginScreen.password")}
                 secureTextEntry={true}
-                onChangeText={handleChange('password')}
+                onChangeText={handleChange("password")}
                 isError={touched.password && errors.password ? true : false}
-                onBlur={handleBlur('password')}
+                onBlur={handleBlur("password")}
                 value={values.password}
-                errorMessage={touched.password && errors.password ? t(`loginScreen.errors.${errors.password}`) : ''}
+                errorMessage={
+                  touched.password && errors.password
+                    ? t(`loginScreen.errors.${errors.password}`)
+                    : ""
+                }
                 disabled={isSubmitting}
-                disableOpacityChange={true}
+                 disableOpacityChange={false}
               />
             </View>
 
             {/* Login Button */}
             <ThemedButton
-              label={t('loginScreen.login')}
+              label={t("loginScreen.login")}
               style={styles.loginButton}
               onPress={() => {
                 Keyboard.dismiss();
                 handleSubmit();
               }}
-              loadingLabel={t('loginScreen.loggingIn')}
+              loadingLabel={t("loginScreen.loggingIn")}
               loading={isSubmitting}
               textStyle={styles.loginButtonText}
             />
@@ -258,22 +339,24 @@ export default function LoginScreen() {
             {/* Forgot Password */}
             <View style={styles.forgotButtonContainer}>
               <ThemedTextButton
-                label={t('loginScreen.forgotPassword')}
+                label={t("loginScreen.forgotPassword")}
                 onPress={onNavigateToForgot}
-                style={{opacity: 0.7}}
+                style={{ opacity: 0.6 }}
               />
             </View>
           </View>
 
           <View style={styles.appNameContainer}>
             <ThemedButton
-              label={t('loginScreen.registerNow')}
+              label={t("loginScreen.registerNow")}
               onPress={onNavigateToRegister}
               style={styles.createAccountButton}
               textStyle={styles.createAccountButtonText}
               outline
             />
-            <ThemedText type='defaultSemiBold' style={styles.metaText}>{t('common.appName')}</ThemedText>
+            <ThemedText type="defaultSemiBold" style={styles.metaText}>
+              {t("common.appName")}
+            </ThemedText>
           </View>
 
           {/* Toast for errors */}
@@ -286,14 +369,14 @@ export default function LoginScreen() {
             onVisibilityToggle={setIsToastVisible}
             iconName="error"
           />
-          
+
           {/* Bottom Sheet for Language Selection */}
           <ThemedReuseableSheet
             ref={bottomSheetRef}
-            title={t('loginScreen.selectLanguage')}
-            snapPoints={['40%']}
+            title={t("loginScreen.selectLanguage")}
+            snapPoints={["40%"]}
             showCloseButton={true}
-            contentType='custom'
+            contentType="custom"
             customContent={renderLanguageOptions()}
           />
         </KeyboardAwareScrollView>
@@ -306,57 +389,53 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     paddingHorizontal: getResponsiveWidth(3.6),
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
   },
   contentContainer: {
     flex: 1,
   },
   languageSelectorContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: getResponsiveHeight(10),
   },
   logoContainer: {
-    alignItems: 'center',
-    marginTop: getResponsiveHeight(6),
-    marginBottom: getResponsiveHeight(6),
+    alignItems: "center",
+    marginVertical: getResponsiveHeight(6),
   },
   inputsWrapper: {
     gap: getResponsiveHeight(2),
-    width: '100%',
-    marginBottom: getResponsiveHeight(2.5),
+    width: "100%",
+    marginBottom: getResponsiveHeight(2),
   },
   loginButton: {
-    height: getResponsiveHeight(6),
+ 
     marginBottom: getResponsiveHeight(2),
   },
   loginButtonText: {
-    fontWeight: 'bold',
   },
   forgotButtonContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: getResponsiveHeight(4),
+    marginTop: getResponsiveHeight(2),
   },
   createAccountButton: {
     borderRadius: getResponsiveWidth(8),
-    height: getResponsiveHeight(6),
-    width: '100%',
+ 
+    width: "100%",
     marginBottom: getResponsiveHeight(2),
   },
   createAccountButtonText: {
-    fontSize: getResponsiveFontSize(16),
-    fontWeight: 'bold',
   },
   appNameContainer: {
-    alignItems: 'center',
-    marginBottom: Platform.OS === 'ios' ? getResponsiveHeight(4) : getResponsiveHeight(3),
-    paddingBottom: Platform.OS === 'android' ? getResponsiveHeight(1) : 0,
+    alignItems: "center",
+    marginBottom: Platform.OS === "ios" ? getResponsiveHeight(4) : getResponsiveHeight(3),
+    paddingBottom: Platform.OS === "android" ? getResponsiveHeight(1) : 0,
   },
   metaText: {
-    fontSize: getResponsiveFontSize(16),
     opacity: 0.7,
   },
   toastContainer: {
-    position: 'absolute',
+    position: "absolute",
     bottom: getResponsiveHeight(1.8),
     left: 0,
     right: 0,
@@ -366,9 +445,9 @@ const styles = StyleSheet.create({
     width: getResponsiveWidth(4.8),
     aspectRatio: 1,
     borderRadius: getResponsiveWidth(12),
-    justifyContent: 'center',
-    alignItems: 'center',
-    overflow: 'hidden',
+    justifyContent: "center",
+    alignItems: "center",
+    overflow: "hidden",
   },
   languageOptionsContainer: {
     marginVertical: getResponsiveHeight(1),
@@ -376,20 +455,20 @@ const styles = StyleSheet.create({
     borderRadius: getResponsiveWidth(4),
   },
   languageOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     borderRadius: getResponsiveWidth(2),
     paddingHorizontal: getResponsiveWidth(4.8),
     paddingVertical: getResponsiveHeight(1.8),
   },
   pressedItem: {
     opacity: 0.7,
-    backgroundColor: Platform.OS === 'ios' ? 'rgba(0,0,0,0.05)' : 'rgba(0,0,0,0.1)',
+    backgroundColor: Platform.OS === "ios" ? "rgba(0,0,0,0.05)" : "rgba(0,0,0,0.1)",
   },
   leftSectionContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: getResponsiveWidth(2.4),
   },
 });
