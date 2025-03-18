@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     justifyContent: 'space-around',
     alignItems: 'center',
-    marginBottom: getResponsiveHeight(3.6),
+    marginBottom: getResponsiveHeight(2),
   },
   descriptionItem: {
     alignItems: 'center',

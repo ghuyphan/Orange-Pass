@@ -54,92 +54,45 @@ export function ThemedEmptyCard({
   menuMode = 'elevated',
 }: ThemedEmptyCardProps) {
   const { currentTheme: colorScheme } = useTheme();
-  const [visible, setVisible] = useState(false);
+  const [isMenuVisible, setIsMenuVisible] = useState(false);
   const buttonRef = useRef(null);
-  const textcolor = useThemeColor({ light: lightColor, dark: darkColor }, 'icon');
-
-  const openMenu = () => setVisible(true);
-  const closeMenu = () => setVisible(false);
+  const textColor = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
 
   const colors = useMemo(() => ({
     text: colorScheme === 'light' ? Colors.light.text : Colors.dark.text,
     buttonBackground: colorScheme === 'light' ? Colors.light.buttonBackground : Colors.dark.buttonBackground,
     cardBackground: colorScheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground,
     cardFooter: colorScheme === 'light' ? Colors.light.cardFooter : Colors.dark.cardFooter,
-    // dropdownItem: colorScheme === 'light' ? Colors.light.surface : Colors.dark.surface,
   }), [colorScheme]);
 
-  // Define styles within the component, but outside the render return
-  const styles = useMemo(() => {
-    const baseStyles = createThemedEmptyCardStyles(paddingTop);
-    return StyleSheet.create({
-      ...baseStyles, // Spread base styles
-      dropdownItem: {
-        gap: getResponsiveWidth(2),
-        ...baseStyles.dropdownItem,
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: getResponsiveHeight(1.2),
-        paddingHorizontal: getResponsiveWidth(2.4),
-      },
-      dropdownItemText: {
-        ...baseStyles.dropdownItemText,
-        fontSize: getResponsiveFontSize(15),
-        // marginLeft: getResponsiveWidth(2), // Consistent margin
-      },
-      dropdownIcon: {
-        ...baseStyles.dropdownIcon,
-        // marginRight: getResponsiveWidth(2),
-      },
-    });
-  }, [paddingTop, colorScheme]);  // Add colorScheme as dependency
+  const styles = useMemo(() => createThemedEmptyCardStyles(paddingTop), [paddingTop]);
 
-  const cardContainerStyle = useMemo(
-    () => [
-      {
-        backgroundColor: colors.cardBackground,
-        borderRadius: getResponsiveWidth(4),
-      },
-      style,
-    ],
-    [colors.cardBackground, style]
-  );
+  const cardContainerStyle = useMemo(() => [
+    { backgroundColor: colors.cardBackground, borderRadius: getResponsiveWidth(4) },
+    style,
+  ], [colors.cardBackground, style]);
 
-  const footerBackground = useMemo(
-    () => ({
-      backgroundColor: colors.cardFooter,
-    }),
-    [colors.cardFooter]
-  );
+  const footerBackground = useMemo(() => ({ backgroundColor: colors.cardFooter }), [colors.cardFooter]);
 
   const handleButtonPress = () => {
-    if (dropdownOptions && dropdownOptions.length > 0) {
-      openMenu();
-    } else if (buttonOnPress) {
-      buttonOnPress();
+    if (dropdownOptions?.length > 0) {
+      setIsMenuVisible(true);
+    } else {
+      buttonOnPress?.();
     }
   };
+
   const renderDropdownItem = (option: { label: string; onPress: () => void; testID?: string; icon?: string }, index: number) => (
     <Pressable
       key={index}
-      style={({ pressed }) => [
-        styles.dropdownItem,
-      ]}
+      style={styles.dropdownItem}
       onPress={() => {
         option.onPress();
-        closeMenu();
+        setIsMenuVisible(false);
       }}
       testID={option.testID}
     >
-      {/* {option.icon && (
-            <MaterialCommunityIcons
-              name={option.icon}
-              size={getResponsiveFontSize(18)}
-              color={textcolor}
-              style={styles.dropdownIcon}
-            />
-          )} */}
-      <ThemedText type="defaultSemiBold" numberOfLines={1} style={[styles.dropdownItemText, { color: textcolor }]}>
+      <ThemedText type="defaultSemiBold" numberOfLines={1} style={[styles.dropdownItemText, { color: textColor }]}>
         {t(option.label)}
       </ThemedText>
     </Pressable>
@@ -154,11 +107,7 @@ export function ThemedEmptyCard({
     >
       <ThemedView style={cardContainerStyle}>
         <View style={styles.cardHeaderContainer}>
-          <ThemedText
-            style={[styles.label, { color: colors.text }]}
-            type="title"
-            numberOfLines={2}
-          >
+          <ThemedText style={[styles.label, { color: colors.text }]} type="title" numberOfLines={2}>
             {t(headerLabel)}
           </ThemedText>
         </View>
@@ -173,26 +122,20 @@ export function ThemedEmptyCard({
         </View>
 
         <View style={[styles.cardFooterContainer, footerBackground, footerStyle]}>
-          <ThemedText numberOfLines={1}>
-            {t(footerLabel)}
-          </ThemedText>
+          <ThemedText style={{fontSize: getResponsiveFontSize(16)}} numberOfLines={1}>{t(footerLabel)}</ThemedText>
           {showFooterButton && (
             <Menu
-              visible={visible}
-              onDismiss={closeMenu}
+              visible={isMenuVisible}
+              onDismiss={() => setIsMenuVisible(false)}
               anchor={
                 <ThemedButton
                   ref={buttonRef}
                   label={t(footButtonLabel)}
                   onPress={handleButtonPress}
-                  style={[
-                    styles.cardFooterButton,
-                    { backgroundColor: colors.buttonBackground },
-                  ]}
+                  style={[styles.cardFooterButton, { backgroundColor: colors.buttonBackground }]}
                 />
               }
-              elevation={0}
-              anchorPosition='bottom'
+              anchorPosition="bottom"
               style={menuStyle}
               contentStyle={[{ borderRadius: getResponsiveWidth(6), backgroundColor: colors.buttonBackground, paddingHorizontal: getResponsiveWidth(2.4) }, menuContentStyle]}
               mode={menuMode}
@@ -200,7 +143,6 @@ export function ThemedEmptyCard({
               {dropdownOptions.map(renderDropdownItem)}
             </Menu>
           )}
-
         </View>
       </ThemedView>
     </Pressable>
@@ -242,13 +184,13 @@ const createThemedEmptyCardStyles = (paddingTop?: number) => StyleSheet.create({
     paddingHorizontal: getResponsiveWidth(4.8),
   },
   dropdownItem: {
-    // Placeholder, styles will be overridden in the useMemo hook
+    gap: getResponsiveWidth(2),
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: getResponsiveHeight(1.2),
+    paddingHorizontal: getResponsiveWidth(2.4),
   },
   dropdownItemText: {
-    // Placeholder
-
-  },
-  dropdownIcon: {
-    // Placeholder
+    fontSize: getResponsiveFontSize(15),
   },
 });

@@ -135,7 +135,7 @@ const DetailScreen = () => {
 
     setTimeout(() => {
       loadBanks();
-    }, 300);
+    }, 200);
   }, [item?.type]);
 
   const handleExpandPress = useCallback(() => {
@@ -290,8 +290,8 @@ const DetailScreen = () => {
       }
 
       setIsSyncing(true);
-      setIsToastVisible(true);
-      setToastMessage(t('detailsScreen.generatingQRCode'));
+      // setIsToastVisible(true);
+      // setToastMessage(t('detailsScreen.generatingQRCode'));
 
       try {
         const itemName = returnItemData(item.code, item.type);
@@ -402,11 +402,12 @@ const DetailScreen = () => {
         },
       ]}
       contentContainerStyle={styles.container}
-      // extraScrollHeight={getResponsiveHeight(12)}  // Consider adding this back *if* content is obscured.
-      // extraHeight={getResponsiveHeight(24)}      //  Less likely to be needed.
+      extraScrollHeight={getResponsiveHeight(10)} // Adjust this value
+      extraHeight={getResponsiveHeight(20)} // Adjust this value
       enableOnAndroid
       showsVerticalScrollIndicator={false}
     >
+
       <View style={styles.headerWrapper}>
         <ThemedButton onPress={router.back} iconName="chevron-left" />
         <ThemedButton onPress={handleExpandPress} iconName="dots-vertical" />
@@ -527,11 +528,15 @@ const DetailScreen = () => {
                     onPress={handleTransferAmount}
                     style={[styles.transferButton, { opacity: amount ? 1 : 0.3 }]}
                   >
-                    <MaterialCommunityIcons
-                      name={amount ? 'chevron-right' : 'chevron-right'}
-                      size={getResponsiveFontSize(16)}
-                      color={iconColor}
-                    />
+                    {isSyncing ? (
+                      <ActivityIndicator size={getResponsiveFontSize(16)} color={iconColor} />
+                    ) : (
+                      <MaterialCommunityIcons
+                        name={amount ? 'chevron-right' : 'chevron-right'}
+                        size={getResponsiveFontSize(16)}
+                        color={iconColor}
+                      />
+                    )}
                   </Pressable>
                 </View>
                 <FlatList

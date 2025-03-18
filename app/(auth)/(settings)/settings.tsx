@@ -210,12 +210,12 @@ function SettingsScreen() {
               )}
             </LinearGradient>
             <View style={styles.userContainer}>
-              <ThemedText numberOfLines={1} style={styles.userEmail}>
+              <ThemedText numberOfLines={1} style={styles.userName}>
                 {name}
               </ThemedText>
-              <ThemedText numberOfLines={1} style={styles.userName}>
+              {/* <ThemedText numberOfLines={1} style={styles.userName}>
                 {email}
-              </ThemedText>
+              </ThemedText> */}
             </View>
           </View>
         }
@@ -341,8 +341,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   userName: {
-    opacity: 0.7,
-    fontSize: getResponsiveFontSize(14),
+    // opacity: 0.7,
+    fontSize: getResponsiveFontSize(16),
     width: '100%',
   },
   sectionContainer: {

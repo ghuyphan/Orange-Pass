@@ -24,8 +24,8 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
   withSequence,
+  withDelay,
   Easing,
-  interpolate,
 } from 'react-native-reanimated';
 
 export type ThemedInputProps = {
@@ -115,73 +115,36 @@ export const ThemedInput = forwardRef<
     const errorTextOpacity = useSharedValue(0);
     const errorShakeValue = useSharedValue(0);
 
-    // Shared value for placeholder animation
-    const placeholderAnimation = useSharedValue(value || isFocused ? 1 : 0);
-
-    // Pre-calculate responsive values outside useAnimatedStyle
-    const borderWidthValue = getResponsiveWidth(0.3);
-    const errorTextHeightValue = getResponsiveHeight(2.5);
-    const errorShakeWidth1 = getResponsiveWidth(1);
-    const errorShakeWidth07 = getResponsiveWidth(0.7);
-    const placeholderFontSizeLarge = getResponsiveFontSize(14);
-    const placeholderFontSizeSmall = getResponsiveFontSize(12);
-    const placeholderTranslateYValue = -getResponsiveHeight(2.5);
-    const iconSize = getResponsiveFontSize(16);
-    const errorIconSize = getResponsiveWidth(5);
-    const iconTouchableHitSlopVertical = getResponsiveHeight(0.6);
-    const iconTouchableHitSlopHorizontal = getResponsiveWidth(1.2);
-    // const inputPaddingVertical = getResponsiveHeight(2.2); // Increased paddingVertical here
-    // const inputPaddingHorizontal = getResponsiveWidth(4.8);
-    // const inputBorderRadius = getResponsiveWidth(4);
-    // const placeholderLeft = getResponsiveWidth(4.8);
-    // const placeholderTop = getResponsiveHeight(2.8); // Adjusted placeholder top position here
-    const inputMarginLeft = getResponsiveWidth(2.5);
-    // const inputMarginRight = getResponsiveWidth(2.4);
-    // const rightContainerGap = getResponsiveWidth(3.6);
-    // const iconTouchableBorderRadius = getResponsiveWidth(12);
-    // const errorIconContainerMarginLeft = getResponsiveWidth(1.2);
-    // const errorIconContainerPadding = getResponsiveWidth(0.5);
-    // const errorContainerMarginHorizontal = getResponsiveWidth(4.8);
-    // const errorTextFontSize = getResponsiveFontSize(11);
-    // const errorTextLineHeight = getResponsiveHeight(2.2);
-    const visibilityIconSize = getResponsiveWidth(4);
-
-
     // Use effect to update animations when error state changes
     useEffect(() => {
       if (isError && errorMessage) {
         // Animate border width
-        animatedBorderWidth.value = withTiming(borderWidthValue, { duration: 200 });
-
+        animatedBorderWidth.value = withTiming(getResponsiveWidth(0.3), { duration: 200 });
+        
         // Animate error text appearance
-        errorTextHeight.value = withTiming(errorTextHeightValue, {
+        errorTextHeight.value = withTiming(getResponsiveHeight(2.5), { 
           duration: 200,
           easing: Easing.out(Easing.ease)
         });
         errorTextOpacity.value = withTiming(1, { duration: 250 });
-
+        
         // Add shake animation for error icon
         errorShakeValue.value = withSequence(
-          withTiming(-errorShakeWidth1, { duration: 50 }),
-          withTiming(errorShakeWidth1, { duration: 50 }),
-          withTiming(-errorShakeWidth07, { duration: 50 }),
-          withTiming(errorShakeWidth07, { duration: 50 }),
+          withTiming(-getResponsiveWidth(1), { duration: 50 }),
+          withTiming(getResponsiveWidth(1), { duration: 50 }),
+          withTiming(-getResponsiveWidth(0.7), { duration: 50 }),
+          withTiming(getResponsiveWidth(0.7), { duration: 50 }),
           withTiming(0, { duration: 50 })
         );
       } else {
         // Animate border width back to normal
         animatedBorderWidth.value = withTiming(0, { duration: 200 });
-
+        
         // Animate error text disappearance
         errorTextHeight.value = withTiming(0, { duration: 150 });
         errorTextOpacity.value = withTiming(0, { duration: 100 });
       }
-    }, [isError, errorMessage, borderWidthValue, errorTextHeightValue, errorShakeWidth1, errorShakeWidth07]);
-
-    // Update placeholder animation when value or focus changes
-    useEffect(() => {
-      placeholderAnimation.value = withTiming(value || isFocused ? 1 : 0, { duration: 200 });
-    }, [value, isFocused]);
+    }, [isError, errorMessage]);
 
     // --- Reanimated: Create Animated Styles ---
     const animatedContainerStyle = useAnimatedStyle(() => {
@@ -202,18 +165,6 @@ export const ThemedInput = forwardRef<
     const animatedErrorIconStyle = useAnimatedStyle(() => {
       return {
         transform: [{ translateX: errorShakeValue.value }],
-      };
-    });
-
-    const animatedPlaceholderStyle = useAnimatedStyle(() => {
-      const translateY = interpolate(placeholderAnimation.value, [0, 1], [0, placeholderTranslateYValue]);
-      const fontSize = interpolate(placeholderAnimation.value, [0, 1], [placeholderFontSizeLarge, placeholderFontSizeSmall]);
-      const opacity = interpolate(placeholderAnimation.value, [0, 1], [1, 0.6]);
-
-      return {
-        transform: [{ translateY }],
-        fontSize,
-        opacity,
       };
     });
 
@@ -279,17 +230,12 @@ export const ThemedInput = forwardRef<
         >
           {/* Input container with animated border */}
           <Animated.View style={[inputContainerStyle, animatedContainerStyle]}>
-            {/* Animated Placeholder */}
-            {placeholder && (
-              <Animated.Text
-                style={[
-                  styles.placeholder,
-                  { color: placeholderColor },
-                  animatedPlaceholderStyle,
-                ]}
-              >
-                {placeholder}
-              </Animated.Text>
+            {/* Label */}
+            {label && (
+              <ThemedText style={[styles.label, { color }, labelStyle]} type="defaultSemiBold">
+                {label}
+                {required && <ThemedText style={{ color: 'red' }}> *</ThemedText>}
+              </ThemedText>
             )}
 
             <View style={styles.inputRow}>
@@ -297,12 +243,12 @@ export const ThemedInput = forwardRef<
               {iconName && (
                 <MaterialCommunityIcons
                   name={iconName}
-                  size={iconSize}
+                  size={getResponsiveFontSize(16)}
                   color={placeholderColor}
                   style={iconStyle}
                 />
               )}
-
+              
               {/* Text Input */}
               <TextInput
                 ref={textInputRef}
@@ -311,7 +257,7 @@ export const ThemedInput = forwardRef<
                   styles.input,
                   {
                     color: disabled ? placeholderColor : color,
-                    marginLeft: iconName ? inputMarginLeft : 0,
+                    marginLeft: iconName ? getResponsiveWidth(2.5) : 0,
                   },
                   inputStyle,
                 ]}
@@ -320,7 +266,7 @@ export const ThemedInput = forwardRef<
                 onChangeText={handleChangeText}
                 onBlur={handleBlur}
                 onFocus={handleFocus}
-                placeholder=""
+                placeholder={placeholder}
                 placeholderTextColor={placeholderColor}
                 accessible={true}
                 accessibilityLabel={label}
@@ -328,6 +274,7 @@ export const ThemedInput = forwardRef<
                 editable={!disabled}
                 selection={selection}
                 onSelectionChange={handleSelectionChange}
+                cursorColor={color}
               />
 
               {/* Right side icons */}
@@ -337,14 +284,14 @@ export const ThemedInput = forwardRef<
                     onPress={disabled ? undefined : onClearValue}
                     style={styles.iconTouchable}
                     hitSlop={{
-                      top: iconTouchableHitSlopVertical,
-                      bottom: iconTouchableHitSlopVertical,
-                      left: iconTouchableHitSlopHorizontal,
-                      right: iconTouchableHitSlopHorizontal,
+                      top: getResponsiveHeight(0.6),
+                      bottom: getResponsiveHeight(0.6),
+                      left: getResponsiveWidth(1.2),
+                      right: getResponsiveWidth(1.2),
                     }}
                     disabled={disabled}
                   >
-                    <MaterialIcons name={'cancel'} color={color} size={iconSize} />
+                    <MaterialIcons name={'cancel'} color={color} size={getResponsiveFontSize(16)} />
                   </Pressable>
                 )}
 
@@ -353,16 +300,16 @@ export const ThemedInput = forwardRef<
                     onPress={disabled ? undefined : onToggleSecureValue}
                     style={[styles.iconTouchable]}
                     hitSlop={{
-                      top: iconTouchableHitSlopVertical,
-                      bottom: iconTouchableHitSlopVertical,
-                      left: iconTouchableHitSlopHorizontal,
-                      right: iconTouchableHitSlopHorizontal,
+                      top: getResponsiveHeight(0.6),
+                      bottom: getResponsiveHeight(0.6),
+                      left: getResponsiveWidth(1.2),
+                      right: getResponsiveWidth(1.2),
                     }}
                     disabled={disabled}
                   >
                     <MaterialIcons
                       name={isSecure ? 'visibility' : 'visibility-off'}
-                      size={visibilityIconSize}
+                      size={getResponsiveWidth(4)}
                       color={color}
                     />
                   </Pressable>
@@ -370,7 +317,7 @@ export const ThemedInput = forwardRef<
 
                 {isError && errorMessage && (
                   <Animated.View style={[styles.errorIconContainer, animatedErrorIconStyle]}>
-                    <MaterialIcons name="error-outline" size={errorIconSize} color={errorColor} />
+                    <MaterialIcons name="error-outline" size={getResponsiveWidth(5)} color={errorColor} />
                   </Animated.View>
                 )}
               </View>
@@ -381,9 +328,9 @@ export const ThemedInput = forwardRef<
         {/* Animated error message container */}
         <Animated.View style={[styles.errorContainer, animatedErrorTextStyle]}>
           {isError && errorMessage && (
-            <ThemedText
+            <ThemedText 
               style={[
-                styles.errorText,
+                styles.errorText, 
                 { color: errorColor },
                 errorTextStyle
               ]}
@@ -415,15 +362,14 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   inputContainer: {
-    paddingVertical: getResponsiveHeight(2.2), // Increased paddingVertical to 2.2
+    paddingVertical: getResponsiveHeight(1.8),
     paddingHorizontal: getResponsiveWidth(4.8),
     borderRadius: getResponsiveWidth(4),
     flexDirection: 'column',
   },
-  placeholder: {
-    position: 'absolute',
-    left: getResponsiveWidth(4.8),
-    top: getResponsiveHeight(2.8), // Adjusted top to 2.8 to align with increased padding
+  label: {
+    fontSize: getResponsiveFontSize(13),
+    opacity: 0.6,
   },
   inputRow: {
     flexDirection: 'row',

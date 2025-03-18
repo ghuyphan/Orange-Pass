@@ -334,6 +334,7 @@ export default function LoginScreen() {
               loadingLabel={t("loginScreen.loggingIn")}
               loading={isSubmitting}
               textStyle={styles.loginButtonText}
+              disabled={isSubmitting}
             />
 
             {/* Forgot Password */}
@@ -342,6 +343,7 @@ export default function LoginScreen() {
                 label={t("loginScreen.forgotPassword")}
                 onPress={onNavigateToForgot}
                 style={{ opacity: 0.6 }}
+                disabled={isSubmitting}
               />
             </View>
           </View>
@@ -353,6 +355,7 @@ export default function LoginScreen() {
               style={styles.createAccountButton}
               textStyle={styles.createAccountButtonText}
               outline
+              disabled={isSubmitting}
             />
             <ThemedText type="defaultSemiBold" style={styles.metaText}>
               {t("common.appName")}

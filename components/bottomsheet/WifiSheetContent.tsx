@@ -51,15 +51,25 @@ const WifiSheetContent: React.FC<WifiSheetContentProps> = ({
   const [modalDescription, setModalDescription] = useState<string | null>(null);
   const [password, setPassword] = useState<string>(initialPassword || '');
   const [hasLocationPermission, setHasLocationPermission] = useState<boolean>(false);
+  const [isWifiEnabled, setIsWifiEnabled] = useState<boolean>(false);
+  const [showPermissionScreen, setShowPermissionScreen] = useState(false);
 
   useEffect(() => {
     setPassword(initialPassword || '');
   }, [initialPassword]);
 
-  // Request location permissions on component mount
   useEffect(() => {
-    checkAndRequestLocationPermission();
+    checkWifiState();
   }, []);
+
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      checkAndRequestLocationPermission(false); // Check on initial load, don't prompt
+    } else {
+      setHasLocationPermission(true); // Assume permission granted on iOS
+    }
+  }, []);
+
 
   const colors = {
     error: currentTheme === 'light' ? Colors.light.error : Colors.dark.error,
@@ -78,51 +88,50 @@ const WifiSheetContent: React.FC<WifiSheetContentProps> = ({
     } else {
       // Fallback to modal if no notification handler is provided
       setIsModalVisible(true);
-      setModalIcon(config.type === 'success' ? 'check-circle' : 
-                  config.type === 'error' ? 'error' : 
-                  config.type === 'warning' ? 'warning' : 'info');
+      setModalIcon(config.type === 'success' ? 'check-circle' :
+        config.type === 'error' ? 'error' :
+          config.type === 'warning' ? 'warning' : 'info');
       setModalTitle(config.title);
       setModalDescription(config.message);
     }
   };
 
-  // Check and request location permissions (for Android)
-  const checkAndRequestLocationPermission = async () => {
+  // Check and request fine location permission (for Android)
+  const checkAndRequestLocationPermission = async (shouldPrompt: boolean = true) => {
     if (Platform.OS !== 'android') {
       setHasLocationPermission(true);
       return true;
     }
 
     try {
-      // First check for coarse location
-      let coarseGranted = await PermissionsAndroid.check(
-        PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION
-      );
-
-      // Check for fine location (precise)
-      let fineGranted = await PermissionsAndroid.check(
+      // Check for fine location permission
+      const fineGranted = await PermissionsAndroid.check(
         PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
       );
 
-      // If both permissions are already granted, return early
-      if (coarseGranted && fineGranted) {
+      // If permission is already granted, return early
+      if (fineGranted) {
         setHasLocationPermission(true);
+        setShowPermissionScreen(false);
         return true;
       }
 
-      // Request the permissions we need
-      const results = await PermissionsAndroid.requestMultiple([
-        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-        PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
-      ]);
+      if (!shouldPrompt) {
+        setShowPermissionScreen(true);
+        return false;
+      }
 
-      const hasRequiredPermissions = 
-        results[PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION] === PermissionsAndroid.RESULTS.GRANTED &&
-        results[PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION] === PermissionsAndroid.RESULTS.GRANTED;
+      // Request fine location permission
+      const result = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+      );
 
-      setHasLocationPermission(hasRequiredPermissions);
+      const hasRequiredPermission = result === PermissionsAndroid.RESULTS.GRANTED;
+      setHasLocationPermission(hasRequiredPermission);
+      setShowPermissionScreen(!hasRequiredPermission);
 
-      if (!hasRequiredPermissions) {
+
+      if (!hasRequiredPermission) {
         showNotification({
           type: 'warning',
           title: t('locationPermission.title'),
@@ -139,6 +148,26 @@ const WifiSheetContent: React.FC<WifiSheetContentProps> = ({
         message: String(err),
       });
       return false;
+    }
+  };
+
+  // Check if Wi-Fi is enabled
+  const checkWifiState = async () => {
+    if (Platform.OS === 'android') {
+      try {
+        const isEnabled = await WifiManager.isEnabled();
+        setIsWifiEnabled(isEnabled);
+      } catch (error) {
+        console.error('Error checking Wi-Fi state:', error);
+        showNotification({
+          type: 'error',
+          title: t('error'),
+          message: String(error),
+        });
+      }
+    } else {
+      // For iOS, assume Wi-Fi is enabled (as iOS does not provide a direct API for this)
+      setIsWifiEnabled(true);
     }
   };
 
@@ -180,9 +209,7 @@ const WifiSheetContent: React.FC<WifiSheetContentProps> = ({
     }
   };
 
-  // Refined connect to WiFi function
   const onConnectToWifi = async () => {
-    // Check for SSID
     if (!ssid) {
       showNotification({
         type: 'error',
@@ -192,7 +219,6 @@ const WifiSheetContent: React.FC<WifiSheetContentProps> = ({
       return;
     }
 
-    // Check for password
     if (!password) {
       showNotification({
         type: 'warning',
@@ -202,7 +228,6 @@ const WifiSheetContent: React.FC<WifiSheetContentProps> = ({
       return;
     }
 
-    // Basic password validation
     if (password.length < 8) {
       showNotification({
         type: 'warning',
@@ -212,7 +237,6 @@ const WifiSheetContent: React.FC<WifiSheetContentProps> = ({
       return;
     }
 
-    // Check location permission
     if (Platform.OS === 'android' && !hasLocationPermission) {
       const permissionGranted = await checkAndRequestLocationPermission();
       if (!permissionGranted) {
@@ -224,9 +248,8 @@ const WifiSheetContent: React.FC<WifiSheetContentProps> = ({
 
     try {
       if (Platform.OS === 'android') {
-        // For Android, we need additional checks
         const locationEnabled = await WifiManager.isEnabled();
-        
+
         if (!locationEnabled) {
           showNotification({
             type: 'warning',
@@ -238,23 +261,19 @@ const WifiSheetContent: React.FC<WifiSheetContentProps> = ({
         }
       }
 
-      // Connect to WiFi network
       await WifiManager.connectToProtectedSSID(ssid, password, !!isWep, isHidden);
-      
-      // Show success notification
+
       showNotification({
         type: 'success',
         title: t('wifiSheet.connectionSuccessModal.title'),
         message: t('wifiSheet.connectionSuccessModal.description'),
         duration: 3000,
       });
-      
-      // Call success callback
+
       onConnectSuccess?.();
     } catch (error: any) {
       console.error('Error connecting to WiFi:', error);
-      
-      // Handle specific error cases
+
       if (error === 'didNotFindNetwork') {
         showNotification({
           type: 'error',
@@ -299,10 +318,88 @@ const WifiSheetContent: React.FC<WifiSheetContentProps> = ({
     setIsModalVisible(false);
   };
 
-  // Display masked password or actual password based on showPassword state
   const displayPassword = () => {
     if (!password) return '';
     return showPassword ? password : '•'.repeat(password.length);
+  };
+
+  const renderPermissionRequestScreen = () => {
+    return (
+      <View style={styles.permissionContainer}>
+        <MaterialCommunityIcons name="map-marker-alert" size={40} color={colors.error} />
+        <ThemedText style={[styles.permissionTitle, { color: colors.text }]}>
+          {t('locationPermission.title')}
+        </ThemedText>
+        <ThemedText style={[styles.permissionMessage, { color: colors.text }]}>
+          {t('locationPermission.message')}
+        </ThemedText>
+        <ThemedButton
+          iconName="lock-open"
+          onPress={() => checkAndRequestLocationPermission(true)} // Pass true to prompt
+          label={t('locationPermission.requestButton')}
+          style={styles.permissionButton}
+        />
+      </View>
+    );
+  };
+
+  // Conditional rendering based on Wi-Fi state and location permission
+  const renderContent = () => {
+
+    if (!isWifiEnabled) {
+      return (
+        <View style={styles.permissionContainer}>
+          <MaterialCommunityIcons name="wifi-off" size={24} color={colors.error} />
+          <ThemedText style={[styles.warningText, { color: colors.error }]}>
+            {t('wifiSheet.wifiDisabledModal.description')}
+          </ThemedText>
+        </View>
+      );
+    }
+
+    return (
+      <>
+        {/* SSID Display (Copyable) */}
+        <Pressable onPress={handleCopySSID} style={[styles.urlCard, { borderColor: colors.border, backgroundColor: colors.inputBg }]}>
+          <View style={styles.urlRow}>
+            <MaterialCommunityIcons name="wifi" size={16} color={colors.icon} />
+            <ThemedText style={styles.urlText} numberOfLines={1}>{ssid}</ThemedText>
+          </View>
+        </Pressable>
+
+        {/* Password Display */}
+        <Pressable
+          onPress={handleCopyPassword}
+          style={[styles.passwordContainer, { borderColor: colors.border, backgroundColor: colors.inputBg }]}
+        >
+          <View style={styles.passwordRow}>
+            <MaterialCommunityIcons name="lock" size={16} color={colors.icon} />
+            <ThemedText style={styles.passwordText} numberOfLines={1}>
+              {displayPassword()}
+            </ThemedText>
+            <Pressable onPress={toggleShowPassword} hitSlop={40}>
+              <MaterialCommunityIcons
+                name={showPassword ? "eye-off" : "eye"}
+                size={20}
+                color={colors.icon}
+              />
+            </Pressable>
+          </View>
+        </Pressable>
+
+        {/* Connect Button */}
+        <View style={styles.actionButtons}>
+          <ThemedButton
+            iconName="wifi"
+            onPress={onConnectToWifi}
+            label={t('homeScreen.connectButton')}
+            style={styles.actionButton}
+            loading={isConnecting}
+            loadingLabel={t('homeScreen.connectingButton')}
+          />
+        </View>
+      </>
+    );
   };
 
   return (
@@ -313,49 +410,10 @@ const WifiSheetContent: React.FC<WifiSheetContentProps> = ({
         title={modalTitle || ''}
         message={modalDescription || ''}
         isVisible={isModalVisible}
-        onDismiss={() => setIsModalVisible(false)} 
+        onDismiss={() => setIsModalVisible(false)}
         onSecondaryAction={() => setIsModalVisible(false)}
       />
-      
-      {/* SSID Display (Copyable) */}
-      <Pressable onPress={handleCopySSID} style={[styles.urlCard, { borderColor: colors.border, backgroundColor: colors.inputBg }]}>
-        <View style={styles.urlRow}>
-          <MaterialCommunityIcons name="wifi" size={16} color={colors.icon} />
-          <ThemedText style={styles.urlText} numberOfLines={1}>{ssid}</ThemedText>
-        </View>
-      </Pressable>
-
-      {/* Password Display (replaced TextInput with display-only view) */}
-      <Pressable 
-        onPress={handleCopyPassword}
-        style={[styles.passwordContainer, { borderColor: colors.border, backgroundColor: colors.inputBg }]}
-      >
-        <View style={styles.passwordRow}>
-          <MaterialCommunityIcons name="lock" size={16} color={colors.icon} />
-          <ThemedText style={styles.passwordText} numberOfLines={1}>
-            {displayPassword()}
-          </ThemedText>
-          <Pressable onPress={toggleShowPassword} hitSlop={40}>
-            <MaterialCommunityIcons 
-              name={showPassword ? "eye-off" : "eye"} 
-              size={20} 
-              color={colors.icon} 
-            />
-          </Pressable>
-        </View>
-      </Pressable>
-
-      {/* Connect Button */}
-      <View style={styles.actionButtons}>
-        <ThemedButton
-          iconName="wifi"
-          onPress={onConnectToWifi}
-          label={t('homeScreen.connectButton')}
-          style={styles.actionButton}
-          loading={isConnecting}
-          loadingLabel={t('homeScreen.connectingButton')}
-        />
-      </View>
+      {showPermissionScreen ? renderPermissionRequestScreen() : renderContent()}
     </View>
   );
 };
@@ -416,6 +474,27 @@ const styles = StyleSheet.create({
   actionButton: {
     flex: 1,
     height: 44,
+  },
+  warningText: {
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  permissionContainer: {
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: getResponsiveHeight(2),
+  },
+  permissionButton: {
+    marginTop: 8,
+  },
+  permissionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  permissionMessage: {
+    fontSize: 16,
+    textAlign: 'center',
   },
 });
 

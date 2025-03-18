@@ -117,7 +117,7 @@ export default function QuickLoginScreen() {
               return {
                 userID,
                 displayName: userData?.name || userData?.username || userID,
-                avatarConfig: userData?.avatar ? JSON.parse(userData.avatar) : null,
+                // avatarConfig: userData?.avatar ? JSON.parse(userData.avatar) : null,
               };
             } catch (e) {
               console.error(`Error getting user data for ${userID}:`, e);
@@ -540,9 +540,10 @@ const styles = StyleSheet.create({
   textButtonContainer: {
     marginTop: getResponsiveHeight(1),
     marginBottom: getResponsiveHeight(3),
+    opacity: 0.7,
   },
   textButton: {
-    fontSize: getResponsiveFontSize(14),
+    // fontSize: getResponsiveFontSize(14),
   },
 
   // Account list styles

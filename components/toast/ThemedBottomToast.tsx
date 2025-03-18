@@ -1,7 +1,18 @@
 import React, { useCallback, useEffect, ReactNode } from 'react';
-import { StyleSheet, View, StyleProp, ViewStyle, ActivityIndicator, Platform } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  StyleProp,
+  ViewStyle,
+  ActivityIndicator,
+  Platform,
+} from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+} from 'react-native-reanimated';
 import { ThemedText } from '../ThemedText';
 import { Colors } from '@/constants/Colors';
 import { useTheme } from '@/context/ThemeContext';
@@ -27,7 +38,7 @@ export type ThemedBottomToastProps = {
   onVisibilityToggle?: (isVisible: boolean) => void;
 };
 
-export function ThemedBottomToast({
+export const ThemedBottomToast = ({
   iconName,
   message,
   isVisible = false,
@@ -37,14 +48,15 @@ export function ThemedBottomToast({
   style = {},
   duration = 4000,
   onVisibilityToggle,
-}: ThemedBottomToastProps) {
+}: ThemedBottomToastProps) => {
   const { currentTheme } = useTheme();
-  const color = currentTheme === 'light' ? Colors.light.text : Colors.dark.text;
+  const textColor = currentTheme === 'light' ? Colors.light.text : Colors.dark.text;
 
   // Reanimated values for animation
   const opacity = useSharedValue(0);
   const translateY = useSharedValue(50);
-  
+
+  // Animated style for the toast
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
     transform: [{ translateY: translateY.value }],
@@ -53,9 +65,7 @@ export function ThemedBottomToast({
   // Callback for onVisibilityToggle to prevent unnecessary re-renders
   const handleVisibilityToggle = useCallback(
     (visible: boolean) => {
-      if (onVisibilityToggle) {
-        onVisibilityToggle(visible);
-      }
+      onVisibilityToggle?.(visible);
     },
     [onVisibilityToggle]
   );
@@ -66,11 +76,12 @@ export function ThemedBottomToast({
       // Show toast with animation
       opacity.value = withTiming(1, { duration: 300 });
       translateY.value = withTiming(0, { duration: 300 });
-      
+
+      // Hide toast after the specified duration
       const timer = setTimeout(() => {
         handleVisibilityToggle(false);
       }, duration);
-      
+
       return () => clearTimeout(timer);
     } else {
       // Hide toast with animation
@@ -79,11 +90,11 @@ export function ThemedBottomToast({
     }
   }, [isVisible, duration, handleVisibilityToggle, opacity, translateY]);
 
-  // Determine the indicator to render
+  // Render the appropriate indicator based on the indicatorType
   const renderIndicator = () => {
     switch (indicatorType) {
       case 'spinner':
-        return <ActivityIndicator size={15} color={color} />;
+        return <ActivityIndicator size={15} color={textColor} />;
       case 'icon':
         return indicatorIcon || null;
       default:
@@ -91,24 +102,28 @@ export function ThemedBottomToast({
     }
   };
 
+  // Determine the background color of the toast
+  const toastBackgroundColor =
+    backgroundColor ||
+    (currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground);
+
   return (
     <Animated.View
       style={[
         styles.toastContainer,
         {
           paddingBottom: Platform.OS === 'ios' ? 20 : 0,
-          backgroundColor: backgroundColor || 
-            (currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground),
+          backgroundColor: toastBackgroundColor,
         },
         style,
         animatedStyle,
       ]}
     >
-      <View style={styles.toastTitle}>
+      <View style={styles.toastContent}>
         {renderIndicator()}
-        <ThemedText 
-          style={styles.toastText} 
-          numberOfLines={2} 
+        <ThemedText
+          style={styles.toastText}
+          numberOfLines={2}
           type="defaultSemiBold"
         >
           {message}
@@ -116,16 +131,15 @@ export function ThemedBottomToast({
       </View>
     </Animated.View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   toastContainer: {
-    // paddingVertical: 5,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  toastTitle: {
+  toastContent: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,

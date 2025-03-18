@@ -177,6 +177,54 @@
     "connectButton": "Kết nối",
     "passwordPlaceholder": "Nhập mật khẩu"
   },
+  "locationPermission": {
+    "title": "Cần Quyền Vị trí",
+    "message": "Ứng dụng cần quyền truy cập vị trí để quét các mạng Wi-Fi. Vui lòng cấp quyền trong cài đặt.",
+    "requestButton": "Cấp Quyền"
+  },
+  "wifiSheet": {
+    "copySSIDModal": {
+      "successTitle": "Đã sao chép SSID",
+      "successDescription": "SSID đã được sao chép vào bộ nhớ tạm.",
+      "errorTitle": "Sao chép thất bại",
+      "errorDescription": "Không thể sao chép SSID."
+    },
+    "copyPasswordModal": {
+      "successTitle": "Đã sao chép mật khẩu",
+      "successDescription": "Mật khẩu đã được sao chép." ,
+      "errorTitle": "Sao chép thất bại",
+      "errorDescription": "Không thể sao chép mật khẩu"
+    },
+    "noSSIDError": "Không có SSID.",
+    "invalidPasswordModal": {
+      "title": "Mật khẩu không hợp lệ",
+      "description": "Mật khẩu Wi-Fi phải có ít nhất 8 ký tự."
+    },
+    "wifiDisabledModal": {
+      "title": "Wi-Fi đã tắt",
+      "description": "Vui lòng bật Wi-Fi để kết nối."
+    },
+    "connectionSuccessModal": {
+      "title": "Kết nối thành công!",
+      "description": "Đã kết nối với mạng Wi-Fi."
+    },
+     "alreadyConnectedModal": {
+        "title": "Đã kết nối!",
+        "description": "Bạn đã kết nối với mạng này."
+      },
+    "networkNotFoundModal": {
+      "title": "Không tìm thấy mạng",
+      "description": "Không tìm thấy mạng Wi-Fi với SSID này."
+    },
+    "authErrorModal": {
+      "title": "Lỗi xác thực",
+      "description": "Mật khẩu không đúng. Vui lòng thử lại."
+    },
+    "connectionErrorModal": {
+      "title": "Lỗi kết nối",
+      "description": "Không thể kết nối với mạng Wi-Fi."
+    }
+  },
   "addScreen": {
     "title": "Thêm thẻ mới",
     "type": "Loại thẻ",
@@ -339,7 +387,11 @@
     "bankTransfer": "Chuyển khoản với",
     "searchBank": "Nhập tên ngân hàng",
     "transferMessage": "Chuyển tiền tới",
-    "copiedToClipboard": "Đã sao chép"
+    "copiedToClipboard": "Đã sao chép",
+    "cannotOpenBankApp": "Không thể mở ứng dụng ngân hàng.",
+    "failedToOpenBankApp": "Lỗi khi mở ứng dụng ngân hàng.",
+    "generateError": "Lỗi khi tạo mã QR.",
+    "offlineMessage": "Bạn đang ngoại tuyến."
   },
   "settingsScreen": {
     "title": "Cài đặt",
