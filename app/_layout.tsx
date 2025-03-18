@@ -11,10 +11,7 @@ import { PaperProvider } from 'react-native-paper';
 import { store } from '@/store';
 import { createTable } from '@/services/localDB/userDB';
 import { createQrTable } from '@/services/localDB/qrDB';
-import { 
-  checkInitialAuth, 
-  getQuickLoginStatus 
-} from '@/services/auth';
+import { checkInitialAuth, getQuickLoginStatus } from '@/services/auth';
 import { checkOfflineStatus } from '@/services/network';
 import { storage } from '@/utils/storage';
 
@@ -82,7 +79,6 @@ export default function RootLayout() {
 
   // Memoized check for quick login to prevent recreating on each render
   const checkQuickLoginEnabled = useCallback(async () => {
-    // Use the helper function from auth service that checks MMKV_KEYS.QUICK_LOGIN_ENABLED
     return Promise.resolve(getQuickLoginStatus());
   }, []);
 
@@ -93,61 +89,60 @@ export default function RootLayout() {
     }
   }, []);
 
-  // App initialization effect - optimize with Promise.all for parallel execution
+  // Initialize database tables
+  const initializeDatabase = useCallback(async () => {
+    await Promise.all([createTable(), createQrTable()]);
+  }, []);
+
+  // Check onboarding status
+  const checkOnboardingStatus = useCallback(async () => {
+    return storage.getBoolean('hasSeenOnboarding') ?? false;
+  }, []);
+
+  // Check authentication status
+  const checkAuthStatus = useCallback(async (onboardingStatus: boolean) => {
+    return onboardingStatus ? checkInitialAuth().catch(() => false) : Promise.resolve(false);
+  }, []);
+
+  // Prepare app initialization
+  const prepareApp = useCallback(async () => {
+    try {
+      await initializeDatabase();
+      const onboardingStatus = await checkOnboardingStatus();
+      const [authStatus, quickLoginEnabled] = await Promise.all([
+        checkAuthStatus(onboardingStatus),
+        checkQuickLoginEnabled(),
+      ]);
+
+      setAppState({
+        isAppReady: fontsLoaded && !fontError,
+        isAuthenticated: authStatus,
+        hasSeenOnboarding: onboardingStatus,
+        hasQuickLoginEnabled: quickLoginEnabled,
+      });
+    } catch (error) {
+      console.error('App initialization error:', error);
+      setAppState({
+        isAppReady: fontsLoaded && !fontError,
+        isAuthenticated: false,
+        hasSeenOnboarding: false,
+        hasQuickLoginEnabled: false,
+      });
+    }
+  }, [fontsLoaded, fontError, checkQuickLoginEnabled, checkOnboardingStatus, checkAuthStatus]);
+
+  // Run app preparation when fonts are loaded
   useEffect(() => {
-    const prepareApp = async () => {
-      try {
-        // Run database creation in parallel
-        const [, , onboardingStatus] = await Promise.all([
-          createTable(),
-          createQrTable(),
-          Promise.resolve(storage.getBoolean('hasSeenOnboarding') ?? false)
-        ]);
-
-        // Only check auth if onboarding is complete
-        const authStatusPromise = onboardingStatus
-          ? checkInitialAuth().catch(() => false)
-          : Promise.resolve(false);
-
-        // Run auth check and quick login check in parallel
-        const [authStatus, quickLoginEnabled] = await Promise.all([
-          authStatusPromise,
-          checkQuickLoginEnabled()
-        ]);
-
-        // Update app state once with all values
-        setAppState({
-          isAppReady: fontsLoaded && !fontError,
-          isAuthenticated: authStatus,
-          hasSeenOnboarding: onboardingStatus,
-          hasQuickLoginEnabled: quickLoginEnabled,
-        });
-      } catch (error) {
-        console.error("App initialization error:", error);
-
-        // Fallback state in case of initialization failure
-        setAppState({
-          isAppReady: fontsLoaded && !fontError,
-          isAuthenticated: false,
-          hasSeenOnboarding: false,
-          hasQuickLoginEnabled: false,
-        });
-      }
-    };
-
-    // Only run preparation when fonts are loaded
     if (fontsLoaded && !fontError) {
       prepareApp();
     }
-  }, [fontsLoaded, fontError, checkQuickLoginEnabled]);
+  }, [fontsLoaded, fontError, prepareApp]);
 
   // Setup AppState change handling
   useEffect(() => {
-    // Set up offline status check
     const unsubscribe = checkOfflineStatus();
     const appStateSub = AppState.addEventListener('change', handleAppStateChange);
 
-    // Cleanup subscriptions
     return () => {
       unsubscribe();
       appStateSub.remove();
@@ -165,19 +160,12 @@ export default function RootLayout() {
     }
   }, [appState.isAppReady]);
 
-  // Navigation effect based on app state - use a single navigation call
-  useEffect(() => {
+  // Navigation effect based on app state
+  const navigateBasedOnAppState = useCallback(() => {
     const { isAppReady, hasSeenOnboarding, isAuthenticated, hasQuickLoginEnabled } = appState;
 
-    // Only navigate when all states are determined
-    if (isAppReady &&
-      hasSeenOnboarding !== null &&
-      isAuthenticated !== null &&
-      hasQuickLoginEnabled !== null) {
-
-      // Determine the target route once with proper typing
-      type RouteDestination = '/onboard' | '/home' | '/quick-login' | '/login';
-      let targetRoute: RouteDestination = '/login'; // Default route
+    if (isAppReady && hasSeenOnboarding !== null && isAuthenticated !== null && hasQuickLoginEnabled !== null) {
+      let targetRoute: '/onboard' | '/home' | '/quick-login' | '/login' = '/login';
 
       if (!hasSeenOnboarding) {
         targetRoute = '/onboard';
@@ -187,35 +175,39 @@ export default function RootLayout() {
         targetRoute = '/quick-login';
       }
 
-      // Navigate once with the determined route
       router.replace(targetRoute);
     }
   }, [appState, router]);
 
+  useEffect(() => {
+    navigateBasedOnAppState();
+  }, [navigateBasedOnAppState]);
 
   // Memoize the stack component to prevent unnecessary re-renders
-  const stackNavigator = useMemo(() => (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-        animation: 'ios',
-      }}
-    >
-      <Stack.Screen name="(public)" />
-      <Stack.Screen
-        name="(auth)"
-        options={{ animation: 'none' }}
-      />
-      <Stack.Screen name="+not-found" />
-      <Stack.Screen name="onboard" />
-    </Stack>
-  ), []);
+  const stackNavigator = useMemo(
+    () => (
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          animation: 'ios',
+        }}
+      >
+        <Stack.Screen name="(public)" />
+        <Stack.Screen name="(auth)" options={{ animation: 'none' }} />
+        <Stack.Screen name="+not-found" />
+        <Stack.Screen name="onboard" />
+      </Stack>
+    ),
+    []
+  );
 
   // Show loading state while app is initializing
-  if (!appState.isAppReady ||
+  if (
+    !appState.isAppReady ||
     appState.isAuthenticated === null ||
     appState.hasSeenOnboarding === null ||
-    appState.hasQuickLoginEnabled === null) {
+    appState.hasQuickLoginEnabled === null
+  ) {
     return null;
   }
 
@@ -225,10 +217,7 @@ export default function RootLayout() {
         <GestureHandlerRootView style={styles.container}>
           <PaperProvider>
             <LocaleProvider>
-              <ThemedView
-                style={styles.root}
-                onLayout={onLayoutRootView}
-              >
+              <ThemedView style={styles.root} onLayout={onLayoutRootView}>
                 {stackNavigator}
               </ThemedView>
             </LocaleProvider>

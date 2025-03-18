@@ -135,7 +135,7 @@ const DetailScreen = () => {
 
     setTimeout(() => {
       loadBanks();
-    }, 200);
+    }, 250);
   }, [item?.type]);
 
   const handleExpandPress = useCallback(() => {
@@ -588,6 +588,9 @@ const DetailScreen = () => {
                 contentContainerStyle={styles.bankListContent}
                 renderItem={renderPaymentMethodItem}
                 ListEmptyComponent={renderEmptyComponent}
+                initialNumToRender={5}
+                maxToRenderPerBatch={5}
+                windowSize={5}
               />
             </View>
           )}

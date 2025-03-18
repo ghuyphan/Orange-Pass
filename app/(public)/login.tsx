@@ -303,7 +303,7 @@ export default function LoginScreen() {
                     : ""
                 }
                 disabled={isSubmitting}
-                 disableOpacityChange={false}
+                disableOpacityChange={false}
               />
 
               <ThemedInput
@@ -319,7 +319,7 @@ export default function LoginScreen() {
                     : ""
                 }
                 disabled={isSubmitting}
-                 disableOpacityChange={false}
+                disableOpacityChange={false}
               />
             </View>
 

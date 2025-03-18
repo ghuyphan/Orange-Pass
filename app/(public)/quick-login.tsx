@@ -56,6 +56,8 @@ export default function QuickLoginScreen() {
   const { currentTheme } = useTheme();
   const insets = useSafeAreaInsets();
   const passwordInputRef = useRef<TextInput>(null);
+  const loginCanceledRef = useRef(false);
+
 
   // State management
   const [isToastVisible, setIsToastVisible] = useState(false);
@@ -164,18 +166,44 @@ export default function QuickLoginScreen() {
     router.push('/register');
   };
 
+  const handleCancelLogin = () => {
+    // Set the canceled flag to true
+    loginCanceledRef.current = true;
+    
+    // Stop showing loading state
+    setIsLoading(false);
+    
+    // Show cancellation message
+    setErrorMessage(t('quickLoginScreen.loginCancelled') || 'Login cancelled');
+    setIsToastVisible(true);
+    
+    // Reset password field if it was shown
+    if (showPasswordField) {
+      setPassword('');
+    }
+  };
+
   const handleQuickLogin = async () => {
     if (!selectedAccount) {
       showError(t('quickLoginScreen.errors.noAccountSelected'));
       return;
     }
-
+    
+    // Reset the canceled flag before starting
+    loginCanceledRef.current = false;
+    
     setIsLoading(true);
     setErrorMessage('');
-
+  
     try {
       const loginSuccess = await quickLogin(selectedAccount.userID);
-
+  
+      // Check if login was canceled while waiting for the response
+      if (loginCanceledRef.current) {
+        // Do not navigate if canceled
+        return;
+      }
+  
       if (loginSuccess) {
         router.replace('/(auth)/home');
       } else {
@@ -184,8 +212,11 @@ export default function QuickLoginScreen() {
         setTimeout(() => passwordInputRef.current?.focus(), 300);
       }
     } catch (error) {
-      showError((error as Error).message);
-      setShowPasswordField(true);
+      // Only show error if not canceled
+      if (!loginCanceledRef.current) {
+        showError((error as Error).message);
+        setShowPasswordField(true);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -305,6 +336,10 @@ export default function QuickLoginScreen() {
       <ThemedText style={styles.loadingText}>
         {t('quickLoginScreen.loggingIn')}
       </ThemedText>
+      <ThemedButton
+        label={t('quickLoginScreen.cancel')}
+        onPress={handleCancelLogin}
+      />
     </View>
   );
 
@@ -331,7 +366,6 @@ export default function QuickLoginScreen() {
           />
         </View>
       )}
-
     </Animated.View>
   );
 
@@ -579,7 +613,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-end',
 
-  },  
+  },
   accountAvatarContainer: {
     width: getResponsiveWidth(12),
     height: getResponsiveWidth(12),

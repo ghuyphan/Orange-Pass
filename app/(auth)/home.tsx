@@ -70,7 +70,8 @@ function HomeScreen() {
   // Loading and Syncing
   const [isLoading, setIsLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
-  const [isEmpty, setIsEmpty] = useState(false);
+  // const [isEmpty, setIsEmpty] = useState(false);
+  const isEmpty = useMemo(() => qrData.length === 0, [qrData]);
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced' | 'error'>('idle');
 
   // UI State
@@ -108,16 +109,14 @@ function HomeScreen() {
   const syncWithServer = useCallback(async (userId: string) => {
     if (isOffline || isSyncing) {
       if (isOffline) {
-        const hasLocal = await hasLocalData(userId);
-        setIsEmpty(!hasLocal);
         setIsLoading(false);
       }
       return;
     }
-
+  
     setIsSyncing(true);
     setSyncStatus('syncing');
-
+  
     try {
       await syncQrCodes(userId);
       const serverData: ServerRecord[] = await fetchServerData(userId);
@@ -126,8 +125,7 @@ function HomeScreen() {
       }
       const localData = await getQrCodesByUserId(userId);
       dispatch(setQrData(localData));
-      setIsEmpty(localData.length === 0);
-
+  
       setSyncStatus('synced');
       showToast(t('homeScreen.syncSuccess'));
       setTimeout(() => setSyncStatus('idle'), 3000);
@@ -135,8 +133,6 @@ function HomeScreen() {
       console.error('Error during sync process:', error);
       setSyncStatus('error');
       showToast(t('homeScreen.syncError'));
-      const hasLocal = await hasLocalData(userId);
-      setIsEmpty(!hasLocal);
     } finally {
       setIsLoading(false);
       setIsSyncing(false);
@@ -150,19 +146,18 @@ function HomeScreen() {
   // Initialize data
   useEffect(() => {
     if (!userId) return;
-
+  
     const initializeData = async () => {
       setIsLoading(true);
       try {
         let localData = qrData;
-        if (localData.length === 0) {
+        if (isEmpty) {
           localData = await getQrCodesByUserId(userId);
           dispatch(setQrData(localData));
         }
-        setIsEmpty(localData.length === 0);
-
+  
         if (!isOffline) {
-          if (localData.length === 0) {
+          if (isEmpty) {
             await syncWithServer(userId);
           } else {
             const unSyncedData = await getUnsyncedQrCodes(userId);
@@ -176,10 +171,9 @@ function HomeScreen() {
         } else {
           setSyncStatus('idle');
         }
-
+  
         const updatedLocalData = await getQrCodesByUserId(userId);
         dispatch(setQrData(updatedLocalData));
-        setIsEmpty(updatedLocalData.length === 0);
       } catch (error) {
         console.error('Error during data initialization:', error);
         setSyncStatus('error');
@@ -187,9 +181,9 @@ function HomeScreen() {
         setIsLoading(false);
       }
     };
-
+  
     initializeData();
-  }, [userId]);
+  }, [userId, isEmpty, isOffline, dispatch]);
 
   // Network status toasts
   useEffect(() => {
@@ -214,12 +208,7 @@ function HomeScreen() {
   // Animate empty card
   useEffect(() => {
     isEmptyShared.value = isEmpty ? 1 : 0;
-    if (isEmpty) {
-      animateEmptyCard();
-    } else {
-      // Reset the emptyCardOffset.value when there is data
-      animateEmptyCard();
-    }
+    animateEmptyCard();
   }, [isEmpty, isEmptyShared]);
   
 
@@ -417,12 +406,12 @@ function HomeScreen() {
 
   const onDeletePress = useCallback(async () => {
     if (!selectedItemId) return;
-
+  
     try {
       setIsSyncing(true);
       setIsToastVisible(true);
       setToastMessage(t('homeScreen.deleting'));
-
+  
       await deleteQrCode(selectedItemId);
       const updatedData = qrData.filter((item) => item.id !== selectedItemId);
       const reindexedData = updatedData.map((item, index) => ({
@@ -431,9 +420,8 @@ function HomeScreen() {
         updated: new Date().toISOString(),
       }));
       dispatch(setQrData(reindexedData));
-      setIsEmpty(reindexedData.length === 0);
       await updateQrIndexes(reindexedData);
-
+  
       setIsModalVisible(false);
       setIsToastVisible(false);
     } catch (error) {

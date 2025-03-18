@@ -451,22 +451,19 @@ export async function updateQrIndexes(qrDataArray: QRRecord[]): Promise<void> {
 
     try {
         await db.runAsync('BEGIN TRANSACTION');
-
-        const ids = qrDataArray.map(qr => qr.id);
-        const qrIndexCases = qrDataArray.map(qr => `WHEN '${qr.id}' THEN ${qr.qr_index}`).join(' ');
-        const updatedAtCases = qrDataArray.map(qr => `WHEN '${qr.id}' THEN '${updatedAt}'`).join(' ');
-
-        const query = `
-          UPDATE qrcodes
-          SET
-              qr_index = CASE id ${qrIndexCases} END,
-              updated = CASE id ${updatedAtCases} END,
-              is_synced = 0
-          WHERE id IN (${ids.map(() => '?').join(',')})
-      `;
-
-        await db.runAsync(query, ...ids);
-
+        
+        // Process each record individually instead of using CASE
+        for (const qr of qrDataArray) {
+            await db.runAsync(
+                `UPDATE qrcodes
+                 SET qr_index = ?, updated = ?, is_synced = 0
+                 WHERE id = ?`,
+                qr.qr_index,
+                updatedAt,
+                qr.id
+            );
+        }
+        
         await db.runAsync('COMMIT');
     } catch (error) {
         await db.runAsync('ROLLBACK');

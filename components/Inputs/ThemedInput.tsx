@@ -1,6 +1,5 @@
 import React, { useState, useImperativeHandle, forwardRef, useCallback, useRef, useEffect } from 'react';
 import {
-  Text,
   TextInput,
   StyleSheet,
   StyleProp,
@@ -120,14 +119,14 @@ export const ThemedInput = forwardRef<
       if (isError && errorMessage) {
         // Animate border width
         animatedBorderWidth.value = withTiming(getResponsiveWidth(0.3), { duration: 200 });
-        
+
         // Animate error text appearance
-        errorTextHeight.value = withTiming(getResponsiveHeight(2.5), { 
+        errorTextHeight.value = withTiming(getResponsiveHeight(2.5), {
           duration: 200,
           easing: Easing.out(Easing.ease)
         });
         errorTextOpacity.value = withTiming(1, { duration: 250 });
-        
+
         // Add shake animation for error icon
         errorShakeValue.value = withSequence(
           withTiming(-getResponsiveWidth(1), { duration: 50 }),
@@ -139,7 +138,7 @@ export const ThemedInput = forwardRef<
       } else {
         // Animate border width back to normal
         animatedBorderWidth.value = withTiming(0, { duration: 200 });
-        
+
         // Animate error text disappearance
         errorTextHeight.value = withTiming(0, { duration: 150 });
         errorTextOpacity.value = withTiming(0, { duration: 100 });
@@ -248,7 +247,7 @@ export const ThemedInput = forwardRef<
                   style={iconStyle}
                 />
               )}
-              
+
               {/* Text Input */}
               <TextInput
                 ref={textInputRef}
@@ -272,10 +271,12 @@ export const ThemedInput = forwardRef<
                 accessibilityLabel={label}
                 keyboardType={keyboardType}
                 editable={!disabled}
-                selection={selection}
-                onSelectionChange={handleSelectionChange}
+                // Remove the selection prop to see if it resolves the issue
+                // selection={selection}
+                // onSelectionChange={handleSelectionChange}
                 cursorColor={color}
               />
+
 
               {/* Right side icons */}
               <View style={styles.rightContainer}>
@@ -291,7 +292,7 @@ export const ThemedInput = forwardRef<
                     }}
                     disabled={disabled}
                   >
-                    <MaterialIcons name={'cancel'} color={color} size={getResponsiveFontSize(16)} />
+                    <MaterialIcons name={'cancel'} style={{opacity: disabled ? 0.5 : 1}} color={color} size={getResponsiveFontSize(16)} />
                   </Pressable>
                 )}
 
@@ -311,6 +312,7 @@ export const ThemedInput = forwardRef<
                       name={isSecure ? 'visibility' : 'visibility-off'}
                       size={getResponsiveWidth(4)}
                       color={color}
+                      style={{opacity: disabled ? 0.5 : 1}}
                     />
                   </Pressable>
                 )}
@@ -328,9 +330,9 @@ export const ThemedInput = forwardRef<
         {/* Animated error message container */}
         <Animated.View style={[styles.errorContainer, animatedErrorTextStyle]}>
           {isError && errorMessage && (
-            <ThemedText 
+            <ThemedText
               style={[
-                styles.errorText, 
+                styles.errorText,
                 { color: errorColor },
                 errorTextStyle
               ]}
