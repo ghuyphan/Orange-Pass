@@ -5,8 +5,6 @@ import {
   ViewStyle,
   View,
   Pressable,
-  Modal,
-  TouchableWithoutFeedback,
   Image,
 } from 'react-native';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -14,9 +12,21 @@ import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
 import { useTheme } from '@/context/ThemeContext';
 import { Colors } from '@/constants/Colors';
-import { Tooltip } from 'react-native-paper';
 import { getIconPath } from '@/utils/returnIcon';
-import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
+import {
+  getResponsiveFontSize,
+  getResponsiveWidth,
+  getResponsiveHeight,
+} from '@/utils/responsive';
+
+// --- Reanimated Imports ---
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withSequence,
+  Easing,
+} from 'react-native-reanimated';
 
 export type ThemedDisplayInputProps = {
   iconName?: keyof typeof MaterialCommunityIcons.glyphMap;
@@ -54,14 +64,17 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
     ref
   ) => {
     const { currentTheme } = useTheme();
-    const [isErrorModalVisible, setIsErrorModalVisible] = useState(false);
-    const [displayValue, setDisplayValue] = useState(value); // Local state for display
+    const [displayValue, setDisplayValue] = useState(value);
 
     // Color configurations
-    const color = currentTheme === 'light' ? Colors.light.text : Colors.dark.text;
+    const color =
+      currentTheme === 'light' ? Colors.light.text : Colors.dark.text;
     const placeholderColor =
-      currentTheme === 'light' ? Colors.light.placeHolder : Colors.dark.placeHolder;
-    const errorColor = currentTheme === 'light' ? Colors.light.error : Colors.dark.error;
+      currentTheme === 'light'
+        ? Colors.light.placeHolder
+        : Colors.dark.placeHolder;
+    const errorColor =
+      currentTheme === 'light' ? Colors.light.error : Colors.dark.error;
     const iconPath = useMemo(() => getIconPath(logoCode ?? ''), [logoCode]);
 
     const inputContainerStyle = useMemo(
@@ -74,41 +87,70 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
               ? Colors.light.inputBackground
               : Colors.dark.inputBackground),
         },
-        // style, // Removed style from here
       ],
-      [currentTheme, backgroundColor] // Removed style from dependencies
+      [currentTheme, backgroundColor]
     );
 
-    const ErrorTooltip = () => (
-      <Modal
-        transparent={true}
-        visible={isErrorModalVisible}
-        animationType="fade"
-        onRequestClose={() => setIsErrorModalVisible(false)}
-      >
-        <TouchableWithoutFeedback onPress={() => setIsErrorModalVisible(false)}>
-          <View style={styles.errorModalOverlay}>
-            <View style={[styles.errorTooltip, { backgroundColor: errorColor }]}>
-              <ThemedText style={styles.errorTooltipText}>{errorMessage}</ThemedText>
-            </View>
-          </View>
-        </TouchableWithoutFeedback>
-      </Modal>
+    // --- Reanimated Shared Values ---
+    const animatedBorderWidth = useSharedValue(
+      isError && errorMessage ? getResponsiveWidth(0.3) : 0
     );
+    const errorTextHeight = useSharedValue(0);
+    const errorTextOpacity = useSharedValue(0);
+    const errorShakeValue = useSharedValue(0);
 
-    // Update displayValue when the external value prop changes
+    // --- Reanimated Styles ---
+    const animatedBorderStyle = useAnimatedStyle(() => ({
+      borderBottomWidth: animatedBorderWidth.value,
+    }));
+
+    const animatedErrorTextStyle = useAnimatedStyle(() => ({
+      height: errorTextHeight.value,
+      opacity: errorTextOpacity.value,
+      overflow: 'hidden',
+    }));
+
+    const animatedErrorIconStyle = useAnimatedStyle(() => ({
+      transform: [{ translateX: errorShakeValue.value }],
+    }));
+
+    // Animate error-related styles when error state changes
+    useEffect(() => {
+      if (isError && errorMessage) {
+        animatedBorderWidth.value = withTiming(getResponsiveWidth(0.3), {
+          duration: 200,
+        });
+        errorTextHeight.value = withTiming(getResponsiveHeight(2.5), {
+          duration: 200,
+          easing: Easing.out(Easing.ease),
+        });
+        errorTextOpacity.value = withTiming(1, { duration: 250 });
+        errorShakeValue.value = withSequence(
+          withTiming(-getResponsiveWidth(1), { duration: 50 }),
+          withTiming(getResponsiveWidth(1), { duration: 50 }),
+          withTiming(-getResponsiveWidth(0.7), { duration: 50 }),
+          withTiming(getResponsiveWidth(0.7), { duration: 50 }),
+          withTiming(0, { duration: 50 })
+        );
+      } else {
+        animatedBorderWidth.value = withTiming(0, { duration: 200 });
+        errorTextHeight.value = withTiming(0, { duration: 150 });
+        errorTextOpacity.value = withTiming(0, { duration: 100 });
+      }
+    }, [isError, errorMessage]);
+
+    // Update local display value when the external prop changes
     useEffect(() => {
       setDisplayValue(value);
     }, [value]);
 
     const handleClear = () => {
-      setDisplayValue(''); // Clear the *local* display value
-      onClear();         // *Then* call the parent's onClear function
+      setDisplayValue('');
+      onClear();
     };
 
-
     return (
-      <View style={[styles.container, style]}> 
+      <View style={[styles.container, style]}>
         <ThemedView style={inputContainerStyle}>
           {!iconName && !logoCode && (
             <ThemedText style={[styles.label, { color }]} type="defaultSemiBold">
@@ -116,14 +158,16 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
             </ThemedText>
           )}
 
-          <Pressable onPress={onPress} disabled={disabled} style={styles.pressableContainer}>
-            <View
+          <Pressable
+            onPress={onPress}
+            disabled={disabled}
+            style={styles.pressableContainer}
+          >
+            <Animated.View
               style={[
                 styles.inputRow,
-                {
-                  borderBottomColor: errorColor,
-                  borderBottomWidth: isError && errorMessage ? getResponsiveWidth(0.3) : 0,
-                },
+                { borderBottomColor: errorColor },
+                animatedBorderStyle,
               ]}
             >
               {iconName && (
@@ -140,15 +184,21 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
                     { marginLeft: iconName ? getResponsiveWidth(2.4) : 0 },
                   ]}
                 >
-                  <Image source={iconPath} style={styles.logo} resizeMode="contain" />
+                  <Image
+                    source={iconPath}
+                    style={styles.logo}
+                    resizeMode="contain"
+                  />
                 </View>
               )}
               <ThemedText
                 style={[
                   styles.input,
                   {
-                    color: displayValue ? color : placeholderColor, // Use displayValue
-                    marginLeft: iconName || logoCode ? getResponsiveWidth(2.4) : 0,
+                    color: displayValue ? color : placeholderColor,
+                    marginLeft: iconName || logoCode
+                      ? getResponsiveWidth(2.4)
+                      : 0,
                   },
                 ]}
                 numberOfLines={1}
@@ -158,53 +208,58 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
               </ThemedText>
 
               <View style={styles.rightContainer}>
-                {/* Clear Value Button */}
-                {showClearButton && !disabled && value.length > 0 && (
-                  <Pressable
-                    onPress={handleClear} // Use the local handler
-                    style={styles.iconTouchable}
-                    hitSlop={{
-                      top: getResponsiveHeight(0.6),
-                      bottom: getResponsiveHeight(0.6),
-                      left: getResponsiveWidth(1.2),
-                      right: getResponsiveWidth(1.2),
-                    }}
-                  >
-                    <MaterialIcons
-                      name={'cancel'}
-                      color={color}
-                      size={getResponsiveFontSize(16)}
-                    />
-                  </Pressable>
-                )}
-
-                {/* Error Icon */}
-                {isError && errorMessage && (
-                  <Tooltip
-                    title={errorMessage}
-                    enterTouchDelay={0}
-                    leaveTouchDelay={1500}
-                    theme={{ colors: { onSurface: errorColor } }}
-                  >
+                {showClearButton &&
+                  !disabled &&
+                  displayValue.length > 0 && (
                     <Pressable
-                      onPress={() => setIsErrorModalVisible(true)}
-                      style={styles.errorIconContainer}
+                      onPress={handleClear}
+                      style={styles.iconTouchable}
+                      hitSlop={{
+                        top: getResponsiveHeight(0.6),
+                        bottom: getResponsiveHeight(0.6),
+                        left: getResponsiveWidth(1.2),
+                        right: getResponsiveWidth(1.2),
+                      }}
                     >
                       <MaterialIcons
-                        name="error"
+                        name="cancel"
+                        color={color}
                         size={getResponsiveFontSize(16)}
-                        color={errorColor}
                       />
                     </Pressable>
-                  </Tooltip>
+                  )}
+                {isError && errorMessage && (
+                  <Animated.View
+                    style={[
+                      styles.errorIconContainer,
+                      animatedErrorIconStyle,
+                    ]}
+                  >
+                    <MaterialIcons
+                      name="error-outline"
+                      size={getResponsiveWidth(5)}
+                      color={errorColor}
+                    />
+                  </Animated.View>
                 )}
               </View>
-            </View>
+            </Animated.View>
           </Pressable>
         </ThemedView>
 
-        {/* Error Tooltip Modal */}
-        <ErrorTooltip />
+        {/* Animated error message container */}
+        <Animated.View
+          style={[styles.errorContainer, animatedErrorTextStyle]}
+        >
+          {isError && errorMessage && (
+            <ThemedText
+              style={[styles.errorText, { color: errorColor }]}
+              numberOfLines={1}
+            >
+              {errorMessage}
+            </ThemedText>
+          )}
+        </Animated.View>
       </View>
     );
   }
@@ -227,6 +282,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: getResponsiveFontSize(13),
+    marginBottom: getResponsiveHeight(0.5),
   },
   logoContainer: {
     width: getResponsiveWidth(6),
@@ -264,24 +320,14 @@ const styles = StyleSheet.create({
     marginLeft: getResponsiveWidth(1.2),
     padding: getResponsiveWidth(0.5),
   },
-  errorModalOverlay: {
-    flex: 1,
+  errorContainer: {
+    marginHorizontal: getResponsiveWidth(4.8),
     justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
   },
-  errorTooltip: {
-    maxWidth: '80%',
-    padding: getResponsiveWidth(2.4),
-    borderRadius: getResponsiveWidth(2),
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: getResponsiveHeight(0.25) },
-    shadowOpacity: 0.25,
-    shadowRadius: getResponsiveWidth(0.92),
-    elevation: 5,
-  },
-  errorTooltipText: {
-    color: 'white',
-    textAlign: 'center',
+  errorText: {
+    fontSize: getResponsiveFontSize(11),
+    lineHeight: getResponsiveHeight(2.2),
   },
 });
+
+export default ThemedDisplayInput;

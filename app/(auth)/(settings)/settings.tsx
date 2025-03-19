@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { StyleSheet, View, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, ActivityIndicator, Pressable } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import * as SecureStore from 'expo-secure-store';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -32,7 +32,6 @@ import { useTheme } from '@/context/ThemeContext';
 import { MaterialIcons } from '@expo/vector-icons';
 import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
 import * as Application from 'expo-application';
-import { Logo } from '@/components/AppLogo';
 import { MMKV_KEYS, SECURE_KEYS } from '@/services/auth';
 
 
@@ -194,7 +193,7 @@ function SettingsScreen() {
         renderItem={renderItem}
         keyExtractor={(_, index) => index.toString()}
         ListHeaderComponent={
-          <View style={[styles.avatarContainer, { backgroundColor: sectionsColors }]}>
+          <Pressable style={[styles.avatarContainer, { backgroundColor: sectionsColors }]} onPress={() => router.push('/(auth)/(settings)/edit-avatar')}>
             <LinearGradient
               colors={['#ff9a9e', '#fad0c4', '#fad0c4', '#fbc2eb', '#a18cd1']}
               start={{ x: 0, y: 0 }}
@@ -213,11 +212,9 @@ function SettingsScreen() {
               <ThemedText numberOfLines={1} style={styles.userName}>
                 {name}
               </ThemedText>
-              {/* <ThemedText numberOfLines={1} style={styles.userName}>
-                {email}
-              </ThemedText> */}
             </View>
-          </View>
+            <MaterialIcons name="chevron-right" size={getResponsiveFontSize(16)} color={Colors.light.text} />
+          </Pressable>
         }
         ListFooterComponent={
           <>
@@ -227,22 +224,10 @@ function SettingsScreen() {
               loadingLabel={t('settingsScreen.logingOut')}
               loading={isLoading}
               onPress={onLogout}
-              // style={{ marginTop: getResponsiveHeight(2) }}
             />
-            {/* <ThemedText style={styles.versionText}>
+            <ThemedText style={styles.versionText}>
               {t('settingsScreen.appVersion') + ' ' + appVersion}
-            </ThemedText> */}
-            <View style={{ backgroundColor: sectionsColors, paddingVertical: getResponsiveHeight(1.8), paddingHorizontal: getResponsiveWidth(4.8), gap: getResponsiveHeight(1.8), marginTop: getResponsiveHeight(6), borderRadius: getResponsiveWidth(4), flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start' }}>
-              <Logo size={9} />
-              <View style={{ flexDirection: 'column' }}>
-                <ThemedText style={{ fontSize: getResponsiveFontSize(16), fontWeight: 'bold' }}>
-                  {t('common.appName')}
-                </ThemedText>
-                <ThemedText style={styles.versionText}>
-                  {t('settingsScreen.appVersion') + ' ' + appVersion}
-                </ThemedText>
-              </View>
-            </View>
+            </ThemedText>
           </>
         }
         scrollEventThrottle={16}
@@ -351,7 +336,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   versionText: {
-    // marginTop: getResponsiveHeight(0.9),
+    marginTop: getResponsiveHeight(2),
     fontSize: getResponsiveFontSize(12),
     opacity: 0.6,
     textAlign: 'center',

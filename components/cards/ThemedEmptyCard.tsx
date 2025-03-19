@@ -55,7 +55,7 @@ export function ThemedEmptyCard({
 }: ThemedEmptyCardProps) {
   const { currentTheme: colorScheme } = useTheme();
   const [isMenuVisible, setIsMenuVisible] = useState(false);
-  const buttonRef = useRef(null);
+  // const buttonRef = useRef(null);
   const textColor = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
 
   const colors = useMemo(() => ({
@@ -129,7 +129,7 @@ export function ThemedEmptyCard({
               onDismiss={() => setIsMenuVisible(false)}
               anchor={
                 <ThemedButton
-                  ref={buttonRef}
+                  // ref={buttonRef}
                   label={t(footButtonLabel)}
                   onPress={handleButtonPress}
                   style={[styles.cardFooterButton, { backgroundColor: colors.buttonBackground }]}

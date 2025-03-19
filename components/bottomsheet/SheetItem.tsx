@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, View, Pressable, Image } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 
 // Components
 import { ThemedText } from '@/components/ThemedText';
@@ -48,24 +48,39 @@ export const CategorySheetItem: React.FC<SheetItemProps> = ({
       onPress={onPress}
       style={[styles.sheetItem, isSelected && styles.selectedItem]}
     >
-      <MaterialCommunityIcons
-        color={iconColors}
-        size={getResponsiveFontSize(18)}
-        name={
-          categoryItem.value === 'store'
-            ? 'store-outline'
-            : categoryItem.value === 'bank'
-              ? 'bank-outline'
-              : 'wallet-outline'
-        }
-      />
-      <ThemedText style={styles.sheetItemText}>{categoryItem.display}</ThemedText>
-      {isSelected && (
+      <View style={styles.contentContainer}>
         <MaterialCommunityIcons
-          name="check"
-          size={getResponsiveFontSize(20)}
+          color={iconColors}
+          size={getResponsiveFontSize(18)}
+          name={
+            categoryItem.value === 'store'
+              ? 'store-outline'
+              : categoryItem.value === 'bank'
+                ? 'bank-outline'
+                : 'wallet-outline'
+          }
+        />
+        <ThemedText style={styles.sheetItemText}>{categoryItem.display}</ThemedText>
+      </View>
+      {isSelected ? (
+        <View style={styles.iconStack}>
+          <MaterialCommunityIcons
+            name="circle-outline"
+            size={getResponsiveFontSize(18)}
+            color={textColors}
+          />
+          <MaterialIcons
+            name="circle"
+            size={getResponsiveFontSize(10)}
+            color={textColors}
+            style={styles.checkIcon}
+          />
+        </View>
+      ) : (
+        <MaterialCommunityIcons
+          name="circle-outline"
+          size={getResponsiveFontSize(18)}
           color={textColors}
-          style={styles.checkIcon}
         />
       )}
     </Pressable>
@@ -85,23 +100,38 @@ export const BrandSheetItem: React.FC<SheetItemProps> = ({
       onPress={onPress}
       style={[styles.sheetItem, isSelected && styles.selectedItem]}
     >
-      <View style={styles.brandIconContainer}>
-        <Image source={getIconPath(brandItem.code)} style={styles.brandIcon} />
+      <View style={styles.contentContainer}>
+        <View style={styles.brandIconContainer}>
+          <Image source={getIconPath(brandItem.code)} style={styles.brandIcon} />
+        </View>
+        <View style={styles.brandContentContainer}>
+          <ThemedText type="defaultSemiBold" style={styles.brandText}>
+            {brandItem.name}
+          </ThemedText>
+          <ThemedText numberOfLines={1} style={styles.brandFullName}>
+            {brandItem.full_name}
+          </ThemedText>
+        </View>
       </View>
-      <View style={styles.brandContentContainer}>
-        <ThemedText type="defaultSemiBold" style={styles.brandText}>
-          {brandItem.name}
-        </ThemedText>
-        <ThemedText numberOfLines={1} style={styles.brandFullName}>
-          {brandItem.full_name}
-        </ThemedText>
-      </View>
-      {isSelected && (
+      {isSelected ? (
+        <View style={styles.iconStack}>
+          <MaterialCommunityIcons
+            name="circle-outline"
+            size={getResponsiveFontSize(18)}
+            color={textColors}
+          />
+          <MaterialIcons
+            name="circle"
+            size={getResponsiveFontSize(10)}
+            color={textColors}
+            style={styles.checkIcon}
+          />
+        </View>
+      ) : (
         <MaterialCommunityIcons
-          name="check"
-          size={getResponsiveFontSize(20)}
+          name="circle-outline"
+          size={getResponsiveFontSize(18)}
           color={textColors}
-          style={styles.checkIcon}
         />
       )}
     </Pressable>
@@ -122,18 +152,33 @@ export const MetadataTypeSheetItem: React.FC<SheetItemProps> = ({
       onPress={onPress}
       style={[styles.sheetItem, isSelected && styles.selectedItem]}
     >
-      <MaterialCommunityIcons
-        color={iconColors}
-        size={getResponsiveFontSize(18)}
-        name={metadataTypeItem.value === 'qr' ? 'qrcode-scan' : 'barcode-scan'}
-      />
-      <ThemedText style={styles.sheetItemText}>{metadataTypeItem.display}</ThemedText>
-      {isSelected && (
+      <View style={styles.contentContainer}>
         <MaterialCommunityIcons
-          name="check"
-          size={getResponsiveFontSize(20)}
+          color={iconColors}
+          size={getResponsiveFontSize(18)}
+          name={metadataTypeItem.value === 'qr' ? 'qrcode-scan' : 'barcode-scan'}
+        />
+        <ThemedText style={styles.sheetItemText}>{metadataTypeItem.display}</ThemedText>
+      </View>
+      {isSelected ? (
+        <View style={styles.iconStack}>
+          <MaterialCommunityIcons
+            name="circle-outline"
+            size={getResponsiveFontSize(18)}
+            color={textColors}
+          />
+          <MaterialIcons
+            name="circle"
+            size={getResponsiveFontSize(10)}
+            color={textColors}
+            style={styles.checkIcon}
+          />
+        </View>
+      ) : (
+        <MaterialCommunityIcons
+          name="circle-outline"
+          size={getResponsiveFontSize(18)}
           color={textColors}
-          style={styles.checkIcon}
         />
       )}
     </Pressable>
@@ -144,11 +189,16 @@ const styles = StyleSheet.create({
   sheetItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: getResponsiveWidth(2.5),
+    justifyContent: 'space-between', // Apply to the entire item
     paddingVertical: getResponsiveHeight(1.8),
     paddingHorizontal: getResponsiveWidth(4.8),
     borderRadius: getResponsiveWidth(4),
     overflow: 'hidden',
+  },
+  contentContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getResponsiveWidth(2.5), // Add gap between icon and text
   },
   selectedItem: {
     // backgroundColor is handled by theme context
@@ -161,6 +211,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'white',
+    marginRight: getResponsiveWidth(2.5), // Add marginRight for spacing
   },
   brandContentContainer: {
     flexDirection: 'column',
@@ -177,9 +228,15 @@ const styles = StyleSheet.create({
   brandFullName: {
     fontSize: getResponsiveFontSize(12),
     opacity: 0.6,
+    maxWidth: getResponsiveWidth(60),
+  },
+  iconStack: {
+    position: 'relative',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   checkIcon: {
-    marginLeft: 'auto',
+    position: 'absolute',
   },
   sheetItemText: {
     fontSize: getResponsiveFontSize(16),

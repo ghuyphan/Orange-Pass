@@ -91,8 +91,13 @@ const LanguageScreen = () => {
           <View style={styles.flagIconContainer}>{flag}</View>
           <ThemedText>{t(`languageScreen.${language}`)}</ThemedText>
         </View>
-        {locale === localeCode && (
-          <MaterialIcons name="check" size={getResponsiveFontSize(18)} color={colors} />
+        {locale === localeCode ? (
+          <View style={styles.iconStack}>
+            <MaterialCommunityIcons name="circle-outline" size={getResponsiveFontSize(18)} color={colors} />
+            <MaterialIcons name="circle" size={getResponsiveFontSize(10)} color={colors} style={styles.checkIcon} />
+          </View>
+        ) : (
+          <MaterialCommunityIcons name="circle-outline" size={getResponsiveFontSize(18)} color={colors} />
         )}
       </View>
     </Pressable>
@@ -137,8 +142,13 @@ const LanguageScreen = () => {
                 </View>
                 <ThemedText>{t('languageScreen.system')}</ThemedText>
               </View>
-              {locale === undefined && (
-                <MaterialIcons name="check" size={getResponsiveFontSize(18)} color={colors} />
+              {locale === undefined ? (
+                <View style={styles.iconStack}>
+                  <MaterialCommunityIcons name="circle-outline" size={getResponsiveFontSize(18)} color={colors} />
+                  <MaterialIcons name="circle" size={getResponsiveFontSize(10)} color={colors} style={styles.checkIcon} />
+                </View>
+              ) : (
+                <MaterialCommunityIcons name="circle-outline" size={getResponsiveFontSize(18)} color={colors} />
               )}
             </View>
           </Pressable>
@@ -222,5 +232,16 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  iconStack: {
+    position: 'relative',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkIcon: {
+    position: 'absolute',
+    // top: '50%',
+    // left: '50%',
+    // transform: [{ translateX: -6 }, { translateY: -6 }], // Adjust to center the checkmark
   },
 });

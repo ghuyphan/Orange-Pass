@@ -166,22 +166,22 @@ export default function QuickLoginScreen() {
     router.push('/register');
   };
 
-  const handleCancelLogin = () => {
-    // Set the canceled flag to true
-    loginCanceledRef.current = true;
+  // const handleCancelLogin = () => {
+  //   // Set the canceled flag to true
+  //   loginCanceledRef.current = true;
     
-    // Stop showing loading state
-    setIsLoading(false);
+  //   // Stop showing loading state
+  //   setIsLoading(false);
     
-    // Show cancellation message
-    setErrorMessage(t('quickLoginScreen.loginCancelled') || 'Login cancelled');
-    setIsToastVisible(true);
+  //   // Show cancellation message
+  //   setErrorMessage(t('quickLoginScreen.loginCancelled') || 'Login cancelled');
+  //   setIsToastVisible(true);
     
-    // Reset password field if it was shown
-    if (showPasswordField) {
-      setPassword('');
-    }
-  };
+  //   // Reset password field if it was shown
+  //   if (showPasswordField) {
+  //     setPassword('');
+  //   }
+  // };
 
   const handleQuickLogin = async () => {
     if (!selectedAccount) {
@@ -336,10 +336,10 @@ export default function QuickLoginScreen() {
       <ThemedText style={styles.loadingText}>
         {t('quickLoginScreen.loggingIn')}
       </ThemedText>
-      <ThemedButton
+      {/* <ThemedButton
         label={t('quickLoginScreen.cancel')}
         onPress={handleCancelLogin}
-      />
+      /> */}
     </View>
   );
 
@@ -536,7 +536,7 @@ const styles = StyleSheet.create({
     fontSize: getResponsiveFontSize(40),
     color: 'white',
     fontWeight: 'bold',
-    lineHeight: getResponsiveFontSize(40),
+    lineHeight: getResponsiveFontSize(100)
   },
 
   // User display name

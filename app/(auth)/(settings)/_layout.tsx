@@ -21,10 +21,11 @@ export default function ScanLayout() {
           animation: 'ios'
         }}
       >
-        <Stack.Screen name="settings" options={{ animation: 'none' }}/>
-        <Stack.Screen name = "theme"/>
-        <Stack.Screen name = "language"/>
-        <Stack.Screen name = "edit"/>
+        <Stack.Screen name="settings" options={{ animation: 'none' }} />
+        <Stack.Screen name="theme" />
+        <Stack.Screen name="language" />
+        <Stack.Screen name="edit" />
+        <Stack.Screen name="edit-avatar" />
       </Stack>
       {showHeader &&
         <View style={styles.headerContainer}>

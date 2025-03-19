@@ -115,7 +115,7 @@ export default function ForgotPasswordScreen() {
 
             <View style={styles.inputContainer}>
               <ThemedInput
-                placeholder={t("forgotPasswordScreen.emailPlaceholder")}
+                placeholder={t("forgotPasswordScreen.email")}
                 onChangeText={handleChange("email")}
                 isError={touched.email && errors.email ? true : false}
                 onBlur={handleBlur("email")}

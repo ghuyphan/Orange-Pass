@@ -17,7 +17,7 @@ import { t } from '@/i18n';
 import { Colors } from '@/constants/Colors';
 import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
 import { useTheme } from '@/context/ThemeContext';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import DARK from '@/assets/svgs/dark.svg';
 import LIGHT from '@/assets/svgs/light.svg';
 import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
@@ -75,9 +75,9 @@ const ThemeScreen = () => {
     setDarkMode(true);
   }, [setDarkMode]);
 
-  const HandleSystemTheme = () => {
-    useSystemTheme();
-  }
+  const handleSystemTheme = useCallback(() => {
+    useSystemTheme(); // Directly call the function
+  }, [useSystemTheme]);
 
   const renderThemeOption = useCallback(
     (themeName: string, iconName: string, isChecked: boolean) => (
@@ -91,7 +91,7 @@ const ThemeScreen = () => {
               handleDarkTheme();
               break;
             case 'system':
-              HandleSystemTheme();
+              handleSystemTheme();
               break;
           }
         }}
@@ -106,17 +106,31 @@ const ThemeScreen = () => {
             />
             <ThemedText>{t(`themeScreen.${themeName}`)}</ThemedText>
           </View>
-          {isChecked && (
+          {isChecked ? (
+            <View style={styles.iconStack}>
+              <MaterialCommunityIcons
+                name="circle-outline"
+                size={getResponsiveFontSize(18)}
+                color={colors}
+              />
+              <MaterialIcons
+                name="circle"
+                size={getResponsiveFontSize(10)}
+                color={colors}
+                style={styles.checkIcon}
+              />
+            </View>
+          ) : (
             <MaterialCommunityIcons
-              name="check"
-              size={getResponsiveFontSize(20)}
+              name="circle-outline"
+              size={getResponsiveFontSize(18)}
               color={colors}
             />
           )}
         </View>
       </Pressable>
     ),
-    [colors, handleLightTheme, handleDarkTheme]
+    [colors, handleLightTheme, handleDarkTheme, handleSystemTheme]
   );
 
   return (
@@ -232,28 +246,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: getResponsiveWidth(3.6),
-    pointerEvents: 'none',
+    paddingVertical: getResponsiveHeight(1.8),
   },
   leftSectionContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: getResponsiveWidth(2.4),
-    paddingVertical: getResponsiveHeight(1.8),
   },
-  flagIconContainer: {
-    width: getResponsiveWidth(6),
-    aspectRatio: 1,
-    borderRadius: getResponsiveWidth(12),
+  iconStack: {
+    position: 'relative',
     justifyContent: 'center',
     alignItems: 'center',
-    overflow: 'hidden',
   },
-  iconContainer: {
-    width: getResponsiveWidth(6.8),
-    aspectRatio: 1,
-    borderRadius: getResponsiveWidth(12),
-    overflow: 'hidden',
-    justifyContent: 'center',
-    alignItems: 'center',
+  checkIcon: {
+    position: 'absolute',
   },
 });
