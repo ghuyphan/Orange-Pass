@@ -413,7 +413,65 @@
   },
   "editAvatarScreen": {
     "title": "Chỉnh sửa Avatar",
-    "save": "Lưu"
+    "save": "Lưu",
+    "faceColor": "Màu da",
+    "earSize": "Kích thước tai",
+    "hairStyle": "Kiểu tóc",
+    "hairColor": "Màu tóc",
+    "hatStyle": "Kiểu mũ",
+    "hatColor": "Màu mũ",
+    "eyeStyle": "Kiểu mắt",
+    "glassesStyle": "Kiểu kính",
+    "noseStyle": "Kiểu mũi",
+    "mouthStyle": "Kiểu miệng",
+    "shirtStyle": "Kiểu áo",
+    "shirtColor": "Màu áo",
+    "options": {
+      "earSize": {
+        "small": "Nhỏ",
+        "big": "Lớn"
+      },
+      "hairStyle": {
+        "normal": "Bình thường",
+        "thick": "Dày",
+        "mohawk": "Mohawk",
+        "womanLong": "Nữ dài",
+        "womanShort": "Nữ ngắn"
+      },
+      "hatStyle": {
+        "none": "Không",
+        "beanie": "Mũ len",
+        "turban": "Khăn xếp"
+      },
+      "eyeStyle": {
+        "circle": "Tròn",
+        "oval": "Oval",
+        "smile": "Cười"
+      },
+      "glassesStyle": {
+        "none": "Không",
+        "round": "Tròn",
+        "square": "Vuông"
+      },
+      "noseStyle": {
+        "short": "Ngắn",
+        "long": "Dài",
+        "round": "Tròn"
+      },
+      "mouthStyle": {
+        "laugh": "Cười lớn",
+        "smile": "Cười mỉm",
+        "peace": "Hòa bình"
+      },
+      "shirtStyle": {
+        "hoody": "Áo trùm đầu",
+        "short": "Ngắn tay",
+        "polo": "Polo"
+      }
+    },
+    "customColor": "Màu tùy chỉnh",
+    "enterCustomHexCode": "Nhập mã hex tùy chỉnh",
+    "hexCode": "Mã Hex"
   },
   "languageScreen": {
     "title": "Ngôn ngữ",

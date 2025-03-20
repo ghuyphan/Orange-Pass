@@ -175,12 +175,13 @@ export default function LoginScreen() {
               <View style={styles.flagIconContainer}>{flag}</View>
               <ThemedText style={{ color: textColors }}>{label}</ThemedText>
             </View>
-            {storedLocale === key && (
-              <MaterialIcons
-                name="check"
-                size={getResponsiveFontSize(18)}
-                color={colors}
-              />
+            {storedLocale === key ? (
+              <View style={styles.iconStack}>
+                <MaterialCommunityIcons name="circle-outline" size={getResponsiveFontSize(18)} color={colors} />
+                <MaterialIcons name="circle" size={getResponsiveFontSize(10)} color={colors} style={styles.checkIcon} />
+              </View>
+            ) : (
+              <MaterialCommunityIcons name="circle-outline" size={getResponsiveFontSize(18)} color={colors} />
             )}
           </Pressable>
         ))}
@@ -201,12 +202,13 @@ export default function LoginScreen() {
               {t("languageScreen.system")}
             </ThemedText>
           </View>
-          {storedLocale === undefined && (
-            <MaterialIcons
-              name="check"
-              size={getResponsiveFontSize(18)}
-              color={colors}
-            />
+          {storedLocale === undefined ? (
+            <View style={styles.iconStack}>
+              <MaterialCommunityIcons name="circle-outline" size={getResponsiveFontSize(18)} color={colors} />
+              <MaterialIcons name="circle" size={getResponsiveFontSize(10)} color={colors} style={styles.checkIcon} />
+            </View>
+          ) : (
+            <MaterialCommunityIcons name="circle-outline" size={getResponsiveFontSize(18)} color={colors} />
           )}
         </Pressable>
       </View>
@@ -411,7 +413,7 @@ const styles = StyleSheet.create({
     marginBottom: getResponsiveHeight(2),
   },
   loginButton: {
- 
+
     marginBottom: getResponsiveHeight(2),
   },
   loginButtonText: {
@@ -423,7 +425,7 @@ const styles = StyleSheet.create({
   },
   createAccountButton: {
     borderRadius: getResponsiveWidth(8),
- 
+
     width: "100%",
     marginBottom: getResponsiveHeight(2),
   },
@@ -473,5 +475,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: getResponsiveWidth(2.4),
+  },
+  iconStack: {
+    position: 'relative',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkIcon: {
+    position: 'absolute',
+    // top: '50%',
+    // left: '50%',
+    // transform: [{ translateX: -6 }, { translateY: -6 }], // Adjust to center the checkmark
   },
 });

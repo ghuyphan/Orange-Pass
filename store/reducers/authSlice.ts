@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import UserRecord from "@/types/userType";
-import { AvatarConfig } from '@zamplyy/react-native-nice-avatar';
+import { AvatarConfig } from "@zamplyy/react-native-nice-avatar";
 
 interface AuthState {
   token: string | null;
@@ -17,24 +17,25 @@ const initialState: AuthState = {
 };
 
 const authSlice = createSlice({
-  name: 'auth',
+  name: "auth",
   initialState,
   reducers: {
-    setAuthData: (state, action: PayloadAction<{ 
-      token: string; 
-      user: UserRecord 
-    }>) => {
+    setAuthData: (
+      state,
+      action: PayloadAction<{ token: string; user: UserRecord }>
+    ) => {
       state.token = action.payload.token;
       state.user = action.payload.user;
       state.isAuthenticated = true;
 
-      // Parse avatar config here
+      // Parse avatar config from the user record.
       try {
-        const avatarConfigString = action.payload.user?.avatar;
-        if (avatarConfigString) {
-          state.avatarConfig = typeof avatarConfigString === 'string'
-            ? JSON.parse(avatarConfigString)
-            : avatarConfigString;
+        const avatarConfigData = action.payload.user?.avatar;
+        if (avatarConfigData) {
+          state.avatarConfig =
+            typeof avatarConfigData === "string"
+              ? JSON.parse(avatarConfigData)
+              : avatarConfigData;
         } else {
           state.avatarConfig = null;
         }
@@ -49,8 +50,20 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.avatarConfig = null;
     },
+    updateAvatarConfig: (
+      state,
+      action: PayloadAction<AvatarConfig>
+    ) => {
+      // Update the avatarConfig in the global state.
+      state.avatarConfig = action.payload;
+      // Also update the user record with the new avatar configuration as an object.
+      if (state.user) {
+        state.user.avatar = action.payload;
+      }
+    },
   },
 });
 
-export const { setAuthData, clearAuthData } = authSlice.actions;
+export const { setAuthData, clearAuthData, updateAvatarConfig } =
+  authSlice.actions;
 export default authSlice.reducer;

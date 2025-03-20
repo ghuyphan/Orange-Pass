@@ -1,4 +1,11 @@
-import React, { useEffect, useState, useRef, useCallback, Suspense, useMemo } from 'react';
+import React, {
+  useEffect,
+  useState,
+  useRef,
+  useCallback,
+  Suspense,
+  useMemo,
+} from 'react';
 import {
   StyleSheet,
   View,
@@ -31,7 +38,7 @@ import { storage } from '@/utils/storage';
 import { triggerLightHapticFeedback } from '@/utils/haptic';
 import SheetType from '@/types/sheetType';
 
-// Components - Consider lazy loading for non-critical components
+// Components
 import { ThemedButton } from '@/components/buttons/ThemedButton';
 import { ScannerFrame } from '@/components/camera/ScannerFrame';
 import { FocusIndicator } from '@/components/camera/FocusIndicator';
@@ -39,25 +46,29 @@ import { ZoomControl } from '@/components/camera/ZoomControl';
 import { QRResult } from '@/components/camera/CodeResult';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedStatusToast } from '@/components/toast/ThemedStatusToast';
-// Lazy load the bottom sheet as it's not immediately visible
-// const ThemedReuseableSheet = React.lazy(() => import('@/components/bottomsheet/ThemedReusableSheet'));
 import ThemedReuseableSheet from '@/components/bottomsheet/ThemedReusableSheet';
+
+// **New imports for sheet content**
+import WifiSheetContent from '@/components/bottomsheet/WifiSheetContent';
+import LinkingSheetContent from '@/components/bottomsheet/LinkingSheetContent';
+import SettingSheetContent from '@/components/bottomsheet/SettingSheetContent';
 
 // Hooks
 import { useMMKVBoolean } from 'react-native-mmkv';
-// import useHandleCodeScanned from '@/hooks/useHandleCodeScanned';
 import { useLocale } from '@/context/LocaleContext';
 import { useCameraScanner } from '@/hooks/useCameraScanner';
 import { useCameraSetup } from '@/hooks/useCameraSetup';
 import { useFocusGesture } from '@/hooks/useFocusGesture';
 import { useGalleryPicker } from '@/hooks/useGalleryPicker';
-import { getResponsiveHeight, getResponsiveWidth } from '@/utils/responsive';
+import {
+  getResponsiveHeight,
+  getResponsiveWidth,
+} from '@/utils/responsive';
 
 // Create animated camera component
 const ReanimatedCamera = Reanimated.createAnimatedComponent(Camera);
 Reanimated.addWhitelistedNativeProps({ zoom: true });
 
-// Main component
 export default function ScanScreen() {
   // Context and Navigation
   const { locale } = useLocale();
@@ -67,18 +78,23 @@ export default function ScanScreen() {
   // Camera Ref and Setup - Defer camera setup until component is mounted
   const cameraRef = useRef(null);
   const [setupCamera, setSetupCamera] = useState(false);
-  const { device, hasPermission, torch, toggleFlash } = useCameraSetup(cameraRef);
+  const { device, hasPermission, torch, toggleFlash } =
+    useCameraSetup(cameraRef);
   const bottomSheetRef = useRef<BottomSheet>(null);
 
-  const [allPermissionsGranted, setAllPermissionsGranted] = useState<boolean | null>(null);
+  const [allPermissionsGranted, setAllPermissionsGranted] =
+    useState<boolean | null>(null);
 
   const zoom = useSharedValue(1);
   const minZoom = device?.minZoom ?? 1;
   const maxZoom = Math.min(device?.maxZoom ?? 1, MAX_ZOOM_FACTOR);
 
-  const cameraAnimatedProps = useAnimatedProps(() => ({
-    zoom: Math.max(Math.min(zoom.value, maxZoom), minZoom),
-  }), [maxZoom, minZoom, zoom]);
+  const cameraAnimatedProps = useAnimatedProps(
+    () => ({
+      zoom: Math.max(Math.min(zoom.value, maxZoom), minZoom),
+    }),
+    [maxZoom, minZoom, zoom]
+  );
 
   // Use effect to defer camera setup
   useEffect(() => {
@@ -95,7 +111,8 @@ export default function ScanScreen() {
   }, []);
 
   // Focus Gesture - Only initialize when camera is ready
-  const { gesture, focusPoint, animatedFocusStyle } = useFocusGesture(cameraRef, zoom);
+  const { gesture, focusPoint, animatedFocusStyle } =
+    useFocusGesture(cameraRef, zoom);
 
   // Camera Scanner - Memoize scanner to prevent unnecessary re-renders
   const {
@@ -113,7 +130,10 @@ export default function ScanScreen() {
   } = useCameraScanner();
 
   // Auto Brightness - Memoize callback
-  const [autoBrightness, setAutoBrightness] = useMMKVBoolean('autoBrightness', storage);
+  const [autoBrightness, setAutoBrightness] = useMMKVBoolean(
+    'autoBrightness',
+    storage
+  );
 
   useEffect(() => {
     if (autoBrightness === undefined) {
@@ -122,18 +142,29 @@ export default function ScanScreen() {
   }, [setAutoBrightness, autoBrightness]);
 
   const toggleAutoBrightness = useCallback(() => {
-    setAutoBrightness(prev => !prev);
+    setAutoBrightness((prev) => !prev);
     triggerLightHapticFeedback();
   }, [setAutoBrightness]);
 
   // Layout and State
-  const [layout, setLayout] = useState({ x: 0, y: 0, width: 0, height: 0 });
+  const [layout, setLayout] = useState({
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
+  });
   const [isCameraReady, setIsCameraReady] = useState(false);
   const [isToastVisible, setIsToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [isDecoding, setIsDecoding] = useState(false);
   const [cameraIsActive, setCameraIsActive] = useState(true);
   const [sheetType, setSheetType] = useState<SheetType | null>(null);
+
+  // **States for sheet content similar to HomeScreen**
+  const [linkingUrl, setLinkingUrl] = useState<string | null>('');
+  const [wifiSsid, setWifiSsid] = useState<string | null>('');
+  const [wifiPassword, setWifiPassword] = useState<string | null>('');
+  const [wifiIsWep, setWifiIsWep] = useState(false);
 
   // Toast handler
   const showToast = useCallback((message: string) => {
@@ -160,7 +191,16 @@ export default function ScanScreen() {
 
   // Code scanner - Memoize to prevent re-creation
   const codeScanner = useCodeScanner({
-    codeTypes: ['qr', 'code-128', 'code-39', 'ean-13', 'ean-8', 'upc-a', 'upc-e', 'data-matrix'],
+    codeTypes: [
+      'qr',
+      'code-128',
+      'code-39',
+      'ean-13',
+      'ean-8',
+      'upc-a',
+      'upc-e',
+      'data-matrix',
+    ],
     onCodeScanned: createCodeScannerCallback,
   });
 
@@ -199,6 +239,41 @@ export default function ScanScreen() {
     onNavigateToAddScreen,
   });
 
+  // **Render the corresponding sheet content based on sheetType**
+  const renderSheetContent = useCallback(() => {
+    switch (sheetType) {
+      case 'wifi':
+        return (
+          <WifiSheetContent
+            ssid={wifiSsid || ''}
+            password={wifiPassword || ''}
+            isWep={wifiIsWep}
+          />
+        );
+      case 'linking':
+        return (
+          <LinkingSheetContent url={linkingUrl || ''} onCopySuccess={showToast} />
+        );
+      case 'setting':
+        return (
+          <SettingSheetContent
+            onEdit={() => router.push('/settings')}
+            onDelete={() => {}}
+          />
+        );
+      default:
+        return null;
+    }
+  }, [
+    sheetType,
+    wifiSsid,
+    wifiPassword,
+    wifiIsWep,
+    linkingUrl,
+    router,
+    showToast,
+  ]);
+
   // Animation values
   const opacity = useSharedValue(0);
   const animatedStyle = useAnimatedStyle(() => ({
@@ -230,7 +305,10 @@ export default function ScanScreen() {
       }
     };
 
-    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    const subscription = AppState.addEventListener(
+      'change',
+      handleAppStateChange
+    );
 
     return () => {
       subscription.remove();
@@ -245,7 +323,7 @@ export default function ScanScreen() {
           cameraOpacity.value = 1;
           setIsCameraReady(true);
         }
-      }, 200); // Reduced timeout from 800ms to 300ms
+      }, 200);
 
       return () => clearTimeout(timeout);
     }
@@ -260,11 +338,11 @@ export default function ScanScreen() {
 
       // Check location permissions
       const hasFineLocationPermission = await PermissionsAndroid.check(
-        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
       );
 
       const hasCoarseLocationPermission = await PermissionsAndroid.check(
-        PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
+        PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION
       );
 
       return hasFineLocationPermission && hasCoarseLocationPermission;
@@ -306,7 +384,10 @@ export default function ScanScreen() {
     <View style={styles.container}>
       <SafeAreaView style={styles.cameraContainer}>
         <GestureDetector gesture={gesture}>
-          <Reanimated.View onLayout={onLayout} style={[StyleSheet.absoluteFill, animatedCameraStyle]}>
+          <Reanimated.View
+            onLayout={onLayout}
+            style={[StyleSheet.absoluteFill, animatedCameraStyle]}
+          >
             {isCameraReady && (
               <ReanimatedCamera
                 ref={cameraRef}
@@ -315,16 +396,23 @@ export default function ScanScreen() {
                 device={device}
                 isActive={cameraIsActive}
                 codeScanner={codeScanner}
-                resizeMode='cover'
-                videoStabilizationMode='auto'
+                resizeMode="cover"
+                videoStabilizationMode="auto"
                 animatedProps={cameraAnimatedProps}
               />
             )}
             {isCameraReady && (
               <>
                 <View>
-                  <FocusIndicator focusPoint={focusPoint} animatedFocusStyle={animatedFocusStyle} />
-                  <ScannerFrame highlight={codeScannerHighlights[0]} layout={layout} scanFrame={scanFrame} />
+                  <FocusIndicator
+                    focusPoint={focusPoint}
+                    animatedFocusStyle={animatedFocusStyle}
+                  />
+                  <ScannerFrame
+                    highlight={codeScannerHighlights[0]}
+                    layout={layout}
+                    scanFrame={scanFrame}
+                  />
                 </View>
                 <View style={{ position: 'absolute', bottom: 20, left: 0, right: 0 }}>
                   {codeMetadata ? (
@@ -360,17 +448,17 @@ export default function ScanScreen() {
           <ThemedButton
             iconName="image"
             iconColor="white"
-            underlayColor='#fff'
+            underlayColor="#fff"
             onPress={onOpenGallery}
             style={styles.bottomButton}
             loading={isDecoding}
-            loadingColor='#fff'
+            loadingColor="#fff"
           />
           <ThemedButton
             iconName="cog"
             iconColor="white"
-            underlayColor='#fff'
-            onPress={() => {}}
+            underlayColor="#fff"
+            onPress={() => onOpenSheet('setting')}
             style={styles.bottomButton}
           />
         </View>
@@ -378,13 +466,13 @@ export default function ScanScreen() {
 
       <View style={styles.headerContainer}>
         <ThemedButton
-          iconColor='#fff'
+          iconColor="#fff"
           style={styles.headerButton}
           onPress={() => router.back()}
           iconName="chevron-left"
         />
         <ThemedButton
-          underlayColor='#fff'
+          underlayColor="#fff"
           iconColor={torch === 'on' ? '#FFCC00' : '#fff'}
           style={styles.headerButton}
           onPress={toggleFlash}
@@ -401,16 +489,40 @@ export default function ScanScreen() {
 
       <StatusBar barStyle="light-content" />
 
-      {/* Lazy load the bottom sheet */}
+      {/* Lazy load the bottom sheet with corresponding content */}
       {isCameraReady && (
         <Suspense fallback={null}>
           <ThemedReuseableSheet
             ref={bottomSheetRef}
-            title={t('homeScreen.manage')}
-            enableDynamicSizing={true}
-            contentType='scroll'
+            title={
+              sheetType === 'setting'
+                ? t('homeScreen.manage')
+                : sheetType === 'wifi'
+                ? t('homeScreen.wifi')
+                : sheetType === 'linking'
+                ? t('homeScreen.linking')
+                : t('homeScreen.settings')
+            }
+            onClose={() => setTimeout(() => setSheetType(null), 50)}
+            snapPoints={
+              sheetType === 'setting'
+                ? ['25%']
+                : sheetType === 'wifi'
+                ? ['38%']
+                : sheetType === 'linking'
+                ? ['35%']
+                : ['35%']
+            }
+            styles={{
+              customContent: {
+                borderRadius: getResponsiveWidth(4),
+                marginHorizontal: getResponsiveWidth(3.6),
+              },
+            }}
             customContent={
-              <View style={{ flex: 1, backgroundColor: 'black' }} />
+              <View style={styles.sheetContentContainer}>
+                {renderSheetContent()}
+              </View>
             }
           />
         </Suspense>
@@ -456,7 +568,7 @@ const styles = StyleSheet.create({
   bottomContainer: {
     flex: 1,
     flexDirection: 'column',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   zoomControlContainer: {
     alignItems: 'center',
@@ -479,4 +591,8 @@ const styles = StyleSheet.create({
     left: 15,
     right: 15,
   },
+  sheetContentContainer: {
+    flex: 1,
+  },
 });
+

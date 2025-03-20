@@ -1,30 +1,41 @@
-import React, { useCallback, useState, useRef } from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useCallback, useState, useRef } from "react";
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  Pressable,
+} from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedScrollHandler,
   useAnimatedStyle,
   interpolate,
-  Extrapolate,
   Extrapolation,
-} from 'react-native-reanimated';
-import { ThemedView } from '@/components/ThemedView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedButton } from '@/components/buttons';
-import { router } from 'expo-router';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '@/store/rootReducer';
-import { updateAvatarConfig } from '@/store/reducers/authSlice';
-import Avatar from '@zamplyy/react-native-nice-avatar';
-import { t } from '@/i18n';
+} from "react-native-reanimated";
+import { ThemedView } from "@/components/ThemedView";
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedButton } from "@/components/buttons";
+import { router } from "expo-router";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/store/rootReducer";
+import Avatar from "@zamplyy/react-native-nice-avatar";
+import { AvatarConfig } from "@zamplyy/react-native-nice-avatar";
+import { t } from "@/i18n";
 import {
   getResponsiveWidth,
   getResponsiveHeight,
   getResponsiveFontSize,
-} from '@/utils/responsive';
-import { Colors } from '@/constants/Colors';
-import { useTheme } from '@/context/ThemeContext';
-import ThemedReuseableSheet from '@/components/bottomsheet/ThemedReusableSheet';
+} from "@/utils/responsive";
+import { Colors } from "@/constants/Colors";
+import { useTheme } from "@/context/ThemeContext";
+import ThemedReuseableSheet from "@/components/bottomsheet/ThemedReusableSheet";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { updateAvatarConfig } from "@/store/reducers/authSlice";
+import { updateUserAvatarCombined } from "@/services/localDB/userDB";
+
+// A helper type for dynamic access.
+type ConfigRecord = Record<string, string>;
 
 const EditAvatarScreen = () => {
   const { currentTheme } = useTheme();
@@ -32,285 +43,375 @@ const EditAvatarScreen = () => {
   const currentAvatarConfig = useSelector(
     (state: RootState) => state.auth.avatarConfig
   );
-  const [avatarConfig, setAvatarConfig] = useState(currentAvatarConfig);
+  const currentUser = useSelector((state: RootState) => state.auth.user);
 
-  console.log('Avatar config:', avatarConfig);
+  // Ensure avatarConfig is never null by providing a fallback.
+  const [avatarConfig, setAvatarConfig] = useState(
+    currentAvatarConfig ?? ({} as any)
+  );
 
-  // Pre-compute responsive constants
+  // Pre-compute responsive constants.
   const headerScrollThreshold = getResponsiveHeight(7);
   const headerAnimationRange = getResponsiveHeight(5);
-  // Increase the shared translation so the header and avatar move up more noticeably
-  const sharedTranslateY = -getResponsiveHeight(6);
-  const responsiveAvatarMarginBottom = getResponsiveHeight(2);
-  const responsiveAvatarMarginBottomSmall = getResponsiveHeight(0.5);
-  const baseAvatarSize = getResponsiveWidth(40); // used for both size and layout height
+  const baseAvatarSize = getResponsiveWidth(40);
+  const avatarMoveUpDistance = getResponsiveHeight(11);
+  const headerMoveUpDistance = getResponsiveHeight(2);
+  const avatarInitialOffset = getResponsiveHeight(16);
 
-  // Shared scroll value for animations.
+  // Shared scroll value.
   const scrollY = useSharedValue(0);
+
+  // Scroll handler.
   const scrollHandler = useAnimatedScrollHandler((event) => {
     scrollY.value = event.contentOffset.y;
   });
 
-  // --- Header Animation (using sharedTranslateY) ---
+  // Animated style for the header.
   const headerAnimatedStyle = useAnimatedStyle(() => {
     return {
       opacity: interpolate(
         scrollY.value,
         [headerScrollThreshold, headerScrollThreshold + headerAnimationRange],
         [1, 0],
-        Extrapolate.CLAMP
+        Extrapolation.CLAMP
       ),
       transform: [
         {
           translateY: interpolate(
             scrollY.value,
             [0, headerScrollThreshold],
-            [0, sharedTranslateY],
-            Extrapolate.CLAMP
+            [0, -headerMoveUpDistance],
+            Extrapolation.CLAMP
           ),
         },
       ],
     };
   });
 
-  // --- Avatar Container Animation: animate both layout height and transform ---
+  // Animated style for the avatar.
+  const AVATAR_SCROLL_THRESHOLD = 100;
   const avatarContainerAnimatedStyle = useAnimatedStyle(() => {
-    const scale = interpolate(
-      scrollY.value,
-      [0, 100],
-      [1, 0.6],
-      Extrapolation.CLAMP
-    );
-    const translateY = interpolate(
-      scrollY.value,
-      [0, 100],
-      [0, sharedTranslateY],
-      Extrapolation.CLAMP
-    );
-    const animatedHeight = interpolate(
-      scrollY.value,
-      [0, 100],
-      [baseAvatarSize, baseAvatarSize * 0.6],
-      Extrapolation.CLAMP
-    );
-    const marginBottom = interpolate(
-      scrollY.value,
-      [0, 100],
-      [responsiveAvatarMarginBottom, responsiveAvatarMarginBottomSmall],
-      Extrapolation.CLAMP
-    );
-    // Instead of animating paddingTop, consider animating an additional translateY
-    const additionalTranslateY = interpolate(
-      scrollY.value,
-      [0, 100],
-      [10, -50], // moves the avatar container upward by 50 at max scroll
-      Extrapolation.CLAMP
-    );
+    const progress = Math.min(scrollY.value / AVATAR_SCROLL_THRESHOLD, 1);
+    const scale = 1 - 0.25 * progress;
+    const translateY = -avatarMoveUpDistance * progress;
+
     return {
-      height: animatedHeight,
-      transform: [{ scale }, { translateY: translateY + additionalTranslateY }],
-      marginBottom,
+      height: baseAvatarSize * (1 - 0.6 * progress),
+      transform: [{ scale }, { translateY }],
     };
   });
-  
 
-  // --- Dynamic Styles ---
   const dynamicScrollViewStyle = {
     backgroundColor:
-      currentTheme === 'light'
+      currentTheme === "light"
         ? Colors.light.cardBackground
         : Colors.dark.cardBackground,
   };
 
-  // --- Preset Options Arrays ---
-  // More natural skin tones.
-  const faceColors = ['#FFE0BD', '#FFCD94', '#EAC086', '#D1A17A', '#8D5524'];
-  // (Keep ear sizes and other non-color properties unchanged.)
-  const earSizes = ['small', 'big'];
-  const hairStyles = ['normal', 'thick', 'mohawk', 'womanLong', 'womanShort'];
-  // More common hair colors: Black, Dark brown, Medium brown, and Red.
-  const hairColors = ['#000000', '#4B3621', '#A67B5B', '#FF4500'];
-  const hatStyles = ['none', 'beanie', 'turban'];
-  const hatColors = ['#000000', '#FFFFFF', '#8B4513', '#FFC0CB'];
-  const eyeStyles = ['circle', 'oval', 'smile'];
-  const glassesStyles = ['none', 'round', 'square'];
-  const noseStyles = ['short', 'long', 'round'];
-  const mouthStyles = ['laugh', 'smile', 'peace'];
-  const shirtStyles = ['hoody', 'short', 'polo'];
-  // More complementary muted colors for shirts.
-  const shirtColors = ['#5DADE2', '#58D68D', '#F4D03F', '#EC7063'];
-  // const bgColors = ['#B9C1CC', '#FFFFFF', '#000000', '#FFC0CB'];
+  // --- Avatar Options Arrays ---
+  const faceColors = [
+    "#F5E6CA",
+    "#FFE0BD",
+    "#FFDAB9",
+    "#FFCD94",
+    "#F9C9B6",
+    "#E8BEAC",
+    "#D9B99B",
+    "#EAC086",
+    "#D1A17A",
+    "#C68642",
+    "#8D5524",
+    "#6B4423",
+  ];
+  const earSizes = ["small", "big"];
+  const hairStyles = ["normal", "thick", "mohawk", "womanLong", "womanShort"];
+  const hairColors = [
+    "#E6BE8A",
+    "#E79CC2",
+    "#23B5D3",
+    "#C19A6B",
+    "#A67B5B",
+    "#B87333",
+    "#8C5A56",
+    "#652DC1",
+    "#704214",
+    "#4B3621",
+    "#000000",
+  ];
+  const hatStyles = ["none", "beanie", "turban"];
+  const hatColors = [
+    "#000000",
+    "#FFFFFF",
+    "#8B4513",
+    "#FDFD96",
+    "#B1E693",
+    "#B5EAD7",
+    "#AEC6CF",
+    "#C3B1E1",
+    "#FFB7B2",
+    "#FFD1DC",
+    "#FFC0CB",
+  ];
+  const eyeStyles = ["circle", "oval", "smile"];
+  const glassesStyles = ["none", "round", "square"];
+  const noseStyles = ["short", "long", "round"];
+  const mouthStyles = ["laugh", "smile", "peace"];
+  const shirtStyles = ["hoody", "short", "polo"];
+  const shirtColors = [
+    "#5DADE2",
+    "#CFE8EF",
+    "#B0E0E6",
+    "#58D68D",
+    "#C1E1C1",
+    "#F4D03F",
+    "#F0E6CC",
+    "#F8B195",
+    "#FAE8E0",
+    "#EC7063",
+    "#FFB6C1",
+    "#D3B4AC",
+    "#E8D3EB",
+    "#CBC3E3",
+  ];
 
   // --- Custom Color Bottom Sheet State ---
-  const customColorSheetRef = useRef(null);
-  const [customColorProperty, setCustomColorProperty] =
-    useState<string | null>(null);
-  const [customColorInput, setCustomColorInput] = useState('');
+  const customColorSheetRef = useRef<BottomSheetModal>(null);
+  const [customColorProperty, setCustomColorProperty] = useState<string | null>(
+    null
+  );
+  const [customColorInput, setCustomColorInput] = useState("");
 
   const openCustomColorSheet = (property: string) => {
+    // Cast avatarConfig to a record type so we can index it.
+    const config = avatarConfig as ConfigRecord;
     setCustomColorProperty(property);
-    setCustomColorInput(avatarConfig[property] || '');
+    setCustomColorInput(config[property] || "");
     customColorSheetRef.current?.snapToIndex(0);
   };
 
-  // Save action.
-  const handleSave = useCallback(() => {
+  // --- Save Handler ---
+  const handleSave = useCallback(async () => {
+    // Update Redux.
     dispatch(updateAvatarConfig(avatarConfig));
-    router.back();
-  }, [avatarConfig, dispatch]);
 
-  // Update a property in the avatar config.
+    // Update both local SQLite DB and Pocketbase.
+    if (currentUser?.id) {
+      try {
+        await updateUserAvatarCombined(currentUser.id, avatarConfig);
+      } catch (error) {
+        console.error("Failed to update avatar (local & Pocketbase):", error);
+      }
+    }
+    router.back();
+  }, [avatarConfig, currentUser, dispatch]);
+
   const handleOptionSelect = useCallback((property: string, option: string) => {
-    setAvatarConfig((prev) => ({ ...prev, [property]: option }));
+    setAvatarConfig((prev: AvatarConfig) => ({
+      ...prev,
+      // Use a cast to allow dynamic access.
+      ...(prev as ConfigRecord),
+      [property]: option,
+    }));
   }, []);
 
-  /**
-   * Render a selectable option row.
-   * For color properties, display preset colored circles. In addition, always render
-   * an extra circle that shows the custom color if the current value isn’t one of the presets.
-   * A pencil overlay indicates that tapping the circle will open the bottom sheet.
-   */
+  // Render a selectable row for each customization option.
   const renderOptionSelector = (
     label: string,
     options: string[],
     property: string
   ) => {
-    const isColor = options[0]?.startsWith('#');
+    const config = avatarConfig as ConfigRecord;
+    const isColor = options[0]?.startsWith("#");
     return (
       <View style={styles.selectorContainer} key={property}>
         <ThemedText style={styles.label}>{label}</ThemedText>
         <View style={styles.optionsRow}>
           {options.map((option, index) => {
-            const isSelected = avatarConfig[property] === option;
-            const optionStyle = isColor
-              ? [
-                styles.colorOption,
-                { backgroundColor: option },
-                isSelected && styles.selectedColorOption,
-              ]
-              : [
-                styles.genericOption,
-                isSelected && {
-                  backgroundColor:
-                    currentTheme === 'light'
-                      ? Colors.light.buttonBackground
-                      : Colors.dark.buttonBackground,
-                },
-              ];
-            return (
-              <TouchableOpacity
-                key={index}
-                onPress={() => handleOptionSelect(property, option)}
-                style={optionStyle}
-              >
-                {!isColor && (
-                  <ThemedText
-                    style={[
-                      styles.genericOptionText,
-                      isSelected && { color: '#fff' },
-                    ]}
-                  >
-                    {option}
+            const isSelected = config[property] === option;
+            if (isColor) {
+              return (
+                <TouchableOpacity
+                  key={index}
+                  onPress={() => handleOptionSelect(property, option)}
+                  style={[
+                    styles.optionCircle,
+                    { backgroundColor: option },
+                    isSelected && styles.selectedOption,
+                  ]}
+                />
+              );
+            } else {
+              return (
+                <TouchableOpacity
+                  key={index}
+                  onPress={() => handleOptionSelect(property, option)}
+                  style={[
+                    styles.genericOption,
+                    isSelected && styles.selectedOption,
+                  ]}
+                >
+                  <ThemedText style={styles.genericOptionText}>
+                    {t(`editAvatarScreen.options.${property}.${option}`)}
                   </ThemedText>
-                )}
-              </TouchableOpacity>
-            );
+                </TouchableOpacity>
+              );
+            }
           })}
           {isColor && (
-            <TouchableOpacity
+            <Pressable
               onPress={() => openCustomColorSheet(property)}
               style={[
-                styles.colorOption,
-                // If current value is not in presets, show that as the background
+                styles.optionCircle,
                 {
-                  backgroundColor: options.includes(avatarConfig[property])
-                    ? undefined
-                    : avatarConfig[property] || Colors.light.text,
+                  backgroundColor: !options.includes(config[property])
+                    ? config[property] || "transparent"
+                    : "transparent",
                 },
-                !options.includes(avatarConfig[property]) &&
-                styles.selectedColorOption,
+                styles.customOption,
+                !options.includes(config[property]) && styles.selectedOption,
               ]}
             >
-              <ThemedText style={styles.customIcon}>✎</ThemedText>
-            </TouchableOpacity>
+              <MaterialCommunityIcons
+                name="plus"
+                size={20}
+                color={Colors.light.text}
+              />
+            </Pressable>
           )}
         </View>
       </View>
     );
   };
 
+  // Array mapping each avatar property to its options.
   const avatarOptions = [
-    { label: 'Face Color', options: faceColors, property: 'faceColor' },
-    { label: 'Ear Size', options: earSizes, property: 'earSize' },
-    { label: 'Hair Style', options: hairStyles, property: 'hairStyle' },
-    { label: 'Hair Color', options: hairColors, property: 'hairColor' },
-    { label: 'Hat Style', options: hatStyles, property: 'hatStyle' },
-    { label: 'Hat Color', options: hatColors, property: 'hatColor' },
-    { label: 'Eye Style', options: eyeStyles, property: 'eyeStyle' },
     {
-      label: 'Glasses Style',
-      options: glassesStyles,
-      property: 'glassesStyle',
+      label: t("editAvatarScreen.faceColor"),
+      options: faceColors,
+      property: "faceColor",
     },
-    { label: 'Nose Style', options: noseStyles, property: 'noseStyle' },
-    { label: 'Mouth Style', options: mouthStyles, property: 'mouthStyle' },
-    { label: 'Shirt Style', options: shirtStyles, property: 'shirtStyle' },
-    { label: 'Shirt Color', options: shirtColors, property: 'shirtColor' },
-    // { label: 'Background Color', options: bgColors, property: 'bgColor' },
+    {
+      label: t("editAvatarScreen.earSize"),
+      options: earSizes,
+      property: "earSize",
+    },
+    {
+      label: t("editAvatarScreen.hairStyle"),
+      options: hairStyles,
+      property: "hairStyle",
+    },
+    {
+      label: t("editAvatarScreen.hairColor"),
+      options: hairColors,
+      property: "hairColor",
+    },
+    {
+      label: t("editAvatarScreen.hatStyle"),
+      options: hatStyles,
+      property: "hatStyle",
+    },
+    {
+      label: t("editAvatarScreen.hatColor"),
+      options: hatColors,
+      property: "hatColor",
+    },
+    {
+      label: t("editAvatarScreen.eyeStyle"),
+      options: eyeStyles,
+      property: "eyeStyle",
+    },
+    {
+      label: t("editAvatarScreen.glassesStyle"),
+      options: glassesStyles,
+      property: "glassesStyle",
+    },
+    {
+      label: t("editAvatarScreen.noseStyle"),
+      options: noseStyles,
+      property: "noseStyle",
+    },
+    {
+      label: t("editAvatarScreen.mouthStyle"),
+      options: mouthStyles,
+      property: "mouthStyle",
+    },
+    {
+      label: t("editAvatarScreen.shirtStyle"),
+      options: shirtStyles,
+      property: "shirtStyle",
+    },
+    {
+      label: t("editAvatarScreen.shirtColor"),
+      options: shirtColors,
+      property: "shirtColor",
+    },
   ];
 
   return (
     <ThemedView style={styles.container}>
-      {/* Animated header */}
+      {/* Animated Header */}
       <Animated.View style={[styles.headerContainer, headerAnimatedStyle]}>
+        <ThemedText style={styles.title} type="title">
+          {t("editAvatarScreen.title")}
+        </ThemedText>
+      </Animated.View>
+      <View style={styles.headerButtonContainer}>
         <ThemedButton
           iconName="chevron-left"
           style={styles.titleButton}
           onPress={() => router.back()}
         />
-        <ThemedText style={styles.title} type="title">
-          {t('editAvatarScreen.title')}
-        </ThemedText>
-      </Animated.View>
+      </View>
 
-      {/* Animated avatar container */}
+      {/* Animated Avatar */}
       <Animated.View
-        style={[styles.avatarContainer, avatarContainerAnimatedStyle]}
+        style={[
+          styles.avatarContainer,
+          { marginTop: avatarInitialOffset },
+          avatarContainerAnimatedStyle,
+        ]}
       >
-        {/* Pass the base size for visual consistency */}
         <Avatar size={baseAvatarSize} {...avatarConfig} />
       </Animated.View>
 
+      {/* Spacer */}
+      <View style={styles.spacer} />
+
+      {/* Options List */}
       <Animated.ScrollView
         onScroll={scrollHandler}
         scrollEventThrottle={16}
         style={[styles.scrollView, dynamicScrollViewStyle]}
         contentContainerStyle={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
       >
         {avatarOptions.map(({ label, options, property }) =>
           renderOptionSelector(label, options, property)
         )}
       </Animated.ScrollView>
 
+      {/* Save Button */}
       <ThemedButton
-        label={t('editAvatarScreen.save')}
+        label={t("editAvatarScreen.save")}
         onPress={handleSave}
         style={styles.saveButton}
       />
 
-      {/* Bottom sheet for custom color input */}
+      {/* Bottom Sheet for Custom Color Input */}
       <ThemedReuseableSheet
         ref={customColorSheetRef}
-        snapPoints={['30%']}
-        title="Custom Color"
+        snapPoints={["30%"]}
+        title={t("editAvatarScreen.customColor")}
         contentType="custom"
         customContent={
           <View style={styles.customSheetContent}>
             <ThemedText style={styles.sheetTitle}>
-              Enter Custom Hex Code
+              {t("editAvatarScreen.enterCustomHexCode")}
             </ThemedText>
             <View style={styles.inputContainer}>
-              <ThemedText style={styles.inputLabel}>Hex Code:</ThemedText>
+              <ThemedText style={styles.inputLabel}>
+                {t("editAvatarScreen.hexCode")}
+              </ThemedText>
               <View style={styles.inputWrapper}>
                 <ThemedText style={styles.inputText}>
                   {customColorInput}
@@ -330,12 +431,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: getResponsiveWidth(3.6),
   },
   headerContainer: {
-    position: 'absolute',
+    position: "absolute",
     top: getResponsiveHeight(10),
     left: getResponsiveWidth(3.6),
     right: getResponsiveWidth(3.6),
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    zIndex: 10,
+    elevation: 10,
+    marginLeft: getResponsiveWidth(13),
+  },
+  headerButtonContainer: {
+    position: "absolute",
+    top: getResponsiveHeight(10),
+    left: getResponsiveWidth(3.6),
+    right: getResponsiveWidth(3.6),
+    flexDirection: "row",
+    alignItems: "center",
+    zIndex: 10,
+    elevation: 10,
   },
   titleButton: {
     marginRight: getResponsiveWidth(3.6),
@@ -344,17 +458,19 @@ const styles = StyleSheet.create({
     fontSize: getResponsiveFontSize(28),
   },
   avatarContainer: {
-    alignItems: 'center',
+    alignSelf: "center",
+  },
+  spacer: {
+    height: getResponsiveHeight(4),
   },
   scrollView: {
     flex: 1,
-    paddingVertical: getResponsiveHeight(1.8),
     paddingHorizontal: getResponsiveWidth(4.8),
     borderRadius: getResponsiveWidth(4),
-    // marginBottom: getResponsiveHeight(2),
   },
   scrollContainer: {
     paddingBottom: getResponsiveHeight(1.8),
+    marginTop: getResponsiveHeight(2),
   },
   selectorContainer: {
     marginBottom: getResponsiveHeight(2),
@@ -364,21 +480,26 @@ const styles = StyleSheet.create({
     marginBottom: getResponsiveHeight(1),
   },
   optionsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
   },
-  colorOption: {
+  optionCircle: {
     width: getResponsiveWidth(8),
     height: getResponsiveWidth(8),
     borderRadius: getResponsiveWidth(4),
     marginRight: getResponsiveWidth(2),
     marginBottom: getResponsiveHeight(1),
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: Colors.light.text,
   },
-  selectedColorOption: {
+  selectedOption: {
     borderWidth: 2,
     borderColor: Colors.primary,
+  },
+  customOption: {
+    borderStyle: "dashed",
   },
   genericOption: {
     paddingHorizontal: getResponsiveWidth(3),
@@ -391,14 +512,10 @@ const styles = StyleSheet.create({
   },
   genericOptionText: {
     fontSize: getResponsiveFontSize(16),
-    color: Colors.dark.text,
-  },
-  customIcon: {
-    fontSize: getResponsiveFontSize(18),
-    color: Colors.dark.text,
   },
   saveButton: {
     marginTop: getResponsiveHeight(2),
+    marginBottom: getResponsiveHeight(2),
   },
   customSheetContent: {
     flex: 1,
@@ -423,10 +540,6 @@ const styles = StyleSheet.create({
   },
   inputText: {
     fontSize: getResponsiveFontSize(16),
-  },
-  sheetButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
   },
 });
 

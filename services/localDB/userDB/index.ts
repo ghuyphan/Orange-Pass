@@ -1,5 +1,6 @@
 import * as SQLite from 'expo-sqlite';
 import UserRecord from '@/types/userType';
+import pb from '@/services/pocketBase';
 
 // Function to open the database
 export async function openDatabase() {
@@ -182,3 +183,34 @@ export async function closeDatabase() {
         throw error;
     }
 }
+export async function updateUserAvatarCombined(
+    userId: string,
+    newAvatarConfig: object
+  ) {
+    // Update in local SQLite DB.
+    const db = await openDatabase();
+    if (!db) {
+      throw new Error("Database not initialized");
+    }
+  
+    try {
+      await db.runAsync(
+        "UPDATE users SET avatar = ? WHERE id = ?",
+        [JSON.stringify(newAvatarConfig), userId]
+      );
+    } catch (error) {
+      console.error("Error updating user avatar in local DB:", error);
+      throw error;
+    }
+  
+    // Update on Pocketbase.
+    try {
+      const response = await pb.collection("users").update(userId, {
+        avatar: JSON.stringify(newAvatarConfig),
+      });
+      return response;
+    } catch (error) {
+      console.error("Error updating user avatar on Pocketbase:", error);
+      throw error;
+    }
+  }
