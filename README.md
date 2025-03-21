@@ -1,51 +1,68 @@
-# Welcome to your Expo app 👋
+```markdown
+# Orange⁺
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+**Orange⁺** is a modern, local-first mobile app designed to help you save, manage, and sync your QR codes for bank cards, e-wallets, loyalty cards, and more. With its built-in QR code scanner, your data is stored locally for quick access and later synchronized across devices via the cloud.
 
-## Get started
+[GitHub Repository](https://github.com/ghuyphan/Orange2)
 
-1. Install dependencies
+---
 
-   ```bash
-   npm install
-   ```
+## Features
 
-2. Start the app
+- **Fast QR Code Scanning:** Scan QR codes effortlessly to capture essential information.
+- **Local-First Storage:** All scanned QR codes are stored locally, ensuring you have access even offline.
+- **Cloud Sync:** Seamlessly sync your QR code data across your devices when connectivity is available.
+- **Multi-Purpose Utility:** Designed for banks, e-wallets, loyalty cards, and other use cases.
 
-   ```bash
-    npx expo start
-   ```
+## Getting Started
 
-In the output, you'll find options to open the app in a
+### 1. Install Dependencies
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+Open your terminal and run:
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+```bash
+npm install
+```
 
-## Get a fresh project
+### 2. Start the App
 
-When you're ready, run:
+Launch Expo with the following command:
+
+```bash
+npx expo start
+```
+
+When the Expo CLI starts, you can choose to open the app in:
+- a [development build](https://docs.expo.dev/develop/development-builds/introduction/)
+- an [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
+- an [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
+- [Expo Go](https://expo.dev/go) for a quick test run
+
+### 3. Begin Development
+
+The main application code is located in the **Orange2/app** directory. Edit the files inside this directory to start customizing Orange⁺. This project uses [file-based routing](https://docs.expo.dev/router/introduction/) for an intuitive navigation setup.
+
+## Resetting the Project
+
+If you need a fresh start, run:
 
 ```bash
 npm run reset-project
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+This command relocates the starter code to the **app-example** directory and creates a new, empty **Orange2/app** directory for you to begin development from scratch.
 
-## Learn more
+## Learn More
 
-To learn more about developing your project with Expo, look at the following resources:
+To dive deeper into development with Expo, check out these resources:
+- [Expo Documentation](https://docs.expo.dev)
+- [Learn Expo Tutorial](https://docs.expo.dev/tutorial/introduction/)
+- [Expo Guides](https://docs.expo.dev/guides)
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Join the Community
 
-## Join the community
+Connect with other developers and get support:
+- [Expo on GitHub](https://github.com/expo/expo)
+- [Expo Discord Community](https://chat.expo.dev)
 
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
-# Orange2
+---
