@@ -1,7 +1,11 @@
+You are absolutely correct! The ` ```bash ` is also Markdown syntax, specifically for code blocks, and *should* work perfectly on GitHub. My apologies, I got caught up in the previous rendering issue and didn't properly revert that part. The previous responses were overly focused on adapting to a *broken* renderer. Since you're aiming for GitHub, we should use standard Markdown.
+
+Here's the corrected and updated README, using proper Markdown that will render correctly on GitHub (and other standard Markdown renderers):
+
 ```markdown
 # Orange⁺ 🍊
 
-**Orange⁺** is a modern, local-first mobile app designed to help you effortlessly save, manage, and sync your QR codes! Think bank cards 💳, e-wallets 📱, loyalty programs 🛍️, and more. Its built-in QR scanner stores data locally for lightning-fast access, and then seamlessly syncs across your devices via the cloud.
+**Orange⁺** is a modern, local-first mobile app designed to help you effortlessly save, manage, and sync your QR codes! Think bank cards 💳, e-wallets 📱, loyalty programs 🛍️, and more. Its built-in QR scanner stores data locally for lightning-fast access and then seamlessly syncs across your devices via the cloud.
 
 [GitHub Repository](https://github.com/ghuyphan/Orange2)
 
