@@ -1,23 +1,16 @@
-You are absolutely correct! The ` ```bash ` is also Markdown syntax, specifically for code blocks, and *should* work perfectly on GitHub. My apologies, I got caught up in the previous rendering issue and didn't properly revert that part. The previous responses were overly focused on adapting to a *broken* renderer. Since you're aiming for GitHub, we should use standard Markdown.
-
-Here's the corrected and updated README, using proper Markdown that will render correctly on GitHub (and other standard Markdown renderers):
-
-```markdown
 # Orange⁺ 🍊
 
 **Orange⁺** is a modern, local-first mobile app designed to help you effortlessly save, manage, and sync your QR codes! Think bank cards 💳, e-wallets 📱, loyalty programs 🛍️, and more. Its built-in QR scanner stores data locally for lightning-fast access and then seamlessly syncs across your devices via the cloud.
 
 [GitHub Repository](https://github.com/ghuyphan/Orange2)
 
----
-
 ## ✨ Features
 
-*   **Blazing-Fast QR Scanning:** ⚡️ Capture QR code information in a snap.
-*   **Offline-First Access:** 📴 Your QR codes are stored locally, so they're available even without an internet connection.
-*   **Secure Cloud Sync:** ☁️ Automatically synchronize your QR code data across all your devices.
-*   **Versatile & Organized:** 🗂️ Perfect for managing QR codes from banks, e-wallets, loyalty cards, and more!
-*   **Intuitive Navigation:** 🧭 Built with file-based routing for a smooth user experience.
+* **Blazing-Fast QR Scanning:** ⚡️ Capture QR code information in a snap.
+* **Offline-First Access:** 📴 Your QR codes are stored locally, so they're available even without an internet connection.
+* **Secure Cloud Sync:** ☁️ Automatically synchronize your QR code data across all your devices.
+* **Versatile & Organized:** 🗂️ Perfect for managing QR codes from banks, e-wallets, loyalty cards, and more!
+* **Intuitive Navigation:** 🧭 Built with file-based routing for a smooth user experience.
 
 ## 🚀 Getting Started
 
@@ -38,10 +31,9 @@ npx expo start
 ```
 
 The Expo CLI will start. You can then open the app in:
-
-*   An Android emulator
-*   An iOS simulator
-*   Expo Go (for a quick test)
+* An Android emulator
+* An iOS simulator
+* Expo Go (for a quick test)
 
 *(See Expo documentation for [development builds](https://docs.expo.dev/develop/development-builds/introduction/), [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/), [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/), and [Expo Go](https://expo.dev/go) if needed.)*
 
@@ -61,13 +53,10 @@ This moves the starter code to **app-example** and creates a fresh, empty **Oran
 
 ## 📚 Learn More
 
-*   [Expo Documentation](https://docs.expo.dev)
-*   [Learn Expo Tutorial](https://docs.expo.dev/tutorial/introduction/)
+* [Expo Documentation](https://docs.expo.dev)
+* [Learn Expo Tutorial](https://docs.expo.dev/tutorial/introduction/)
 
 ## 🤝 Join the Community
 
-*   [Expo on GitHub](https://github.com/expo/expo)
-*   [Expo Discord Community](https://chat.expo.dev)
-
----
-```
+* [Expo on GitHub](https://github.com/expo/expo)
+* [Expo Discord Community](https://chat.expo.dev)
