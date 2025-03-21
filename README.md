@@ -19,7 +19,7 @@
 Open your terminal and run:
 
 ```bash
-npm install
+yarn install
 ```
 
 ### 2. Start the App
@@ -27,15 +27,13 @@ npm install
 Launch the app with:
 
 ```bash
-npx expo start
+yarn expo start
 ```
 
-The Expo CLI will start. You can then open the app in:
+The app will start. You can then open it in:
 * An Android emulator
 * An iOS simulator
-* Expo Go (for a quick test)
-
-*(See Expo documentation for [development builds](https://docs.expo.dev/develop/development-builds/introduction/), [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/), [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/), and [Expo Go](https://expo.dev/go) if needed.)*
+* Your physical device using QR code
 
 ### 3. Start Developing!
 
@@ -46,17 +44,12 @@ The main app code lives in the **Orange2/app** directory. Modify the files there
 Need a clean slate? Run:
 
 ```bash
-npm run reset-project
+yarn reset-project
 ```
 
 This moves the starter code to **app-example** and creates a fresh, empty **Orange2/app** directory.
 
 ## 📚 Learn More
 
-* [Expo Documentation](https://docs.expo.dev)
-* [Learn Expo Tutorial](https://docs.expo.dev/tutorial/introduction/)
-
-## 🤝 Join the Community
-
-* [Expo on GitHub](https://github.com/expo/expo)
-* [Expo Discord Community](https://chat.expo.dev)
+* [React Native Documentation](https://reactnative.dev/docs/getting-started)
+* [TypeScript Documentation](https://www.typescriptlang.org/docs/)
