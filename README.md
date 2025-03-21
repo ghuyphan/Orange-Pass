@@ -59,5 +59,3 @@ This moves the starter code to **app-example** and creates a fresh, empty **Oran
 ## 📝 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-```
