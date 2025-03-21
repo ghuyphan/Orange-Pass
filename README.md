@@ -30,10 +30,11 @@ Launch the app with:
 yarn expo start
 ```
 
-The app will start. You can then open it in:
-* An Android emulator
-* An iOS simulator
-* Your physical device using QR code
+⚠️ **IMPORTANT:** This app uses react-native-ml-kit and **WILL NOT WORK** on simulators or emulators. You must use a physical device to run the app.
+
+You can only run the app on:
+* Physical Android devices
+* Physical iOS devices
 
 ### 3. Start Developing!
 
@@ -53,3 +54,4 @@ This moves the starter code to **app-example** and creates a fresh, empty **Oran
 
 * [React Native Documentation](https://reactnative.dev/docs/getting-started)
 * [TypeScript Documentation](https://www.typescriptlang.org/docs/)
+* [react-native-ml-kit Documentation](https://github.com/agencyenterprise/react-native-ml-kit)
