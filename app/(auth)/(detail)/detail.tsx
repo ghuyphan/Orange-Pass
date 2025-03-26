@@ -144,16 +144,16 @@ const DetailScreen = () => {
 
   const onEditPress = useCallback(
     throttle(() => {  // Remove the unnecessary parameters
+      bottomSheetRef.current?.close();
 
-      router.push({
-        pathname: `/(edit)/edit`,  // Correct path
-        params: {
-          id: id,  // Pass the item ID
-        },
-      });
       setTimeout(() => {
-        bottomSheetRef.current?.close();
-      }, 300);
+        router.push({
+          pathname: `/(edit)/edit`,  // Correct path
+          params: {
+            id: id,  // Pass the item ID
+          },
+        });
+      }, 10);
 
     }, 1000),
     [id, router] // Depend on selectedItemId and router

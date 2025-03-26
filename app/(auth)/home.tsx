@@ -95,7 +95,7 @@ function HomeScreen() {
   const [wifiIsHidden, setWifiIsHidden] = useState(false);
   const [filter, setFilter] = useState('all');
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
-  const [wasOffline, setWasOffline] = useState(false);
+  // const [wasOffline, setWasOffline] = useState(false);
 
   // Refs
   const flatListRef = useRef<FlatList<QRRecord> | null>(null);
@@ -156,16 +156,7 @@ function HomeScreen() {
     }
   },
     // Dependencies: Include all external variables/functions used
-    [
-      isOffline,
-      isSyncing,
-      dispatch, // setQrData is implicitly covered by dispatch
-      t, // Assuming stable
-      setSyncStatus, // Stable setter
-      setIsSyncing, // Stable setter
-      // setIsLoading, // Add if used inside
-      // DB functions (syncQrCodes, fetchServerData, etc.) are assumed stable imports
-    ]
+    [isOffline, isSyncing, dispatch]
   );
 
   // Initialize data
@@ -176,34 +167,48 @@ useEffect(() => {
   let isMounted = true; // Flag to prevent state updates on unmounted component
 
   const initializeData = async () => {
+    // 1. Start loading indicator for the *initial local fetch*
     setIsLoading(true);
     setSyncStatus('idle'); // Reset sync status on new load
 
     try {
-      // 1. Always load current local data first
+      // 2. Load current local data first
       const currentLocalData = await getQrCodesByUserId(userId);
       if (isMounted) {
         dispatch(setQrData(currentLocalData));
+        // 3. IMPORTANT: Stop loading indicator *now* - local data is ready for display
+        setIsLoading(false);
+      } else {
+         // If component unmounted before data loaded, just stop loading
+         setIsLoading(false);
+         return; // Exit early
       }
 
-      // 2. Check if sync is needed/possible (only if online)
+
+      // 4. Check if sync is needed/possible (only if online) - this runs in the background
       if (!isOffline) {
         const unsyncedCodes = await getUnsyncedQrCodes(userId);
-        const needsSync = currentLocalData.length === 0 || unsyncedCodes.length > 0;
+        // Determine if sync is needed (e.g., first load, unsynced changes)
+        // Using hasLocalData might be more robust than just checking length if DB could be empty initially
+        const localDbExists = await hasLocalData(userId); // Assuming hasLocalData checks if DB table/store exists or has *any* rows for the user
+        const needsSync = !localDbExists || unsyncedCodes.length > 0;
 
         if (needsSync) {
-          // Call the stable sync function (awaits its completion)
+          // Call the stable sync function (awaits its completion, but UI isn't blocked by isLoading)
+          // syncWithServer handles setting syncStatus ('syncing', 'synced', 'error')
           await syncWithServer(userId);
-          // syncWithServer handles setting status ('synced' or 'error') and updating data via dispatch
+          // No need to set syncStatus here, syncWithServer does it.
         } else {
           // Already synced or no need to sync
-          if (isMounted) setSyncStatus('synced');
-          // Reset status back to idle after a short delay
-          const timer = setTimeout(() => {
-            if (isMounted) setSyncStatus('idle');
-          }, 3000);
-          // Return cleanup for this specific timeout if effect re-runs before it fires
-          return () => clearTimeout(timer);
+          if (isMounted) {
+              setSyncStatus('synced'); // Indicate it's up-to-date
+              // Reset status back to idle after a short delay
+              const timer = setTimeout(() => {
+                  if (isMounted) setSyncStatus('idle');
+              }, 3000);
+              // Set up cleanup for this specific timeout
+              return () => clearTimeout(timer); // IMPORTANT: This only cleans up *this specific* timer
+          }
         }
       } else {
         // Offline, sync not possible
@@ -212,20 +217,29 @@ useEffect(() => {
 
     } catch (error) {
       console.error('Error during data initialization:', error);
-      if (isMounted) setSyncStatus('error');
+      if (isMounted) {
+        // Ensure loading stops even if local fetch fails
+        setIsLoading(false);
+        setSyncStatus('error'); // Indicate an error occurred
+        // Optional: Show a toast/message about the loading error
+        showToast(t('homeScreen.loadError'));
+      }
     } finally {
-      if (isMounted) setIsLoading(false);
+      // No need to set isLoading(false) here anymore, it's handled above
+      // Keep isMounted logic if other async operations were added here
     }
   };
 
   initializeData();
 
-  // Cleanup function: Runs when component unmounts or dependencies change
+  // Main cleanup function: Runs when component unmounts or dependencies change
   return () => {
     isMounted = false;
-    // Any other cleanup specific to this effect can go here
+    // Any other general cleanup for the effect goes here
+    // Note: The specific timer cleanup is handled within the 'else' block of the sync check
   };
-}, [userId, isOffline, dispatch]); // Dependencies: Rerun if userId, online status changes, or sync function reference changes.
+  // Keep dependencies: Rerun if userId or online status changes. syncWithServer is stable via useCallback.
+}, [userId]);
 
   // Network status toasts
   const prevIsOffline = useRef(isOffline);
