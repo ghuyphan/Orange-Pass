@@ -3,7 +3,6 @@ import { StyleSheet, View, Platform, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import { useSelector } from 'react-redux';
 import { LinearGradient } from 'expo-linear-gradient';
-import { InteractionManager } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedButton } from '@/components/buttons/ThemedButton';
@@ -58,11 +57,9 @@ export default function QuickLoginPromptScreen() {
       if (userData?.id) {
         const hasPreference = await hasQuickLoginPreference(userData.id);
         if (hasPreference) {
-          // Defer cleanup and navigation until after interactions
-          InteractionManager.runAfterInteractions(() => {
-            cleanupTemporaryPassword();
-            router.replace('/(auth)/home');
-          });
+          // User already made a decision, skip prompt and go to home
+          cleanupTemporaryPassword();
+          router.replace('/(auth)/home');
         }
       }
     };
@@ -118,23 +115,19 @@ export default function QuickLoginPromptScreen() {
       // Clean up temporary password
       await cleanupTemporaryPassword();
 
-      // Defer navigation until after interactions
-      InteractionManager.runAfterInteractions(() => {
-        router.push('/(auth)/home');
-      });
+      // Navigate to home screen
+      router.replace('/(auth)/home');
     } catch (error) {
       console.error('Error setting up quick login:', error);
       // Navigate to home anyway if there's an error
-      InteractionManager.runAfterInteractions(() => {
-        router.push('/(auth)/home');
-      });
+      router.replace('/(auth)/home');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleDeclineQuickLogin = async () => {
-    setIsDeclining(true);
+    setIsDeclining(true); // Set loading state
     try {
       if (!userData?.id) {
         throw new Error('User ID not available');
@@ -165,17 +158,13 @@ export default function QuickLoginPromptScreen() {
       // Clean up temporary password
       await cleanupTemporaryPassword();
 
-      // Defer navigation until after interactions
-      InteractionManager.runAfterInteractions(() => {
-        router.push('/(auth)/home');
-      });
+      // Navigate to home screen
+      router.replace('/(auth)/home');
     } catch (error) {
       console.error('Error saving quick login preference:', error);
-      InteractionManager.runAfterInteractions(() => {
-        router.push('/(auth)/home');
-      });
+      router.replace('/(auth)/home');
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Reset loading state
     }
   };
 

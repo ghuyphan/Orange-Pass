@@ -107,111 +107,161 @@ function HomeScreen() {
   const scrollY = useSharedValue(0);
 
   // Sync with server
-  const syncWithServer = useCallback(async (userId: string) => {
+  // Assuming showToast is useCallback'd and t is stable
+  const syncWithServer = useCallback(async (userIdToSync: string) => {
+    // Prevent concurrent syncs or syncing when offline
     if (isOffline || isSyncing) {
-      if (isOffline) {
-        setIsLoading(false);
-      }
       return;
     }
-  
     setIsSyncing(true);
     setSyncStatus('syncing');
-  
+    // setIsLoading(true); // Optional: Indicate general loading during sync
+
     try {
-      await syncQrCodes(userId);
-      const serverData: ServerRecord[] = await fetchServerData(userId);
+      // Step 1: Upload local changes (if any) to the server
+      await syncQrCodes(userIdToSync);
+
+      // Step 2: Fetch latest data from the server
+      const serverData: ServerRecord[] = await fetchServerData(userIdToSync);
+
+      // Step 3: Insert or update local DB with server data (if any)
       if (serverData.length > 0) {
         await insertOrUpdateQrCodes(serverData);
       }
-      const localData = await getQrCodesByUserId(userId);
-      dispatch(setQrData(localData));
-  
+
+      // Step 4: Get the final, merged data from the local DB
+      const finalLocalData = await getQrCodesByUserId(userIdToSync);
+
+      // Step 5: Update the UI state via Redux
+      dispatch(setQrData(finalLocalData));
+
+      // Step 6: Update sync status and notify user
       setSyncStatus('synced');
       showToast(t('homeScreen.syncSuccess'));
-      setTimeout(() => setSyncStatus('idle'), 3000);
+
+      // Step 7: Reset status back to idle after a delay
+      const timer = setTimeout(() => setSyncStatus('idle'), 3000);
+      // No cleanup needed here as it's unlikely to unmount mid-timeout *within* the callback itself
+
     } catch (error) {
       console.error('Error during sync process:', error);
       setSyncStatus('error');
       showToast(t('homeScreen.syncError'));
+      // Optional: Reset status after error display
+      // const errorTimer = setTimeout(() => setSyncStatus('idle'), 5000);
     } finally {
-      setIsLoading(false);
+      // Step 8: Always ensure syncing state is reset
       setIsSyncing(false);
+      // setIsLoading(false); // Reset loading if it was set at the start
     }
-  }, [isOffline, isSyncing, dispatch]);
-
-  const debouncedSyncWithServer = useCallback(async (userId: string) => {
-    await syncWithServer(userId);
-  }, [syncWithServer]);
+  },
+    // Dependencies: Include all external variables/functions used
+    [
+      isOffline,
+      isSyncing,
+      dispatch, // setQrData is implicitly covered by dispatch
+      t, // Assuming stable
+      setSyncStatus, // Stable setter
+      setIsSyncing, // Stable setter
+      // setIsLoading, // Add if used inside
+      // DB functions (syncQrCodes, fetchServerData, etc.) are assumed stable imports
+    ]
+  );
 
   // Initialize data
-  useEffect(() => {
-    if (!userId) return;
-  
-    const initializeData = async () => {
-      setIsLoading(true);
-      try {
-        let localData = qrData;
-        if (isEmpty) {
-          localData = await getQrCodesByUserId(userId);
-          dispatch(setQrData(localData));
-        }
-  
-        if (!isOffline) {
-          if (isEmpty) {
-            await syncWithServer(userId);
-          } else {
-            const unSyncedData = await getUnsyncedQrCodes(userId);
-            if (unSyncedData.length > 0) {
-              await syncWithServer(userId);
-            } else {
-              setSyncStatus('synced');
-              setTimeout(() => setSyncStatus('idle'), 3000);
-            }
-          }
-        } else {
-          setSyncStatus('idle');
-        }
-  
-        const updatedLocalData = await getQrCodesByUserId(userId);
-        dispatch(setQrData(updatedLocalData));
-      } catch (error) {
-        console.error('Error during data initialization:', error);
-        setSyncStatus('error');
-      } finally {
-        setIsLoading(false);
+  // Effect for Initial Data Load and Sync Check
+useEffect(() => {
+  if (!userId) return; // Don't run if userId is not available
+
+  let isMounted = true; // Flag to prevent state updates on unmounted component
+
+  const initializeData = async () => {
+    setIsLoading(true);
+    setSyncStatus('idle'); // Reset sync status on new load
+
+    try {
+      // 1. Always load current local data first
+      const currentLocalData = await getQrCodesByUserId(userId);
+      if (isMounted) {
+        dispatch(setQrData(currentLocalData));
       }
-    };
-  
-    initializeData();
-  }, [userId, isEmpty, isOffline, dispatch]);
+
+      // 2. Check if sync is needed/possible (only if online)
+      if (!isOffline) {
+        const unsyncedCodes = await getUnsyncedQrCodes(userId);
+        const needsSync = currentLocalData.length === 0 || unsyncedCodes.length > 0;
+
+        if (needsSync) {
+          // Call the stable sync function (awaits its completion)
+          await syncWithServer(userId);
+          // syncWithServer handles setting status ('synced' or 'error') and updating data via dispatch
+        } else {
+          // Already synced or no need to sync
+          if (isMounted) setSyncStatus('synced');
+          // Reset status back to idle after a short delay
+          const timer = setTimeout(() => {
+            if (isMounted) setSyncStatus('idle');
+          }, 3000);
+          // Return cleanup for this specific timeout if effect re-runs before it fires
+          return () => clearTimeout(timer);
+        }
+      } else {
+        // Offline, sync not possible
+        if (isMounted) setSyncStatus('idle'); // Indicate idle status as sync wasn't attempted
+      }
+
+    } catch (error) {
+      console.error('Error during data initialization:', error);
+      if (isMounted) setSyncStatus('error');
+    } finally {
+      if (isMounted) setIsLoading(false);
+    }
+  };
+
+  initializeData();
+
+  // Cleanup function: Runs when component unmounts or dependencies change
+  return () => {
+    isMounted = false;
+    // Any other cleanup specific to this effect can go here
+  };
+}, [userId, isOffline, dispatch]); // Dependencies: Rerun if userId, online status changes, or sync function reference changes.
 
   // Network status toasts
+  const prevIsOffline = useRef(isOffline);
   useEffect(() => {
     if (isOffline) {
-      if (isBottomToastVisible && bottomToastMessage === t('homeScreen.offline')) return;
+      // Show persistent offline toast
       setBottomToastIcon('wifi-off');
       setBottomToastMessage(t('homeScreen.offline'));
       setBottomToastColor('#f2726f');
       setIsBottomToastVisible(true);
-      setWasOffline(true);
-    } else if (wasOffline) {
-      if (isBottomToastVisible && bottomToastMessage === t('homeScreen.online')) return;
-      setBottomToastIcon('wifi');
-      setBottomToastMessage(t('homeScreen.online'));
-      setBottomToastColor('#4caf50');
-      setIsBottomToastVisible(true);
-      setTimeout(() => setIsBottomToastVisible(false), 1000);
-      setWasOffline(false);
+    } else {
+      // If it *was* offline before, show temporary online toast
+      if (prevIsOffline.current) {
+        setBottomToastIcon('wifi');
+        setBottomToastMessage(t('homeScreen.online'));
+        setBottomToastColor('#4caf50');
+        setIsBottomToastVisible(true);
+        // Hide after a delay
+        const timer = setTimeout(() => setIsBottomToastVisible(false), 2000); // Increased duration slightly
+        // Cleanup timer if component unmounts or isOffline changes again quickly
+        return () => clearTimeout(timer);
+      } else {
+        // If it was already online, ensure the toast is hidden
+        setIsBottomToastVisible(false);
+      }
     }
-  }, [isOffline, isBottomToastVisible, bottomToastMessage, wasOffline]);
+    // Update ref for next render
+    prevIsOffline.current = isOffline;
+  }, [isOffline, t]); // Assuming t is stable
 
   // Animate empty card
   useEffect(() => {
     isEmptyShared.value = isEmpty ? 1 : 0;
     animateEmptyCard();
   }, [isEmpty, isEmptyShared]);
-  
+
 
   const animateEmptyCard = () => {
     emptyCardOffset.value = withSpring(0, { damping: 30, stiffness: 150 });
@@ -361,10 +411,10 @@ function HomeScreen() {
     return qrData.filter(item => item.type === filter);
   }, [qrData, filter]);
 
-  // Memoize handlers
-  const handleSync = useCallback(() => {
-    debouncedSyncWithServer(userId);
-  }, [debouncedSyncWithServer, userId]);
+const handleSync = useCallback(() => {
+  // Directly call the actual sync function
+  syncWithServer(userId);
+}, [syncWithServer, userId]); // Depend on the stable syncWithServer function and userId
 
   const handleFilterChange = useCallback((newFilter: string) => {
     setFilter(newFilter);
@@ -436,12 +486,12 @@ function HomeScreen() {
 
   const onDeletePress = useCallback(async () => {
     if (!selectedItemId) return;
-  
+
     try {
       setIsSyncing(true);
       setIsToastVisible(true);
       setToastMessage(t('homeScreen.deleting'));
-  
+
       await deleteQrCode(selectedItemId);
       const updatedData = qrData.filter((item) => item.id !== selectedItemId);
       const reindexedData = updatedData.map((item, index) => ({
@@ -451,7 +501,7 @@ function HomeScreen() {
       }));
       dispatch(setQrData(reindexedData));
       await updateQrIndexes(reindexedData);
-  
+
       setIsModalVisible(false);
       setIsToastVisible(false);
     } catch (error) {
@@ -479,15 +529,15 @@ function HomeScreen() {
         return 100; // Default padding for more than three items
     }
   }, [qrData.length, height]);
-  
+
   const listContainerPadding = useMemo(() => paddingValues, [paddingValues]);
-  
+
 
   // Sheet content
   const renderSheetContent = () => {
     switch (sheetType) {
       case 'wifi':
-        return <WifiSheetContent ssid={wifiSsid || ''} password={wifiPassword || ''} isWep={wifiIsWep} isHidden={wifiIsHidden}/>;
+        return <WifiSheetContent ssid={wifiSsid || ''} password={wifiPassword || ''} isWep={wifiIsWep} isHidden={wifiIsHidden} />;
       case 'linking':
         return <LinkingSheetContent url={linkingUrl} onCopySuccess={handleCopySuccess} />;
       case 'setting':
@@ -590,8 +640,8 @@ function HomeScreen() {
           onNavigateToScanScreen={onNavigateToScanScreen}
           dropdownOptions={[
             { label: 'homeScreen.fab.add', onPress: onNavigateToAddScreen },
-            { label: 'homeScreen.fab.scan', onPress: onNavigateToScanScreen},
-            { label: 'homeScreen.fab.gallery', onPress: onOpenGallery},
+            { label: 'homeScreen.fab.scan', onPress: onNavigateToScanScreen },
+            { label: 'homeScreen.fab.gallery', onPress: onOpenGallery },
           ]}
         />
       ) : (

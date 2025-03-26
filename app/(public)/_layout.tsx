@@ -8,7 +8,6 @@ import { ThemedView } from '@/components/ThemedView';
 import { getResponsiveHeight, getResponsiveWidth } from '@/utils/responsive';
 import { storage } from '@/utils/storage';
 import { MMKV_KEYS } from '@/services/auth/login';
-
 export default function AuthLayout() {
   const segments = useSegments() as string[];
   const router = useRouter();

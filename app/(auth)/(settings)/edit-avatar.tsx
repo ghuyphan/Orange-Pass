@@ -63,6 +63,7 @@ const EditAvatarScreen = () => {
   const currentAvatarConfig = useSelector(
     (state: RootState) => state.auth.avatarConfig
   );
+  const selectedColor = currentTheme === 'light' ? Colors.light.icon : Colors.dark.icon;
   const currentUser = useSelector((state: RootState) => state.auth.user);
 
   // Initialize the avatar configuration to include sex (default: "male")
@@ -75,7 +76,7 @@ const EditAvatarScreen = () => {
   const headerScrollThreshold = getResponsiveHeight(7);
   const headerAnimationRange = getResponsiveHeight(5);
   const baseAvatarSize = getResponsiveWidth(40);
-  const avatarMoveUpDistance = getResponsiveHeight(11);
+  const avatarMoveUpDistance = getResponsiveHeight(12);
   const headerMoveUpDistance = getResponsiveHeight(2);
   const avatarInitialOffset = getResponsiveHeight(18);
 
@@ -279,7 +280,7 @@ const EditAvatarScreen = () => {
                   style={[
                     styles.optionCircle,
                     { backgroundColor: option },
-                    isSelected && styles.selectedOption
+                    isSelected && [styles.selectedOption, { borderColor: selectedColor}]
                   ]}
                 />
               );
@@ -290,7 +291,7 @@ const EditAvatarScreen = () => {
                   onPress={() => handleOptionSelect(property, option)}
                   style={[
                     styles.genericOption,
-                    isSelected && styles.selectedOption
+                    isSelected && [styles.selectedOption, { borderColor: selectedColor}]
                   ]}
                 >
                   <ThemedText style={styles.genericOptionText}>
@@ -522,7 +523,7 @@ const styles = StyleSheet.create({
     alignSelf: "center"
   },
   spacer: {
-    height: getResponsiveHeight(4)
+    height: getResponsiveHeight(2)
   },
   scrollView: {
     flex: 1,
@@ -556,7 +557,8 @@ const styles = StyleSheet.create({
   },
   selectedOption: {
     borderWidth: 2,
-    borderColor: '#007AFF' // iOS blue as primary color
+
+
   },
   customOption: {
     borderStyle: "dashed"

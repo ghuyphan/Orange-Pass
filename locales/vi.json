@@ -37,8 +37,8 @@
     "switchAccount": "Chuyển tài khoản",
     "cancel": "Hủy",
     "errors": {
-      "required": "Vui lòng nhập mật khẩu",
-      "passwordTooShort": "Mật khẩu quá ngắn",
+      "required": "Vui lòng nhập mật khẩu.",
+      "passwordTooShort": "Mật khẩu quá ngắn.",
       "invalidCredentials": "Thông tin đăng nhập không chính xác.",
       "quickLoginFailed": "Đăng nhập nhanh thất bại. Vui lòng nhập mật khẩu.",
       "noAccountSelected": "Vui lòng chọn một tài khoản.",
@@ -60,22 +60,22 @@
     "password": "Mật khẩu",
     "passwordPlaceholder": "Nhập mật khẩu",
     "login": "Đăng nhập",
-    "forgotPassword": "Bạn quên mật khẩu ư?",
+    "forgotPassword": "Bạn quên mật khẩu?",
     "dontHaveAnAccount": "Chưa có tài khoản?",
     "register": "Đăng ký",
     "registerNow": "Tạo tài khoản mới",
     "loggingIn": "Đang đăng nhập...",
     "errors": {
-      "invalidEmail": "Email không hợp lệ",
-      "emailRequired": "Vui lòng nhập email",
-      "invalidPassword": "Mật khẩu không đúng",
-      "passwordRequired": "Vui lòng nhập mật khẩu",
-      "offlineNotice": "Bạn đang ngoại tuyến. Vui lòng kết nối mạng!",
+      "invalidEmail": "Email không hợp lệ.",
+      "emailRequired": "Vui lòng nhập email.",
+      "invalidPassword": "Mật khẩu không đúng.",
+      "passwordRequired": "Vui lòng nhập mật khẩu.",
+      "offlineNotice": "Bạn đang ngoại tuyến. Vui lòng kết nối mạng.",
       "400": "Email hoặc mật khẩu không đúng. Vui lòng thử lại.",
       "500": "Đã xảy ra lỗi máy chủ. Vui lòng thử lại sau.",
       "emptyFields": "Vui lòng nhập email và mật khẩu.",
-      "passwordTooShort": "Mật khẩu phải ít nhất 6 ký tự.",
-      "timeout": "Quá thời gian đăng nhập. Vui lòng kiểm tra kết nối mạng và thử lại.",
+      "passwordTooShort": "Mật khẩu phải có ít nhất 6 ký tự.",
+      "timeout": "Yêu cầu đăng nhập đã hết thời gian. Vui lòng kiểm tra kết nối mạng và thử lại.",
       "invalidResponse": "Phản hồi từ máy chủ không hợp lệ. Vui lòng thử lại sau.",
       "storageError": "Đã xảy ra lỗi khi lưu thông tin đăng nhập. Vui lòng thử lại.",
       "databaseError": "Đã xảy ra lỗi cơ sở dữ liệu. Vui lòng thử lại sau.",
@@ -100,17 +100,17 @@
       "fullNameRequired": "Vui lòng nhập họ và tên.",
       "fullNameInvalid": "Họ và tên không hợp lệ.",
       "invalidEmail": "Email không hợp lệ.",
-      "emailRequired": "Vui lòng nhập email",
-      "invalidPassword": "Mật khẩu không hợp lệ",
-      "invalidPasswordLength": "Mật khẩu phải tối thiểu 8 ký tự",
-      "invalidPasswordLowerCase": "Mật khẩu cần có chữ thường",
-      "invalidPasswordUpperCase": "Mật khẩu cần có chữ hoa",
+      "emailRequired": "Vui lòng nhập email.",
+      "invalidPassword": "Mật khẩu không hợp lệ.",
+      "invalidPasswordLength": "Mật khẩu phải tối thiểu 8 ký tự.",
+      "invalidPasswordLowerCase": "Mật khẩu cần có chữ thường.",
+      "invalidPasswordUpperCase": "Mật khẩu cần có chữ hoa.",
       "invalidPasswordNumber": "Mật khẩu cần có số.",
-      "invalidPasswordSpecialChar": "Mật khẩu cần có ký tự đặc biệt (như !@#$%^&*()_)",
+      "invalidPasswordSpecialChar": "Mật khẩu cần có ký tự đặc biệt (ví dụ: !@#$%^&*()_).",
       "passwordRequired": "Vui lòng nhập mật khẩu.",
-      "passwordsDontMatch": "Hai mật khẩu không giống nhau",
-      "confirmPasswordRequired": "Vui lòng xác nhận lại mật khẩu",
-      "offlineNotice": "Bạn đang ngoại tuyến. Vui lòng kết nối mạng!",
+      "passwordsDontMatch": "Hai mật khẩu không khớp.",
+      "confirmPasswordRequired": "Vui lòng xác nhận lại mật khẩu.",
+      "offlineNotice": "Bạn đang ngoại tuyến. Vui lòng kết nối mạng.",
       "400": "Email này đã được sử dụng. Vui lòng sử dụng email khác.",
       "403": "Không thể tạo tài khoản. Vui lòng liên hệ với chúng tôi để được hỗ trợ.",
       "500": "Đã xảy ra lỗi máy chủ. Vui lòng thử lại sau."
@@ -122,7 +122,7 @@
     "emailPlaceholder": "Nhập email",
     "sendResetLink": "Tiếp tục",
     "sendingResetLink": "Đang gửi...",
-    "successMessage": "Link đặt lại mật khẩu đã được gửi tới email của bạn rồi đó. Kiểm tra ngay nhé!",
+    "successMessage": "Đã gửi liên kết đặt lại mật khẩu đến email của bạn. Vui lòng kiểm tra hộp thư.",
     "errors": {
       "emailRequired": "Vui lòng nhập email.",
       "invalidEmail": "Email không hợp lệ.",
@@ -132,9 +132,9 @@
   "homeScreen": {
     "title": "Orange⁺",
     "searchPlaceholder": "Tìm kiếm thẻ của bạn",
-    "noItemFound": "Không tìm thấy thẻ. Vui lòng thử lại",
+    "noItemFound": "Không tìm thấy thẻ. Vui lòng thử lại.",
     "manage": "Quản lý thẻ",
-    "linking": "Chi tiết Liên kết",
+    "linking": "Chi tiết liên kết",
     "edit": "Sửa thẻ",
     "delete": "Xóa",
     "syncing": "Đang đồng bộ...",
@@ -148,19 +148,19 @@
     "move": "Chuyển",
     "fetchError": "Không thể tải dữ liệu. Vui lòng thử lại.",
     "syncError": "Không thể đồng bộ. Vui lòng thử lại.",
-    "syncSuccess": "Đồng bộ thành công",
-    "copied": "Đã sao chép liên kết",
+    "syncSuccess": "Đồng bộ thành công.",
+    "copied": "Đã sao chép liên kết.",
     "filters": {
       "all": "Tất cả",
       "bank": "Ngân hàng",
       "store": "Thẻ thành viên",
-      "ewallet": "Ví tiền"
+      "ewallet": "Ví điện tử"
     },
     "emptyCard": {
-      "header": "Tất cả mã QR của bạn\nGiờ đã ở cùng một nơi",
-      "footer": "Thêm thẻ mới nào!",
+      "header": "Tất cả mã QR của bạn\nNay đã ở cùng một nơi",
+      "footer": "Thêm thẻ mới",
       "footerButton": "Thêm thẻ",
-      "content": "Lưu tất cả mã QR của bạn vào đây - từ thẻ ngân hàng, ví tiền, thẻ thành viên,... Sắp xếp và truy cập dễ dàng mọi lúc mọi nơi."
+      "content": "Lưu tất cả mã QR của bạn tại đây - từ thẻ ngân hàng, ví điện tử, thẻ thành viên,... Sắp xếp và truy cập dễ dàng mọi lúc mọi nơi."
     },
     "fab": {
       "add": "Thêm thẻ",
@@ -179,7 +179,7 @@
     "passwordPlaceholder": "Nhập mật khẩu"
   },
   "locationPermission": {
-    "title": "Cần Quyền Vị trí",
+    "title": "Yêu cầu Quyền Vị trí",
     "message": "Ứng dụng cần quyền truy cập vị trí để quét các mạng Wi-Fi. Vui lòng cấp quyền trong cài đặt.",
     "requestButton": "Cấp Quyền"
   },
@@ -192,9 +192,9 @@
     },
     "copyPasswordModal": {
       "successTitle": "Đã sao chép mật khẩu",
-      "successDescription": "Mật khẩu đã được sao chép.",
+      "successDescription": "Mật khẩu đã được sao chép vào bộ nhớ tạm.",
       "errorTitle": "Sao chép thất bại",
-      "errorDescription": "Không thể sao chép mật khẩu"
+      "errorDescription": "Không thể sao chép mật khẩu."
     },
     "noSSIDError": "Không có SSID.",
     "invalidPasswordModal": {
@@ -202,7 +202,7 @@
       "description": "Mật khẩu Wi-Fi phải có ít nhất 8 ký tự."
     },
     "wifiDisabledModal": {
-      "title": "Wi-Fi đã tắt",
+      "title": "Wi-Fi đang tắt",
       "description": "Vui lòng bật Wi-Fi để kết nối."
     },
     "connectionSuccessModal": {
@@ -252,32 +252,32 @@
     "brandPlaceholder": "Ví dụ: Vietcombank, Circle K, MoMo...",
     "metadataTypeTitle": "Loại mã",
     "metadataTypePlaceholder": "Chọn loại mã (QR, vạch...)",
-    "metadataPlaceholder": "Nhập thông tin mã ở đây",
+    "metadataPlaceholder": "Nhập thông tin mã tại đây",
     "accountNameTitle": "Tên chủ tài khoản",
     "accountNamePlaceholder": "Nhập tên trên thẻ/tài khoản",
     "accountNumberTitle": "Số tài khoản/Số thẻ",
     "accountNumberPlaceholder": "Nhập số tài khoản/số thẻ",
     "saving": "Đang lưu thẻ...",
     "errors": {
-      "categoryRequired": "Bạn cần chọn loại thẻ trước nhé!",
-      "brandRequired": "Vui lòng cho biết thương hiệu của thẻ.",
-      "metadataRequired": "Hãy nhập thông tin mã (QR, vạch...).",
-      "metadataTypeRequired": "Bạn cần chọn loại mã (QR, vạch...) nhé.",
+      "categoryRequired": "Vui lòng chọn loại thẻ.",
+      "brandRequired": "Vui lòng nhập thương hiệu của thẻ.",
+      "metadataRequired": "Vui lòng nhập thông tin mã (QR, vạch...).",
+      "metadataTypeRequired": "Vui lòng chọn loại mã (QR, vạch...).",
       "accountNameRequired": "Vui lòng nhập tên chủ tài khoản.",
       "accountNumberRequired": "Vui lòng nhập số tài khoản/số thẻ.",
-      "emptyFields": "Hình như còn thông tin chưa điền, bạn kiểm tra lại nhé!",
-      "invalidInput": "Có vẻ thông tin chưa đúng, bạn kiểm tra lại giúp mình nha!",
-      "saveFailed": "Rất tiếc, chưa lưu được thẻ.  Bạn thử lại sau nhé!",
-      "offlineNotice": "Bạn đang không có mạng.  Vui lòng kết nối mạng để thêm thẻ.",
-      "timeout": "Quá thời gian rồi.  Bạn kiểm tra lại kết nối mạng xem sao.",
-      "invalidResponse": "Có lỗi xảy ra, bạn thử lại sau nha.",
-      "storageError": "Có lỗi khi lưu thẻ. Bạn thử lại giúp mình.",
-      "databaseError": "Có lỗi cơ sở dữ liệu.  Bạn thử lại sau ít phút nhé.",
-      "selectCategoryFirstMessage": "Chọn loại thẻ trước đã nha!",
-      "emptyInputMessage": "Bạn nhập thông tin vào đây nhé.",
-      "submissionErrorTitle": "Ôi, có lỗi rồi!",
-      "submissionErrorMessage": "Chưa lưu được thông tin. Bạn thử lại nha!",
-      "ok": "Đã hiểu"
+      "emptyFields": "Vui lòng điền đầy đủ thông tin.",
+      "invalidInput": "Thông tin nhập không hợp lệ. Vui lòng kiểm tra lại.",
+      "saveFailed": "Không thể lưu thẻ. Vui lòng thử lại sau.",
+      "offlineNotice": "Bạn đang ngoại tuyến. Vui lòng kết nối mạng để thêm thẻ.",
+      "timeout": "Yêu cầu đã hết thời gian. Vui lòng kiểm tra kết nối mạng và thử lại.",
+      "invalidResponse": "Phản hồi không hợp lệ từ máy chủ. Vui lòng thử lại sau.",
+      "storageError": "Đã xảy ra lỗi khi lưu thẻ. Vui lòng thử lại.",
+      "databaseError": "Đã xảy ra lỗi cơ sở dữ liệu. Vui lòng thử lại sau.",
+      "selectCategoryFirstMessage": "Vui lòng chọn loại thẻ trước.",
+      "emptyInputMessage": "Vui lòng nhập thông tin.",
+      "submissionErrorTitle": "Lỗi Lưu Thẻ",
+      "submissionErrorMessage": "Không thể lưu thông tin thẻ. Vui lòng thử lại.",
+      "ok": "OK"
     }
   },
   "editScreen": {
@@ -306,32 +306,32 @@
     "brandPlaceholder": "Ví dụ: Vietcombank, Circle K, MoMo...",
     "metadataTypeTitle": "Loại mã",
     "metadataTypePlaceholder": "Chọn loại mã (QR, vạch...)",
-    "metadataPlaceholder": "Nhập thông tin mã ở đây",
+    "metadataPlaceholder": "Nhập thông tin mã tại đây",
     "accountNameTitle": "Tên chủ tài khoản",
     "accountNamePlaceholder": "Nhập tên trên thẻ/tài khoản",
     "accountNumberTitle": "Số tài khoản/Số thẻ",
     "accountNumberPlaceholder": "Nhập số tài khoản/số thẻ",
     "saving": "Đang lưu thay đổi...",
     "errors": {
-      "categoryRequired": "Bạn cần chọn loại thẻ trước nhé!",
-      "brandRequired": "Vui lòng cho biết thương hiệu của thẻ.",
-      "metadataRequired": "Hãy nhập thông tin mã (QR, vạch...).",
-      "metadataTypeRequired": "Bạn cần chọn loại mã (QR, vạch...) nhé.",
+      "categoryRequired": "Vui lòng chọn loại thẻ.",
+      "brandRequired": "Vui lòng nhập thương hiệu của thẻ.",
+      "metadataRequired": "Vui lòng nhập thông tin mã (QR, vạch...).",
+      "metadataTypeRequired": "Vui lòng chọn loại mã (QR, vạch...).",
       "accountNameRequired": "Vui lòng nhập tên chủ tài khoản.",
       "accountNumberRequired": "Vui lòng nhập số tài khoản/số thẻ.",
-      "emptyFields": "Hình như còn thông tin chưa điền, bạn kiểm tra lại nhé!",
-      "invalidInput": "Có vẻ thông tin chưa đúng, bạn kiểm tra lại giúp mình nha!",
-      "saveFailed": "Rất tiếc, chưa lưu được thay đổi.  Bạn thử lại sau nhé!",
-      "offlineNotice": "Bạn đang không có mạng.  Vui lòng kết nối mạng để lưu thay đổi.",
-      "timeout": "Quá thời gian rồi.  Bạn kiểm tra lại kết nối mạng xem sao.",
-      "invalidResponse": "Có lỗi xảy ra, bạn thử lại sau nha.",
-      "storageError": "Có lỗi khi lưu thay đổi. Bạn thử lại giúp mình.",
-      "databaseError": "Có lỗi cơ sở dữ liệu.  Bạn thử lại sau ít phút nhé.",
-      "selectCategoryFirstMessage": "Chọn loại thẻ trước đã nha!",
-      "emptyInputMessage": "Bạn nhập thông tin vào đây nhé.",
-      "submissionErrorTitle": "Ôi, có lỗi rồi!",
-      "submissionErrorMessage": "Chưa lưu được thay đổi. Bạn thử lại nha!",
-      "ok": "Đã hiểu"
+      "emptyFields": "Vui lòng điền đầy đủ thông tin.",
+      "invalidInput": "Thông tin nhập không hợp lệ. Vui lòng kiểm tra lại.",
+      "saveFailed": "Không thể lưu thay đổi. Vui lòng thử lại sau.",
+      "offlineNotice": "Bạn đang ngoại tuyến. Vui lòng kết nối mạng để lưu thay đổi.",
+      "timeout": "Yêu cầu đã hết thời gian. Vui lòng kiểm tra kết nối mạng và thử lại.",
+      "invalidResponse": "Phản hồi không hợp lệ từ máy chủ. Vui lòng thử lại sau.",
+      "storageError": "Đã xảy ra lỗi khi lưu thay đổi. Vui lòng thử lại.",
+      "databaseError": "Đã xảy ra lỗi cơ sở dữ liệu. Vui lòng thử lại sau.",
+      "selectCategoryFirstMessage": "Vui lòng chọn loại thẻ trước.",
+      "emptyInputMessage": "Vui lòng nhập thông tin.",
+      "submissionErrorTitle": "Lỗi Lưu Thay Đổi",
+      "submissionErrorMessage": "Không thể lưu thay đổi. Vui lòng thử lại.",
+      "ok": "OK"
     }
   },
   "scanScreen": {
@@ -349,33 +349,33 @@
     "imageTitle": "Cho phép truy cập ảnh",
     "locationTitle": "Cho phép truy cập vị trí",
     "cameraSubtitle": "Để quét mã QR, ứng dụng cần quyền truy cập vào máy ảnh của bạn.",
-    "imageSubtitle": "Để quét mã QR từ ảnh, ứng dụng cần quyền truy cập vào ảnh của bạn.",
-    "locationSubtitle": "Để quét các mạng Wi-Fi gần đây, ứng dụng cần quyền truy cập vị trí của bạn. Bạn có thể từ chối, nhưng sẽ không quét được Wi-Fi.",
+    "imageSubtitle": "Để quét mã QR từ ảnh, ứng dụng cần quyền truy cập vào thư viện ảnh của bạn.",
+    "locationSubtitle": "Để quét các mạng Wi-Fi lân cận, ứng dụng cần quyền truy cập vị trí của bạn. Bạn có thể từ chối, nhưng sẽ không quét được Wi-Fi.",
     "allowButton": "Cho phép",
     "cancelButton": "Từ chối"
   },
   "onboardingScreen": {
     "title": "Orange⁺",
     "title1": "Trình quản lý mã QR của bạn",
-    "subtitle1": "Sắp xếp và lưu trữ mã QR cho tài khoản ngân hàng, thẻ khách hàng thân thiết và ví điện tử của bạn.",
+    "subtitle1": "Sắp xếp và lưu trữ mã QR cho tài khoản ngân hàng, thẻ thành viên và ví điện tử của bạn.",
     "title2": "Đồng bộ hóa đám mây",
     "subtitle2": "Mã QR của bạn được sao lưu an toàn và đồng bộ hóa với đám mây.",
-    "title3": "Luôn có thể truy cập",
+    "title3": "Truy cập mọi lúc mọi nơi",
     "subtitle3": "Truy cập và quản lý mã QR của bạn mọi lúc, mọi nơi.",
     "finishButton": "Bắt đầu",
     "termsOfService": {
-      "agreementPrefix": "Nhấn tiếp tục nghĩa là bạn đồng ý với",
+      "agreementPrefix": "Nhấn \"Tiếp tục\" đồng nghĩa với việc bạn đồng ý với",
       "termsOfServiceLink": "Điều khoản dịch vụ",
       "privacyPolicyPrefix": "và đã xem qua",
       "privacyPolicyLink": "Chính sách bảo mật",
       "termsOfServiceSheetTitle": "Điều khoản dịch vụ",
       "termsOfServiceTitle": "Chào mừng bạn đến với Orange⁺",
       "termsOfServiceDescription": "Nguyên tắc cộng đồng",
-      "termsOfServiceContent1": "Để đảm bảo trải nghiệm tích cực cho tất cả người dùng, vui lòng tuân thủ các nguyên tắc cộng đồng sau đây:",
-      "termsOfServiceContent2": "Tóm lại:\n* Không thực hiện hành vi bất hợp pháp hoặc gây hại. Không đăng tải nội dung không phù hợp.\n* Tôn trọng quyền riêng tư. Không chia sẻ mã QR của người khác mà không có sự cho phép.\n* Bảo vệ tài khoản của bạn. Không chia sẻ thông tin đăng nhập.",
+      "termsOfServiceContent1": "Để đảm bảo trải nghiệm tích cực cho tất cả người dùng, vui lòng tuân thủ các nguyên tắc cộng đồng sau:",
+      "termsOfServiceContent2": "Các điểm chính cần lưu ý:\n* Không thực hiện hành vi bất hợp pháp hoặc gây hại. Không đăng tải nội dung không phù hợp.\n* Tôn trọng quyền riêng tư. Không chia sẻ mã QR của người khác mà không có sự cho phép.\n* Bảo vệ tài khoản của bạn. Không chia sẻ thông tin đăng nhập.",
       "privacyPolicySheetTitle": "Chính sách bảo mật",
       "privacyPolicyTitle": "Dữ liệu của bạn, Orange⁺ bảo vệ",
-      "privacyPolicyDescription": "Lời hứa về quyền riêng tư",
+      "privacyPolicyDescription": "Cam kết về quyền riêng tư",
       "privacyPolicyContent1": "Orange⁺ cam kết bảo vệ quyền riêng tư của bạn. Chúng tôi chỉ thu thập thông tin cần thiết để cải thiện trải nghiệm ứng dụng, chẳng hạn như tên và email để cá nhân hóa tài khoản và liên lạc.",
       "privacyPolicyContent2": "Chúng tôi cam kết:\n* Bảo mật dữ liệu của bạn. Không chia sẻ thông tin cá nhân khi chưa có sự đồng ý.\n* Sử dụng các biện pháp bảo mật tiên tiến để bảo vệ thông tin.\n* Bạn có toàn quyền kiểm soát dữ liệu, bao gồm cả quyền xóa tài khoản."
     }
@@ -392,7 +392,7 @@
     "bankTransfer": "Chuyển khoản với",
     "searchBank": "Nhập tên ngân hàng",
     "transferMessage": "Chuyển tiền tới",
-    "copiedToClipboard": "Đã sao chép",
+    "copiedToClipboard": "Đã sao chép vào bộ nhớ tạm.",
     "cannotOpenBankApp": "Không thể mở ứng dụng ngân hàng.",
     "failedToOpenBankApp": "Lỗi khi mở ứng dụng ngân hàng.",
     "generateError": "Lỗi khi tạo mã QR.",
@@ -415,7 +415,7 @@
     "confirmLogoutButton": "Đăng xuất",
     "appVersion": "Phiên bản:"
   },
-    "editAvatarScreen": {
+  "editAvatarScreen": {
       "title": "Sửa Avatar",
       "save": "Lưu",
       "gender": "Giới tính",
@@ -432,16 +432,16 @@
       "shirtStyle": "Kiểu áo",
       "shirtColor": "Màu áo",
       "options": {
-        "gender": {
-          "male": "Nam",
-          "female": "Nữ"
+        "sex": {
+          "man": "Nam",
+          "woman": "Nữ"
         },
         "earSize": {
           "small": "Nhỏ",
           "big": "Lớn"
         },
         "hairStyle": {
-          "normal": "Bình thường",
+          "normal": "Thường",
           "thick": "Dày",
           "mohawk": "Mohawk",
           "womanLong": "Tóc dài",
@@ -455,7 +455,7 @@
         "eyeStyle": {
           "circle": "Tròn",
           "oval": "Oval",
-          "smile": "Cười"
+          "smile": "Mắt cười"
         },
         "glassesStyle": {
           "none": "Không",
@@ -468,9 +468,9 @@
           "round": "Tròn"
         },
         "mouthStyle": {
-          "laugh": "Cười tươi",
-          "smile": "Cười mỉm",
-          "peace": "Biểu hiệu hòa bình"
+          "laugh": "Cười lớn",
+          "smile": "Mỉm cười",
+          "peace": "Peace"
         },
         "shirtStyle": {
           "hoody": "Áo hoodie",
@@ -481,7 +481,7 @@
       "customColor": "Màu tùy chỉnh",
       "enterCustomHexCode": "Nhập mã màu hex tùy chỉnh",
       "hexCode": "Mã hex"
-    },  
+  },
   "languageScreen": {
     "title": "Ngôn ngữ",
     "english": "Tiếng Anh",
@@ -494,6 +494,6 @@
     "light": "Chế độ sáng",
     "dark": "Chế độ tối",
     "system": "Theo hệ thống",
-    "successMessage": "Vui lòng khởi động lại ứng dụng để thấy các thay đổi."
+    "successMessage": "Vui lòng khởi động lại ứng dụng để áp dụng thay đổi."
   }
 }

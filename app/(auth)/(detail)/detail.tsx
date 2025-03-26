@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import { StyleSheet, View, FlatList, TextInput, Pressable, Image, ActivityIndicator, InteractionManager } from 'react-native';
+import { StyleSheet, View, FlatList, TextInput, Pressable, Image, ActivityIndicator } from 'react-native';
 import * as Linking from 'expo-linking';
 import { useDispatch, useSelector } from 'react-redux';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
@@ -135,7 +135,7 @@ const DetailScreen = () => {
 
     setTimeout(() => {
       loadBanks();
-    }, 250);
+    }, 300);
   }, [item?.type]);
 
   const handleExpandPress = useCallback(() => {
@@ -290,8 +290,8 @@ const DetailScreen = () => {
       }
 
       setIsSyncing(true);
-      // setIsToastVisible(true);
-      // setToastMessage(t('detailsScreen.generatingQRCode'));
+      setIsToastVisible(true);
+      setToastMessage(t('detailsScreen.generatingQRCode'));
 
       try {
         const itemName = returnItemData(item.code, item.type);
@@ -402,12 +402,11 @@ const DetailScreen = () => {
         },
       ]}
       contentContainerStyle={styles.container}
-      extraScrollHeight={getResponsiveHeight(10)} // Adjust this value
-      extraHeight={getResponsiveHeight(20)} // Adjust this value
+      // extraScrollHeight={getResponsiveHeight(12)}  // Consider adding this back *if* content is obscured.
+      // extraHeight={getResponsiveHeight(24)}      //  Less likely to be needed.
       enableOnAndroid
       showsVerticalScrollIndicator={false}
     >
-
       <View style={styles.headerWrapper}>
         <ThemedButton onPress={router.back} iconName="chevron-left" />
         <ThemedButton onPress={handleExpandPress} iconName="dots-vertical" />
@@ -528,15 +527,11 @@ const DetailScreen = () => {
                     onPress={handleTransferAmount}
                     style={[styles.transferButton, { opacity: amount ? 1 : 0.3 }]}
                   >
-                    {isSyncing ? (
-                      <ActivityIndicator size={getResponsiveFontSize(16)} color={iconColor} />
-                    ) : (
-                      <MaterialCommunityIcons
-                        name={amount ? 'chevron-right' : 'chevron-right'}
-                        size={getResponsiveFontSize(16)}
-                        color={iconColor}
-                      />
-                    )}
+                    <MaterialCommunityIcons
+                      name={amount ? 'chevron-right' : 'chevron-right'}
+                      size={getResponsiveFontSize(16)}
+                      color={iconColor}
+                    />
                   </Pressable>
                 </View>
                 <FlatList
@@ -588,9 +583,6 @@ const DetailScreen = () => {
                 contentContainerStyle={styles.bankListContent}
                 renderItem={renderPaymentMethodItem}
                 ListEmptyComponent={renderEmptyComponent}
-                initialNumToRender={5}
-                maxToRenderPerBatch={5}
-                windowSize={5}
               />
             </View>
           )}

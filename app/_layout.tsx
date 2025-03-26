@@ -1,44 +1,52 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { StyleSheet, UIManager, Platform, AppState } from 'react-native';
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
+import { StyleSheet, UIManager, Platform, AppState, LogBox } from 'react-native'; // Import LogBox
 import { Stack, useRouter } from 'expo-router';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
-import { Provider } from 'react-redux';
+import { Provider } from 'react-redux'; // Removed useDispatch as it wasn't used here
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { PaperProvider } from 'react-native-paper';
-import { ActivityIndicator } from 'react-native';
+import 'react-native-get-random-values';
 
-// Import core services and providers
-import { store } from '@/store';
-import { createTable } from '@/services/localDB/userDB';
+// --- Store ---
+import { store } from '@/store'; // Removed AppDispatch import
+
+// --- Services ---
+// Assuming these functions handle their own specific errors internally
+import { createTable as createUserTable } from '@/services/localDB/userDB';
 import { createQrTable } from '@/services/localDB/qrDB';
+// Ensure getQuickLoginStatus is correctly imported and implemented in '@/services/auth'
 import { checkInitialAuth, getQuickLoginStatus } from '@/services/auth';
 import { checkOfflineStatus } from '@/services/network';
 import { storage } from '@/utils/storage';
 
-// Import context providers
+// --- Context Providers ---
 import { LocaleProvider } from '@/context/LocaleContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 
-// Import components
+// --- Components & Utils ---
 import { ThemedView } from '@/components/ThemedView';
-import 'react-native-get-random-values';
-
-// Import cleanup function for ResponsiveManager
 import { cleanupResponsiveManager } from '@/utils/responsive';
 
-// Prevent auto-hide of splash screen
+// --- Constants ---
+const ONBOARDING_STORAGE_KEY = 'hasSeenOnboarding';
+const LOG_PREFIX = '[RootLayout]'; // Keep prefix for remaining logs
+
+// --- Ignore specific warnings if necessary (use cautiously) ---
+// LogBox.ignoreLogs(['Warning: ...']); // Example
+
+// Prevent native splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
 
-// Type for app initialization state
+// --- Type Definitions ---
 interface AppInitState {
   isAppReady: boolean;
-  isAuthenticated: boolean | null;
+  isAuthenticated: boolean | null; // Determined by checkInitialAuth
   hasSeenOnboarding: boolean | null;
   hasQuickLoginEnabled: boolean | null;
 }
 
-// Pre-load fonts configuration
+// --- Font Assets ---
 const fontAssets = {
   'HelveticaNeue-Bold': require('../assets/fonts/HelveticaNeueBold.ttf'),
   'OpenSans-Regular': require('../assets/fonts/OpenSans-VariableFont_wdth,wght.ttf'),
@@ -57,188 +65,249 @@ const fontAssets = {
   'Roboto-ThinItalic': require('../assets/fonts/Roboto-ThinItalic.ttf'),
 };
 
+// --- Root Layout Component ---
 export default function RootLayout() {
-  // Font loading - memoize to prevent unnecessary re-renders
-  const [fontsLoaded, fontError] = useFonts(fontAssets);
+  const router = useRouter();
 
-  // App initialization state
+  // --- State ---
+  const [fontsLoaded, fontError] = useFonts(fontAssets);
   const [appState, setAppState] = useState<AppInitState>({
     isAppReady: false,
     isAuthenticated: null,
     hasSeenOnboarding: null,
     hasQuickLoginEnabled: null,
   });
+  const initializationRan = useRef(false); // Prevent prepareApp running multiple times
 
-  const router = useRouter();
-
-  // Enable layout animation on Android - only run once
+  // --- Android Specific Setup ---
   useEffect(() => {
-    if (Platform.OS === 'android') {
-      UIManager.setLayoutAnimationEnabledExperimental?.(true);
+    if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+      UIManager.setLayoutAnimationEnabledExperimental(true);
     }
   }, []);
 
-  // Memoized check for quick login to prevent recreating on each render
-  const checkQuickLoginEnabled = useCallback(async () => {
-    return Promise.resolve(getQuickLoginStatus());
-  }, []);
+  // --- Memoized Initialization Callbacks ---
 
-  // Memoized handler for app state changes
-  const handleAppStateChange = useCallback((nextAppState: string) => {
-    if (nextAppState === 'inactive' || nextAppState === 'background') {
-      cleanupResponsiveManager();
-    }
-  }, []);
-
-  // Initialize database tables
+  // Initializes core database tables. Critical failure stops app prep.
   const initializeDatabase = useCallback(async () => {
-    await Promise.all([createTable(), createQrTable()]);
-  }, []);
-
-  // Check onboarding status
-  const checkOnboardingStatus = useCallback(async () => {
-    return storage.getBoolean('hasSeenOnboarding') ?? false;
-  }, []);
-
-  // Check authentication status
-  const checkAuthStatus = useCallback(async (onboardingStatus: boolean) => {
-    return onboardingStatus ? checkInitialAuth().catch(() => false) : Promise.resolve(false);
-  }, []);
-
-  // Prepare app initialization
-  const prepareApp = useCallback(async () => {
     try {
-      // Run database and auth checks in parallel
-      const [onboardingStatus, authStatus, quickLoginEnabled] = await Promise.all([
+      // Assuming these are idempotent (safe to run multiple times)
+      await Promise.all([createUserTable(), createQrTable()]);
+      // console.log(LOG_PREFIX, 'Database tables initialized.'); // Removed verbose log
+    } catch (error) {
+      console.error(LOG_PREFIX, 'Failed to initialize database tables:', error);
+      throw error; // Propagate error to stop prepareApp
+    }
+  }, []);
+
+  // Checks if the user has completed the onboarding flow.
+  const checkOnboardingStatus = useCallback(async (): Promise<boolean> => {
+    try {
+      // Assuming storage.getBoolean is synchronous (like MMKV)
+      const status = storage.getBoolean(ONBOARDING_STORAGE_KEY) ?? false;
+      // console.log(LOG_PREFIX, `Onboarding status: ${status}.`); // Removed verbose log
+      return status;
+    } catch (error) {
+      console.error(LOG_PREFIX, 'Error reading onboarding status:', error);
+      return false; // Default to false on error
+    }
+  }, []);
+
+  // Checks initial authentication state using the optimized service function.
+  const checkAuthStatus = useCallback(async (onboardingComplete: boolean): Promise<boolean> => {
+    // Skip check if onboarding isn't done (user will be routed to /onboard)
+    if (!onboardingComplete) {
+      // console.log(LOG_PREFIX, 'Auth check skipped: Onboarding not complete.'); // Removed verbose log
+      return false;
+    }
+    try {
+      // checkInitialAuth is now faster as it doesn't await network refresh
+      const authResult = await checkInitialAuth();
+      // console.log(LOG_PREFIX, `Initial auth status from service: ${authResult}`); // Removed verbose log
+      return authResult; // Returns true if local user data exists
+    } catch (error) {
+      // checkInitialAuth should handle its internal errors, but catch unexpected ones
+      console.error(LOG_PREFIX, 'Unexpected error during initial auth check call:', error);
+      return false;
+    }
+  }, []);
+
+  // Checks if quick login (e.g., Biometrics) is enabled.
+  const checkQuickLoginEnabled = useCallback(async (): Promise<boolean> => {
+    try {
+      // Ensure getQuickLoginStatus exists and handles its errors
+      const enabled = await getQuickLoginStatus();
+      // console.log(LOG_PREFIX, `Quick Login status: ${enabled}.`); // Removed verbose log
+      return enabled;
+    } catch (error) {
+      console.error(LOG_PREFIX, 'Error checking quick login status:', error);
+      return false; // Default to false on error
+    }
+  }, []);
+
+  // --- Main App Preparation Function ---
+  // Orchestrates the essential checks needed before navigating the user.
+  const prepareApp = useCallback(async () => {
+    if (initializationRan.current) return;
+    initializationRan.current = true;
+    console.log(LOG_PREFIX, 'Starting app preparation...'); // Keep high-level log
+
+    try {
+      // Run non-dependent checks concurrently
+      const [onboardingStatus, quickLoginEnabled, _dbResult] = await Promise.all([
         checkOnboardingStatus(),
-        checkAuthStatus(await checkOnboardingStatus()),
         checkQuickLoginEnabled(),
+        initializeDatabase(), // Critical, might be needed by auth implicitly
       ]);
 
-      // Initialize database after auth checks
-      await initializeDatabase();
+      // Run auth check (depends on onboarding status)
+      const authStatus = await checkAuthStatus(onboardingStatus);
 
+      console.log(LOG_PREFIX, 'Core preparation finished.'); // Keep high-level log
       setAppState({
-        isAppReady: fontsLoaded && !fontError,
+        isAppReady: true, // Ready to render and hide splash
         isAuthenticated: authStatus,
         hasSeenOnboarding: onboardingStatus,
         hasQuickLoginEnabled: quickLoginEnabled,
       });
+
     } catch (error) {
-      console.error('App initialization error:', error);
-      // More specific error handling
-      if (error instanceof Error) {
-        console.error('Error details:', error.message);
-      }
+      // Catch critical errors from initialization steps (e.g., DB init failure)
+      console.error(LOG_PREFIX, 'CRITICAL App initialization error:', error);
+      // Mark as ready to render an error state if needed, but assume unauthenticated
       setAppState({
-        isAppReady: fontsLoaded && !fontError,
+        isAppReady: true,
         isAuthenticated: false,
-        hasSeenOnboarding: false,
+        hasSeenOnboarding: false, // Sensible defaults on critical failure
         hasQuickLoginEnabled: false,
       });
     }
-  }, [fontsLoaded, fontError, checkQuickLoginEnabled, checkOnboardingStatus, checkAuthStatus]);
+  }, [ // Dependencies for prepareApp
+    initializeDatabase,
+    checkOnboardingStatus,
+    checkAuthStatus,
+    checkQuickLoginEnabled
+  ]
+  );
 
-  // Run app preparation when fonts are loaded
+  // --- Effects ---
+
+  // Effect: Trigger app preparation once fonts are loaded (or failed).
   useEffect(() => {
-    if (fontsLoaded && !fontError) {
-      prepareApp();
+    // Only proceed if fonts have loaded or if there was a font error
+    if (fontsLoaded || fontError) {
+      if (fontError) {
+        console.error(LOG_PREFIX, 'Font loading failed:', fontError);
+        // Mark app as ready even on font error to hide splash and potentially show error UI
+        setAppState(prevState => ({
+          ...prevState,
+          isAppReady: true, // Allow splash hide
+          isAuthenticated: false, // Assume failure state
+          hasSeenOnboarding: false,
+          hasQuickLoginEnabled: false,
+        }));
+      } else {
+        // Fonts loaded successfully, run the main preparation logic
+        prepareApp();
+      }
     }
   }, [fontsLoaded, fontError, prepareApp]);
 
-  // Setup AppState change handling
+  // Effect: Setup AppState and Network status listeners on mount.
   useEffect(() => {
-    const unsubscribe = checkOfflineStatus();
-    const appStateSub = AppState.addEventListener('change', handleAppStateChange);
-
-    return () => {
-      unsubscribe();
-      appStateSub.remove();
+    // Listener for app state changes (e.g., background/foreground)
+    const handleAppStateChange = (nextAppState: string) => {
+      if (nextAppState === 'inactive' || nextAppState === 'background') {
+        cleanupResponsiveManager(); // Example cleanup task
+      }
+      // Add other background/inactive handlers if needed
     };
-  }, [handleAppStateChange]);
+    const appStateSubscription = AppState.addEventListener('change', handleAppStateChange);
 
-  // Callback to hide splash screen when app is ready - memoized
+    // Setup network status listener
+    const networkUnsubscribe = checkOfflineStatus(); // Assumes this returns an unsubscribe function
+
+    // Cleanup listeners on component unmount
+    return () => {
+      // console.log(LOG_PREFIX, 'Cleaning up AppState & Network listeners.'); // Removed verbose log
+      appStateSubscription.remove();
+      networkUnsubscribe();
+    };
+  }, []); // Run only once on mount
+
+  // Effect: Handle initial navigation once app state is determined.
+  useEffect(() => {
+    const { isAppReady, hasSeenOnboarding, isAuthenticated, hasQuickLoginEnabled } = appState;
+
+    // Ensure all flags are set (not null) before attempting to navigate
+    const canNavigate = isAppReady &&
+      hasSeenOnboarding !== null &&
+      isAuthenticated !== null &&
+      hasQuickLoginEnabled !== null;
+
+    if (canNavigate) {
+      let targetRoute: '/onboard' | '/home' | '/quick-login' | '/login';
+
+      if (!hasSeenOnboarding) {
+        targetRoute = '/onboard';
+      } else if (isAuthenticated) { // User has valid local data via checkInitialAuth
+        targetRoute = '/home';
+      } else if (hasQuickLoginEnabled) { // Onboarding done, not authenticated, but quick login available
+        targetRoute = '/quick-login';
+      } else { // Onboarding done, not authenticated, no quick login
+        targetRoute = '/login';
+      }
+
+      console.log(LOG_PREFIX, `Navigating to initial route: ${targetRoute}`); // Keep navigation log
+      router.replace(targetRoute); // Use replace to avoid splash/loading state in back stack
+
+    }
+    // No else needed, navigation will re-run when appState changes
+  }, [appState, router]); // Re-run when appState changes
+
+  // --- Memoized Components ---
+  // Memoize stack navigator structure as it's static
+  const stackNavigator = useMemo(() => (
+    <Stack screenOptions={{ headerShown: false }}>
+      {/* Define group routes or individual screens */}
+      <Stack.Screen name="(public)" options={{ animation: 'default' }} />
+      <Stack.Screen name="(auth)" options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="onboard" options={{ animation: 'fade' }} />
+      <Stack.Screen name="+not-found" />
+      {/* Add other top-level screens like modals if necessary */}
+      {/* <Stack.Screen name="modal" options={{ presentation: 'modal' }} /> */}
+    </Stack>
+  ), []);
+
+  // --- Render Logic ---
+
+  // Callback to hide splash screen once the main layout is rendered and ready
   const onLayoutRootView = useCallback(async () => {
     if (appState.isAppReady) {
       try {
         await SplashScreen.hideAsync();
+        // console.log(LOG_PREFIX, 'Splash screen hidden.'); // Removed verbose log
       } catch (error) {
-        console.error('Failed to hide splash screen', error);
+        console.error(LOG_PREFIX, 'Failed to hide splash screen:', error);
       }
     }
   }, [appState.isAppReady]);
 
-  // Navigation effect based on app state
-  const navigateBasedOnAppState = useCallback(() => {
-    const { isAppReady, hasSeenOnboarding, isAuthenticated, hasQuickLoginEnabled } = appState;
-
-    if (isAppReady && hasSeenOnboarding !== null && isAuthenticated !== null && hasQuickLoginEnabled !== null) {
-      let targetRoute: '/onboard' | '/home' | '/quick-login' | '/login' = '/login';
-
-      if (!hasSeenOnboarding) {
-        targetRoute = '/onboard';
-      } else if (isAuthenticated) {
-        targetRoute = '/home';
-      } else if (hasQuickLoginEnabled) {
-        targetRoute = '/quick-login';
-      }
-
-      router.replace(targetRoute);
-    }
-  }, [appState, router]);
-
-  useEffect(() => {
-    navigateBasedOnAppState();
-  }, [navigateBasedOnAppState]);
-
-  // Memoize the stack component to prevent unnecessary re-renders
-  const stackNavigator = useMemo(
-    () => (
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          animation: 'ios',
-        }}
-      >
-        <Stack.Screen name="(public)" />
-        <Stack.Screen name="(auth)" options={{ animation: 'none' }} />
-        <Stack.Screen name="+not-found" />
-        <Stack.Screen name="onboard" />
-      </Stack>
-    ),
-    []
-  );
-
-  // Show loading state while app is initializing
-  if (
-    !appState.isAppReady ||
-    appState.isAuthenticated === null ||
-    appState.hasSeenOnboarding === null ||
-    appState.hasQuickLoginEnabled === null
-  ) {
-    return (
-      <ThemeProvider>
-        <Provider store={store}>
-          <GestureHandlerRootView style={styles.container}>
-            <PaperProvider>
-              <LocaleProvider>
-                <ThemedView style={styles.root}>
-                  <ActivityIndicator size="large" />
-                </ThemedView>
-              </LocaleProvider>
-            </PaperProvider>
-          </GestureHandlerRootView>
-        </Provider>
-      </ThemeProvider>
-    );
+  // Render nothing (splash remains visible) until all readiness checks pass
+  if (!appState.isAppReady || appState.isAuthenticated === null || appState.hasSeenOnboarding === null || appState.hasQuickLoginEnabled === null) {
+    // console.log(LOG_PREFIX, 'Waiting for app state determination...'); // Removed verbose log
+    return null;
   }
 
+  // Render the main application structure
+  // console.log(LOG_PREFIX, 'Rendering main app structure...'); // Removed verbose log
   return (
     <ThemeProvider>
       <Provider store={store}>
         <GestureHandlerRootView style={styles.container}>
           <PaperProvider>
             <LocaleProvider>
+              {/* ThemedView acts as the root view for layout callback */}
               <ThemedView style={styles.root} onLayout={onLayoutRootView}>
                 {stackNavigator}
               </ThemedView>
@@ -250,12 +319,14 @@ export default function RootLayout() {
   );
 }
 
-// Styles - memoize with StyleSheet.create
+// --- Styles ---
 const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
   root: {
     flex: 1,
+    // Add a background color matching your theme's default to avoid flashes
+    // backgroundColor: 'your_theme_background_color',
   },
 });
