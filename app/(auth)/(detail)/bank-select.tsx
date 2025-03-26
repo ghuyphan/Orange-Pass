@@ -144,7 +144,7 @@ const BankSelectScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        paddingTop: getResponsiveHeight(10), // Adjusted paddingTop to match DetailScreen
+        paddingTop: getResponsiveHeight(8.5), // Adjusted paddingTop to match DetailScreen
     },
     headerWrapper: {
         flexDirection: 'column',

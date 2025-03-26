@@ -92,6 +92,7 @@ function HomeScreen() {
   const [wifiSsid, setWifiSsid] = useState<string | null>(null);
   const [wifiPassword, setWifiPassword] = useState<string | null>(null);
   const [wifiIsWep, setWifiIsWep] = useState(false);
+  const [wifiIsHidden, setWifiIsHidden] = useState(false);
   const [filter, setFilter] = useState('all');
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [wasOffline, setWasOffline] = useState(false);
@@ -307,7 +308,7 @@ function HomeScreen() {
 
   // Sheet handlers
   const onOpenSheet = useCallback(
-    (type: SheetType, id?: string, url?: string, ssid?: string, password?: string, isWep?: boolean) => {
+    (type: SheetType, id?: string, url?: string, ssid?: string, password?: string, isWep?: boolean, isHidden?: boolean) => {
       setSheetType(type);
       setIsSheetOpen(true);
       setSelectedItemId(id || null);
@@ -318,7 +319,7 @@ function HomeScreen() {
             setWifiSsid(ssid);
             setWifiPassword(password);
             setWifiIsWep(isWep ?? false);
-            
+            setWifiIsHidden(isHidden ?? false);
           }
           break;
         case 'linking':
@@ -354,6 +355,44 @@ function HomeScreen() {
     setIsActive(true);
   }, []);
 
+  // Memoize filtered data
+  const filteredData = useMemo(() => {
+    if (filter === 'all') return qrData;
+    return qrData.filter(item => item.type === filter);
+  }, [qrData, filter]);
+
+  // Memoize handlers
+  const handleSync = useCallback(() => {
+    debouncedSyncWithServer(userId);
+  }, [debouncedSyncWithServer, userId]);
+
+  const handleFilterChange = useCallback((newFilter: string) => {
+    setFilter(newFilter);
+    filterQrCodesByType(userId, newFilter).then((filteredData) => dispatch(setQrData(filteredData)));
+  }, [userId, dispatch]);
+
+  // Optimize renderItem with useCallback
+  const renderItem = useCallback(
+    ({ item, drag, isActive }: { item: QRRecord; drag: () => void; isActive: boolean }) => (
+      <ScaleDecorator activeScale={0.9}>
+        <ThemedCardItem
+          isActive={isActive}
+          onItemPress={() => onNavigateToDetailScreen(item)}
+          code={item.code}
+          type={item.type}
+          metadata={item.metadata}
+          metadata_type={item.metadata_type}
+          onMoreButtonPress={() => onOpenSheet('setting', item.id)}
+          accountName={item.account_name}
+          accountNumber={item.account_number}
+          onDrag={drag}
+        />
+      </ScaleDecorator>
+    ),
+    [onNavigateToDetailScreen, onOpenSheet]
+  );
+
+  // Optimize onDragEnd with useCallback
   const onDragEnd = useCallback(
     async ({ data }: { data: QRRecord[] }) => {
       try {
@@ -379,15 +418,6 @@ function HomeScreen() {
       }
     },
     [dispatch]
-  );
-
-  // Filter handler
-  const handleFilterPress = useCallback(
-    (filter: string) => {
-      setFilter(filter);
-      filterQrCodesByType(userId, filter).then((filteredData) => dispatch(setQrData(filteredData)));
-    },
-    [userId, dispatch]
   );
 
   // Toast handler
@@ -433,27 +463,6 @@ function HomeScreen() {
     }
   }, [selectedItemId, qrData, dispatch]);
 
-  // Render item
-  const renderItem = useCallback(
-    ({ item, drag, isActive }: { item: QRRecord; drag: () => void; isActive: boolean }) => (
-      <ScaleDecorator activeScale={0.9}>
-        <ThemedCardItem
-          isActive={isActive}
-          onItemPress={() => onNavigateToDetailScreen(item)}
-          code={item.code}
-          type={item.type}
-          metadata={item.metadata}
-          metadata_type={item.metadata_type}
-          onMoreButtonPress={() => onOpenSheet('setting', item.id)}
-          accountName={item.account_name}
-          accountNumber={item.account_number}
-          onDrag={drag}
-        />
-      </ScaleDecorator>
-    ),
-    [onNavigateToDetailScreen, onOpenSheet]
-  );
-
   // Padding values
   const paddingValues = useMemo(() => {
     // Define padding values based on the number of items in the list
@@ -478,7 +487,7 @@ function HomeScreen() {
   const renderSheetContent = () => {
     switch (sheetType) {
       case 'wifi':
-        return <WifiSheetContent ssid={wifiSsid || ''} password={wifiPassword || ''} isWep={wifiIsWep} />;
+        return <WifiSheetContent ssid={wifiSsid || ''} password={wifiPassword || ''} isWep={wifiIsWep} isHidden={wifiIsHidden}/>;
       case 'linking':
         return <LinkingSheetContent url={linkingUrl} onCopySuccess={handleCopySuccess} />;
       case 'setting':
@@ -488,46 +497,91 @@ function HomeScreen() {
     }
   };
 
+  // Memoize the header component
+  const HeaderComponent = React.memo(({ titleContainerStyle, syncStatus, isLoading, onSync, onScan, onSettings }: {
+    titleContainerStyle: any;
+    syncStatus: 'idle' | 'syncing' | 'synced' | 'error';
+    isLoading: boolean;
+    onSync: () => void;
+    onScan: () => void;
+    onSettings: () => void;
+  }) => (
+    <Animated.View style={[styles.titleContainer, titleContainerStyle]}>
+      <View style={styles.headerContainer}>
+        <ThemedText style={styles.titleText} type="title">
+          {t('homeScreen.title')}
+        </ThemedText>
+        <View style={styles.titleButtonContainer}>
+          <ThemedButton
+            iconName="cloud-sync"
+            syncStatus={syncStatus}
+            style={styles.titleButton}
+            onPress={onSync}
+            disabled={syncStatus === 'syncing' || isLoading}
+          />
+          <ThemedButton
+            iconName="camera"
+            style={styles.titleButton}
+            onPress={onScan}
+            disabled={isLoading}
+          />
+          <ThemedButton
+            iconName="cog"
+            style={styles.titleButton}
+            onPress={onSettings}
+            disabled={isLoading}
+          />
+        </View>
+      </View>
+    </Animated.View>
+  ));
+
+  // Memoize the loading component
+  const LoadingComponent = React.memo(() => (
+    <View style={styles.loadingContainer}>
+      <View style={{ marginBottom: 20 }}>
+        <ThemedFilterSkeleton show={true} />
+      </View>
+      {Array.from({ length: 3 }).map((_, index) => (
+        <ThemedCardSkeleton key={index} index={index} />
+      ))}
+    </View>
+  ));
+
+  // Memoize the list header component
+  const ListHeaderComponent = React.memo(({ listHeaderStyle, filter, onFilterChange }: {
+    listHeaderStyle: any;
+    filter: string;
+    onFilterChange: (filter: string) => void;
+  }) => (
+    <Animated.View style={[listHeaderStyle, { marginBottom: getResponsiveHeight(3.6) }]}>
+      <ThemedFilter selectedFilter={filter} onFilterChange={onFilterChange} />
+    </Animated.View>
+  ));
+
+  // Memoize the empty item component
+  const EmptyItemComponent = React.memo(({ color }: { color: string }) => (
+    <View style={styles.emptyItem}>
+      <MaterialIcons color={color} name="search" size={50} />
+      <ThemedText style={{ textAlign: 'center', lineHeight: 30 }}>
+        {t('homeScreen.noItemFound')}
+      </ThemedText>
+    </View>
+  ));
+
   return (
     <ThemedView style={styles.container}>
-      <Animated.View style={[styles.titleContainer, titleContainerStyle]}>
-        <View style={styles.headerContainer}>
-          <ThemedText style={styles.titleText} type="title">
-            {t('homeScreen.title')}
-          </ThemedText>
-          <View style={styles.titleButtonContainer}>
-            <ThemedButton
-              iconName="cloud-sync"
-              syncStatus={syncStatus}
-              style={styles.titleButton}
-              onPress={() => debouncedSyncWithServer(userId)}
-              disabled={syncStatus === 'syncing' || isLoading}
-            />
-            <ThemedButton
-              iconName="camera"
-              style={styles.titleButton}
-              onPress={onNavigateToScanScreen}
-              disabled={isLoading}
-            />
-            <ThemedButton
-              iconName="cog"
-              style={styles.titleButton}
-              onPress={onNavigateToSettingsScreen}
-              disabled={isLoading}
-            />
-          </View>
-        </View>
-      </Animated.View>
+      <HeaderComponent
+        titleContainerStyle={titleContainerStyle}
+        syncStatus={syncStatus}
+        isLoading={isLoading}
+        onSync={() => handleSync()}
+        onScan={onNavigateToScanScreen}
+        onSettings={onNavigateToSettingsScreen}
+      />
 
       {isLoading ? (
-        <View style={styles.loadingContainer}>
-          <View style={{ marginBottom: 20 }}>
-            <ThemedFilterSkeleton show={true} />
-          </View>
-          {Array.from({ length: 3 }).map((_, index) => (
-            <ThemedCardSkeleton key={index} index={index} />
-          ))}
-        </View>
+        <LoadingComponent />
       ) : isEmpty ? (
         <EmptyListItem
           scrollHandler={scrollHandler}
@@ -546,24 +600,20 @@ function HomeScreen() {
             ref={flatListRef}
             bounces={true}
             ListHeaderComponent={
-              <Animated.View style={[listHeaderStyle, { marginBottom: getResponsiveHeight(3.6) }]}>
-                <ThemedFilter selectedFilter={filter} onFilterChange={handleFilterPress} />
-              </Animated.View>
+              <ListHeaderComponent
+                listHeaderStyle={listHeaderStyle}
+                filter={filter}
+                onFilterChange={handleFilterChange}
+              />
             }
-            ListEmptyComponent={
-              <View style={styles.emptyItem}>
-                <MaterialIcons color={color} name="search" size={50} />
-                <ThemedText style={{ textAlign: 'center', lineHeight: 30 }}>
-                  {t('homeScreen.noItemFound')}
-                </ThemedText>
-              </View>
-            }
-            initialNumToRender={15}
-            automaticallyAdjustKeyboardInsets
-            keyboardDismissMode="on-drag"
-            data={[...qrData]}
+            ListEmptyComponent={<EmptyItemComponent color={color} />}
+            initialNumToRender={10}
+            maxToRenderPerBatch={5}
+            windowSize={5}
+            removeClippedSubviews={true}
+            data={[...filteredData]}
             renderItem={renderItem}
-            keyExtractor={(item, index) => `draggable-item-${item.id}`}
+            keyExtractor={(item) => `draggable-item-${item.id}`}
             containerStyle={{ flex: 1 }}
             contentContainerStyle={[styles.listContainer, qrData.length > 0 && { paddingBottom: listContainerPadding }]}
             scrollEventThrottle={16}
@@ -574,9 +624,6 @@ function HomeScreen() {
             onScrollOffsetChange={onScrollOffsetChange}
             decelerationRate={'fast'}
             scrollEnabled={!fabOpen}
-            windowSize={10}
-            removeClippedSubviews={true}
-            maxToRenderPerBatch={10}
           />
         </Animated.View>
       )}

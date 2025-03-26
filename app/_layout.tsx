@@ -6,6 +6,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { Provider } from 'react-redux';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { PaperProvider } from 'react-native-paper';
+import { ActivityIndicator } from 'react-native';
 
 // Import core services and providers
 import { store } from '@/store';
@@ -107,12 +108,15 @@ export default function RootLayout() {
   // Prepare app initialization
   const prepareApp = useCallback(async () => {
     try {
-      await initializeDatabase();
-      const onboardingStatus = await checkOnboardingStatus();
-      const [authStatus, quickLoginEnabled] = await Promise.all([
-        checkAuthStatus(onboardingStatus),
+      // Run database and auth checks in parallel
+      const [onboardingStatus, authStatus, quickLoginEnabled] = await Promise.all([
+        checkOnboardingStatus(),
+        checkAuthStatus(await checkOnboardingStatus()),
         checkQuickLoginEnabled(),
       ]);
+
+      // Initialize database after auth checks
+      await initializeDatabase();
 
       setAppState({
         isAppReady: fontsLoaded && !fontError,
@@ -122,6 +126,10 @@ export default function RootLayout() {
       });
     } catch (error) {
       console.error('App initialization error:', error);
+      // More specific error handling
+      if (error instanceof Error) {
+        console.error('Error details:', error.message);
+      }
       setAppState({
         isAppReady: fontsLoaded && !fontError,
         isAuthenticated: false,
@@ -208,7 +216,21 @@ export default function RootLayout() {
     appState.hasSeenOnboarding === null ||
     appState.hasQuickLoginEnabled === null
   ) {
-    return null;
+    return (
+      <ThemeProvider>
+        <Provider store={store}>
+          <GestureHandlerRootView style={styles.container}>
+            <PaperProvider>
+              <LocaleProvider>
+                <ThemedView style={styles.root}>
+                  <ActivityIndicator size="large" />
+                </ThemedView>
+              </LocaleProvider>
+            </PaperProvider>
+          </GestureHandlerRootView>
+        </Provider>
+      </ThemeProvider>
+    );
   }
 
   return (

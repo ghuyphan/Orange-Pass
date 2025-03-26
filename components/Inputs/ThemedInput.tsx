@@ -1,4 +1,11 @@
-import React, { useState, useImperativeHandle, forwardRef, useCallback, useRef, useEffect } from 'react';
+import React, {
+  useState,
+  useImperativeHandle,
+  forwardRef,
+  useCallback,
+  useRef,
+  useEffect,
+} from "react";
 import {
   TextInput,
   StyleSheet,
@@ -9,13 +16,17 @@ import {
   TextInputFocusEventData,
   TextInputSelectionChangeEventData,
   TextStyle,
-} from 'react-native';
-import { ViewStyle } from 'react-native';
-import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { ThemedText } from '../ThemedText';
-import { useTheme } from '@/context/ThemeContext';
-import { Colors } from '@/constants/Colors';
-import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
+} from "react-native";
+import { ViewStyle } from "react-native";
+import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { ThemedText } from "../ThemedText";
+import { useTheme } from "@/context/ThemeContext";
+import { Colors } from "@/constants/Colors";
+import {
+  getResponsiveFontSize,
+  getResponsiveWidth,
+  getResponsiveHeight,
+} from "@/utils/responsive";
 
 // --- Reanimated Imports ---
 import Animated, {
@@ -23,9 +34,8 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
   withSequence,
-  withDelay,
   Easing,
-} from 'react-native-reanimated';
+} from "react-native-reanimated";
 
 export type ThemedInputProps = {
   iconName?: keyof typeof MaterialCommunityIcons.glyphMap;
@@ -40,7 +50,7 @@ export type ThemedInputProps = {
   isError?: boolean;
   errorMessage?: string;
   secureTextEntry?: boolean;
-  keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad';
+  keyboardType?: "default" | "email-address" | "numeric" | "phone-pad";
   onChangeText?: (text: string) => void;
   onBlur?: (event: NativeSyntheticEvent<TextInputFocusEventData>) => void;
   onFocus?: (event: NativeSyntheticEvent<TextInputFocusEventData>) => void;
@@ -58,7 +68,7 @@ type Selection = {
 };
 
 export const ThemedInput = forwardRef<
-  { focus: () => void; },
+  { focus: () => void },
   ThemedInputProps
 >(
   (
@@ -66,20 +76,20 @@ export const ThemedInput = forwardRef<
       iconName,
       label,
       placeholder,
-      value = '',
+      value = "",
       style,
       inputStyle,
       labelStyle,
       iconStyle,
       errorTextStyle,
       isError = false,
-      errorMessage = '',
+      errorMessage = "",
       secureTextEntry = false,
-      keyboardType = 'default',
-      onChangeText = () => { },
-      onBlur = () => { },
-      onFocus = () => { },
-      onSubmitEditing = () => { },
+      keyboardType = "default",
+      onChangeText = () => {},
+      onBlur = () => {},
+      onFocus = () => {},
+      onSubmitEditing = () => {},
       disabled = false,
       backgroundColor,
       disableOpacityChange = false,
@@ -94,10 +104,14 @@ export const ThemedInput = forwardRef<
     const [selection, setSelection] = useState<Selection>({ start: 0, end: 0 });
     const [isFocused, setIsFocused] = useState(false);
 
-    const color = currentTheme === 'light' ? Colors.light.text : Colors.dark.text;
+    const color =
+      currentTheme === "light" ? Colors.light.text : Colors.dark.text;
     const placeholderColor =
-      currentTheme === 'light' ? Colors.light.placeHolder : Colors.dark.placeHolder;
-    const errorColor = currentTheme === 'light' ? Colors.light.error : Colors.dark.error;
+      currentTheme === "light"
+        ? Colors.light.placeHolder
+        : Colors.dark.placeHolder;
+    const errorColor =
+      currentTheme === "light" ? Colors.light.error : Colors.dark.error;
 
     const textInputRef = useRef<TextInput>(null);
 
@@ -107,23 +121,35 @@ export const ThemedInput = forwardRef<
       },
     }));
 
+    // Helper: determine desired opacity
+    const targetOpacity = disabled && !disableOpacityChange ? 0.5 : 1;
+
     // --- Reanimated: Create Shared Values ---
-    const animatedOpacity = useSharedValue(disabled && !disableOpacityChange ? 0.5 : 1);
-    const animatedBorderWidth = useSharedValue(isError && errorMessage ? getResponsiveWidth(0.3) : 0);
+    const animatedOpacity = useSharedValue(targetOpacity);
+    const animatedBorderWidth = useSharedValue(
+      isError && errorMessage ? getResponsiveWidth(0.3) : 0
+    );
     const errorTextHeight = useSharedValue(0);
     const errorTextOpacity = useSharedValue(0);
     const errorShakeValue = useSharedValue(0);
+
+    // Update opacity if disabled or disableOpacityChange changes
+    useEffect(() => {
+      animatedOpacity.value = withTiming(targetOpacity, { duration: 200 });
+    }, [disabled, disableOpacityChange]);
 
     // Use effect to update animations when error state changes
     useEffect(() => {
       if (isError && errorMessage) {
         // Animate border width
-        animatedBorderWidth.value = withTiming(getResponsiveWidth(0.3), { duration: 200 });
+        animatedBorderWidth.value = withTiming(getResponsiveWidth(0.3), {
+          duration: 200,
+        });
 
         // Animate error text appearance
         errorTextHeight.value = withTiming(getResponsiveHeight(2.5), {
           duration: 200,
-          easing: Easing.out(Easing.ease)
+          easing: Easing.out(Easing.ease),
         });
         errorTextOpacity.value = withTiming(1, { duration: 250 });
 
@@ -157,7 +183,7 @@ export const ThemedInput = forwardRef<
       return {
         height: errorTextHeight.value,
         opacity: errorTextOpacity.value,
-        overflow: 'hidden',
+        overflow: "hidden",
       };
     });
 
@@ -168,29 +194,42 @@ export const ThemedInput = forwardRef<
     });
 
     const onClearValue = useCallback(() => {
-      setLocalValue('');
-      onChangeText('');
+      setLocalValue("");
+      onChangeText("");
       setSelection({ start: 0, end: 0 });
     }, [onChangeText]);
 
-    const onToggleSecureValue = useCallback(() => setIsSecure((prevState) => !prevState), []);
+    const onToggleSecureValue = useCallback(
+      () => setIsSecure((prevState) => !prevState),
+      []
+    );
 
-    const handleChangeText = useCallback((text: string) => {
-      setLocalValue(text);
-      onChangeText(text);
-    }, [onChangeText]);
+    const handleChangeText = useCallback(
+      (text: string) => {
+        setLocalValue(text);
+        onChangeText(text);
+      },
+      [onChangeText]
+    );
 
-    const handleBlur = useCallback((event: NativeSyntheticEvent<TextInputFocusEventData>) => {
-      onBlur(event);
-      setIsFocused(false);
-      animatedOpacity.value = withTiming(disabled && !disableOpacityChange ? 0.5 : 1, { duration: 200 });
-    }, [onBlur, disabled, disableOpacityChange, animatedOpacity]);
+    const handleBlur = useCallback(
+      (event: NativeSyntheticEvent<TextInputFocusEventData>) => {
+        onBlur(event);
+        setIsFocused(false);
+        animatedOpacity.value = withTiming(targetOpacity, { duration: 200 });
+      },
+      [onBlur, targetOpacity, animatedOpacity]
+    );
 
-    const handleFocus = useCallback((event: NativeSyntheticEvent<TextInputFocusEventData>) => {
-      onFocus(event);
-      setIsFocused(true);
-      animatedOpacity.value = withTiming(1, { duration: 200 });
-    }, [onFocus, animatedOpacity]);
+    const handleFocus = useCallback(
+      (event: NativeSyntheticEvent<TextInputFocusEventData>) => {
+        onFocus(event);
+        setIsFocused(true);
+        // If focus happens, we always bring the opacity to 1
+        animatedOpacity.value = withTiming(1, { duration: 200 });
+      },
+      [onFocus, animatedOpacity]
+    );
 
     const handleDisabledPress = useCallback(() => {
       if (onDisabledPress) {
@@ -212,7 +251,7 @@ export const ThemedInput = forwardRef<
       {
         backgroundColor:
           backgroundColor ??
-          (currentTheme === 'light'
+          (currentTheme === "light"
             ? Colors.light.inputBackground
             : Colors.dark.inputBackground),
         borderBottomColor: errorColor,
@@ -223,17 +262,22 @@ export const ThemedInput = forwardRef<
     return (
       <View style={[styles.container, style]}>
         <Pressable
-          style={{ width: '100%' }}
+          style={{ width: "100%" }}
           onPress={disabled ? handleDisabledPress : undefined}
           disabled={!disabled}
         >
           {/* Input container with animated border */}
-          <Animated.View style={[inputContainerStyle, animatedContainerStyle]}>
+          <Animated.View
+            style={[inputContainerStyle, animatedContainerStyle]}
+          >
             {/* Label */}
             {label && (
-              <ThemedText style={[styles.label, { color }, labelStyle]} type="defaultSemiBold">
+              <ThemedText
+                style={[styles.label, { color }, labelStyle]}
+                type="defaultSemiBold"
+              >
                 {label}
-                {required && <ThemedText style={{ color: 'red' }}> *</ThemedText>}
+                {required && <ThemedText style={{ color: "red" }}> *</ThemedText>}
               </ThemedText>
             )}
 
@@ -271,12 +315,8 @@ export const ThemedInput = forwardRef<
                 accessibilityLabel={label}
                 keyboardType={keyboardType}
                 editable={!disabled}
-                // Remove the selection prop to see if it resolves the issue
-                // selection={selection}
-                // onSelectionChange={handleSelectionChange}
                 cursorColor={color}
               />
-
 
               {/* Right side icons */}
               <View style={styles.rightContainer}>
@@ -292,14 +332,21 @@ export const ThemedInput = forwardRef<
                     }}
                     disabled={disabled}
                   >
-                    <MaterialIcons name={'cancel'} style={{opacity: disabled ? 0.5 : 1}} color={color} size={getResponsiveFontSize(16)} />
+                    <MaterialIcons
+                      name="cancel"
+                      size={getResponsiveFontSize(16)}
+                      color={color}
+                      style={{
+                        opacity: disabled && !disableOpacityChange ? 0.5 : 1,
+                      }}
+                    />
                   </Pressable>
                 )}
 
                 {localValue.length > 0 && secureTextEntry && (
                   <Pressable
                     onPress={disabled ? undefined : onToggleSecureValue}
-                    style={[styles.iconTouchable]}
+                    style={styles.iconTouchable}
                     hitSlop={{
                       top: getResponsiveHeight(0.6),
                       bottom: getResponsiveHeight(0.6),
@@ -309,17 +356,28 @@ export const ThemedInput = forwardRef<
                     disabled={disabled}
                   >
                     <MaterialIcons
-                      name={isSecure ? 'visibility' : 'visibility-off'}
+                      name={isSecure ? "visibility" : "visibility-off"}
                       size={getResponsiveWidth(4)}
                       color={color}
-                      style={{opacity: disabled ? 0.5 : 1}}
+                      style={{
+                        opacity: disabled && !disableOpacityChange ? 0.5 : 1,
+                      }}
                     />
                   </Pressable>
                 )}
 
                 {isError && errorMessage && (
-                  <Animated.View style={[styles.errorIconContainer, animatedErrorIconStyle]}>
-                    <MaterialIcons name="error-outline" size={getResponsiveWidth(5)} color={errorColor} />
+                  <Animated.View
+                    style={[
+                      styles.errorIconContainer,
+                      animatedErrorIconStyle,
+                    ]}
+                  >
+                    <MaterialIcons
+                      name="error-outline"
+                      size={getResponsiveWidth(5)}
+                      color={errorColor}
+                    />
                   </Animated.View>
                 )}
               </View>
@@ -328,14 +386,12 @@ export const ThemedInput = forwardRef<
         </Pressable>
 
         {/* Animated error message container */}
-        <Animated.View style={[styles.errorContainer, animatedErrorTextStyle]}>
+        <Animated.View
+          style={[styles.errorContainer, animatedErrorTextStyle]}
+        >
           {isError && errorMessage && (
             <ThemedText
-              style={[
-                styles.errorText,
-                { color: errorColor },
-                errorTextStyle
-              ]}
+              style={[styles.errorText, { color: errorColor }, errorTextStyle]}
               numberOfLines={1}
             >
               {errorMessage}
@@ -347,12 +403,12 @@ export const ThemedInput = forwardRef<
   }
 );
 
-ThemedInput.displayName = 'ThemedInput';
+ThemedInput.displayName = "ThemedInput";
 
 ThemedInput.defaultProps = {
-  placeholder: '',
+  placeholder: "",
   secureTextEntry: false,
-  keyboardType: 'default',
+  keyboardType: "default",
   disabled: false,
   disableOpacityChange: false,
   required: false,
@@ -360,22 +416,22 @@ ThemedInput.defaultProps = {
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'column',
-    width: '100%',
+    flexDirection: "column",
+    width: "100%",
   },
   inputContainer: {
     paddingVertical: getResponsiveHeight(1.8),
     paddingHorizontal: getResponsiveWidth(4.8),
     borderRadius: getResponsiveWidth(4),
-    flexDirection: 'column',
+    flexDirection: "column",
   },
   label: {
     fontSize: getResponsiveFontSize(13),
     opacity: 0.6,
   },
   inputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   input: {
     fontSize: getResponsiveFontSize(16),
@@ -384,13 +440,13 @@ const styles = StyleSheet.create({
     marginRight: getResponsiveWidth(2.4),
   },
   rightContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: getResponsiveWidth(3.6),
   },
   iconTouchable: {
     borderRadius: getResponsiveWidth(12),
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   errorIconContainer: {
     marginLeft: getResponsiveWidth(1.2),
@@ -399,7 +455,7 @@ const styles = StyleSheet.create({
   errorContainer: {
     height: 0, // Initially zero height
     marginHorizontal: getResponsiveWidth(4.8),
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   errorText: {
     fontSize: getResponsiveFontSize(11),

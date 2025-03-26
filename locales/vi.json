@@ -338,7 +338,11 @@
     "join": "Kết nối",
     "join2": "mạng",
     "goto": "Truy cập",
-    "momoPayment": "Mã QR MoMo"
+    "momoPayment": "Mã QR MoMo",
+    "copied": "Đã sao chép",
+    "settings": "Cài đặt",
+    "wifi": "Mạng Wifi",
+    "linking": "Liên kết"
   },
   "permissionScreen": {
     "cameraTitle": "Cho phép truy cập máy ảnh",
@@ -411,68 +415,73 @@
     "confirmLogoutButton": "Đăng xuất",
     "appVersion": "Phiên bản:"
   },
-  "editAvatarScreen": {
-    "title": "Chỉnh sửa Avatar",
-    "save": "Lưu",
-    "faceColor": "Màu da",
-    "earSize": "Kích thước tai",
-    "hairStyle": "Kiểu tóc",
-    "hairColor": "Màu tóc",
-    "hatStyle": "Kiểu mũ",
-    "hatColor": "Màu mũ",
-    "eyeStyle": "Kiểu mắt",
-    "glassesStyle": "Kiểu kính",
-    "noseStyle": "Kiểu mũi",
-    "mouthStyle": "Kiểu miệng",
-    "shirtStyle": "Kiểu áo",
-    "shirtColor": "Màu áo",
-    "options": {
-      "earSize": {
-        "small": "Nhỏ",
-        "big": "Lớn"
+    "editAvatarScreen": {
+      "title": "Sửa Avatar",
+      "save": "Lưu",
+      "gender": "Giới tính",
+      "faceColor": "Màu da",
+      "earSize": "Kích thước tai",
+      "hairStyle": "Kiểu tóc",
+      "hairColor": "Màu tóc",
+      "hatStyle": "Kiểu mũ",
+      "hatColor": "Màu mũ",
+      "eyeStyle": "Kiểu mắt",
+      "glassesStyle": "Kiểu kính",
+      "noseStyle": "Kiểu mũi",
+      "mouthStyle": "Kiểu miệng",
+      "shirtStyle": "Kiểu áo",
+      "shirtColor": "Màu áo",
+      "options": {
+        "gender": {
+          "male": "Nam",
+          "female": "Nữ"
+        },
+        "earSize": {
+          "small": "Nhỏ",
+          "big": "Lớn"
+        },
+        "hairStyle": {
+          "normal": "Bình thường",
+          "thick": "Dày",
+          "mohawk": "Mohawk",
+          "womanLong": "Tóc dài",
+          "womanShort": "Tóc ngắn"
+        },
+        "hatStyle": {
+          "none": "Không",
+          "beanie": "Mũ len",
+          "turban": "Khăn xếp"
+        },
+        "eyeStyle": {
+          "circle": "Tròn",
+          "oval": "Oval",
+          "smile": "Cười"
+        },
+        "glassesStyle": {
+          "none": "Không",
+          "round": "Tròn",
+          "square": "Vuông"
+        },
+        "noseStyle": {
+          "short": "Ngắn",
+          "long": "Dài",
+          "round": "Tròn"
+        },
+        "mouthStyle": {
+          "laugh": "Cười tươi",
+          "smile": "Cười mỉm",
+          "peace": "Biểu hiệu hòa bình"
+        },
+        "shirtStyle": {
+          "hoody": "Áo hoodie",
+          "short": "Áo tay ngắn",
+          "polo": "Áo polo"
+        }
       },
-      "hairStyle": {
-        "normal": "Bình thường",
-        "thick": "Dày",
-        "mohawk": "Mohawk",
-        "womanLong": "Nữ dài",
-        "womanShort": "Nữ ngắn"
-      },
-      "hatStyle": {
-        "none": "Không",
-        "beanie": "Mũ len",
-        "turban": "Khăn xếp"
-      },
-      "eyeStyle": {
-        "circle": "Tròn",
-        "oval": "Oval",
-        "smile": "Cười"
-      },
-      "glassesStyle": {
-        "none": "Không",
-        "round": "Tròn",
-        "square": "Vuông"
-      },
-      "noseStyle": {
-        "short": "Ngắn",
-        "long": "Dài",
-        "round": "Tròn"
-      },
-      "mouthStyle": {
-        "laugh": "Cười lớn",
-        "smile": "Cười mỉm",
-        "peace": "Hòa bình"
-      },
-      "shirtStyle": {
-        "hoody": "Áo trùm đầu",
-        "short": "Ngắn tay",
-        "polo": "Polo"
-      }
-    },
-    "customColor": "Màu tùy chỉnh",
-    "enterCustomHexCode": "Nhập mã hex tùy chỉnh",
-    "hexCode": "Mã Hex"
-  },
+      "customColor": "Màu tùy chỉnh",
+      "enterCustomHexCode": "Nhập mã màu hex tùy chỉnh",
+      "hexCode": "Mã hex"
+    },  
   "languageScreen": {
     "title": "Ngôn ngữ",
     "english": "Tiếng Anh",

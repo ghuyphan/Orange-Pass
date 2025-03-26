@@ -61,6 +61,12 @@ function SettingsScreen() {
     [currentTheme]
   );
 
+  const iconColor = useMemo(
+    () =>
+      currentTheme === 'light' ? Colors.light.text : Colors.dark.text,
+    [currentTheme]
+  );
+
   const scrollHandler = useAnimatedScrollHandler((event) => {
     scrollY.value = event.contentOffset.y;
   });
@@ -88,27 +94,27 @@ function SettingsScreen() {
     try {
       setIsModalVisible(false);
       setIsLoading(true);
-      
+
       // Clear auth tokens but keep quick login credentials
       await SecureStore.deleteItemAsync(SECURE_KEYS.AUTH_TOKEN);
       await SecureStore.deleteItemAsync(SECURE_KEYS.USER_ID);
       pb.authStore.clear();
-      
+
       // Dispatch actions immediately *before* navigation
       dispatch(clearErrorMessage());
       dispatch(removeAllQrData());
       dispatch(clearAuthData());
-      
+
       // Check if quick login is enabled
       const quickLoginEnabled = storage.getBoolean(MMKV_KEYS.QUICK_LOGIN_ENABLED) ?? false;
-      
+
       // Navigate to the appropriate screen based on quick login status
       if (quickLoginEnabled) {
         router.replace('/quick-login');
       } else {
         router.replace('/login');
       }
-      
+
     } catch (error) {
       console.error('Logout error:', error);
       // Consider dispatching an error action here to show an error message
@@ -116,7 +122,7 @@ function SettingsScreen() {
       setIsLoading(false); // Set loading to false *after* everything is done
     }
   }, [dispatch]);
-  
+
   const onLogout = useCallback(() => {
     setIsModalVisible(true);
   }, []);
@@ -194,26 +200,29 @@ function SettingsScreen() {
         keyExtractor={(_, index) => index.toString()}
         ListHeaderComponent={
           <Pressable style={[styles.avatarContainer, { backgroundColor: sectionsColors }]} onPress={() => router.push('/(auth)/(settings)/edit-avatar')}>
-            <LinearGradient
-              colors={['#ff9a9e', '#fad0c4', '#fad0c4', '#fbc2eb', '#a18cd1']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.gradient}
-            >
-              {avatarConfig ? (
-                <Avatar size={getResponsiveWidth(11)} {...avatarConfig} />
-              ) : (
-                <View style={styles.avatarLoadContainer}>
-                  <ActivityIndicator size={getResponsiveFontSize(10)} color="white" />
-                </View>
-              )}
-            </LinearGradient>
-            <View style={styles.userContainer}>
-              <ThemedText numberOfLines={1} style={styles.userName}>
-                {name}
-              </ThemedText>
+            <View style={styles.avatarWrapper}>
+
+              <LinearGradient
+                colors={['#ff9a9e', '#fad0c4', '#fad0c4', '#fbc2eb', '#a18cd1']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.gradient}
+              >
+                {avatarConfig ? (
+                  <Avatar size={getResponsiveWidth(11)} {...avatarConfig} />
+                ) : (
+                  <View style={styles.avatarLoadContainer}>
+                    <ActivityIndicator size={getResponsiveFontSize(10)} color="white" />
+                  </View>
+                )}
+              </LinearGradient>
+              <View style={styles.userContainer}>
+                <ThemedText type='defaultSemiBold' numberOfLines={1} style={styles.userName}>
+                  {name}
+                </ThemedText>
+              </View>
             </View>
-            <MaterialIcons name="chevron-right" size={getResponsiveFontSize(16)} color={Colors.light.text} />
+            <MaterialIcons name="chevron-right" size={getResponsiveFontSize(16)} color={iconColor} />
           </Pressable>
         }
         ListFooterComponent={
@@ -300,11 +309,16 @@ const styles = StyleSheet.create({
   avatarContainer: {
     alignItems: 'center',
     flexDirection: 'row',
+    justifyContent: 'space-between',
     paddingVertical: getResponsiveHeight(1.8),
     paddingHorizontal: getResponsiveWidth(4.8),
     marginBottom: getResponsiveHeight(2),
     borderRadius: getResponsiveWidth(4),
     gap: 0,
+  },
+  avatarWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   avatarLoadContainer: {
     width: getResponsiveWidth(11),
@@ -321,10 +335,10 @@ const styles = StyleSheet.create({
     maxWidth: '80%',
     overflow: 'hidden',
   },
-  userEmail: {
-    fontSize: getResponsiveFontSize(16),
-    fontWeight: 'bold',
-  },
+  // userEmail: {
+  //   fontSize: getResponsiveFontSize(16),
+  //   fontWeight: 'bold',
+  // },
   userName: {
     // opacity: 0.7,
     fontSize: getResponsiveFontSize(16),

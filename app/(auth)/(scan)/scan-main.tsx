@@ -4,7 +4,6 @@ import React, {
   useRef,
   useCallback,
   Suspense,
-  useMemo,
 } from 'react';
 import {
   StyleSheet,
@@ -47,8 +46,6 @@ import { QRResult } from '@/components/camera/CodeResult';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedStatusToast } from '@/components/toast/ThemedStatusToast';
 import ThemedReuseableSheet from '@/components/bottomsheet/ThemedReusableSheet';
-
-// **New imports for sheet content**
 import WifiSheetContent from '@/components/bottomsheet/WifiSheetContent';
 import LinkingSheetContent from '@/components/bottomsheet/LinkingSheetContent';
 import SettingSheetContent from '@/components/bottomsheet/SettingSheetContent';
@@ -158,12 +155,12 @@ export default function ScanScreen() {
   const [toastMessage, setToastMessage] = useState('');
   const [isDecoding, setIsDecoding] = useState(false);
   const [cameraIsActive, setCameraIsActive] = useState(true);
-  const [sheetType, setSheetType] = useState<SheetType | null>(null);
+  const [sheetType, setSheetType] = useState<SheetType>(null);
 
   // **States for sheet content similar to HomeScreen**
-  const [linkingUrl, setLinkingUrl] = useState<string | null>('');
-  const [wifiSsid, setWifiSsid] = useState<string | null>('');
-  const [wifiPassword, setWifiPassword] = useState<string | null>('');
+  const [linkingUrl, setLinkingUrl] = useState<string | null>(null);
+  const [wifiSsid, setWifiSsid] = useState<string | null>(null);
+  const [wifiPassword, setWifiPassword] = useState<string | null>(null);
   const [wifiIsWep, setWifiIsWep] = useState(false);
 
   // Toast handler
@@ -228,8 +225,13 @@ export default function ScanScreen() {
   );
 
   // Sheet handler
-  const onOpenSheet = useCallback((type: SheetType) => {
+  const onOpenSheet = useCallback((type: SheetType, id?: string, url?: string, ssid?: string, pass?: string, isWep?: boolean, isHidden?: boolean) => {
+    if (type === null) return;
     setSheetType(type);
+    if (url) setLinkingUrl(url);
+    if (ssid) setWifiSsid(ssid);
+    if (pass) setWifiPassword(pass);
+    if (isWep !== undefined) setWifiIsWep(isWep);
     bottomSheetRef.current?.snapToIndex(0);
   }, []);
 
@@ -241,6 +243,8 @@ export default function ScanScreen() {
 
   // **Render the corresponding sheet content based on sheetType**
   const renderSheetContent = useCallback(() => {
+    if (!sheetType) return null;
+
     switch (sheetType) {
       case 'wifi':
         return (
@@ -248,11 +252,15 @@ export default function ScanScreen() {
             ssid={wifiSsid || ''}
             password={wifiPassword || ''}
             isWep={wifiIsWep}
+            isHidden={false}
           />
         );
       case 'linking':
         return (
-          <LinkingSheetContent url={linkingUrl || ''} onCopySuccess={showToast} />
+          <LinkingSheetContent 
+            url={linkingUrl || ''} 
+            onCopySuccess={() => showToast(t('scanScreen.copied'))} 
+          />
         );
       case 'setting':
         return (
@@ -264,15 +272,7 @@ export default function ScanScreen() {
       default:
         return null;
     }
-  }, [
-    sheetType,
-    wifiSsid,
-    wifiPassword,
-    wifiIsWep,
-    linkingUrl,
-    router,
-    showToast,
-  ]);
+  }, [sheetType, wifiSsid, wifiPassword, wifiIsWep, linkingUrl, router, showToast]);
 
   // Animation values
   const opacity = useSharedValue(0);
@@ -496,12 +496,12 @@ export default function ScanScreen() {
             ref={bottomSheetRef}
             title={
               sheetType === 'setting'
-                ? t('homeScreen.manage')
+                ? t('scanScreen.settings')
                 : sheetType === 'wifi'
-                ? t('homeScreen.wifi')
+                ? t('scanScreen.wifi')
                 : sheetType === 'linking'
-                ? t('homeScreen.linking')
-                : t('homeScreen.settings')
+                ? t('scanScreen.linking')
+                : t('scanScreen.settings')
             }
             onClose={() => setTimeout(() => setSheetType(null), 50)}
             snapPoints={

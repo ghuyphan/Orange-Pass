@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import { StyleSheet, View, FlatList, TextInput, Pressable, Image, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, FlatList, TextInput, Pressable, Image, ActivityIndicator, InteractionManager } from 'react-native';
 import * as Linking from 'expo-linking';
 import { useDispatch, useSelector } from 'react-redux';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
