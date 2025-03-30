@@ -2,7 +2,7 @@ import pb from "@/services/pocketBase";
 import { openDatabase } from "../userDB";
 import QRRecord from "@/types/qrType";
 import ServerRecord from "@/types/serverDataTypes";
-import { returnItemCode } from "@/utils/returnItemData";
+import { returnItems } from "@/utils/returnItemData";
 
 /**
  * Create the QR table and its indexes within one transaction
@@ -462,7 +462,7 @@ export async function searchQrCodes(
     const queryParams: any[] = [userId];
     const conditions: string[] = ["user_id = ? AND is_deleted = 0"];
     if (searchQuery) {
-      const matchingCodes = returnItemCode(searchQuery);
+      const matchingCodes = returnItems(searchQuery);
       const searchTerms = Array.from(
         new Set([searchQuery, ...matchingCodes])
       );
