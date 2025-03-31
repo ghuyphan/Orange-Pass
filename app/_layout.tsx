@@ -274,8 +274,6 @@ export default function RootLayout() {
       <Stack.Screen name="(auth)" options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="onboard" options={{ animation: 'fade' }} />
       <Stack.Screen name="+not-found" />
-      {/* Add other top-level screens like modals if necessary */}
-      {/* <Stack.Screen name="modal" options={{ presentation: 'modal' }} /> */}
     </Stack>
   ), []);
 

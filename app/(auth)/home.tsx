@@ -1,16 +1,5 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
-import {
-  StyleSheet,
-  View,
-  FlatList,
-  InteractionManager, // <-- Import InteractionManager
-} from 'react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { StyleSheet, View, FlatList, InteractionManager } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import Animated, {
   Easing,
@@ -23,9 +12,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { router } from 'expo-router';
-import DraggableFlatList, {
-  ScaleDecorator,
-} from 'react-native-draggable-flatlist';
+import DraggableFlatList, { ScaleDecorator } from 'react-native-draggable-flatlist';
 import { throttle } from 'lodash';
 import BottomSheet from '@gorhom/bottom-sheet';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
@@ -57,10 +44,7 @@ import { ThemedFAB } from '@/components/buttons';
 import { ThemedButton } from '@/components/buttons';
 import ThemedReuseableSheet from '@/components/bottomsheet/ThemedReusableSheet';
 import ThemedCardItem from '@/components/cards/ThemedCardItem';
-import {
-  ThemedFilterSkeleton,
-  ThemedCardSkeleton,
-} from '@/components/skeletons';
+import { ThemedFilterSkeleton, ThemedCardSkeleton } from '@/components/skeletons';
 import { ThemedStatusToast } from '@/components/toast/ThemedStatusToast';
 import ThemedBottomToast from '@/components/toast/ThemedBottomToast';
 import { ThemedTopToast } from '@/components/toast/ThemedTopToast';
@@ -70,101 +54,8 @@ import EmptyListItem from '@/components/lists/EmptyListItem';
 import LinkingSheetContent from '@/components/bottomsheet/LinkingSheetContent';
 import SettingSheetContent from '@/components/bottomsheet/SettingSheetContent';
 import WifiSheetContent from '@/components/bottomsheet/WifiSheetContent';
-import {
-  getResponsiveHeight,
-  getResponsiveWidth,
-  getResponsiveFontSize,
-} from '@/utils/responsive';
+import { getResponsiveHeight, getResponsiveWidth, getResponsiveFontSize } from '@/utils/responsive';
 import { t } from '@/i18n';
-
-// --- Memoized Components (Moved Up for Clarity) ---
-
-const HeaderComponent = React.memo(
-  ({
-    titleContainerStyle,
-    syncStatus,
-    isLoading, // Keep isLoading prop for disabling buttons
-    onSync,
-    onScan,
-    onSettings,
-  }: {
-    titleContainerStyle: any;
-    syncStatus: 'idle' | 'syncing' | 'synced' | 'error';
-    isLoading: boolean;
-    onSync: () => void;
-    onScan: () => void;
-    onSettings: () => void;
-  }) => (
-    <Animated.View style={[styles.titleContainer, titleContainerStyle]}>
-      <View style={styles.headerContainer}>
-        <ThemedText style={styles.titleText} type="title">
-          {t('homeScreen.title')}
-        </ThemedText>
-        <View style={styles.titleButtonContainer}>
-          <ThemedButton
-            iconName="cloud-sync"
-            syncStatus={syncStatus}
-            style={styles.titleButton}
-            onPress={onSync}
-            disabled={syncStatus === 'syncing' || isLoading} // Disable during initial load too
-          />
-          <ThemedButton
-            iconName="camera"
-            style={styles.titleButton}
-            onPress={onScan}
-            disabled={isLoading}
-          />
-          <ThemedButton
-            iconName="cog"
-            style={styles.titleButton}
-            onPress={onSettings}
-            disabled={isLoading}
-          />
-        </View>
-      </View>
-    </Animated.View>
-  )
-);
-
-const LoadingComponent = React.memo(() => (
-  <View style={styles.loadingContainer}>
-    <View style={{ marginBottom: 20 }}>
-      <ThemedFilterSkeleton show={true} />
-    </View>
-    {Array.from({ length: 3 }).map((_, index) => (
-      <ThemedCardSkeleton key={index} index={index} />
-    ))}
-  </View>
-));
-
-const ListHeaderComponent = React.memo(
-  ({
-    listHeaderStyle,
-    filter,
-    onFilterChange,
-  }: {
-    listHeaderStyle: any;
-    filter: string;
-    onFilterChange: (filter: string) => void;
-  }) => (
-    <Animated.View
-      style={[listHeaderStyle, { marginBottom: getResponsiveHeight(3.6) }]}
-    >
-      <ThemedFilter selectedFilter={filter} onFilterChange={onFilterChange} />
-    </Animated.View>
-  )
-);
-
-const EmptyItemComponent = React.memo(({ color }: { color: string }) => (
-  <View style={styles.emptyItem}>
-    <MaterialIcons color={color} name="search" size={50} />
-    <ThemedText style={{ textAlign: 'center', lineHeight: 30 }}>
-      {t('homeScreen.noItemFound')}
-    </ThemedText>
-  </View>
-));
-
-// --- Main Component ---
 
 function HomeScreen() {
   // Redux and Context
@@ -177,25 +68,23 @@ function HomeScreen() {
   const color = useThemeColor({ light: '#3A2E24', dark: '#FFF5E1' }, 'text');
 
   // Loading and Syncing
-  // isLoading now primarily reflects the *initial local fetch* if needed
   const [isLoading, setIsLoading] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false); // Tracks background sync process
+  const [isSyncing, setIsSyncing] = useState(false);
+  // const [isEmpty, setIsEmpty] = useState(false);
   const isEmpty = useMemo(() => qrData.length === 0, [qrData]);
-  const [syncStatus, setSyncStatus] = useState<
-    'idle' | 'syncing' | 'synced' | 'error'
-  >('idle');
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced' | 'error'>('idle');
 
   // UI State
-  const [isActive, setIsActive] = useState(false); // Drag active state
-  const [toastMessage, setToastMessage] = useState(''); // For status toast (delete)
+  const [isActive, setIsActive] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
   const [isToastVisible, setIsToastVisible] = useState(false);
-  const [topToastMessage, setTopToastMessage] = useState(''); // For general info toast
+  const [topToastMessage, setTopToastMessage] = useState('');
   const [isTopToastVisible, setIsTopToastVisible] = useState(false);
-  const [isBottomToastVisible, setIsBottomToastVisible] = useState(false); // For network status
+  const [isBottomToastVisible, setIsBottomToastVisible] = useState(false);
   const [bottomToastColor, setBottomToastColor] = useState('');
   const [bottomToastIcon, setBottomToastIcon] = useState('');
   const [bottomToastMessage, setBottomToastMessage] = useState('');
-  const [isModalVisible, setIsModalVisible] = useState(false); // Delete confirmation
+  const [isModalVisible, setIsModalVisible] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [fabOpen, setFabOpen] = useState(false);
   const [sheetType, setSheetType] = useState<SheetType>(null);
@@ -206,6 +95,7 @@ function HomeScreen() {
   const [wifiIsHidden, setWifiIsHidden] = useState(false);
   const [filter, setFilter] = useState('all');
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  // const [wasOffline, setWasOffline] = useState(false);
 
   // Refs
   const flatListRef = useRef<FlatList<QRRecord> | null>(null);
@@ -216,350 +106,310 @@ function HomeScreen() {
   const emptyCardOffset = useSharedValue(350);
   const scrollY = useSharedValue(0);
 
-  // --- Callbacks ---
+  // Sync with server
+  // Assuming showToast is useCallback'd and t is stable
+  const syncWithServer = useCallback(async (userIdToSync: string) => {
+    // Prevent concurrent syncs or syncing when offline
+    if (isOffline || isSyncing) {
+      return;
+    }
+    setIsSyncing(true);
+    setSyncStatus('syncing');
+    // setIsLoading(true); // Optional: Indicate general loading during sync
 
-  // Toast handler (memoized)
-  const showToast = useCallback((message: string) => {
-    setTopToastMessage(message);
-    setIsTopToastVisible(true);
-  }, []);
+    try {
+      // Step 1: Upload local changes (if any) to the server
+      await syncQrCodes(userIdToSync);
 
-  // Sync with server (memoized)
-  const syncWithServer = useCallback(
-    async (userIdToSync: string) => {
-      if (isOffline || isSyncing) {
-        console.log(
-          `Sync skipped: isOffline=${isOffline}, isSyncing=${isSyncing}`
-        );
-        return;
+      // Step 2: Fetch latest data from the server
+      const serverData: ServerRecord[] = await fetchServerData(userIdToSync);
+
+      // Step 3: Insert or update local DB with server data (if any)
+      if (serverData.length > 0) {
+        await insertOrUpdateQrCodes(serverData);
       }
-      console.log('Starting sync...');
-      setIsSyncing(true);
-      setSyncStatus('syncing');
 
-      try {
-        await syncQrCodes(userIdToSync);
-        const serverData: ServerRecord[] = await fetchServerData(userIdToSync);
-        if (serverData.length > 0) {
-          await insertOrUpdateQrCodes(serverData);
-        }
-        const finalLocalData = await getQrCodesByUserId(userIdToSync);
-        dispatch(setQrData(finalLocalData)); // Update Redux with merged data
-        setSyncStatus('synced');
-        showToast(t('homeScreen.syncSuccess'));
-        console.log('Sync successful');
-        const timer = setTimeout(() => setSyncStatus('idle'), 3000);
-        // No cleanup needed here for this specific timer
-      } catch (error) {
-        console.error('Error during sync process:', error);
-        setSyncStatus('error');
-        showToast(t('homeScreen.syncError'));
-      } finally {
-        setIsSyncing(false);
-        console.log('Sync process finished.');
-      }
-    },
-    [dispatch, isOffline, isSyncing, showToast] // Dependencies for syncWithServer
+      // Step 4: Get the final, merged data from the local DB
+      const finalLocalData = await getQrCodesByUserId(userIdToSync);
+
+      // Step 5: Update the UI state via Redux
+      dispatch(setQrData(finalLocalData));
+
+      // Step 6: Update sync status and notify user
+      setSyncStatus('synced');
+      showToast(t('homeScreen.syncSuccess'));
+
+      // Step 7: Reset status back to idle after a delay
+      const timer = setTimeout(() => setSyncStatus('idle'), 3000);
+      // No cleanup needed here as it's unlikely to unmount mid-timeout *within* the callback itself
+
+    } catch (error) {
+      console.error('Error during sync process:', error);
+      setSyncStatus('error');
+      showToast(t('homeScreen.syncError'));
+      // Optional: Reset status after error display
+      // const errorTimer = setTimeout(() => setSyncStatus('idle'), 5000);
+    } finally {
+      // Step 8: Always ensure syncing state is reset
+      setIsSyncing(false);
+      // setIsLoading(false); // Reset loading if it was set at the start
+    }
+  },
+    // Dependencies: Include all external variables/functions used
+    [isOffline, isSyncing, dispatch]
   );
 
-  // --- Effects ---
-
-  // Effect for Initial Data Load and Background Sync Check (Optimized)
+  // Initialize data
   useEffect(() => {
-    if (!userId) return;
+    if (!userId) {
+      // If no user ID, potentially clear existing data or set empty state
+      // dispatch(setQrData([])); // Optional: Clear data if user logs out
+      setIsLoading(false); // Ensure loading is off if no user
+      setSyncStatus('idle');
+      return; // Don't proceed without userId
+    }
 
-    let isMounted = true;
-    let loadingTimer: NodeJS.Timeout | null = null;
+    let isMounted = true; // Flag to prevent state updates on unmounted component
 
     const initializeData = async () => {
-      setSyncStatus('idle'); // Reset sync status on new load/user change
+      // --- Phase 1: Load and Display Local Data Quickly ---
+      setIsLoading(true);
+      setSyncStatus('idle'); // Reset sync status on new load
 
-      // 1. Check if data is already in Redux (likely pre-fetched)
-      if (qrData.length === 0) {
-        // Data not pre-fetched, show loading and fetch locally
-        console.log('Initial data not found in Redux, fetching locally...');
-        setIsLoading(true);
-        try {
-          const currentLocalData = await getQrCodesByUserId(userId);
-          if (isMounted) {
-            dispatch(setQrData(currentLocalData));
-            console.log('Local data fetched and dispatched.');
-          }
-        } catch (error) {
-          console.error('Error fetching initial local data:', error);
-          if (isMounted) {
-            showToast(t('homeScreen.loadError'));
-            setSyncStatus('error'); // Indicate error state
-          }
-        } finally {
-          // Ensure loading stops even if fetch fails or component unmounts quickly
-          if (isMounted) {
-            setIsLoading(false);
-            console.log('Initial local fetch finished.');
-          }
+      try {
+        const currentLocalData = await getQrCodesByUserId(userId);
+        if (isMounted) {
+          dispatch(setQrData(currentLocalData));
+          // IMPORTANT: Stop the main loading indicator NOW
+          setIsLoading(false);
+        } else {
+           // If component unmounted before local data loaded, just stop loading
+           setIsLoading(false);
+           return; // Exit early
         }
-      } else {
-        // Data likely pre-fetched, no need for local fetch or loading indicator
-        console.log('Initial data found in Redux.');
-        setIsLoading(false); // Ensure loading is off
+      } catch (error) {
+        console.error('Error during initial local data load:', error);
+        if (isMounted) {
+          // Ensure loading stops even if local fetch fails
+          setIsLoading(false);
+          setSyncStatus('error'); // Indicate an error occurred during load
+          showToast(t('homeScreen.loadError')); // Show error message
+        }
+        // Stop execution here if initial load fails
+        return;
       }
 
-      // 2. Defer Sync Check until after interactions
-      const interactionHandle = InteractionManager.runAfterInteractions(() => {
-        if (!isMounted) return; // Check mount status again inside callback
-
-        console.log('Running deferred sync check...');
-        const checkAndSync = async () => {
-          if (isOffline) {
-            console.log('Sync check skipped: Offline.');
-            if (isMounted) setSyncStatus('idle');
+      // --- Phase 2: Schedule Network Sync After Interactions ---
+      const interactionHandle = InteractionManager.runAfterInteractions(async () => {
+        // Check mount status *again* as the callback runs asynchronously
+        if (!isMounted) {
+            console.log('Skipping sync: Component unmounted before interaction callback.');
             return;
-          }
+        }
 
+        console.log('Interactions finished, proceeding with sync check.');
+
+        // Only proceed with sync logic if online
+        if (!isOffline) {
           try {
+            // Check if sync is necessary
             const unsyncedCodes = await getUnsyncedQrCodes(userId);
             const localDbExists = await hasLocalData(userId);
             const needsSync = !localDbExists || unsyncedCodes.length > 0;
 
-            if (needsSync && !isSyncing) {
-              console.log('Sync needed, initiating...');
-              // Call the stable sync function
-              await syncWithServer(userId); // syncWithServer handles its own status updates
-            } else if (!needsSync) {
-              console.log('No sync needed or already syncing.');
-              // Already synced or no need to sync
-              if (isMounted && syncStatus !== 'syncing') {
-                // Avoid overriding 'syncing' status if sync started elsewhere
+            if (needsSync) {
+              console.log('Sync needed, calling syncWithServer...');
+              // Call the stable sync function. It handles its own status updates ('syncing', 'synced', 'error').
+              // No need to set isLoading here, as the main loading is finished.
+              // syncWithServer will update the syncStatus.
+              await syncWithServer(userId);
+              // syncWithServer should ideally handle setting 'synced' or 'error' status internally.
+              // If syncWithServer *doesn't* reliably set the final state, you might need:
+              // if (isMounted) { /* check sync outcome if needed */ }
+            } else {
+              // Already synced or no need to sync based on checks
+              console.log('No sync needed based on local checks.');
+              if (isMounted) {
                 setSyncStatus('synced'); // Indicate it's up-to-date
-                loadingTimer = setTimeout(() => {
+                // Reset status back to idle after a short delay
+                const timer = setTimeout(() => {
                   if (isMounted) setSyncStatus('idle');
                 }, 3000);
+                // NOTE: Cleaning up this timer if the component unmounts *before*
+                // the timeout completes, but *after* this InteractionManager task runs,
+                // is complex. The isMounted check inside setTimeout is the main guard.
               }
             }
           } catch (error) {
-            console.error('Error during deferred sync check:', error);
-            if (isMounted) {
-              setSyncStatus('error');
-              showToast(t('homeScreen.syncError')); // Show error from check phase
-            }
+             // Catch errors specifically from the sync check/trigger process
+             console.error('Error during post-interaction sync process:', error);
+             if (isMounted) {
+               setSyncStatus('error'); // Set error status if sync check/trigger fails
+               // Optionally show a specific toast for sync failure
+               // showToast(t('homeScreen.syncError')); // syncWithServer likely already does this
+             }
           }
-        };
-
-        checkAndSync();
-      });
-
-      // Cleanup function
-      return () => {
-        console.log('Cleaning up init effect for userId:', userId);
-        isMounted = false;
-        if (loadingTimer) clearTimeout(loadingTimer);
-        interactionHandle.cancel(); // Cancel InteractionManager task if unmounted
-      };
+        } else {
+          // Offline when interaction task ran, sync not possible
+          console.log('Skipping sync check: App is offline.');
+          if (isMounted) {
+            setSyncStatus('idle'); // Indicate idle status as sync wasn't attempted
+          }
+        }
+      }); // End InteractionManager.runAfterInteractions
     };
 
     initializeData();
 
-    // Dependencies: Re-run if user changes, network status changes,
-    // or the sync function/state changes.
-  }, [userId, isOffline, syncWithServer, isSyncing, dispatch, qrData.length]); // Added qrData.length to re-evaluate if it becomes 0
+    // --- Cleanup Function ---
+    return () => {
+      console.log('HomeScreen useEffect cleanup running.');
+      isMounted = false;
+      // InteractionManager tasks cannot be directly cancelled by standard means
+      // once runAfterInteractions is called. The `isMounted` flag is the
+      // primary way to prevent state updates after unmount within the async callbacks.
+      // If you started timers *outside* the InteractionManager callback that need cleanup,
+      // clear them here. Timers started *inside* the callback rely on the isMounted check.
+    };
+    // Dependencies: Re-run if userId changes or network status changes.
+    // syncWithServer and showToast are assumed to be stable due to useCallback.
+  }, [userId]); 
 
   // Network status toasts
   const prevIsOffline = useRef(isOffline);
   useEffect(() => {
-    let timer: NodeJS.Timeout | null = null;
     if (isOffline) {
+      // Show persistent offline toast
       setBottomToastIcon('wifi-off');
       setBottomToastMessage(t('homeScreen.offline'));
       setBottomToastColor('#f2726f');
       setIsBottomToastVisible(true);
     } else {
+      // If it *was* offline before, show temporary online toast
       if (prevIsOffline.current) {
-        // Was offline, now online
         setBottomToastIcon('wifi');
         setBottomToastMessage(t('homeScreen.online'));
         setBottomToastColor('#4caf50');
         setIsBottomToastVisible(true);
-        timer = setTimeout(() => setIsBottomToastVisible(false), 2000);
+        // Hide after a delay
+        const timer = setTimeout(() => setIsBottomToastVisible(false), 2000); // Increased duration slightly
+        // Cleanup timer if component unmounts or isOffline changes again quickly
+        return () => clearTimeout(timer);
       } else {
-        // Was already online, ensure toast is hidden
+        // If it was already online, ensure the toast is hidden
         setIsBottomToastVisible(false);
       }
     }
-    prevIsOffline.current = isOffline; // Update ref for next render
-
-    return () => {
-      if (timer) clearTimeout(timer); // Cleanup timer
-    };
+    // Update ref for next render
+    prevIsOffline.current = isOffline;
   }, [isOffline, t]); // Assuming t is stable
 
-  // Animate empty card based on isEmpty state
+  // Animate empty card
   useEffect(() => {
-    isEmptyShared.value = withTiming(isEmpty ? 1 : 0); // Use timing for smoother transition if needed
-    if (isEmpty) {
-      // Only animate entry when it becomes empty
-      emptyCardOffset.value = 350; // Reset position off-screen
-      emptyCardOffset.value = withSpring(0, { damping: 30, stiffness: 150 });
-    } else {
-      // Optionally animate out, or just let it disappear
-      emptyCardOffset.value = 0; // Ensure it's reset if list becomes non-empty
-    }
-  }, [isEmpty, isEmptyShared, emptyCardOffset]);
+    isEmptyShared.value = isEmpty ? 1 : 0;
+    animateEmptyCard();
+  }, [isEmpty, isEmptyShared]);
 
-  // --- Animated Styles ---
 
+  const animateEmptyCard = () => {
+    emptyCardOffset.value = withSpring(0, { damping: 30, stiffness: 150 });
+  };
+
+  // Animated styles
   const titleContainerStyle = useAnimatedStyle(() => {
     const SCROLL_THRESHOLD = 120;
     const ANIMATION_RANGE = 90;
+
     const opacity = interpolate(
       scrollY.value,
       [SCROLL_THRESHOLD, SCROLL_THRESHOLD + ANIMATION_RANGE],
       [1, 0],
       Extrapolation.CLAMP
     );
+
     const translateY = interpolate(
       scrollY.value,
       [0, SCROLL_THRESHOLD],
       [0, -35],
       Extrapolation.CLAMP
     );
+
     const shouldReduceZIndex = scrollY.value > 120 || isActive || isSheetOpen;
-    return {
-      opacity,
-      transform: [{ translateY }],
-      zIndex: shouldReduceZIndex ? 0 : 1,
-    };
-  }, [isActive, isSheetOpen]); // scrollY is implicitly a dependency
+
+    return { opacity, transform: [{ translateY }], zIndex: shouldReduceZIndex ? 0 : 1 };
+  }, [isActive, isSheetOpen]);
 
   const listHeaderStyle = useAnimatedStyle(() => {
     const opacity = withTiming(
       interpolate(scrollY.value, [0, 50], [1, 0], Extrapolation.CLAMP),
       { duration: 200, easing: Easing.out(Easing.ease) }
     );
+
     const scale = withTiming(
       interpolate(scrollY.value, [0, 50], [1, 0.95], Extrapolation.CLAMP),
       { duration: 150, easing: Easing.out(Easing.ease) }
     );
+
     const translateY = withTiming(
       interpolate(scrollY.value, [0, 50], [0, -5], Extrapolation.CLAMP),
       { duration: 150, easing: Easing.out(Easing.ease) }
     );
+
     return { opacity, transform: [{ scale }, { translateY }] };
-  }, []); // scrollY is implicitly a dependency
+  }, []);
 
   const fabStyle = useAnimatedStyle(() => {
-    // Adjust based on which toasts are potentially visible
-    let bottomOffset = getResponsiveHeight(2); // Default FAB bottom
-    if (isBottomToastVisible) {
-      bottomOffset = 50; // Adjust if bottom network toast is visible
-    } else if (isToastVisible) {
-      bottomOffset = 80; // Adjust if status toast is visible (higher priority?)
-    }
-    const marginBottom = withTiming(bottomOffset, {
-      duration: 200,
-      easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-    });
+    const marginBottom = withTiming(
+      isBottomToastVisible ? 30 : isToastVisible ? 80 : 10,
+      { duration: 200, easing: Easing.bezier(0.25, 0.1, 0.25, 1) }
+    );
     return { marginBottom };
-  }, [isBottomToastVisible, isToastVisible]); // React to toast visibility
+  });
 
   const emptyCardStyle = useAnimatedStyle(() => ({
-    // Style for the EmptyListItem container
-    opacity: isEmptyShared.value,
     transform: [{ translateY: emptyCardOffset.value }],
   }));
 
-  // --- Navigation Handlers (Memoized) ---
+  // Navigation handlers
   const onNavigateToEmptyScreen = useCallback(() => router.push('/empty'), []);
   const onNavigateToDetailScreen = useCallback(
-    throttle(
-      (item: QRRecord) => {
-        router.push({
-          pathname: `/detail`,
-          params: {
-            id: item.id,
-            item: encodeURIComponent(JSON.stringify(item)),
-            user_id: userId,
-          },
-        });
-      },
-      300,
-      { leading: true, trailing: false }
-    ), // Throttle navigation
+    throttle((item: QRRecord) => {
+      router.push({
+        pathname: `/detail`,
+        params: { id: item.id, item: encodeURIComponent(JSON.stringify(item)), user_id: userId },
+      });
+    }, 300),
     [userId]
   );
-  const onNavigateToScanScreen = useCallback(
-    () => router.push('/(scan)/scan-main'),
-    []
-  );
-  const onNavigateToSettingsScreen = useCallback(
-    () => router.push('/settings'),
-    []
-  );
+  const onNavigateToScanScreen = useCallback(() => router.push('/(scan)/scan-main'), []);
+  const onNavigateToSettingsScreen = useCallback(() => router.push('/settings'), []);
   const onNavigateToAddScreen = useCallback(
     throttle(
-      (
-        codeFormat?: number,
-        codeValue?: string,
-        bin?: string,
-        codeType?: string,
-        codeProvider?: string
-      ) => {
+      (codeFormat?: number, codeValue?: string, bin?: string, codeType?: string, codeProvider?: string) => {
         router.push({
           pathname: `/(auth)/(add)/add-new`,
-          params: {
-            codeFormat,
-            codeValue,
-            codeBin: bin,
-            codeType,
-            codeProvider,
-          },
+          params: { codeFormat, codeValue, codeBin: bin, codeType, codeProvider },
         });
       },
-      300,
-      { leading: true, trailing: false }
+      300
     ),
     []
   );
   const onNavigateToEditScreen = useCallback(
-    throttle(
-      () => {
-        if (!selectedItemId) return;
-        bottomSheetRef.current?.close();
-        // Delay navigation slightly to allow sheet to close smoothly
-        setTimeout(
-          () =>
-            router.push({
-              pathname: `/(edit)/edit`,
-              params: { id: selectedItemId },
-            }),
-          200
-        );
-      },
-      300,
-      { leading: true, trailing: false }
-    ),
+    throttle(() => {
+      if (!selectedItemId) return;
+      bottomSheetRef.current?.close();
+      setTimeout(() => router.push({ pathname: `/(edit)/edit`, params: { id: selectedItemId } }), 200);
+    }, 300),
     [selectedItemId]
   );
 
-  // --- UI Handlers (Memoized) ---
-
+  // Sheet handlers
   const onOpenSheet = useCallback(
-    (
-      type: SheetType,
-      id?: string,
-      url?: string,
-      ssid?: string,
-      password?: string,
-      isWep?: boolean,
-      isHidden?: boolean
-    ) => {
+    (type: SheetType, id?: string, url?: string, ssid?: string, password?: string, isWep?: boolean, isHidden?: boolean) => {
       setSheetType(type);
-      setIsSheetOpen(true); // Used for titleContainer zIndex animation
+      setIsSheetOpen(true);
       setSelectedItemId(id || null);
-
-      // Reset specific sheet states before setting new ones
-      setLinkingUrl(null);
-      setWifiSsid(null);
-      setWifiPassword(null);
 
       switch (type) {
         case 'wifi':
@@ -578,301 +428,275 @@ function HomeScreen() {
       }
       bottomSheetRef.current?.snapToIndex(0);
     },
-    [] // No dependencies needed as it only sets state
+    []
   );
 
-  // Hook for gallery picker logic
-  const onOpenGallery = useGalleryPicker({
-    onOpenSheet,
-    onNavigateToAddScreen,
-  });
+  const onOpenGallery = useGalleryPicker({ onOpenSheet, onNavigateToAddScreen });
 
   // Scroll handler
-  const scrollHandler = useAnimatedScrollHandler(
-    {
-      onScroll: (event) => {
-        scrollY.value = event.contentOffset.y;
-        // Logic to auto-close FAB removed for simplicity, manage manually if needed
-      },
-    },
-    [] // No external dependencies
-  );
+  const scrollHandler = useAnimatedScrollHandler((event) => {
+    scrollY.value = event.contentOffset.y;
+    if (event.contentOffset.y > 50 && fabOpen) {
+      setFabOpen(false);
+    } else if (event.contentOffset.y <= 50 && !fabOpen) {
+      setFabOpen(true);
+    }
+  });
 
-  // Callback for DraggableFlatList's onScrollOffsetChange
-  const onScrollOffsetChange = useCallback(
-    (offset: number) => {
-      scrollY.value = offset;
-    },
-    [scrollY] // Depends only on the shared value ref
-  );
+  const onScrollOffsetChange = useCallback((offset: number) => {
+    scrollY.value = offset;
+  }, [scrollY]);
 
   // Drag handlers
   const onDragBegin = useCallback(() => {
     triggerHapticFeedback();
-    setIsActive(true); // Used for item scaling and title zIndex
+    setIsActive(true);
   }, []);
 
+  // Memoize filtered data
+  const filteredData = useMemo(() => {
+    if (filter === 'all') return qrData;
+    return qrData.filter(item => item.type === filter);
+  }, [qrData, filter]);
+
+  const handleSync = useCallback(() => {
+    // Directly call the actual sync function
+    syncWithServer(userId);
+  }, [syncWithServer, userId]); // Depend on the stable syncWithServer function and userId
+
+  const handleFilterChange = useCallback((newFilter: string) => {
+    setFilter(newFilter);
+    filterQrCodesByType(userId, newFilter).then((filteredData) => dispatch(setQrData(filteredData)));
+  }, [userId, dispatch]);
+
+  // Optimize renderItem with useCallback
+  const renderItem = useCallback(
+    ({ item, drag, isActive }: { item: QRRecord; drag: () => void; isActive: boolean }) => (
+      <ScaleDecorator activeScale={0.9}>
+        <ThemedCardItem
+          isActive={isActive}
+          onItemPress={() => onNavigateToDetailScreen(item)}
+          code={item.code}
+          type={item.type}
+          metadata={item.metadata}
+          metadata_type={item.metadata_type}
+          onMoreButtonPress={() => onOpenSheet('setting', item.id)}
+          accountName={item.account_name}
+          accountNumber={item.account_number}
+          onDrag={drag}
+        />
+      </ScaleDecorator>
+    ),
+    [onNavigateToDetailScreen, onOpenSheet]
+  );
+
+  // Optimize onDragEnd with useCallback
   const onDragEnd = useCallback(
     async ({ data }: { data: QRRecord[] }) => {
-      setIsActive(false); // Deactivate drag state immediately
-      triggerHapticFeedback(); // Haptic on drop
-
-      // Check if order actually changed
-      const hasOrderChanged = data.some(
-        (item, index) => item.qr_index !== index
-      );
-      if (!hasOrderChanged) {
-        return; // No change, no need to update
-      }
-
-      console.log('Order changed, updating indexes...');
-      const updatedData = data.map((item, index) => ({
-        ...item,
-        qr_index: index,
-        updated: new Date().toISOString(), // Mark as updated for sync
-      }));
-
       try {
-        dispatch(setQrData(updatedData)); // Update UI immediately
-        await updateQrIndexes(updatedData); // Persist changes to local DB
-        console.log('Indexes updated successfully.');
-        // Optionally trigger a background sync if needed after reordering
-        // syncWithServer(userId); // Consider if this is desired behavior
+        triggerHapticFeedback();
+        const hasOrderChanged = data.some((item, index) => item.qr_index !== index);
+        if (!hasOrderChanged) {
+          setIsActive(false);
+          return;
+        }
+
+        const updatedData = data.map((item, index) => ({
+          ...item,
+          qr_index: index,
+          updated: new Date().toISOString(),
+        }));
+
+        dispatch(setQrData(updatedData));
+        await updateQrIndexes(updatedData);
       } catch (error) {
         console.error('Error updating QR indexes:', error);
-        showToast(t('homeScreen.reorderError')); // Inform user of error
-        // Optionally revert Redux state to previous order if DB update fails
+      } finally {
+        setIsActive(false);
       }
     },
-    [dispatch, userId, showToast] // Added userId and showToast
+    [dispatch]
   );
 
-  // Filter handler
-  const handleFilterChange = useCallback(
-    async (newFilter: string) => {
-      setFilter(newFilter);
-      // Note: Filtering logic might be complex. Consider if filtering should
-      // happen purely on the client (using useMemo) or involve DB refetch.
-      // This example assumes client-side filtering via `filteredData` useMemo.
-      // If DB filtering is preferred:
-      // try {
-      //   setIsLoading(true); // Indicate loading during filter fetch
-      //   const filteredDbData = await filterQrCodesByType(userId, newFilter);
-      //   dispatch(setQrData(filteredDbData));
-      // } catch (error) {
-      //   console.error("Error filtering data:", error);
-      //   showToast(t('homeScreen.filterError'));
-      // } finally {
-      //   setIsLoading(false);
-      // }
-    },
-    [userId, dispatch, showToast] // Dependencies if using DB filtering
-    // [setFilter] // Dependency if only using client-side filtering
-  );
+  // Toast handler
+  const showToast = useCallback((message: string) => {
+    setTopToastMessage(message);
+    setIsTopToastVisible(true);
+  }, []);
 
-  // Sync button handler
-  const handleSync = useCallback(() => {
-    if (!isOffline && !isSyncing) {
-      syncWithServer(userId);
-    }
-  }, [syncWithServer, userId, isOffline, isSyncing]);
+  const handleCopySuccess = useCallback(() => showToast(t('homeScreen.copied')), []);
 
   // Delete handlers
   const onDeleteSheetPress = useCallback(() => {
     bottomSheetRef.current?.close();
-    // Delay modal display slightly for smoother transition
-    setTimeout(() => setIsModalVisible(true), 150);
+    setIsModalVisible(true);
   }, []);
 
   const onDeletePress = useCallback(async () => {
     if (!selectedItemId) return;
 
-    setIsModalVisible(false); // Close modal immediately
-    setIsToastVisible(true); // Show status toast
-    setToastMessage(t('homeScreen.deleting'));
-    setIsSyncing(true); // Use isSyncing to indicate ongoing operation
-
     try {
-      await deleteQrCode(selectedItemId); // Delete from local DB
+      setIsSyncing(true);
+      setIsToastVisible(true);
+      setToastMessage(t('homeScreen.deleting'));
 
-      // Update Redux state optimistically
+      await deleteQrCode(selectedItemId);
       const updatedData = qrData.filter((item) => item.id !== selectedItemId);
-      // Re-index remaining items
       const reindexedData = updatedData.map((item, index) => ({
         ...item,
         qr_index: index,
-        updated: new Date().toISOString(), // Mark potentially affected items for sync
+        updated: new Date().toISOString(),
       }));
-
       dispatch(setQrData(reindexedData));
+      await updateQrIndexes(reindexedData);
 
-      // Persist re-indexing (important!)
-      if (reindexedData.length > 0) {
-        await updateQrIndexes(reindexedData);
-      }
-
-      setIsToastVisible(false); // Hide status toast on success
-      showToast(t('homeScreen.deleteSuccess')); // Show success confirmation
-
-      // Optionally trigger sync after delete
-      // syncWithServer(userId);
+      setIsModalVisible(false);
+      setIsToastVisible(false);
     } catch (error) {
-      console.error('Error deleting QR code:', error);
-      setToastMessage(t('homeScreen.deleteError')); // Update toast message on error
-      setIsToastVisible(true); // Ensure toast remains visible on error
-      // Consider reverting Redux state if delete fails critically
+      setToastMessage(t('homeScreen.deleteError'));
+      setIsToastVisible(true);
     } finally {
       setSelectedItemId(null);
-      // Delay resetting isSyncing slightly to allow toast to show
-      setTimeout(() => setIsSyncing(false), 500);
+      setTimeout(() => setIsSyncing(false), 400);
     }
-  }, [selectedItemId, qrData, dispatch, userId, showToast]); // Added userId, showToast
+  }, [selectedItemId, qrData, dispatch]);
 
-  const handleCopySuccess = useCallback(
-    () => showToast(t('homeScreen.copied')),
-    [showToast]
-  );
+  // Padding values
+  const paddingValues = useMemo(() => {
+    // Define padding values based on the number of items in the list
+    switch (qrData.length) {
+      case 0:
+        return 0; // No padding when the list is empty
+      case 1:
+        return height * 0.7; // Larger padding for a single item
+      case 2:
+        return height * 0.45; // Moderate padding for two items
+      case 3:
+        return height * 0.2; // Smaller padding for three items
+      default:
+        return 100; // Default padding for more than three items
+    }
+  }, [qrData.length, height]);
 
-  // --- Memoized Values ---
+  const listContainerPadding = useMemo(() => paddingValues, [paddingValues]);
 
-  // Filtered data for the list (client-side filtering)
-  const filteredData = useMemo(() => {
-    if (filter === 'all') return qrData;
-    return qrData.filter((item) => item.type === filter);
-  }, [qrData, filter]);
 
-  // Dynamic padding for the bottom of the list
-  const listContainerPadding = useMemo(() => {
-    const len = filteredData.length; // Base padding on filtered data length
-    if (len === 0) return 0;
-    if (len === 1) return height * 0.7;
-    if (len === 2) return height * 0.45;
-    if (len === 3) return height * 0.2;
-    return 100; // Default padding
-  }, [filteredData.length, height]); // Use filteredData.length
-
-  // --- Render Functions ---
-
-  // Optimized renderItem for FlatList (memoized)
-  const renderItem = useCallback(
-    ({
-      item,
-      drag,
-      isActive: isItemActive,
-    }: {
-      item: QRRecord;
-      drag: () => void;
-      isActive: boolean;
-    }) => (
-      <ScaleDecorator activeScale={0.95}>
-        {' '}
-        {/* Slightly less aggressive scale */}
-        <ThemedCardItem
-          // Pass necessary props
-          // item={item} // <-- FIX 1: REMOVED THIS LINE
-          isActive={isItemActive}
-          onItemPress={() => onNavigateToDetailScreen(item)}
-          onMoreButtonPress={() =>
-            onOpenSheet(
-              'setting',
-              item.id
-              // Pass other necessary details if needed by sheet types directly
-            )
-          }
-          onDrag={drag}
-          // Explicitly pass props used by ThemedCardItem
-          code={item.code}
-          type={item.type}
-          metadata={item.metadata}
-          metadata_type={item.metadata_type}
-          accountName={item.account_name}
-          accountNumber={item.account_number}
-        />
-      </ScaleDecorator>
-    ),
-    [onNavigateToDetailScreen, onOpenSheet] // Dependencies for renderItem
-  );
-
-  // Sheet content renderer
+  // Sheet content
   const renderSheetContent = () => {
     switch (sheetType) {
       case 'wifi':
-        return (
-          <WifiSheetContent
-            ssid={wifiSsid || ''}
-            password={wifiPassword || ''}
-            isWep={wifiIsWep}
-            isHidden={wifiIsHidden}
-          />
-        );
+        return <WifiSheetContent ssid={wifiSsid || ''} password={wifiPassword || ''} isWep={wifiIsWep} isHidden={wifiIsHidden} />;
       case 'linking':
-        return (
-          <LinkingSheetContent
-            url={linkingUrl}
-            onCopySuccess={handleCopySuccess}
-          />
-        );
+        return <LinkingSheetContent url={linkingUrl} onCopySuccess={handleCopySuccess} />;
       case 'setting':
-        return (
-          <SettingSheetContent
-            onEdit={onNavigateToEditScreen}
-            onDelete={onDeleteSheetPress}
-          />
-        );
+        return <SettingSheetContent onEdit={onNavigateToEditScreen} onDelete={onDeleteSheetPress} />;
       default:
-        return null; // Or a placeholder View
+        return null;
     }
   };
 
-  // --- JSX ---
+  // Memoize the header component
+  const HeaderComponent = React.memo(({ titleContainerStyle, syncStatus, isLoading, onSync, onScan, onSettings }: {
+    titleContainerStyle: any;
+    syncStatus: 'idle' | 'syncing' | 'synced' | 'error';
+    isLoading: boolean;
+    onSync: () => void;
+    onScan: () => void;
+    onSettings: () => void;
+  }) => (
+    <Animated.View style={[styles.titleContainer, titleContainerStyle]}>
+      <View style={styles.headerContainer}>
+        <ThemedText style={styles.titleText} type="title">
+          {t('homeScreen.title')}
+        </ThemedText>
+        <View style={styles.titleButtonContainer}>
+          <ThemedButton
+            iconName="cloud-sync"
+            syncStatus={syncStatus}
+            style={styles.titleButton}
+            onPress={onSync}
+            disabled={syncStatus === 'syncing' || isLoading}
+          />
+          <ThemedButton
+            iconName="camera"
+            style={styles.titleButton}
+            onPress={onScan}
+            disabled={isLoading}
+          />
+          <ThemedButton
+            iconName="cog"
+            style={styles.titleButton}
+            onPress={onSettings}
+            disabled={isLoading}
+          />
+        </View>
+      </View>
+    </Animated.View>
+  ));
+
+  // Memoize the loading component
+  const LoadingComponent = React.memo(() => (
+    <View style={styles.loadingContainer}>
+      <View style={{ marginBottom: 20 }}>
+        <ThemedFilterSkeleton show={true} />
+      </View>
+      {Array.from({ length: 3 }).map((_, index) => (
+        <ThemedCardSkeleton key={index} index={index} />
+      ))}
+    </View>
+  ));
+
+  // Memoize the list header component
+  const ListHeaderComponent = React.memo(({ listHeaderStyle, filter, onFilterChange }: {
+    listHeaderStyle: any;
+    filter: string;
+    onFilterChange: (filter: string) => void;
+  }) => (
+    <Animated.View style={[listHeaderStyle, { marginBottom: getResponsiveHeight(3.6) }]}>
+      <ThemedFilter selectedFilter={filter} onFilterChange={onFilterChange} />
+    </Animated.View>
+  ));
+
+  // Memoize the empty item component
+  const EmptyItemComponent = React.memo(({ color }: { color: string }) => (
+    <View style={styles.emptyItem}>
+      <MaterialIcons color={color} name="search" size={50} />
+      <ThemedText style={{ textAlign: 'center', lineHeight: 30 }}>
+        {t('homeScreen.noItemFound')}
+      </ThemedText>
+    </View>
+  ));
 
   return (
     <ThemedView style={styles.container}>
       <HeaderComponent
         titleContainerStyle={titleContainerStyle}
         syncStatus={syncStatus}
-        isLoading={isLoading || isSyncing} // Disable buttons during initial load OR sync
-        onSync={handleSync}
+        isLoading={isLoading}
+        onSync={() => handleSync()}
         onScan={onNavigateToScanScreen}
         onSettings={onNavigateToSettingsScreen}
       />
 
-      {/* Conditional Rendering: Loading -> Empty -> List */}
       {isLoading ? (
         <LoadingComponent />
       ) : isEmpty ? (
-        // Use Animated.View for the empty state container to apply animations
-        <Animated.View style={[styles.emptyContainer, emptyCardStyle]}>
-          <EmptyListItem
-            // Pass necessary props to EmptyListItem
-            onNavigateToEmptyScreen={onNavigateToEmptyScreen} // If needed inside EmptyListItem
-            onNavigateToScanScreen={onNavigateToScanScreen}
-            scrollHandler={scrollHandler} // <-- FIX 2: ADDED THIS PROP
-            emptyCardStyle={emptyCardStyle} // <-- FIX 2: ADDED THIS PROP
-            dropdownOptions={[
-              {
-                label: t('homeScreen.fab.add'),
-                onPress: onNavigateToAddScreen,
-              },
-              {
-                label: t('homeScreen.fab.scan'),
-                onPress: onNavigateToScanScreen,
-              },
-              {
-                label: t('homeScreen.fab.gallery'),
-                onPress: onOpenGallery,
-              },
-            ]}
-          />
-        </Animated.View>
+        <EmptyListItem
+          scrollHandler={scrollHandler}
+          emptyCardStyle={emptyCardStyle}
+          onNavigateToEmptyScreen={onNavigateToEmptyScreen}
+          onNavigateToScanScreen={onNavigateToScanScreen}
+          dropdownOptions={[
+            { label: 'homeScreen.fab.add', onPress: onNavigateToAddScreen },
+            { label: 'homeScreen.fab.scan', onPress: onNavigateToScanScreen },
+            { label: 'homeScreen.fab.gallery', onPress: onOpenGallery },
+          ]}
+        />
       ) : (
-        // Use Animated.View for the list container if needed for entry animation
-        <Animated.View style={{ flex: 1 }}>
+        <Animated.View style={[emptyCardStyle, { flex: 1 }]}>
           <DraggableFlatList
             ref={flatListRef}
-            data={filteredData} // Use memoized filtered data
-            renderItem={renderItem}
-            keyExtractor={(item) => `draggable-item-${item.id}`}
+            bounces={true}
             ListHeaderComponent={
               <ListHeaderComponent
                 listHeaderStyle={listHeaderStyle}
@@ -880,69 +704,52 @@ function HomeScreen() {
                 onFilterChange={handleFilterChange}
               />
             }
-            ListEmptyComponent={<EmptyItemComponent color={color} />} // Shown if filteredData is empty but qrData is not
-            containerStyle={styles.listFlex} // Use flex: 1 for container
-            contentContainerStyle={[
-              styles.listContainer,
-              { paddingBottom: listContainerPadding }, // Apply dynamic padding
-            ]}
-            // Performance props
-            initialNumToRender={10} // Adjust based on testing
+            ListEmptyComponent={<EmptyItemComponent color={color} />}
+            initialNumToRender={10}
             maxToRenderPerBatch={5}
-            windowSize={11} // Standard recommendation: 21 (10 above, 10 below, 1 visible) - adjust based on item height
-            removeClippedSubviews={true} // Can improve performance but use with caution
-            // Scroll and Drag props
+            windowSize={5}
+            removeClippedSubviews={true}
+            data={[...filteredData]}
+            renderItem={renderItem}
+            keyExtractor={(item) => `draggable-item-${item.id}`}
+            containerStyle={{ flex: 1 }}
+            contentContainerStyle={[styles.listContainer, qrData.length > 0 && { paddingBottom: listContainerPadding }]}
             scrollEventThrottle={16}
             showsVerticalScrollIndicator={false}
-            onScrollOffsetChange={onScrollOffsetChange} // Use optimized callback
             onDragBegin={onDragBegin}
             onDragEnd={onDragEnd}
-            dragItemOverflow={false} // Keep items clipped
+            dragItemOverflow={false}
+            onScrollOffsetChange={onScrollOffsetChange}
             decelerationRate={'fast'}
-            // scrollEnabled={!isActive} // Allow scroll only when not dragging
-            bounces={true}
+            scrollEnabled={!fabOpen}
           />
         </Animated.View>
       )}
 
-      {/* FAB: Show only if not loading and list is not empty */}
-      {!isLoading && !isEmpty && (
+      {!isLoading && qrData.length > 0 && (
         <ThemedFAB
           actions={[
-            {
-              text: t('homeScreen.fab.add'),
-              iconName: 'plus-circle',
-              onPress: onNavigateToAddScreen,
-            },
-            {
-              text: t('homeScreen.fab.scan'),
-              iconName: 'camera',
-              onPress: onNavigateToScanScreen,
-            },
-            {
-              text: t('homeScreen.fab.gallery'),
-              iconName: 'image',
-              onPress: onOpenGallery,
-            },
+            { text: 'homeScreen.fab.add', iconName: 'plus-circle', onPress: onNavigateToAddScreen },
+            { text: 'homeScreen.fab.scan', iconName: 'camera', onPress: onNavigateToScanScreen },
+            { text: 'homeScreen.fab.gallery', iconName: 'image', onPress: onOpenGallery },
           ]}
           style={styles.fab}
-          animatedStyle={fabStyle} // Apply animated style for positioning
+          animatedStyle={fabStyle}
         />
       )}
 
-      {/* Toasts and Modals */}
       <ThemedStatusToast
         isVisible={isToastVisible}
         message={toastMessage}
         onDismiss={() => setIsToastVisible(false)}
         style={styles.toastContainer}
-        isSyncing={isSyncing} // Pass syncing state to toast if it needs it
+        isSyncing={isSyncing}
       />
       <ThemedTopToast
         message={topToastMessage}
         isVisible={isTopToastVisible}
-        onVisibilityToggle={setIsTopToastVisible} // Let the component manage its visibility timer
-        duration={2000} // Standard duration
+        onVisibilityToggle={(isVisible) => setIsTopToastVisible(isVisible)}
+        duration={2000}
       />
       <ThemedBottomToast
         isVisible={isBottomToastVisible}
@@ -960,130 +767,103 @@ function HomeScreen() {
               ? t('homeScreen.wifi')
               : sheetType === 'linking'
                 ? t('homeScreen.linking')
-                : '' // Default empty title
+                : t('homeScreen.settings')
         }
-        onClose={() => setTimeout(() => setIsSheetOpen(false), 50)} // Reset sheet open state
-        snapPoints={useMemo(
-          () =>
-            sheetType === 'setting'
-              ? ['25%']
-              : sheetType === 'wifi'
-                ? ['38%']
-                : sheetType === 'linking'
-                  ? ['35%']
-                  : ['25%'], // Default snap points
-          [sheetType]
-        )} // Memoize snap points based on type
+        onClose={() => setTimeout(() => setIsSheetOpen(false), 50)}
+        snapPoints={
+          sheetType === 'setting'
+            ? ['25%']
+            : sheetType === 'wifi'
+              ? ['38%']
+              : sheetType === 'linking'
+                ? ['35%']
+                : ['35%']
+        }
         styles={{
-          // Pass styles if needed
           customContent: {
             borderRadius: getResponsiveWidth(4),
             marginHorizontal: getResponsiveWidth(3.6),
           },
         }}
-        customContent={<View>{renderSheetContent()}</View>} // Render dynamic content
+        customContent={<View>{renderSheetContent()}</View>}
       />
       <ThemedModal
-        isVisible={isModalVisible}
-        onDismiss={() => setIsModalVisible(false)}
-        primaryActionText={t('homeScreen.move')} // Assuming 'move' means delete here
+        primaryActionText={t('homeScreen.move')}
         onPrimaryAction={onDeletePress}
-        secondaryActionText={t('homeScreen.cancel')}
+        onDismiss={() => setIsModalVisible(false)}
+        dismissable={true}
         onSecondaryAction={() => setIsModalVisible(false)}
+        secondaryActionText={t('homeScreen.cancel')}
         title={t('homeScreen.confirmDeleteTitle')}
         message={t('homeScreen.confirmDeleteMessage')}
+        isVisible={isModalVisible}
         iconName="delete-outline"
-        dismissable={true}
       />
     </ThemedView>
   );
 }
 
-// Memoize the entire screen component
 export default React.memo(HomeScreen);
-
-// --- Styles ---
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // backgroundColor: // Set background via ThemedView props if needed
   },
   titleContainer: {
     position: 'absolute',
-    top: getResponsiveHeight(10), // Adjust as needed for status bar/notch
+    top: getResponsiveHeight(10),
     left: 0,
     right: 0,
-    // backgroundColor: 'transparent', // Ensure no background blocks content below
-    zIndex: 1, // Default zIndex
+    flexDirection: 'column',
+    gap: 15,
   },
   headerContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
     paddingHorizontal: getResponsiveWidth(3.6),
-    paddingBottom: getResponsiveHeight(1), // Add some padding below title/buttons
   },
   titleText: {
     fontSize: getResponsiveFontSize(28),
-    fontWeight: 'bold', // Make title bolder
   },
   titleButtonContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: getResponsiveWidth(3), // Responsive gap
+    gap: 10,
   },
-  titleButton: {
-    // Add specific styles for title buttons if needed
-  },
-  listFlex: {
-    flex: 1, // Ensure FlatList container takes available space
-  },
+  titleButton: {},
   listContainer: {
-    paddingTop: getResponsiveHeight(18.1), // Space for absolute positioned header
-    paddingHorizontal: getResponsiveWidth(3.6), // Horizontal padding for list items
-    flexGrow: 1, // Ensure content can grow to enable scrolling
-  },
-  loadingContainer: {
-    paddingTop: getResponsiveHeight(18), // Match list padding top
-    paddingHorizontal: getResponsiveWidth(3.6),
-    flex: 1,
-    gap: getResponsiveHeight(2), // Space between skeleton items
-  },
-  emptyContainer: {
-    // Style for the container holding EmptyListItem, used for animation
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: getResponsiveWidth(5),
+    paddingTop: getResponsiveHeight(18.1),
+    flexGrow: 1,
   },
   emptyItem: {
-    // Styles for the content *inside* ListEmptyComponent (if list has data but filter returns none)
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: getResponsiveHeight(10), // Add padding when shown within the list
     gap: 10,
     opacity: 0.7,
   },
   toastContainer: {
     position: 'absolute',
-    bottom: getResponsiveHeight(10), // Position above FAB/BottomNav
-    left: getResponsiveWidth(3.6),
-    right: getResponsiveWidth(3.6),
-    zIndex: 10, // High zIndex
+    bottom: 15,
+    left: 15,
+    right: 15,
   },
   bottomToastContainer: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    zIndex: 9, // Below status toast but above content
   },
   fab: {
-    position: 'absolute',
-    // bottom: handled by animatedStyle
+    bottom: getResponsiveHeight(2),
     right: getResponsiveWidth(3.6),
-    zIndex: 5, // Above list, below toasts/sheets
+    position: 'absolute',
+    zIndex: 3,
+  },
+  loadingContainer: {
+    paddingTop: getResponsiveHeight(18),
+    paddingHorizontal: 15,
+    flex: 1,
   },
 });
