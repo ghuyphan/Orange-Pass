@@ -1,12 +1,12 @@
 {
   "common": {
     "appName": "Orange⁺",
-    "done": "Done",
-    "cancel": "Cancel",
-    "back": "Back",
-    "discard": "Discard",
-    "unsavedChangesTitle": "Unsaved Changes",
-    "unsavedChanges": "You have unsaved changes. Are you sure you want to leave?"
+    "done": "Готово",
+    "cancel": "Отмена",
+    "back": "Назад",
+    "discard": "Отменить",
+    "unsavedChangesTitle": "Несохраненные изменения",
+    "unsavedChanges": "У вас есть несохраненные изменения. Вы уверены, что хотите уйти?"
   },
   "authRefresh": {
     "errors": {
@@ -26,7 +26,35 @@
       "qr.localFetchFailed": "QR-данные не найдены. Некоторые функции недоступны."
     }
   },
+  "quickLoginScreen": {
+    "continue": "Продолжить",
+    "usernamePlaceholder": "Имя пользователя",
+    "loggingIn": "Вход...",
+    "passwordPlaceholder": "Пароль",
+    "createAccount": "Создать новый аккаунт",
+    "useOtherAccount": "Использовать другой аккаунт",
+    "chooseAccount": "Выберите аккаунт",
+    "switchAccount": "Сменить аккаунт",
+    "cancel": "Отмена",
+    "errors": {
+      "required": "Пожалуйста, введите ваш пароль",
+      "passwordTooShort": "Пароль слишком короткий",
+      "invalidCredentials": "Неверные учетные данные.",
+      "quickLoginFailed": "Быстрый вход не удался. Пожалуйста, введите пароль.",
+      "noAccountSelected": "Пожалуйста, выберите аккаунт.",
+      "noUserIDSelected": "Аккаунт не выбран.",
+      "passwordRequired": "Пожалуйста, введите пароль."
+    }
+  },
+  "quickLoginPrompt": {
+    "saveLoginInfo": "Сохранить данные для входа?",
+    "saveDescription": "Мы сохраним данные для входа {name} в облачное резервное копирование вашего устройства, чтобы вам не пришлось вводить их снова на этом устройстве или любом устройстве, которое вы восстановите.",
+    "save": "Сохранить",
+    "saving": "Сохранение...",
+    "notNow": "Не сейчас"
+  },
   "loginScreen": {
+    "selectLanguage": "Выберите язык",
     "email": "Электронная почта",
     "emailPlaceholder": "Введите вашу электронную почту",
     "password": "Пароль",
@@ -61,10 +89,10 @@
     "email": "Email",
     "emailPlaceholder": "Введите email",
     "password": "Пароль",
-    "passwordPlaceholder": "Введите пароль",
+    "passwordPlaceholder": "Пароль (мин. 8 символов, заглавные, цифры)",
     "confirmPassword": "Подтвердите пароль",
     "confirmPasswordPlaceholder": "Подтвердите пароль",
-    "registerNewAccount": "Создать аккаунт",
+    "registerNewAccount": "Присоединиться к Orange⁺",
     "register": "Регистрация",
     "registering": "Регистрация...",
     "registerSuccess": "Аккаунт успешно создан",
@@ -74,27 +102,27 @@
       "invalidEmail": "Некорректный email",
       "emailRequired": "Введите email",
       "invalidPassword": "Некорректный пароль",
-      "invalidPasswordLength": "Минимум 8 символов",
+      "invalidPasswordLength": "Пароль должен содержать не менее 8 символов",
       "passwordRequired": "Введите пароль",
-      "invalidPasswordLowerCase": "Минимум 1 строчная буква",
-      "invalidPasswordUpperCase": "Минимум 1 заглавная буква",
-      "invalidPasswordNumber": "Минимум 1 цифра",
-      "invalidPasswordSpecialChar": "Минимум 1 спецсимвол (!@#$%^&*_)",
+      "invalidPasswordLowerCase": "Пароль должен содержать хотя бы одну строчную букву",
+      "invalidPasswordUpperCase": "Пароль должен содержать хотя бы одну заглавную букву",
+      "invalidPasswordNumber": "Пароль должен содержать хотя бы одну цифру",
+      "invalidPasswordSpecialChar": "Пароль должен содержать хотя бы один специальный символ (например, !@#$%^&*_)",
       "passwordsDontMatch": "Пароли не совпадают",
       "confirmPasswordRequired": "Подтвердите пароль",
-      "offlineNotice": "Подключитесь к интернету для входа",
-      "400": "Email уже зарегистрирован. Используйте другой или войдите",
-      "403": "Регистрация отключена. Свяжитесь с поддержкой",
-      "500": "Ошибка сервера. Попробуйте позже"
+      "offlineNotice": "Вы офлайн. Подключитесь к интернету для регистрации.",
+      "400": "Этот email уже зарегистрирован. Используйте другой email или войдите.",
+      "403": "Создание аккаунта отключено. Свяжитесь с поддержкой, если это ошибка.",
+      "500": "Ошибка сервера. Попробуйте позже."
     }
   },
   "forgotPasswordScreen": {
-    "forgotPassword": "Забыли пароль?",
+    "forgotPassword": "Найти аккаунт",
     "email": "Почта",
     "emailPlaceholder": "Введите почту",
-    "sendResetLink": "Отправить ссылку",
+    "sendResetLink": "Продолжить",
     "sendingResetLink": "Отправка...",
-    "successMessage": "Ссылка для сброса отправлена. Проверьте почту.",
+    "successMessage": "Ссылка для сброса пароля отправлена на вашу почту. Проверьте ее!",
     "errors": {
       "emailRequired": "Введите почту",
       "invalidEmail": "Некорректная почта",
@@ -103,173 +131,227 @@
   },
   "homeScreen": {
     "title": "Orange⁺",
-    "searchPlaceholder": "Поиск",
-    "noItemFound": "Ничего не найдено, попробуйте снова.",
+    "searchPlaceholder": "Поиск ваших карт",
+    "noItemFound": "Карты не найдены. Попробуйте снова.",
     "manage": "Управление картой",
+    "linking": "Детали ссылки",
     "edit": "Редактировать карту",
-    "delete": "Переместить в корзину",
+    "delete": "Удалить",
     "syncing": "Синхронизация...",
     "deleting": "Удаление...",
-    "offline": "Нет соединения",
-    "online": "Снова в сети.",
+    "offline": "Вы офлайн",
+    "online": "Снова в сети",
     "confirmDeleteTitle": "Переместить в корзину?",
     "confirmDeleteMessage": "Вы уверены, что хотите переместить эту карту в корзину?",
     "cancel": "Отмена",
     "moveToTrash": "Переместить в корзину",
     "move": "Переместить",
-    "copied": "Ссылка скопирована",
     "fetchError": "Не удалось загрузить данные. Повторите попытку.",
     "syncError": "Не удалось синхронизировать. Повторите попытку.",
     "syncSuccess": "Синхронизировано успешно",
+    "copied": "Ссылка скопирована",
+    "wifi": "Детали Wi-Fi",
+    "connectButton": "Подключиться",
+    "passwordPlaceholder": "Введите пароль",
     "filters": {
       "all": "Все",
       "bank": "Банк",
-      "store": "Клуб",
-      "ewallet": "Кошелек"
+      "store": "Лояльность",
+      "ewallet": "Э-Кошелек"
     },
     "emptyCard": {
-      "header": "Ваши QR-коды\nВсе в одном месте",
-      "footer": "Создайте QR-код",
-      "footerButton": "Добавить",
-      "content": "Храните ваши банковские, кошельковые и клубные QR-коды в одном удобном месте."
+      "header": "Все ваши QR-коды\nТеперь в одном месте",
+      "footer": "Добавьте вашу первую карту!",
+      "footerButton": "Добавить карту",
+      "content": "Сохраняйте все ваши QR-коды здесь - от банковских карт, электронных кошельков, карт лояльности и многого другого. Организуйте и получайте к ним доступ легко в любое время и в любом месте."
     },
     "fab": {
-      "add": "Добавить",
-      "scan": "Сканировать",
-      "gallery": "Галерея"
+      "add": "Добавить карту",
+      "scan": "Сканировать код",
+      "gallery": "Выбрать изображение"
+    },
+    "linkingSheet": {
+      "title": "Ссылка на карту",
+      "share": "Поделиться",
+      "open": "Открыть",
+      "copy": "Копировать",
+      "warning": "Эта ссылка небезопасна"
+    }
+  },
+  "locationPermission": {
+    "title": "Требуется разрешение на доступ к местоположению",
+    "message": "Приложению нужен доступ к местоположению для сканирования сетей Wi-Fi. Пожалуйста, предоставьте разрешение в настройках.",
+    "requestButton": "Предоставить разрешение"
+  },
+  "wifiSheet": {
+    "copySSIDModal": {
+      "successTitle": "SSID скопирован",
+      "successDescription": "SSID скопирован в буфер обмена.",
+      "errorTitle": "Ошибка копирования",
+      "errorDescription": "Не удалось скопировать SSID."
+    },
+    "copyPasswordModal": {
+      "successTitle": "Пароль скопирован",
+      "successDescription": "Пароль скопирован в буфер обмена.",
+      "errorTitle": "Ошибка копирования",
+      "errorDescription": "Не удалось скопировать пароль."
+    },
+    "noSSIDError": "SSID недоступен.",
+    "invalidPasswordModal": {
+      "title": "Неверный пароль",
+      "description": "Пароль Wi-Fi должен содержать не менее 8 символов."
+    },
+    "wifiDisabledModal": {
+      "title": "Wi-Fi выключен",
+      "description": "Пожалуйста, включите Wi-Fi для подключения."
+    },
+    "connectionSuccessModal": {
+      "title": "Подключение успешно!",
+      "description": "Подключено к сети Wi-Fi."
+    },
+    "alreadyConnectedModal": {
+      "title": "Уже подключено!",
+      "description": "Вы уже подключены к этой сети."
+    },
+    "networkNotFoundModal": {
+      "title": "Сеть не найдена",
+      "description": "Не удалось найти сеть Wi-Fi с этим SSID."
+    },
+    "authErrorModal": {
+      "title": "Ошибка аутентификации",
+      "description": "Неверный пароль. Попробуйте снова."
+    },
+    "connectionErrorModal": {
+      "title": "Ошибка подключения",
+      "description": "Не удалось подключиться к сети Wi-Fi."
     }
   },
   "addScreen": {
-    "title": "Добавить карту",
+    "title": "Добавить новую карту",
     "type": "Тип карты",
     "bank": "Банк",
-    "store": "Магазин",
-    "ewallet": "Электронный кошелек",
+    "store": "Карта лояльности",
+    "ewallet": "Э-кошелек",
     "qr": "QR-код",
     "barcode": "Штрих-код",
     "image": "Изображение",
-    "saveButton": "Сохранить",
-    "categoryTitle": "Категория карты",
-    "categoryPlaceholder": "Введите категорию карты",
-    "storeCategory": "Магазин",
-    "ewalletCategory": "Электронный кошелек",
+    "saveButton": "Сохранить карту",
+    "categoryTitle": "Выберите тип карты",
+    "categoryPlaceholder": "Пример: Банк, Магазин, Э-кошелек",
+    "storeCategory": "Карта лояльности",
+    "ewalletCategory": "Э-кошелек",
     "bankCategory": "Банк",
     "nameTitle": "Название карты",
-    "namePlaceholder": "Введите название карты",
+    "namePlaceholder": "Пример: Карта лояльности, Подарочная карта...",
     "qrCodeTitle": "QR-код",
-    "qrCodePlaceholder": "Введите QR-код",
+    "qrCodePlaceholder": "Вставьте QR-код сюда",
     "barcodeTitle": "Штрих-код",
-    "barcodePlaceholder": "Введите штрих-код",
+    "barcodePlaceholder": "Вставьте штрих-код сюда",
     "imageTitle": "Изображение",
     "brandTitle": "Бренд",
-    "brandPlaceholder": "Введите бренд",
+    "brandPlaceholder": "Пример: Сбербанк, Пятерочка, ЮMoney...",
     "metadataTypeTitle": "Тип кода",
-    "metadataTypePlaceholder": "Выберите тип кода",
-    "metadataPlaceholder": "Введите информацию",
+    "metadataTypePlaceholder": "Выберите тип кода (QR, штрих-код...)",
+    "metadataPlaceholder": "Введите информацию о коде здесь",
     "accountNameTitle": "Имя владельца счета",
-    "accountNamePlaceholder": "Введите имя владельца счета",
-    "accountNumberTitle": "Номер счета",
-    "accountNumberPlaceholder": "Введите номер счета",
-    "saving": "Сохранение...",
+    "accountNamePlaceholder": "Введите имя на карте/счете",
+    "accountNumberTitle": "Номер счета/Номер карты",
+    "accountNumberPlaceholder": "Введите номер счета/карты",
+    "saving": "Сохранение карты...",
     "errors": {
-      "categoryRequired": "Необходимо указать категорию карты.",
-      "brandRequired": "Необходимо указать бренд.",
-      "metadataRequired": "Необходимо ввести информацию.",
-      "metadataTypeRequired": "Необходимо выбрать тип кода.",
-      "accountNameRequired": "Необходимо указать имя владельца счета.",
-      "accountNumberRequired": "Необходимо указать номер счета.",
-      "emptyFields": "Поля не могут быть пустыми.",
-      "invalidInput": "Неверные данные. Пожалуйста, проверьте еще раз.",
-      "saveFailed": "Не удалось сохранить карту. Пожалуйста, попробуйте позже.",
-      "offlineNotice": "Вы не в сети. Пожалуйста, подключитесь к Интернету.",
-      "timeout": "Время ожидания истекло. Проверьте подключение к сети.",
-      "invalidResponse": "Неверный ответ сервера. Пожалуйста, попробуйте позже.",
-      "storageError": "Произошла ошибка при сохранении информации о карте. Пожалуйста, попробуйте еще раз.",
-      "databaseError": "Произошла ошибка базы данных. Пожалуйста, попробуйте позже.",
-      "selectCategoryFirstMessage": "Сначала выберите тип карты."
+      "categoryRequired": "Сначала нужно выбрать тип карты!",
+      "brandRequired": "Пожалуйста, укажите бренд карты.",
+      "metadataRequired": "Пожалуйста, введите информацию о коде (QR, штрих-код...).",
+      "metadataTypeRequired": "Нужно выбрать тип кода (QR, штрих-код...).",
+      "accountNameRequired": "Пожалуйста, введите имя владельца счета.",
+      "accountNumberRequired": "Пожалуйста, введите номер счета/карты.",
+      "emptyFields": "Кажется, какая-то информация отсутствует, проверьте еще раз!",
+      "invalidInput": "Информация кажется неверной, проверьте еще раз!",
+      "saveFailed": "Извините, не удалось сохранить карту. Попробуйте позже!",
+      "offlineNotice": "Вы офлайн. Пожалуйста, подключитесь к интернету, чтобы добавить карту.",
+      "timeout": "Время ожидания запроса истекло. Проверьте подключение к сети.",
+      "invalidResponse": "Произошла ошибка, попробуйте позже.",
+      "storageError": "Ошибка сохранения карты. Попробуйте снова.",
+      "databaseError": "Ошибка базы данных. Попробуйте через несколько минут.",
+      "selectCategoryFirstMessage": "Сначала выберите тип карты!",
+      "emptyInputMessage": "Пожалуйста, введите информацию здесь.",
+      "submissionErrorTitle": "Упс, произошла ошибка!",
+      "submissionErrorMessage": "Не удалось сохранить информацию. Попробуйте снова!",
+      "ok": "OK"
     }
   },
   "editScreen": {
     "title": "Редактировать карту",
     "type": "Тип карты",
     "bank": "Банк",
-    "store": "Магазин",
-    "ewallet": "Электронный кошелек",
+    "store": "Карта лояльности",
+    "ewallet": "Э-кошелек",
     "qr": "QR-код",
     "barcode": "Штрих-код",
     "image": "Изображение",
-    "saveButton": "Сохранить",
-    "categoryTitle": "Категория карты",
-    "categoryPlaceholder": "Введите категорию карты",
-    "storeCategory": "Магазин",
-    "ewalletCategory": "Электронный кошелек",
+    "saveButton": "Сохранить изменения",
+    "categoryTitle": "Выберите тип карты",
+    "categoryPlaceholder": "Пример: Банк, Магазин, Э-кошелек",
+    "storeCategory": "Карта лояльности",
+    "ewalletCategory": "Э-кошелек",
     "bankCategory": "Банк",
     "nameTitle": "Название карты",
-    "namePlaceholder": "Введите название карты",
+    "namePlaceholder": "Пример: Карта лояльности, Подарочная карта...",
     "qrCodeTitle": "QR-код",
-    "qrCodePlaceholder": "Введите QR-код",
+    "qrCodePlaceholder": "Вставьте QR-код сюда",
     "barcodeTitle": "Штрих-код",
-    "barcodePlaceholder": "Введите штрих-код",
+    "barcodePlaceholder": "Вставьте штрих-код сюда",
     "imageTitle": "Изображение",
     "brandTitle": "Бренд",
-    "brandPlaceholder": "Введите бренд",
+    "brandPlaceholder": "Пример: Сбербанк, Пятерочка, ЮMoney...",
     "metadataTypeTitle": "Тип кода",
-    "metadataTypePlaceholder": "Выберите тип кода",
-    "metadataPlaceholder": "Введите информацию",
+    "metadataTypePlaceholder": "Выберите тип кода (QR, штрих-код...)",
+    "metadataPlaceholder": "Введите информацию о коде здесь",
     "accountNameTitle": "Имя владельца счета",
-    "accountNamePlaceholder": "Введите имя владельца счета",
-    "accountNumberTitle": "Номер счета",
-    "accountNumberPlaceholder": "Введите номер счета",
-    "saving": "Сохранение...",
+    "accountNamePlaceholder": "Введите имя на карте/счете",
+    "accountNumberTitle": "Номер счета/Номер карты",
+    "accountNumberPlaceholder": "Введите номер счета/карты",
+    "saving": "Сохранение изменений...",
     "errors": {
-      "categoryRequired": "Необходимо указать категорию карты.",
-      "brandRequired": "Необходимо указать бренд.",
-      "metadataRequired": "Необходимо ввести информацию.",
-      "metadataTypeRequired": "Необходимо выбрать тип кода.",
-      "accountNameRequired": "Необходимо указать имя владельца счета.",
-      "accountNumberRequired": "Необходимо указать номер счета.",
-      "emptyFields": "Поля не могут быть пустыми.",
-      "invalidInput": "Неверные данные. Пожалуйста, проверьте еще раз.",
-      "saveFailed": "Не удалось сохранить карту. Пожалуйста, попробуйте позже.",
-      "offlineNotice": "Вы не в сети. Пожалуйста, подключитесь к Интернету.",
-      "timeout": "Время ожидания истекло. Проверьте подключение к сети.",
-      "invalidResponse": "Неверный ответ сервера. Пожалуйста, попробуйте позже.",
-      "storageError": "Произошла ошибка при сохранении информации о карте. Пожалуйста, попробуйте еще раз.",
-      "databaseError": "Произошла ошибка базы данных. Пожалуйста, попробуйте позже.",
-      "selectCategoryFirstMessage": "Сначала выберите тип карты."
+      "categoryRequired": "Сначала нужно выбрать тип карты!",
+      "brandRequired": "Пожалуйста, укажите бренд карты.",
+      "metadataRequired": "Пожалуйста, введите информацию о коде (QR, штрих-код...).",
+      "metadataTypeRequired": "Нужно выбрать тип кода (QR, штрих-код...).",
+      "accountNameRequired": "Пожалуйста, введите имя владельца счета.",
+      "accountNumberRequired": "Пожалуйста, введите номер счета/карты.",
+      "emptyFields": "Кажется, какая-то информация отсутствует, проверьте еще раз!",
+      "invalidInput": "Информация кажется неверной, проверьте еще раз!",
+      "saveFailed": "Извините, не удалось сохранить изменения. Попробуйте позже!",
+      "offlineNotice": "Вы офлайн. Пожалуйста, подключитесь к интернету, чтобы сохранить изменения.",
+      "timeout": "Время ожидания запроса истекло. Проверьте подключение к сети.",
+      "invalidResponse": "Произошла ошибка, попробуйте позже.",
+      "storageError": "Ошибка сохранения изменений. Попробуйте снова.",
+      "databaseError": "Ошибка базы данных. Попробуйте через несколько минут.",
+      "selectCategoryFirstMessage": "Сначала выберите тип карты!",
+      "emptyInputMessage": "Пожалуйста, введите информацию здесь.",
+      "submissionErrorTitle": "Упс, произошла ошибка!",
+      "submissionErrorMessage": "Не удалось сохранить изменения. Попробуйте снова!",
+      "ok": "OK"
     }
-  },
-  "settingsScreen": {
-    "title": "Настройки",
-    "language": "Язык",
-    "about": "О компании Orange⁺",
-    "editProfile": "Редактировать профиль",
-    "changePassword": "Сменить пароль",
-    "changeEmail": "Сменить электронную почту",
-    "languageTitle": "Выберите язык",
-    "appTheme": "Оформление",
-    "cancel": "Отмена",
-    "logout": "Выйти",
-    "logingOut": "Выход...",
-    "confirmLogoutTitle": "Выйти?",
-    "confirmLogoutMessage": "Вы уверены, что хотите выйти?",
-    "confirmLogoutButton": "Выйти",
-    "appVersion": "версия:"
   },
   "scanScreen": {
     "join": "Подключиться",
     "join2": "Сеть",
     "goto": "Перейти",
-    "momoPayment": "Добавить MoMo QR"
+    "momoPayment": "QR-код MoMo",
+    "copied": "Скопировано",
+    "settings": "Настройки",
+    "wifi": "Сеть Wi-Fi",
+    "linking": "Ссылка"
   },
   "permissionScreen": {
     "cameraTitle": "Разрешить доступ к камере",
-    "imageTitle": "Разрешить доступ к галерее",
+    "imageTitle": "Разрешить доступ к фото",
     "locationTitle": "Разрешить доступ к местоположению",
-    "cameraSubtitle": "Для сканирования QR-кодов нам нужно разрешение на доступ к камере вашего устройства.",
-    "imageSubtitle": "Для сканирования QR-кодов с изображений нам нужно разрешение на доступ к вашей галерее.",
-    "locationSubtitle": "Для сканирования ближайших Wi-Fi сетей нам нужно разрешение на доступ к вашему местоположению. Вы можете отказаться, и сканирование Wi-Fi будет недоступно.",
-    "allowButton": "Разрешить доступ",
+    "cameraSubtitle": "Для сканирования QR-кодов приложению нужен доступ к вашей камере.",
+    "imageSubtitle": "Для сканирования QR-кодов с изображений приложению нужен доступ к вашим фото.",
+    "locationSubtitle": "Для сканирования ближайших сетей Wi-Fi приложению нужен доступ к вашему местоположению. Вы можете отказаться, но сканирование Wi-Fi будет недоступно.",
+    "allowButton": "Разрешить",
     "cancelButton": "Отклонить"
   },
   "onboardingScreen": {
@@ -282,20 +364,20 @@
     "subtitle3": "Доступ и управление вашими QR-кодами в любое время и в любом месте.",
     "finishButton": "Начать",
     "termsOfService": {
-      "agreementPrefix": "Нажимая «Продолжить», ты соглашаешься с",
-      "termsOfServiceLink": "Простыми правилами",
-      "privacyPolicyPrefix": "и уже глянул(а) нашу",
-      "privacyPolicyLink": "Политику конфиденциальности",
-      "termsOfServiceSheetTitle": "Парочка простых правил",
+      "agreementPrefix": "Продолжая, вы соглашаетесь с нашими",
+      "termsOfServiceLink": "Условиями обслуживания",
+      "privacyPolicyPrefix": "и ознакомились с нашей",
+      "privacyPolicyLink": "Политикой конфиденциальности",
+      "termsOfServiceSheetTitle": "Условия обслуживания",
       "termsOfServiceTitle": "Добро пожаловать в Orange⁺!",
-      "termsOfServiceDescription": "Правила нашего сообщества",
-      "termsOfServiceContent1": "Чтобы всем было комфортно пользоваться нашим приложением для сохранения QR-кодов, у нас есть несколько простых правил. Они помогают использовать приложение ответственно и защищают наше сообщество.",
-      "termsOfServiceContent2": "В общем, вот о чем мы просим:\n*Не нарушай закон и будь вежливым. Никакого вредного или неприемлемого контента.\n* Уважай чужую конфиденциальность. Всегда спрашивай разрешения, прежде чем делиться QR-кодами других.\n* Береги свой аккаунт как зеницу ока. Не передавай его никому, и все будет отлично!",
+      "termsOfServiceDescription": "Правила сообщества",
+      "termsOfServiceContent1": "Чтобы обеспечить положительный опыт для всех пользователей, пожалуйста, следуйте этим правилам сообщества:",
+      "termsOfServiceContent2": "Вкратце:\n*Не занимайтесь незаконной или вредоносной деятельностью. Не публикуйте неприемлемый контент.\n* Уважайте конфиденциальность. Не делитесь чужими QR-кодами без разрешения.\n* Защищайте свой аккаунт. Не делитесь своей информацией для входа.",
       "privacyPolicySheetTitle": "Политика конфиденциальности",
-      "privacyPolicyTitle": "Твои данные, наша забота",
-      "privacyPolicyDescription": "Обещаем конфиденциальность",
-      "privacyPolicyContent1": "Мы очень ценим твою конфиденциальность. Собираем только самую необходимую информацию, чтобы приложение работало как часы и становилось еще лучше. Например, имя и адрес электронной почты — для персонализации аккаунта и связи с тобой.",
-      "privacyPolicyContent2": "\n*Твои данные остаются у нас. Мы никому их не передадим без твоего разрешения.\n* Используем самые надежные меры безопасности, чтобы защитить твою информацию.\n* Ты полностью контролируешь ситуацию. Захочешь удалить аккаунт — без проблем."
+      "privacyPolicyTitle": "Ваши данные, Orange⁺ защищает",
+      "privacyPolicyDescription": "Наше обещание конфиденциальности",
+      "privacyPolicyContent1": "Orange⁺ обязуется защищать вашу конфиденциальность. Мы собираем только необходимую информацию для улучшения вашего опыта использования приложения, такую как имя и email для персонализации вашего аккаунта и связи с вами.",
+      "privacyPolicyContent2": "Мы обязуемся:\n*Обеспечивать безопасность ваших данных. Не передавать личную информацию без согласия.\n* Использовать передовые меры безопасности для защиты вашей информации.\n* Предоставлять вам полный контроль над вашими данными, включая право на удаление вашего аккаунта."
     }
   },
   "detailsScreen": {
@@ -303,23 +385,115 @@
     "delete": "Удалить",
     "moveToTrash": "Переместить в корзину",
     "nearbyLocation": "Ближайшее местоположение",
-    "createQrCode": "QR-код для оплаты",
+    "createQrCode": "Создать QR-код для оплаты",
     "receivePlaceholder": "Введите сумму для получения",
     "generatingQRCode": "Создание QR-кода...",
-    "bankTransfer": "Банковский перевод"
+    "failedToOpenGoogleMaps": "Не удалось открыть Google Карты.",
+    "bankTransfer": "Перевести через",
+    "searchBank": "Введите название банка",
+    "transferMessage": "Перевести на",
+    "copiedToClipboard": "Скопировано",
+    "cannotOpenBankApp": "Не удается открыть банковское приложение.",
+    "failedToOpenBankApp": "Ошибка при открытии банковского приложения.",
+    "generateError": "Ошибка при создании QR-кода.",
+    "offlineMessage": "Вы офлайн."
+  },
+  "settingsScreen": {
+    "title": "Настройки",
+    "language": "Язык",
+    "about": "О Orange⁺",
+    "editProfile": "Редактировать профиль",
+    "changePassword": "Сменить пароль",
+    "changeEmail": "Сменить адрес электронной почты",
+    "languageTitle": "Выберите язык",
+    "appTheme": "Оформление",
+    "cancel": "Отмена",
+    "logout": "Выйти",
+    "logingOut": "Выход...",
+    "confirmLogoutTitle": "Выйти?",
+    "confirmLogoutMessage": "Вы уверены, что хотите выйти?",
+    "confirmLogoutButton": "Выйти",
+    "appVersion": "Версия:"
+  },
+  "editAvatarScreen": {
+    "title": "Редактировать аватар",
+    "save": "Сохранить",
+    "gender": "Пол",
+    "faceColor": "Цвет лица",
+    "earSize": "Размер ушей",
+    "hairStyle": "Прическа",
+    "hairColor": "Цвет волос",
+    "hatStyle": "Головной убор",
+    "hatColor": "Цвет головного убора",
+    "eyeStyle": "Тип глаз",
+    "glassesStyle": "Тип очков",
+    "noseStyle": "Тип носа",
+    "mouthStyle": "Тип рта",
+    "shirtStyle": "Тип рубашки",
+    "shirtColor": "Цвет рубашки",
+    "options": {
+      "sex": {
+        "man": "Мужчина",
+        "woman": "Женщина"
+      },
+      "earSize": {
+        "small": "Маленькие",
+        "big": "Большие"
+      },
+      "hairStyle": {
+        "normal": "Обычная",
+        "thick": "Густые",
+        "mohawk": "Ирокез",
+        "womanLong": "Длинные волосы",
+        "womanShort": "Короткие волосы"
+      },
+      "hatStyle": {
+        "none": "Нет",
+        "beanie": "Шапка",
+        "turban": "Тюрбан"
+      },
+      "eyeStyle": {
+        "circle": "Круглые",
+        "oval": "Овальные",
+        "smile": "Улыбающиеся"
+      },
+      "glassesStyle": {
+        "none": "Нет",
+        "round": "Круглые",
+        "square": "Квадратные"
+      },
+      "noseStyle": {
+        "short": "Короткий",
+        "long": "Длинный",
+        "round": "Круглый"
+      },
+      "mouthStyle": {
+        "laugh": "Смех",
+        "smile": "Улыбка",
+        "peace": "Мир"
+      },
+      "shirtStyle": {
+        "hoody": "Худи",
+        "short": "Короткий рукав",
+        "polo": "Поло"
+      }
+    },
+    "customColor": "Пользовательский цвет",
+    "enterCustomHexCode": "Введите пользовательский hex-код цвета",
+    "hexCode": "Hex-код"
   },
   "languageScreen": {
     "title": "Язык",
     "english": "Английский",
     "vietnamese": "Вьетнамский",
     "russian": "Русский",
-    "system": "По системе"
+    "system": "Как в системе"
   },
   "themeScreen": {
-    "title": "Тема",
-    "light": "Светлая",
-    "dark": "Тёмная",
-    "system": "Системные настройки",
-    "successMessage": "Перезапустите приложение для изменений."
+    "title": "Оформление",
+    "light": "Светлая тема",
+    "dark": "Темная тема",
+    "system": "Как в системе",
+    "successMessage": "Пожалуйста, перезапустите приложение, чтобы увидеть изменения."
   }
 }

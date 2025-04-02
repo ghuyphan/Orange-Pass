@@ -161,119 +161,102 @@ function HomeScreen() {
 
   // Initialize data
   useEffect(() => {
+
     if (!userId) {
-      // If no user ID, potentially clear existing data or set empty state
-      // dispatch(setQrData([])); // Optional: Clear data if user logs out
-      setIsLoading(false); // Ensure loading is off if no user
+      setIsLoading(false);
       setSyncStatus('idle');
-      return; // Don't proceed without userId
+      return; // Stop execution
     }
 
-    let isMounted = true; // Flag to prevent state updates on unmounted component
+    let isMounted = true; // Flag to prevent state updates after unmount
 
     const initializeData = async () => {
       // --- Phase 1: Load and Display Local Data Quickly ---
       setIsLoading(true);
-      setSyncStatus('idle'); // Reset sync status on new load
 
+      let localLoadSuccess = false;
       try {
         const currentLocalData = await getQrCodesByUserId(userId);
-        if (isMounted) {
-          dispatch(setQrData(currentLocalData));
-          // IMPORTANT: Stop the main loading indicator NOW
-          setIsLoading(false);
-        } else {
-           // If component unmounted before local data loaded, just stop loading
-           setIsLoading(false);
-           return; // Exit early
+
+        if (!isMounted) {
+          // No state updates, but ensure loading stops in finally
+          return; // Exit initializeData early
         }
+
+        dispatch(setQrData(currentLocalData));
+        setSyncStatus('idle'); // Reset sync status after successful local load
+        localLoadSuccess = true;
+
       } catch (error) {
-        console.error('Error during initial local data load:', error);
         if (isMounted) {
-          // Ensure loading stops even if local fetch fails
-          setIsLoading(false);
-          setSyncStatus('error'); // Indicate an error occurred during load
-          showToast(t('homeScreen.loadError')); // Show error message
+          setSyncStatus('error'); // Indicate error state
+          showToast(t('homeScreen.loadError'));
         }
-        // Stop execution here if initial load fails
-        return;
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
 
-      // --- Phase 2: Schedule Network Sync After Interactions ---
-      const interactionHandle = InteractionManager.runAfterInteractions(async () => {
-        // Check mount status *again* as the callback runs asynchronously
+      // --- Phase 2: Schedule Network Sync (Only if Phase 1 succeeded & mounted) ---
+      if (!localLoadSuccess || !isMounted) {
+        return; // Don't proceed if local load failed or component unmounted
+      }
+
+      // No need to store the handle if not cancelling
+      InteractionManager.runAfterInteractions(async () => {
         if (!isMounted) {
-            console.log('Skipping sync: Component unmounted before interaction callback.');
-            return;
+          return;
         }
 
-        console.log('Interactions finished, proceeding with sync check.');
+        if (syncStatus === 'error') {
+          return
+        }
 
-        // Only proceed with sync logic if online
-        if (!isOffline) {
-          try {
-            // Check if sync is necessary
-            const unsyncedCodes = await getUnsyncedQrCodes(userId);
-            const localDbExists = await hasLocalData(userId);
-            const needsSync = !localDbExists || unsyncedCodes.length > 0;
+        if (isOffline) {
+          return;
+        }
 
-            if (needsSync) {
-              console.log('Sync needed, calling syncWithServer...');
-              // Call the stable sync function. It handles its own status updates ('syncing', 'synced', 'error').
-              // No need to set isLoading here, as the main loading is finished.
-              // syncWithServer will update the syncStatus.
-              await syncWithServer(userId);
-              // syncWithServer should ideally handle setting 'synced' or 'error' status internally.
-              // If syncWithServer *doesn't* reliably set the final state, you might need:
-              // if (isMounted) { /* check sync outcome if needed */ }
-            } else {
-              // Already synced or no need to sync based on checks
-              console.log('No sync needed based on local checks.');
-              if (isMounted) {
-                setSyncStatus('synced'); // Indicate it's up-to-date
-                // Reset status back to idle after a short delay
-                const timer = setTimeout(() => {
-                  if (isMounted) setSyncStatus('idle');
-                }, 3000);
-                // NOTE: Cleaning up this timer if the component unmounts *before*
-                // the timeout completes, but *after* this InteractionManager task runs,
-                // is complex. The isMounted check inside setTimeout is the main guard.
-              }
+        try {
+          const unsyncedCodes = await getUnsyncedQrCodes(userId);
+          const localDbExists = await hasLocalData(userId); // Check existence again, might be redundant if Phase 1 guarantees data, but safe
+          const needsSync = !localDbExists || unsyncedCodes.length > 0;
+
+          if (needsSync) {
+            await syncWithServer(userId);
+          } else {
+            if (isMounted) {
+              setSyncStatus('synced'); // Indicate up-to-date status
+              // No need to store timer ID if not clearing it
+              setTimeout(() => {
+                // Reset to idle only if still mounted and status hasn't changed
+                // (e.g., user didn't trigger manual sync in the meantime)
+                if (isMounted && syncStatus === 'synced') {
+                  setSyncStatus('idle');
+                }
+              }, 3000);
             }
-          } catch (error) {
-             // Catch errors specifically from the sync check/trigger process
-             console.error('Error during post-interaction sync process:', error);
-             if (isMounted) {
-               setSyncStatus('error'); // Set error status if sync check/trigger fails
-               // Optionally show a specific toast for sync failure
-               // showToast(t('homeScreen.syncError')); // syncWithServer likely already does this
-             }
           }
-        } else {
-          // Offline when interaction task ran, sync not possible
-          console.log('Skipping sync check: App is offline.');
+        } catch (error) {
           if (isMounted) {
-            setSyncStatus('idle'); // Indicate idle status as sync wasn't attempted
+            setSyncStatus('error');
+            // Maybe show a specific toast? Be careful not to double-toast if syncWithServer failed.
+            // showToast(t('homeScreen.syncCheckError'));
           }
         }
-      }); // End InteractionManager.runAfterInteractions
+      }); // End InteractionManager
     };
 
     initializeData();
 
     // --- Cleanup Function ---
     return () => {
-      console.log('HomeScreen useEffect cleanup running.');
+      console.log('[Init Effect] Cleanup running.');
       isMounted = false;
-      // InteractionManager tasks cannot be directly cancelled by standard means
-      // once runAfterInteractions is called. The `isMounted` flag is the
-      // primary way to prevent state updates after unmount within the async callbacks.
-      // If you started timers *outside* the InteractionManager callback that need cleanup,
-      // clear them here. Timers started *inside* the callback rely on the isMounted check.
+      // No timers or handles requiring explicit cleanup based on this logic
     };
-    // Dependencies: Re-run if userId changes or network status changes.
-    // syncWithServer and showToast are assumed to be stable due to useCallback.
-  }, [userId]); 
+
+  }, [userId]);
 
   // Network status toasts
   const prevIsOffline = useRef(isOffline);
@@ -466,7 +449,7 @@ function HomeScreen() {
 
   const handleFilterChange = useCallback((newFilter: string) => {
     setFilter(newFilter);
-    filterQrCodesByType(userId, newFilter).then((filteredData) => dispatch(setQrData(filteredData)));
+    // filterQrCodesByType(userId, newFilter).then((filteredData) => dispatch(setQrData(filteredData)));
   }, [userId, dispatch]);
 
   // Optimize renderItem with useCallback
@@ -492,31 +475,82 @@ function HomeScreen() {
 
   // Optimize onDragEnd with useCallback
   const onDragEnd = useCallback(
-    async ({ data }: { data: QRRecord[] }) => {
+    async ({ data: reorderedFilteredData }: { data: QRRecord[] }) => {
       try {
         triggerHapticFeedback();
-        const hasOrderChanged = data.some((item, index) => item.qr_index !== index);
-        if (!hasOrderChanged) {
-          setIsActive(false);
-          return;
+        setIsActive(false); // Set inactive immediately
+
+        // Get the full list *before* this update attempt
+        // Assuming `qrData` holds the latest full list from Redux state
+        const currentFullData = qrData;
+
+        // If the filter is 'all', the original logic works because
+        // reorderedFilteredData IS the full list.
+        if (filter === 'all') {
+          const hasOrderChanged = reorderedFilteredData.some(
+            (item, index) => item.qr_index !== index
+          );
+          if (!hasOrderChanged) {
+            return; // No change, exit early
+          }
+
+          const updatedData = reorderedFilteredData.map((item, index) => ({
+            ...item,
+            qr_index: index,
+            updated: new Date().toISOString(),
+          }));
+
+          dispatch(setQrData(updatedData));
+          await updateQrIndexes(updatedData);
+        } else {
+          // --- Filter is active: Merge changes into the full list ---
+
+          // 1. Create a map of the reordered *filtered* items for quick lookup
+          const reorderedFilteredMap = new Map(
+            reorderedFilteredData.map((item) => [item.id, item])
+          );
+
+          // 2. Create the new full list by iterating through the *current* full list
+          //    and placing the reordered items in their new relative positions.
+          let filteredIndex = 0;
+          const mergedData = currentFullData.map((originalItem) => {
+            // Check if this item was part of the filter that was just dragged
+            if (reorderedFilteredMap.has(originalItem.id)) {
+              // If yes, take the item from the reordered list in its new sequence
+              const itemToReturn = reorderedFilteredData[filteredIndex];
+              filteredIndex++;
+              return itemToReturn;
+            } else {
+              // If no, keep the original item (it wasn't visible/dragged)
+              return originalItem;
+            }
+          });
+
+          // 3. Re-index the *entire* merged list sequentially and update timestamps
+          const finalUpdatedData = mergedData.map((item, index) => ({
+            ...item,
+            qr_index: index,
+            updated: new Date().toISOString(), // Update timestamp for all items in the final list
+          }));
+
+          // 4. Dispatch the new *full* list to Redux
+          dispatch(setQrData(finalUpdatedData));
+
+          // 5. Update the database with the new *full* list and indices
+          await updateQrIndexes(finalUpdatedData);
         }
-
-        const updatedData = data.map((item, index) => ({
-          ...item,
-          qr_index: index,
-          updated: new Date().toISOString(),
-        }));
-
-        dispatch(setQrData(updatedData));
-        await updateQrIndexes(updatedData);
       } catch (error) {
         console.error('Error updating QR indexes:', error);
+        // Optionally: Show an error toast to the user
+        // showToast(t('homeScreen.reorderError'));
+        // Consider reverting state if needed, though complex
       } finally {
-        setIsActive(false);
+        // Already set isActive to false at the beginning of try block
       }
     },
-    [dispatch]
+    [dispatch, qrData, filter] // Add qrData and filter as dependencies
   );
+
 
   // Toast handler
   const showToast = useCallback((message: string) => {
@@ -708,7 +742,6 @@ function HomeScreen() {
             initialNumToRender={10}
             maxToRenderPerBatch={5}
             windowSize={5}
-            removeClippedSubviews={true}
             data={[...filteredData]}
             renderItem={renderItem}
             keyExtractor={(item) => `draggable-item-${item.id}`}

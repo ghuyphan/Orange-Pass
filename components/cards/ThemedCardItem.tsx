@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import QRCode from "react-native-qrcode-svg";
-import Barcode from "react-native-barcode-svg";
+import Barcode from "react-native-barcode-svg"; // Ensure defaultProps warning is fixed in this component's source
 import { LinearGradient } from "expo-linear-gradient";
 import { getIconPath } from "@/utils/returnIcon";
 import { returnItemData } from "@/utils/returnItemData";
@@ -29,10 +29,25 @@ const MIDPOINT_COUNT = 6;
 const QR_SIZE = getResponsiveWidth(16.8);
 const BARCODE_WIDTH = getResponsiveWidth(33.6);
 const BARCODE_HEIGHT = getResponsiveWidth(16.8);
+const DEFAULT_GRADIENT_START = "#FAF3E7";
+const DEFAULT_GRADIENT_END = "#D6C4AF";
 
 // Create animated component once outside of component
 const ReanimatedLinearGradient =
   Animated.createAnimatedComponent(LinearGradient);
+
+// Define a default structure for itemData using preferred fallback colors
+const defaultItemData = {
+  name: "...", // Use "..." as placeholder name
+  color: { light: DEFAULT_GRADIENT_START, dark: DEFAULT_GRADIENT_END }, // Default light color
+  accent_color: { light: DEFAULT_GRADIENT_END, dark: DEFAULT_GRADIENT_START }, // Default accent color
+  type: "store", // Provide a default type
+  // Add any other properties expected from returnItemData with defaults if necessary
+  // e.g., bin: ""
+};
+
+// Define a default icon path or handle it in getIconPath
+const defaultIconPath = null; // Or require a placeholder image: require('@/assets/images/placeholder-icon.png');
 
 export type ThemedCardItemProps = {
   isActive?: boolean;
@@ -66,18 +81,28 @@ const ThemedCardItem = memo(function ThemedCardItem({
   cardHolderStyle
 }: ThemedCardItemProps): JSX.Element {
   // Derived data from the code using memoization
-  const itemData = useMemo(() => returnItemData(code), [code]);
+  // Use logical OR (||) to provide defaultItemData if returnItemData is falsy
+  const itemData = useMemo(
+    () => returnItemData(code) || defaultItemData,
+    [code]
+  );
+
+  // Now destructuring is safe because itemData is guaranteed to be an object
   const { name, color, accent_color, type: itemDataType } = itemData;
 
   const isDefaultCode = useMemo(() => code === "N/A", [code]);
 
   const cardType = useMemo(() => {
+    // Prioritize the explicitly passed 'type' prop
     if (type) return type;
+    // Fallback to the type from itemData (which might be the default 'store')
     if (itemDataType) return itemDataType;
+    // Final fallback based on isDefaultCode (less likely needed now)
     return isDefaultCode ? "bank" : "store";
   }, [type, itemDataType, isDefaultCode]);
 
-  const iconPath = useMemo(() => getIconPath(code), [code]);
+  // Use a default icon path if needed, or ensure getIconPath handles unknown codes gracefully
+  const iconPath = useMemo(() => getIconPath(code) || defaultIconPath, [code]);
 
   const accountDisplayName = useMemo(() => {
     if (cardType !== "store" && accountNumber) {
@@ -88,14 +113,16 @@ const ThemedCardItem = memo(function ThemedCardItem({
   }, [cardType, accountNumber]);
 
   const displayMetadata = useMemo(() => {
-    return !isDefaultCode && metadata ? metadata : "";
+    // Ensure metadata is treated as string even if null/undefined initially
+    const safeMetadata = metadata || "";
+    // Don't display metadata if it's the default code or metadata is empty
+    return !isDefaultCode && safeMetadata ? safeMetadata : "";
   }, [metadata, isDefaultCode]);
 
   // Memoize the footer text so that we do not re-calculate it each render
   const footerText = useMemo(() => {
-    // Only show text if iconPath is not a specific value (124) –
-    // Note: adjust this check according to your actual logic.
-    if (iconPath !== 124 && cardType) {
+    // Check if iconPath is valid before comparing (adjust 124 if needed)
+    if (iconPath && iconPath !== 124 && cardType) {
       return cardType === "store" ? displayMetadata : accountDisplayName;
     }
     return "";
@@ -118,10 +145,11 @@ const ThemedCardItem = memo(function ThemedCardItem({
       placeholderWidth.value = QR_SIZE;
       placeholderHeight.value = QR_SIZE;
     }
-  }, [metadata_type]);
+  }, [metadata_type, placeholderWidth, placeholderHeight]); // Added dependencies
 
   // Memoize the metadata content (QR code or Barcode or placeholder)
   const metadataContent = useMemo(() => {
+    // Use the safe displayMetadata which defaults to ''
     if (!displayMetadata) {
       return (
         <Animated.View
@@ -133,14 +161,15 @@ const ThemedCardItem = memo(function ThemedCardItem({
       return (
         <QRCode
           value={displayMetadata}
-          size={getResponsiveWidth(18)}
+          size={QR_SIZE} // Use constant for consistency
         />
       );
     }
+    // Ensure Barcode component handles empty string gracefully if displayMetadata can be ''
     return (
       <Barcode
-        height={getResponsiveHeight(8.5)}
-        maxWidth={getResponsiveWidth(31)}
+        height={BARCODE_HEIGHT} // Use constant
+        maxWidth={BARCODE_WIDTH} // Use constant
         value={displayMetadata}
         format="CODE128"
       />
@@ -153,11 +182,12 @@ const ThemedCardItem = memo(function ThemedCardItem({
 
   const gradientColors = useMemo(
     () =>
+      // Use optional chaining for safety, though defaults make it less critical now
       returnMidpointColors(
-        color.light,
-        accent_color.light,
+        color?.light,
+        accent_color?.light,
         MIDPOINT_COUNT
-      ) || ["#FAF3E7", "#D6C4AF"],
+      ) || [color.light, accent_color.light], // Fallback to the current (potentially default) colors
     [color, accent_color]
   );
 
@@ -172,18 +202,24 @@ const ThemedCardItem = memo(function ThemedCardItem({
       <View style={styles.cardHeader}>
         <View style={styles.leftHeaderContainer}>
           <View style={styles.logoContainer}>
-            <Image
-              source={iconPath}
-              style={styles.logo}
-              resizeMode="contain"
-            />
+            {/* Conditionally render Image only if iconPath is valid */}
+            {iconPath ? (
+              <Image
+                source={iconPath}
+                style={styles.logo}
+                resizeMode="contain"
+              />
+            ) : (
+              // Optional: Render a placeholder icon/view if iconPath is null/defaultIconPath
+              <View style={styles.logo} />
+            )}
           </View>
           <Text
             numberOfLines={1}
             ellipsizeMode="tail"
             style={styles.cardName}
           >
-            {name}
+            {name} {/* name is now guaranteed to be a string ("..." if default) */}
           </Text>
         </View>
 
@@ -215,7 +251,7 @@ const ThemedCardItem = memo(function ThemedCardItem({
             ellipsizeMode="tail"
             style={[styles.cardHolderName, cardHolderStyle]}
           >
-            {accountName}
+            {accountName || ""} {/* Ensure accountName is string */}
           </Text>
 
           {cardType && (
@@ -229,6 +265,7 @@ const ThemedCardItem = memo(function ThemedCardItem({
           )}
         </View>
 
+        {/* Ensure qrContainer styles accommodate the placeholder */}
         <View style={styles.qrContainer}>{metadataContent}</View>
       </View>
 
@@ -308,7 +345,8 @@ const styles = StyleSheet.create({
     borderRadius: getResponsiveWidth(6),
     backgroundColor: "white",
     justifyContent: "center",
-    alignItems: "center"
+    alignItems: "center",
+    overflow: "hidden" // Keep logo contained
   },
   logo: {
     width: "60%",
@@ -321,35 +359,38 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-end",
-    pointerEvents: "none"
+    pointerEvents: "none" // Keep this if interactions should go through the Pressable wrapper
   },
   footerLeft: {
-    flexDirection: "column"
+    flexDirection: "column",
+    justifyContent: "flex-end", // Align text towards the bottom
+    flexShrink: 1, // Allow text to shrink if needed
+    paddingRight: getResponsiveWidth(1) // Add some space between text and QR
   },
   cardHolderName: {
     color: "white",
     fontSize: getResponsiveFontSize(15),
     fontWeight: "600",
-    maxWidth: getResponsiveWidth(54)
+    maxWidth: getResponsiveWidth(54) // Adjust as needed
   },
   cardType: {
     color: "rgba(255,255,255,0.7)",
     fontSize: getResponsiveFontSize(12),
     marginTop: getResponsiveHeight(0.6),
-    maxWidth: getResponsiveWidth(32),
+    maxWidth: getResponsiveWidth(32), // Adjust as needed
     overflow: "hidden"
   },
   qrContainer: {
     backgroundColor: "white",
     borderRadius: getResponsiveWidth(2),
-    padding: getResponsiveWidth(2)
+    padding: getResponsiveWidth(1.5), // Slightly reduced padding
+    alignSelf: "flex-end" // Align to the bottom right of the footer
   },
   qrPlaceholder: {
-    width: QR_SIZE,
-    height: QR_SIZE,
-    backgroundColor: "white",
-    borderRadius: getResponsiveWidth(2),
-    padding: getResponsiveWidth(2)
+    // Dimensions are applied by animatedPlaceholderStyle
+    // backgroundColor: "#E0E0E0", // Light grey placeholder background
+    borderRadius: getResponsiveWidth(1.5) // Match container's padding/radius
+    // No explicit padding needed here, size comes from animation
   },
   dragHandle: {
     position: "absolute",
@@ -357,10 +398,11 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     alignItems: "center",
+    paddingBottom: getResponsiveHeight(0.5), // Add slight padding if needed
     pointerEvents: "none"
   },
   pressableContainer: {
-    borderRadius: getResponsiveWidth(5),
+    borderRadius: getResponsiveWidth(4), // Match cardContainer borderRadius
     overflow: "hidden"
   }
 });

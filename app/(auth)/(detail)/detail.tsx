@@ -402,8 +402,7 @@ const DetailScreen = () => {
         },
       ]}
       contentContainerStyle={styles.container}
-      // extraScrollHeight={getResponsiveHeight(12)}  // Consider adding this back *if* content is obscured.
-      // extraHeight={getResponsiveHeight(24)}      //  Less likely to be needed.
+      // extraScrollHeight={-getResponsiveHeight(10)} // Adjust this negative value (-5, -15, etc.)
       enableOnAndroid
       showsVerticalScrollIndicator={false}
     >
@@ -636,7 +635,7 @@ const DetailScreen = () => {
 
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
+    // flexGrow: 1,
     paddingHorizontal: getResponsiveWidth(3.6),
   },
   headerWrapper: {

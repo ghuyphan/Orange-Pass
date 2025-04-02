@@ -150,7 +150,6 @@ export default function RootLayout() {
   const prepareApp = useCallback(async () => {
     if (initializationRan.current) return;
     initializationRan.current = true;
-    console.log(LOG_PREFIX, 'Starting app preparation...'); // Keep high-level log
 
     try {
       // Run non-dependent checks concurrently
@@ -163,7 +162,6 @@ export default function RootLayout() {
       // Run auth check (depends on onboarding status)
       const authStatus = await checkAuthStatus(onboardingStatus);
 
-      console.log(LOG_PREFIX, 'Core preparation finished.'); // Keep high-level log
       setAppState({
         isAppReady: true, // Ready to render and hide splash
         isAuthenticated: authStatus,
@@ -257,8 +255,6 @@ export default function RootLayout() {
       } else { // Onboarding done, not authenticated, no quick login
         targetRoute = '/login';
       }
-
-      console.log(LOG_PREFIX, `Navigating to initial route: ${targetRoute}`); // Keep navigation log
       router.replace(targetRoute); // Use replace to avoid splash/loading state in back stack
 
     }

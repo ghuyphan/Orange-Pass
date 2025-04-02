@@ -33,10 +33,17 @@
     "passwordPlaceholder": "Password",
     "createAccount": "Create new account",
     "useOtherAccount": "Use another account",
+    "chooseAccount": "Choose account",
+    "switchAccount": "Switch account",
+    "cancel": "Cancel",
     "errors": {
       "required": "Please enter your password",
       "passwordTooShort": "Password is too short",
-      "invalidCredentials": "Invalid login credentials."
+      "invalidCredentials": "Invalid login credentials.",
+      "quickLoginFailed": "Quick login failed. Please enter your password.",
+      "noAccountSelected": "Please select an account.",
+      "noUserIDSelected": "No account selected.",
+      "passwordRequired": "Please enter your password."
     }
   },
   "quickLoginPrompt": {
@@ -171,6 +178,54 @@
       "warning": "This link is not secure"
     }
   },
+  "locationPermission": {
+    "title": "Location Permission Required",
+    "message": "The app needs location access to scan for Wi-Fi networks. Please grant permission in settings.",
+    "requestButton": "Grant Permission"
+  },
+  "wifiSheet": {
+    "copySSIDModal": {
+      "successTitle": "SSID Copied",
+      "successDescription": "SSID has been copied to the clipboard.",
+      "errorTitle": "Copy Failed",
+      "errorDescription": "Could not copy SSID."
+    },
+    "copyPasswordModal": {
+      "successTitle": "Password Copied",
+      "successDescription": "Password has been copied to the clipboard.",
+      "errorTitle": "Copy Failed",
+      "errorDescription": "Could not copy password."
+    },
+    "noSSIDError": "No SSID available.",
+    "invalidPasswordModal": {
+      "title": "Invalid Password",
+      "description": "Wi-Fi password must be at least 8 characters long."
+    },
+    "wifiDisabledModal": {
+      "title": "Wi-Fi is Off",
+      "description": "Please turn on Wi-Fi to connect."
+    },
+    "connectionSuccessModal": {
+      "title": "Connection Successful!",
+      "description": "Connected to the Wi-Fi network."
+    },
+    "alreadyConnectedModal": {
+      "title": "Already Connected!",
+      "description": "You are already connected to this network."
+    },
+    "networkNotFoundModal": {
+      "title": "Network Not Found",
+      "description": "Could not find a Wi-Fi network with this SSID."
+    },
+    "authErrorModal": {
+      "title": "Authentication Error",
+      "description": "Incorrect password. Please try again."
+    },
+    "connectionErrorModal": {
+      "title": "Connection Error",
+      "description": "Could not connect to the Wi-Fi network."
+    }
+  },
   "addScreen": {
     "title": "Add New Card",
     "type": "Card Type",
@@ -283,7 +338,11 @@
     "join": "Join",
     "join2": "Network",
     "goto": "Go to",
-    "momoPayment": "MoMo QR Code"
+    "momoPayment": "MoMo QR Code",
+    "copied": "Copied",
+    "settings": "Settings",
+    "wifi": "Wi-Fi Network",
+    "linking": "Link"
   },
   "permissionScreen": {
     "cameraTitle": "Allow Camera Access",
@@ -333,7 +392,11 @@
     "bankTransfer": "Transfer with",
     "searchBank": "Enter bank name",
     "transferMessage": "Transfer to",
-    "copiedToClipboard": "Copied"
+    "copiedToClipboard": "Copied",
+    "cannotOpenBankApp": "Cannot open bank app.",
+    "failedToOpenBankApp": "Failed to open bank app.",
+    "generateError": "Error generating QR code.",
+    "offlineMessage": "You are offline."
   },
   "settingsScreen": {
     "title": "Settings",
@@ -351,6 +414,73 @@
     "confirmLogoutMessage": "Are you sure you want to logout?",
     "confirmLogoutButton": "Logout",
     "appVersion": "Version:"
+  },
+  "editAvatarScreen": {
+    "title": "Edit Avatar",
+    "save": "Save",
+    "gender": "Gender",
+    "faceColor": "Face Color",
+    "earSize": "Ear Size",
+    "hairStyle": "Hair Style",
+    "hairColor": "Hair Color",
+    "hatStyle": "Hat Style",
+    "hatColor": "Hat Color",
+    "eyeStyle": "Eye Style",
+    "glassesStyle": "Glasses Style",
+    "noseStyle": "Nose Style",
+    "mouthStyle": "Mouth Style",
+    "shirtStyle": "Shirt Style",
+    "shirtColor": "Shirt Color",
+    "options": {
+      "sex": {
+        "man": "Man",
+        "woman": "Woman"
+      },
+      "earSize": {
+        "small": "Small",
+        "big": "Big"
+      },
+      "hairStyle": {
+        "normal": "Normal",
+        "thick": "Thick",
+        "mohawk": "Mohawk",
+        "womanLong": "Long Hair",
+        "womanShort": "Short Hair"
+      },
+      "hatStyle": {
+        "none": "None",
+        "beanie": "Beanie",
+        "turban": "Turban"
+      },
+      "eyeStyle": {
+        "circle": "Circle",
+        "oval": "Oval",
+        "smile": "Smile"
+      },
+      "glassesStyle": {
+        "none": "None",
+        "round": "Round",
+        "square": "Square"
+      },
+      "noseStyle": {
+        "short": "Short",
+        "long": "Long",
+        "round": "Round"
+      },
+      "mouthStyle": {
+        "laugh": "Laugh",
+        "smile": "Smile",
+        "peace": "Peace"
+      },
+      "shirtStyle": {
+        "hoody": "Hoodie",
+        "short": "Short Sleeve",
+        "polo": "Polo"
+      }
+    },
+    "customColor": "Custom Color",
+    "enterCustomHexCode": "Enter custom hex code",
+    "hexCode": "Hex code"
   },
   "languageScreen": {
     "title": "Language",
