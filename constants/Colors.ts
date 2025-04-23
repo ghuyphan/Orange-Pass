@@ -1,6 +1,6 @@
 // --- Define Colors Object with distinct border colors ---
 const tintColorLight = "#FF7B50";
-const tintColorDark = "#FFA726";
+const tintColorDark = "#FFA726"; // Restoring the original dark tint
 
 export const Colors = {
   light: {
@@ -19,9 +19,10 @@ export const Colors = {
     cardBackground: "#F9EFE7", // Consistent with other light elements
     cardFooter: "#EDE3DA", // A soft accent for card footers
     logoIcon: "#FF7F60", // Keeps the warmth with a slight modern adjustment
-    border: "#D1C7BF" // Distinct border color for light mode
+    border: "#D1C7BF", // Distinct border color for light mode
   },
   dark: {
+    // Reverted to the original dark theme colors
     text: "#FFFFFF",
     background: "#121212",
     tint: tintColorDark,
@@ -37,6 +38,6 @@ export const Colors = {
     cardBackground: "#2D272B", // Harmonized with the input background
     cardFooter: "#1F1A1B", // A slightly darker footer for depth
     logoIcon: tintColorDark, // Keeping the logo consistent with the tint color
-    border: "#555555" // Distinct, lighter border color for dark mode
+    border: "#555555", // Distinct, lighter border color for dark mode
   },
 };

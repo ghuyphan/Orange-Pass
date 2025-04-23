@@ -266,8 +266,8 @@ export default function RootLayout() {
   const stackNavigator = useMemo(() => (
     <Stack screenOptions={{ headerShown: false }}>
       {/* Define group routes or individual screens */}
-      <Stack.Screen name="(public)" options={{ animation: 'default' }} />
-      <Stack.Screen name="(auth)" options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="(public)" options={{ animation: 'ios' }} />
+      <Stack.Screen name="(auth)" options={{ animation: 'none' }} />
       <Stack.Screen name="onboard" options={{ animation: 'fade' }} />
       <Stack.Screen name="+not-found" />
     </Stack>

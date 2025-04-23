@@ -1,47 +1,50 @@
 import React, { memo, useMemo } from 'react';
 import { StyleSheet } from 'react-native';
-import Animated, {AnimatedStyle} from 'react-native-reanimated';
+import Animated, { AnimatedStyle } from 'react-native-reanimated';
+
+// Define size as a constant
+const INDICATOR_SIZE = 60;
+const INDICATOR_BORDER_WIDTH = 2;
 
 interface FocusIndicatorProps {
   focusPoint: { x: number; y: number } | null;
-  animatedFocusStyle: AnimatedStyle<any>; // This line assumes a correction based on the library's type definitions
+  animatedFocusStyle: AnimatedStyle<any>; // Keeping 'any' as in original, but could be stricter if needed
 }
 
-export const FocusIndicator: React.FC<FocusIndicatorProps> = memo(({ focusPoint, animatedFocusStyle }) => {
-  // 1. Use useMemo for calculating position styles
-  const positionStyle = useMemo(() => {
-    if (!focusPoint) return null;
-    return {
-      left: focusPoint.x - 25,
-      top: focusPoint.y - 25,
-    };
-  }, [focusPoint]);
+export const FocusIndicator: React.FC<FocusIndicatorProps> = memo(
+  ({ focusPoint, animatedFocusStyle }) => {
+    // Calculate the offset based on the constant size
+    const positionOffset = useMemo(() => INDICATOR_SIZE / 2, []);
 
-  if (!positionStyle) return null;
+    const positionStyle = useMemo(() => {
+      if (!focusPoint) return null;
+      // Use the calculated offset
+      return {
+        left: focusPoint.x - positionOffset,
+        top: focusPoint.y - positionOffset,
+      };
+    }, [focusPoint, positionOffset]); // Include positionOffset in deps
 
-  return (
-    <Animated.View
-      style={[
-        styles.focusIndicator,
-        positionStyle,
-        animatedFocusStyle,
-      ]}
-      // 4. Add pointerEvents='none' to prevent touch events
-      pointerEvents='none'
-    />
-  );
-});
+    if (!positionStyle) return null;
+
+    return (
+      <Animated.View
+        style={[styles.focusIndicator, positionStyle, animatedFocusStyle]}
+        pointerEvents="none"
+      />
+    );
+  }
+);
 
 const styles = StyleSheet.create({
   focusIndicator: {
     position: 'absolute',
-    width: 60,
-    height: 60,
-    borderRadius: 30, // Using half of width/height is more reliable than a fixed value
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 1)',
-    // 2. Remove unnecessary elevation from StyleSheet (only relevant for Android)
-    // 3. Apply opacity directly instead of via color (if needed)
-    // opacity: 0.8, // Example if you need to make it semi-transparent
+    // Use the constant for size
+    width: INDICATOR_SIZE,
+    height: INDICATOR_SIZE,
+    // Calculate borderRadius based on the constant
+    borderRadius: INDICATOR_SIZE / 2,
+    borderWidth: INDICATOR_BORDER_WIDTH,
+    borderColor: 'rgba(255, 255, 255, 1)', // Solid white
   },
 });

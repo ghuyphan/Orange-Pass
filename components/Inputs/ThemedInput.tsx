@@ -60,6 +60,11 @@ export type ThemedInputProps = {
   disableOpacityChange?: boolean;
   required?: boolean;
   onDisabledPress?: () => void;
+  // --- New Props for Optional Right Button ---
+  rightButtonIconName?: keyof typeof MaterialCommunityIcons.glyphMap;
+  onRightButtonPress?: () => void;
+  rightButtonIconStyle?: StyleProp<TextStyle>;
+  // --- End New Props ---
 };
 
 type Selection = {
@@ -95,6 +100,11 @@ export const ThemedInput = forwardRef<
       disableOpacityChange = false,
       required = false,
       onDisabledPress,
+      // --- Destructure New Props ---
+      rightButtonIconName,
+      onRightButtonPress,
+      rightButtonIconStyle,
+      // --- End Destructure ---
     },
     ref
   ) => {
@@ -246,6 +256,14 @@ export const ThemedInput = forwardRef<
       [isFocused]
     );
 
+    // --- Callback for the new right button ---
+    const handleRightButtonPress = useCallback(() => {
+      if (onRightButtonPress && !disabled) {
+        onRightButtonPress();
+      }
+    }, [onRightButtonPress, disabled]);
+    // --- End Callback ---
+
     const inputContainerStyle = [
       styles.inputContainer,
       {
@@ -320,6 +338,34 @@ export const ThemedInput = forwardRef<
 
               {/* Right side icons */}
               <View style={styles.rightContainer}>
+                {/* --- Optional Right Button --- */}
+                {rightButtonIconName && onRightButtonPress && (
+                  <Pressable
+                    onPress={handleRightButtonPress}
+                    style={styles.iconTouchable}
+                    hitSlop={{
+                      top: getResponsiveHeight(0.6),
+                      bottom: getResponsiveHeight(0.6),
+                      left: getResponsiveWidth(1.2),
+                      right: getResponsiveWidth(1.2),
+                    }}
+                    disabled={disabled}
+                  >
+                    <MaterialCommunityIcons
+                      name={rightButtonIconName}
+                      size={getResponsiveFontSize(16)} // Adjust size as needed
+                      color={color}
+                      style={[
+                        {
+                          opacity: disabled && !disableOpacityChange ? 0.5 : 1,
+                        },
+                        rightButtonIconStyle, // Apply custom style
+                      ]}
+                    />
+                  </Pressable>
+                )}
+                {/* --- End Optional Right Button --- */}
+
                 {localValue.length > 0 && (
                   <Pressable
                     onPress={disabled ? undefined : onClearValue}
@@ -412,6 +458,10 @@ ThemedInput.defaultProps = {
   disabled: false,
   disableOpacityChange: false,
   required: false,
+  // --- Default values for new props ---
+  rightButtonIconName: undefined,
+  onRightButtonPress: undefined,
+  // --- End default values ---
 };
 
 const styles = StyleSheet.create({
@@ -437,19 +487,21 @@ const styles = StyleSheet.create({
     fontSize: getResponsiveFontSize(16),
     height: getResponsiveHeight(3.6),
     flex: 1,
-    marginRight: getResponsiveWidth(2.4),
+    marginRight: getResponsiveWidth(2.4), // Ensure space before right icons
   },
   rightContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: getResponsiveWidth(3.6),
+    gap: getResponsiveWidth(3.6), // Adjust gap if needed
   },
   iconTouchable: {
-    borderRadius: getResponsiveWidth(12),
+    borderRadius: getResponsiveWidth(12), // Make it circular if desired
     overflow: "hidden",
+    // Add padding if needed for better touch area
+    // padding: getResponsiveWidth(1),
   },
   errorIconContainer: {
-    marginLeft: getResponsiveWidth(1.2),
+    // Removed marginLeft to rely on gap
     padding: getResponsiveWidth(0.5),
   },
   errorContainer: {

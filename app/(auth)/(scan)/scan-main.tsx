@@ -224,10 +224,20 @@ export default function ScanScreen() {
     [router]
   );
 
+  const handleSheetChange = useCallback((index: number) => {
+    console.log('Sheet index changed:', index);
+    // Reset sheetType ONLY when the sheet is fully closed (index -1)
+    if (index === -1) {
+      console.log('Sheet closed (index -1), setting sheetType to null');
+      setSheetType(null);
+    }
+  }, [setSheetType]);
+
   // Sheet handler
   const onOpenSheet = useCallback((type: SheetType, id?: string, url?: string, ssid?: string, pass?: string, isWep?: boolean, isHidden?: boolean) => {
     if (type === null) return;
     setSheetType(type);
+    console.log('Sheet opened:', type, id, url, ssid, pass, isWep, isHidden);
     if (url) setLinkingUrl(url);
     if (ssid) setWifiSsid(ssid);
     if (pass) setWifiPassword(pass);
@@ -257,16 +267,16 @@ export default function ScanScreen() {
         );
       case 'linking':
         return (
-          <LinkingSheetContent 
-            url={linkingUrl || ''} 
-            onCopySuccess={() => showToast(t('scanScreen.copied'))} 
+          <LinkingSheetContent
+            url={linkingUrl || ''}
+            onCopySuccess={() => showToast(t('scanScreen.copied'))}
           />
         );
       case 'setting':
         return (
           <SettingSheetContent
             onEdit={() => router.push('/settings')}
-            onDelete={() => {}}
+            onDelete={() => { }}
           />
         );
       default:
@@ -379,6 +389,15 @@ export default function ScanScreen() {
       </View>
     );
   }
+
+  const calculatedTitle = sheetType === 'setting'
+    ? t('scanScreen.settings')
+    : sheetType === 'wifi'
+      ? t('scanScreen.wifi') // <-- Check this value too
+      : sheetType === 'linking'
+        ? t('scanScreen.linking')
+        : t('scanScreen.settings');
+
 
   return (
     <View style={styles.container}>
@@ -494,24 +513,16 @@ export default function ScanScreen() {
         <Suspense fallback={null}>
           <ThemedReuseableSheet
             ref={bottomSheetRef}
-            title={
-              sheetType === 'setting'
-                ? t('scanScreen.settings')
-                : sheetType === 'wifi'
-                ? t('scanScreen.wifi')
-                : sheetType === 'linking'
-                ? t('scanScreen.linking')
-                : t('scanScreen.settings')
-            }
-            onClose={() => setTimeout(() => setSheetType(null), 50)}
+            title={calculatedTitle}
+            onChange={handleSheetChange}
             snapPoints={
               sheetType === 'setting'
                 ? ['25%']
                 : sheetType === 'wifi'
-                ? ['38%']
-                : sheetType === 'linking'
-                ? ['35%']
-                : ['35%']
+                  ? ['38%']
+                  : sheetType === 'linking'
+                    ? ['35%']
+                    : ['35%']
             }
             styles={{
               customContent: {
@@ -538,7 +549,7 @@ const styles = StyleSheet.create({
   },
   cameraContainer: {
     marginTop: STATUSBAR_HEIGHT,
-    flex: getResponsiveHeight(0.26),
+    flex: getResponsiveHeight(0.3),
     backgroundColor: 'black',
     borderRadius: getResponsiveWidth(8),
     overflow: 'hidden',
