@@ -1,5 +1,16 @@
-import React, { useCallback, useMemo, useState } from 'react';
-import { StyleSheet, View, ActivityIndicator, Pressable } from 'react-native';
+import React, {
+  useCallback,
+  useMemo,
+  useState,
+  useEffect, // Keep useEffect for this pattern
+} from 'react';
+import {
+  StyleSheet,
+  View,
+  ActivityIndicator,
+  Pressable,
+  InteractionManager, // Import InteractionManager
+} from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import * as SecureStore from 'expo-secure-store';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -30,10 +41,13 @@ import { useMMKVString } from 'react-native-mmkv';
 import { useLocale } from '@/context/LocaleContext';
 import { useTheme } from '@/context/ThemeContext';
 import { MaterialIcons } from '@expo/vector-icons';
-import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
+import {
+  getResponsiveFontSize,
+  getResponsiveWidth,
+  getResponsiveHeight,
+} from '@/utils/responsive';
 import * as Application from 'expo-application';
 import { MMKV_KEYS, SECURE_KEYS } from '@/services/auth';
-
 
 // Define the type for your settings card items
 interface SettingsCardItem {
@@ -45,35 +59,62 @@ interface SettingsCardItem {
 function SettingsScreen() {
   const { updateLocale } = useLocale();
   const [locale, setLocale] = useMMKVString('locale', storage);
-  const avatarConfig = useSelector((state: RootState) => state.auth.avatarConfig);
+  const avatarConfig = useSelector(
+    (state: RootState) => state.auth.avatarConfig
+  );
   const { currentTheme } = useTheme();
   const [isLoading, setIsLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isAvatarReady, setIsAvatarReady] = useState(false); // State to manage avatar rendering
   const dispatch = useDispatch();
   const scrollY = useSharedValue(0);
-  const email = useSelector((state: RootState) => state.auth.user?.email ?? '-');
+  const email = useSelector(
+    (state: RootState) => state.auth.user?.email ?? '-'
+  );
   const name = useSelector((state: RootState) => state.auth.user?.name ?? '-');
   const appVersion = Application.nativeApplicationVersion;
 
   const sectionsColors = useMemo(
     () =>
-      currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground,
+      currentTheme === 'light'
+        ? Colors.light.cardBackground
+        : Colors.dark.cardBackground,
     [currentTheme]
   );
 
   const iconColor = useMemo(
-    () =>
-      currentTheme === 'light' ? Colors.light.text : Colors.dark.text,
+    () => (currentTheme === 'light' ? Colors.light.text : Colors.dark.text),
     [currentTheme]
   );
+
+  // Effect to defer avatar rendering until after interactions
+  useEffect(() => {
+    // Schedule setIsAvatarReady(true) to run after interactions/animations
+    const interactionPromise = InteractionManager.runAfterInteractions(() => {
+      setIsAvatarReady(true);
+    });
+
+    // Cleanup function to cancel the task if the component unmounts
+    return () => interactionPromise.cancel();
+  }, []); // Empty dependency array ensures this runs only once on mount
 
   const scrollHandler = useAnimatedScrollHandler((event) => {
     scrollY.value = event.contentOffset.y;
   });
 
   const titleContainerStyle = useAnimatedStyle(() => {
-    const opacity = interpolate(scrollY.value, [40, 70], [1, 0], Extrapolation.CLAMP);
-    const translateY = interpolate(scrollY.value, [0, 150], [0, -35], Extrapolation.CLAMP);
+    const opacity = interpolate(
+      scrollY.value,
+      [40, 70],
+      [1, 0],
+      Extrapolation.CLAMP
+    );
+    const translateY = interpolate(
+      scrollY.value,
+      [0, 150],
+      [0, -35],
+      Extrapolation.CLAMP
+    );
 
     return {
       opacity,
@@ -88,38 +129,33 @@ function SettingsScreen() {
 
   const onNavigateToEditScreen = useCallback(() => {
     router.push('/(auth)/(settings)/edit');
-  }, [])
+  }, []);
 
   const logout = useCallback(async () => {
     try {
       setIsModalVisible(false);
       setIsLoading(true);
 
-      // Clear auth tokens but keep quick login credentials
       await SecureStore.deleteItemAsync(SECURE_KEYS.AUTH_TOKEN);
       await SecureStore.deleteItemAsync(SECURE_KEYS.USER_ID);
       pb.authStore.clear();
 
-      // Dispatch actions immediately *before* navigation
       dispatch(clearErrorMessage());
       dispatch(removeAllQrData());
       dispatch(clearAuthData());
 
-      // Check if quick login is enabled
-      const quickLoginEnabled = storage.getBoolean(MMKV_KEYS.QUICK_LOGIN_ENABLED) ?? false;
+      const quickLoginEnabled =
+        storage.getBoolean(MMKV_KEYS.QUICK_LOGIN_ENABLED) ?? false;
 
-      // Navigate to the appropriate screen based on quick login status
       if (quickLoginEnabled) {
         router.replace('/quick-login');
       } else {
         router.replace('/login');
       }
-
     } catch (error) {
       console.error('Logout error:', error);
-      // Consider dispatching an error action here to show an error message
     } finally {
-      setIsLoading(false); // Set loading to false *after* everything is done
+      setIsLoading(false);
     }
   }, [dispatch]);
 
@@ -137,12 +173,12 @@ function SettingsScreen() {
       {
         leftIcon: 'lock-outline',
         settingsTitle: t('settingsScreen.changePassword'),
-        onPress: () => { },
+        onPress: () => {},
       },
       {
         leftIcon: 'mail-outline',
         settingsTitle: t('settingsScreen.changeEmail'),
-        onPress: () => { },
+        onPress: () => {},
       },
     ],
     [
@@ -177,7 +213,10 @@ function SettingsScreen() {
     <ThemedView style={styles.container}>
       <ThemedView style={styles.blurContainer} />
 
-      <Animated.View style={[styles.titleContainer, titleContainerStyle]} pointerEvents="auto">
+      <Animated.View
+        style={[styles.titleContainer, titleContainerStyle]}
+        pointerEvents="auto"
+      >
         <View style={styles.headerContainer}>
           <View style={styles.titleButtonContainer}>
             <ThemedButton
@@ -199,30 +238,53 @@ function SettingsScreen() {
         renderItem={renderItem}
         keyExtractor={(_, index) => index.toString()}
         ListHeaderComponent={
-          <Pressable style={[styles.avatarContainer, { backgroundColor: sectionsColors }]} onPress={() => router.push('/(auth)/(settings)/edit-avatar')}>
+          <Pressable
+            style={[
+              styles.avatarContainer,
+              { backgroundColor: sectionsColors },
+            ]}
+            onPress={() => router.push('/(auth)/(settings)/edit-avatar')}
+          >
             <View style={styles.avatarWrapper}>
-
               <LinearGradient
-                colors={['#ff9a9e', '#fad0c4', '#fad0c4', '#fbc2eb', '#a18cd1']}
+                colors={[
+                  '#ff9a9e',
+                  '#fad0c4',
+                  '#fad0c4',
+                  '#fbc2eb',
+                  '#a18cd1',
+                ]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.gradient}
               >
-                {avatarConfig ? (
+                {/* Conditionally render Avatar based on config and readiness state */}
+                {avatarConfig && isAvatarReady ? (
                   <Avatar size={getResponsiveWidth(11)} {...avatarConfig} />
                 ) : (
                   <View style={styles.avatarLoadContainer}>
-                    <ActivityIndicator size={getResponsiveFontSize(10)} color="white" />
+                    <ActivityIndicator
+                      size={getResponsiveFontSize(10)}
+                      color="white"
+                    />
                   </View>
                 )}
               </LinearGradient>
               <View style={styles.userContainer}>
-                <ThemedText type='defaultSemiBold' numberOfLines={1} style={styles.userName}>
+                <ThemedText
+                  type="defaultSemiBold"
+                  numberOfLines={1}
+                  style={styles.userName}
+                >
                   {name}
                 </ThemedText>
               </View>
             </View>
-            <MaterialIcons name="chevron-right" size={getResponsiveFontSize(16)} color={iconColor} />
+            <MaterialIcons
+              name="chevron-right"
+              size={getResponsiveFontSize(16)}
+              color={iconColor}
+            />
           </Pressable>
         }
         ListFooterComponent={
@@ -323,9 +385,10 @@ const styles = StyleSheet.create({
   avatarLoadContainer: {
     width: getResponsiveWidth(11),
     aspectRatio: 1,
-    borderRadius: getResponsiveWidth(12),
+    borderRadius: getResponsiveWidth(12), // Match Avatar's effective border radius if needed
     justifyContent: 'center',
     alignItems: 'center',
+    // Ensure background is transparent or matches gradient if desired during load
   },
   userContainer: {
     justifyContent: 'center',
@@ -335,12 +398,7 @@ const styles = StyleSheet.create({
     maxWidth: '80%',
     overflow: 'hidden',
   },
-  // userEmail: {
-  //   fontSize: getResponsiveFontSize(16),
-  //   fontWeight: 'bold',
-  // },
   userName: {
-    // opacity: 0.7,
     fontSize: getResponsiveFontSize(16),
     width: '100%',
   },

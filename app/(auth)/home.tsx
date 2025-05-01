@@ -476,82 +476,62 @@ function HomeScreen() {
   // Optimize onDragEnd with useCallback
   const onDragEnd = useCallback(
     ({ data: reorderedFilteredData }: { data: QRRecord[] }) => {
-      // Immediate haptic feedback and UI update
+      // Provide immediate haptic feedback and update UI state
       triggerHapticFeedback();
       setIsActive(false);
       
-      // Clone data for UI update to avoid mutation issues
-      const visualReorderedData = [...reorderedFilteredData];
-      
-      // Immediately update UI with visual change for better perceived performance
-      if (filter === 'all') {
-        // Quick visual update without waiting for DB
-        dispatch(setQrData(visualReorderedData));
-      }
-      
-      // Defer expensive operations to prevent UI blocking
-      requestAnimationFrame(() => {
-        setTimeout(async () => {
-          try {
-            // Processing based on filter type
-            if (filter === 'all') {
-              // Optimization: Check if order actually changed before processing
-              const hasOrderChanged = reorderedFilteredData.some(
-                (item, index) => item.qr_index !== index
-              );
-              
-              if (!hasOrderChanged) return;
-              
-              // Update indices and timestamps
-              const updatedData = reorderedFilteredData.map((item, index) => ({
-                ...item,
-                qr_index: index,
-                updated: new Date().toISOString(),
-              }));
-              
-              // If filter is 'all' and we already updated UI, only update DB
-              await updateQrIndexes(updatedData);
+      try {
+        // Prepare the updated data
+        let finalUpdatedData;
+        
+        if (filter === 'all') {
+          finalUpdatedData = reorderedFilteredData.map((item, index) => ({
+            ...item,
+            qr_index: index,
+            updated: new Date().toISOString(),
+          }));
+        } else {
+          // Your existing filter logic for merging filtered data
+          const reorderedFilteredMap = new Map(
+            reorderedFilteredData.map((item) => [item.id, item])
+          );
+          
+          let filteredIndex = 0;
+          const mergedData = qrData.map((originalItem) => {
+            if (reorderedFilteredMap.has(originalItem.id)) {
+              const itemToReturn = reorderedFilteredData[filteredIndex];
+              filteredIndex++;
+              return itemToReturn;
             } else {
-              // --- Filtered list processing ---
-              const currentFullData = qrData;
-              
-              // Optimization: Use Set for faster lookups instead of Map
-              const reorderedItemIds = new Set(reorderedFilteredData.map(item => item.id));
-              
-              // Track for relative positioning
-              let filteredIndex = 0;
-              
-              // Process each item only once
-              const mergedData = currentFullData.map(originalItem => {
-                if (reorderedItemIds.has(originalItem.id)) {
-                  // Return item from reordered list in new sequence
-                  const itemToReturn = reorderedFilteredData[filteredIndex++];
-                  return itemToReturn;
-                }
-                return originalItem;
-              });
-              
-              // Update indices once
-              const finalUpdatedData = mergedData.map((item, index) => ({
-                ...item,
-                qr_index: index, 
-                updated: new Date().toISOString(),
-              }));
-              
-              // Update Redux and then DB
-              dispatch(setQrData(finalUpdatedData));
-              await updateQrIndexes(finalUpdatedData);
+              return originalItem;
             }
-          } catch (error) {
-            console.error('Error updating QR indexes:', error);
-            // Could add fallback UI state recovery here
-          }
-        }, 50); // Short delay to ensure animations finish smoothly
-      });
+          });
+          
+          finalUpdatedData = mergedData.map((item, index) => ({
+            ...item,
+            qr_index: index,
+            updated: new Date().toISOString(),
+          }));
+        }
+        
+        // Update Redux immediately for responsive UI
+        dispatch(setQrData(finalUpdatedData));
+        
+        // Defer database update until after animations complete
+        InteractionManager.runAfterInteractions(() => {
+          updateQrIndexes(finalUpdatedData)
+            .catch(error => {
+              console.error('Error updating QR indexes:', error);
+              // Optionally show an error toast
+            });
+        });
+      } catch (error) {
+        console.error('Error processing reordered data:', error);
+      }
     },
     [dispatch, qrData, filter]
-  );  
-
+  );
+  
   // Toast handler
   const showToast = useCallback((message: string) => {
     setTopToastMessage(message);
