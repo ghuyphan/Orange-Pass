@@ -3,20 +3,30 @@ import React, {
   useState,
   useCallback,
   useRef,
-  useMemo, // Added useMemo
+  useMemo,
+  lazy,
+  Suspense,
 } from "react";
 import { StyleSheet, View, Keyboard, Pressable, Platform } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Formik } from "formik";
 import { router } from "expo-router";
+import { useSelector } from "react-redux";
+import { useMMKVString } from "react-native-mmkv";
+import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
 
+// Lazy-loaded components
+const ThemedToast = lazy(() => import("@/components/toast/ThemedToast"));
+const ThemedReuseableSheet = lazy(() =>
+  import("@/components/bottomsheet/ThemedReusableSheet")
+);
+
+// Regular imports
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedInput } from "@/components/Inputs/ThemedInput";
 import { ThemedButton } from "@/components/buttons/ThemedButton";
 import { ThemedTextButton } from "@/components/buttons/ThemedTextButton";
-import { ThemedToast } from "@/components/toast/ThemedToast";
 import { Colors } from "@/constants/Colors";
-import { useSelector } from "react-redux";
 import { RootState } from "@/store/rootReducer";
 import { t } from "@/i18n";
 import { loginSchema } from "@/utils/validationSchemas";
@@ -29,91 +39,119 @@ import {
   getResponsiveHeight,
 } from "@/utils/responsive";
 import { Logo } from "@/components/AppLogo";
-import GB from "@/assets/svgs/GB.svg";
-import VN from "@/assets/svgs/VN.svg";
-import RU from "@/assets/svgs/RU.svg";
-import { MaterialIcons } from "@expo/vector-icons";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useMMKVString } from "react-native-mmkv";
-import ThemedReuseableSheet from "@/components/bottomsheet/ThemedReusableSheet";
 
-// Define the valid language keys
+// Flag components
+const GB = lazy(() => import("@/assets/svgs/GB.svg"));
+const VN = lazy(() => import("@/assets/svgs/VN.svg"));
+const RU = lazy(() => import("@/assets/svgs/RU.svg"));
+
+// Fallback component for lazy loading
+const LoadingPlaceholder = () => <View />;
+
+// Types
 type LanguageKey = "vi" | "ru" | "en";
 
-// Define the LanguageOption type
 interface LanguageOption {
   label: string;
   flag: React.ReactNode;
 }
 
-// Use the LanguageKey type in the languageOptions object
-const languageOptions: Record<LanguageKey, LanguageOption> = {
-  vi: {
-    label: "Tiếng Việt",
-    flag: (
-      <VN
-        width={getResponsiveWidth(7.2)}
-        height={getResponsiveHeight(3)}
-      />
-    ),
-  },
-  ru: {
-    label: "Русский",
-    flag: (
-      <RU
-        width={getResponsiveWidth(7.2)}
-        height={getResponsiveHeight(3)}
-      />
-    ),
-  },
-  en: {
-    label: "English",
-    flag: (
-      <GB
-        width={getResponsiveWidth(7.2)}
-        height={getResponsiveHeight(3)}
-      />
-    ),
-  },
-};
-
 export default function LoginScreen() {
+  // Contexts and state
   const { locale, updateLocale } = useLocale();
   const [storedLocale, setStoredLocale] = useMMKVString("locale");
   const { currentTheme } = useTheme();
+  const authRefreshError = useSelector(
+    (state: RootState) => state.error.message
+  );
+  
+  // UI state
+  const [isToastVisible, setIsToastVisible] = useState(false);
+  const [isKeyboardVisible, setKeyboardVisible] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isLanguageSheetReady, setIsLanguageSheetReady] = useState(false);
+  
+  // Refs
+  const bottomSheetRef = useRef(null);
+  const scrollViewRef = useRef(null);
+
+  // Pre-calculate theme colors
+  const backgroundColor =
+    currentTheme === "light" ? Colors.light.background : Colors.dark.background;
   const cardColor =
     currentTheme === "light"
       ? Colors.light.cardBackground
       : Colors.dark.cardBackground;
-  const authRefreshError = useSelector(
-    (state: RootState) => state.error.message
-  );
-  const [isToastVisible, setIsToastVisible] = useState(false);
-  const [isKeyboardVisible, setKeyboardVisible] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const bottomSheetRef = useRef<any>(null);
-  const scrollViewRef = useRef<KeyboardAwareScrollView>(null);
+  const iconColor =
+    currentTheme === "light" ? Colors.light.icon : Colors.dark.icon;
+  const textColor =
+    currentTheme === "light" ? Colors.light.text : Colors.dark.text;
 
+  // Create styles with pre-calculated responsive values
+  const styles = useMemo(
+    () => createStyles(currentTheme),
+    [currentTheme]
+  );
+
+  // Lazy initialize language options
+  const languageOptions = useMemo(() => {
+    const flagSize = {
+      width: getResponsiveWidth(7.2),
+      height: getResponsiveHeight(3),
+    };
+    
+    return {
+      vi: {
+        label: "Tiếng Việt",
+        flag: (
+          <Suspense fallback={<View style={flagSize} />}>
+            <VN {...flagSize} />
+          </Suspense>
+        ),
+      },
+      ru: {
+        label: "Русский",
+        flag: (
+          <Suspense fallback={<View style={flagSize} />}>
+            <RU {...flagSize} />
+          </Suspense>
+        ),
+      },
+      en: {
+        label: "English",
+        flag: (
+          <Suspense fallback={<View style={flagSize} />}>
+            <GB {...flagSize} />
+          </Suspense>
+        ),
+      },
+    };
+  }, []);
+
+  // Keyboard listeners
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
       "keyboardDidShow",
-      () => {
-        setKeyboardVisible(true);
-      }
+      () => setKeyboardVisible(true)
     );
     const keyboardDidHideListener = Keyboard.addListener(
       "keyboardDidHide",
-      () => {
-        setKeyboardVisible(false);
-      }
+      () => setKeyboardVisible(false)
     );
+
+    // Defer loading the language sheet
+    const timer = setTimeout(() => {
+      setIsLanguageSheetReady(true);
+    }, 500);
 
     return () => {
       keyboardDidHideListener.remove();
       keyboardDidShowListener.remove();
+      clearTimeout(timer);
     };
   }, []);
 
+  // Error handling
   useEffect(() => {
     if (authRefreshError !== null) {
       setIsToastVisible(true);
@@ -121,19 +159,20 @@ export default function LoginScreen() {
     }
   }, [authRefreshError]);
 
-  const onDismissToast = () => {
+  // Event handlers
+  const onDismissToast = useCallback(() => {
     setIsToastVisible(false);
-  };
+  }, []);
 
-  const onNavigateToRegister = () => {
+  const onNavigateToRegister = useCallback(() => {
     Keyboard.dismiss();
     router.push("/register");
-  };
+  }, []);
 
-  const onNavigateToForgot = () => {
+  const onNavigateToForgot = useCallback(() => {
     Keyboard.dismiss();
     router.push("/forgot-password");
-  };
+  }, []);
 
   const handleLanguageChange = useCallback(
     (newLocale: LanguageKey) => {
@@ -150,24 +189,36 @@ export default function LoginScreen() {
     bottomSheetRef.current?.close();
   }, [updateLocale, setStoredLocale]);
 
-  const toggleLanguageDropdown = () => {
+  const toggleLanguageDropdown = useCallback(() => {
     Keyboard.dismiss();
     bottomSheetRef.current?.expand();
-  };
+  }, []);
 
+  // Handle form submission
+  const handleFormSubmit = useCallback(async (values, { setSubmitting }) => {
+    setSubmitting(true);
+    try {
+      const authData = await login(values.email, values.password);
+      const hasPreference = await hasQuickLoginPreference(authData.record.id);
+      
+      if (hasPreference) {
+        router.replace("/(auth)/home");
+      } else {
+        router.replace("/(auth)/quick-login-prompt");
+      }
+    } catch (error) {
+      const errorAsError = error as Error;
+      setIsToastVisible(true);
+      setErrorMessage(errorAsError.toString());
+    } finally {
+      setSubmitting(false);
+    }
+  }, []);
+
+  // Memoized language options content
   const languageOptionsContent = useMemo(() => {
-    const colors =
-      currentTheme === "light" ? Colors.light.icon : Colors.dark.icon;
-    const textColors =
-      currentTheme === "light" ? Colors.light.text : Colors.dark.text;
-
     return (
-      <View
-        style={[
-          styles.languageOptionsContainer,
-          { backgroundColor: cardColor },
-        ]}
-      >
+      <View style={[styles.languageOptionsContainer, { backgroundColor: cardColor }]}>
         {Object.entries(languageOptions).map(([key, { label, flag }]) => (
           <Pressable
             key={key}
@@ -179,19 +230,19 @@ export default function LoginScreen() {
           >
             <View style={styles.leftSectionContainer}>
               <View style={styles.flagIconContainer}>{flag}</View>
-              <ThemedText style={{ color: textColors }}>{label}</ThemedText>
+              <ThemedText style={{ color: textColor }}>{label}</ThemedText>
             </View>
             {storedLocale === key ? (
               <View style={styles.iconStack}>
                 <MaterialCommunityIcons
                   name="circle-outline"
                   size={getResponsiveFontSize(18)}
-                  color={colors}
+                  color={iconColor}
                 />
                 <MaterialIcons
                   name="circle"
                   size={getResponsiveFontSize(10)}
-                  color={colors}
+                  color={iconColor}
                   style={styles.checkIcon}
                 />
               </View>
@@ -199,7 +250,7 @@ export default function LoginScreen() {
               <MaterialCommunityIcons
                 name="circle-outline"
                 size={getResponsiveFontSize(18)}
-                color={colors}
+                color={iconColor}
               />
             )}
           </Pressable>
@@ -215,9 +266,9 @@ export default function LoginScreen() {
             <MaterialCommunityIcons
               name="cog-outline"
               size={getResponsiveFontSize(18)}
-              color={colors}
+              color={iconColor}
             />
-            <ThemedText style={{ color: textColors }}>
+            <ThemedText style={{ color: textColor }}>
               {t("languageScreen.system")}
             </ThemedText>
           </View>
@@ -226,12 +277,12 @@ export default function LoginScreen() {
               <MaterialCommunityIcons
                 name="circle-outline"
                 size={getResponsiveFontSize(18)}
-                color={colors}
+                color={iconColor}
               />
               <MaterialIcons
                 name="circle"
                 size={getResponsiveFontSize(10)}
-                color={colors}
+                color={iconColor}
                 style={styles.checkIcon}
               />
             </View>
@@ -239,51 +290,49 @@ export default function LoginScreen() {
             <MaterialCommunityIcons
               name="circle-outline"
               size={getResponsiveFontSize(18)}
-              color={colors}
+              color={iconColor}
             />
           )}
         </Pressable>
       </View>
     );
   }, [
-    currentTheme,
     cardColor,
+    textColor,
+    iconColor,
     storedLocale,
     handleLanguageChange,
     handleSystemLocale,
-    t, // Added t as a dependency
   ]);
+
+  // Memoized language selector button
+  const LanguageSelectorButton = useMemo(() => (
+    <View style={styles.languageSelectorContainer}>
+      <ThemedTextButton
+        onPress={toggleLanguageDropdown}
+        label={
+          storedLocale
+            ? languageOptions[storedLocale as LanguageKey]?.label ||
+              t("languageScreen.system")
+            : t("languageScreen.system")
+        }
+        rightIconName="chevron-down"
+      />
+    </View>
+  ), [toggleLanguageDropdown, storedLocale, languageOptions, t]);
+
+  // Memoized logo component
+  const LogoComponent = useMemo(() => (
+    <View style={styles.logoContainer}>
+      <Logo size={getResponsiveWidth(3.5)} />
+    </View>
+  ), [styles.logoContainer]);
 
   return (
     <Formik
       initialValues={{ email: "", password: "" }}
       validationSchema={loginSchema}
-      onSubmit={async (values, { setSubmitting }) => {
-        setSubmitting(true);
-        try {
-          // Login with the provided credentials
-          const authData = await login(values.email, values.password);
-
-          // Check if user has already made a decision about quick login
-          const hasPreference = await hasQuickLoginPreference(
-            authData.record.id
-          ); // Use userID instead of email
-
-          if (hasPreference) {
-            // User has already decided, go directly to home
-            router.replace("/(auth)/home");
-          } else {
-            // User hasn't decided yet, show the quick login prompt
-            router.replace("/(auth)/quick-login-prompt");
-          }
-        } catch (error) {
-          const errorAsError = error as Error;
-          setIsToastVisible(true);
-          setErrorMessage(errorAsError.toString());
-        } finally {
-          setSubmitting(false);
-        }
-      }}
+      onSubmit={handleFormSubmit}
     >
       {({
         handleChange,
@@ -293,236 +342,257 @@ export default function LoginScreen() {
         errors,
         touched,
         isSubmitting,
-      }) => (
-        <KeyboardAwareScrollView
-          ref={scrollViewRef}
-          keyboardShouldPersistTaps="handled"
-          style={{
-            backgroundColor:
-              currentTheme === "light"
-                ? Colors.light.background
-                : Colors.dark.background,
-          }}
-          contentContainerStyle={styles.container}
-          extraScrollHeight={
-            Platform.OS === "ios" ? getResponsiveHeight(4) : 0
-          }
-          enableOnAndroid={true}
-          enableResetScrollToCoords={false}
-          showsVerticalScrollIndicator={false}
-          scrollEnabled={true}
-          keyboardOpeningTime={0}
-        >
-          <View style={styles.contentContainer}>
-            <View style={styles.languageSelectorContainer}>
-              <ThemedTextButton
-                onPress={toggleLanguageDropdown}
-                label={
-                  storedLocale
-                    ? languageOptions[storedLocale as LanguageKey]?.label ||
-                      t("languageScreen.system")
-                    : t("languageScreen.system")
-                }
-                rightIconName="chevron-down"
-              />
-            </View>
+      }) => {
+        // Memoized form content
+        const FormContent = useMemo(() => (
+          <>
+            <View style={styles.contentContainer}>
+              {LanguageSelectorButton}
+              {LogoComponent}
 
-            {/* Logo Centered */}
-            <View style={styles.logoContainer}>
-              <Logo size={getResponsiveWidth(3.5)} />
-            </View>
+              <View style={styles.inputsWrapper}>
+                <ThemedInput
+                  placeholder={t("loginScreen.email")}
+                  onChangeText={handleChange("email")}
+                  isError={touched.email && errors.email ? true : false}
+                  onBlur={handleBlur("email")}
+                  value={values.email}
+                  errorMessage={
+                    touched.email && errors.email
+                      ? t(`loginScreen.errors.${errors.email}`)
+                      : ""
+                  }
+                  disabled={isSubmitting}
+                  disableOpacityChange={false}
+                />
 
-            {/* Input Fields */}
-            <View style={styles.inputsWrapper}>
-              <ThemedInput
-                placeholder={t("loginScreen.email")}
-                onChangeText={handleChange("email")}
-                isError={touched.email && errors.email ? true : false}
-                onBlur={handleBlur("email")}
-                value={values.email}
-                errorMessage={
-                  touched.email && errors.email
-                    ? t(`loginScreen.errors.${errors.email}`)
-                    : ""
-                }
-                disabled={isSubmitting}
-                disableOpacityChange={false}
-              />
+                <ThemedInput
+                  placeholder={t("loginScreen.password")}
+                  secureTextEntry={true}
+                  onChangeText={handleChange("password")}
+                  isError={touched.password && errors.password ? true : false}
+                  onBlur={handleBlur("password")}
+                  value={values.password}
+                  errorMessage={
+                    touched.password && errors.password
+                      ? t(`loginScreen.errors.${errors.password}`)
+                      : ""
+                  }
+                  disabled={isSubmitting}
+                  disableOpacityChange={false}
+                />
+              </View>
 
-              <ThemedInput
-                placeholder={t("loginScreen.password")}
-                secureTextEntry={true}
-                onChangeText={handleChange("password")}
-                isError={touched.password && errors.password ? true : false}
-                onBlur={handleBlur("password")}
-                value={values.password}
-                errorMessage={
-                  touched.password && errors.password
-                    ? t(`loginScreen.errors.${errors.password}`)
-                    : ""
-                }
-                disabled={isSubmitting}
-                disableOpacityChange={false}
-              />
-            </View>
-
-            {/* Login Button */}
-            <ThemedButton
-              label={t("loginScreen.login")}
-              style={styles.loginButton}
-              onPress={() => {
-                Keyboard.dismiss();
-                handleSubmit();
-              }}
-              loadingLabel={t("loginScreen.loggingIn")}
-              loading={isSubmitting}
-              textStyle={styles.loginButtonText}
-              disabled={isSubmitting}
-            />
-
-            {/* Forgot Password */}
-            <View style={styles.forgotButtonContainer}>
-              <ThemedTextButton
-                label={t("loginScreen.forgotPassword")}
-                onPress={onNavigateToForgot}
-                style={{ opacity: 0.6 }}
+              <ThemedButton
+                label={t("loginScreen.login")}
+                style={styles.loginButton}
+                onPress={() => {
+                  Keyboard.dismiss();
+                  handleSubmit();
+                }}
+                loadingLabel={t("loginScreen.loggingIn")}
+                loading={isSubmitting}
+                textStyle={styles.loginButtonText}
                 disabled={isSubmitting}
               />
+
+              <View style={styles.forgotButtonContainer}>
+                <ThemedTextButton
+                  label={t("loginScreen.forgotPassword")}
+                  onPress={onNavigateToForgot}
+                  style={{ opacity: 0.6 }}
+                  disabled={isSubmitting}
+                />
+              </View>
             </View>
-          </View>
 
-          <View style={styles.appNameContainer}>
-            <ThemedButton
-              label={t("loginScreen.registerNow")}
-              onPress={onNavigateToRegister}
-              style={styles.createAccountButton}
-              textStyle={styles.createAccountButtonText}
-              outline
-              disabled={isSubmitting}
-            />
-            <ThemedText type="defaultSemiBold" style={styles.metaText}>
-              {t("common.appName")}
-            </ThemedText>
-          </View>
+            <View style={styles.appNameContainer}>
+              <ThemedButton
+                label={t("loginScreen.registerNow")}
+                onPress={onNavigateToRegister}
+                style={styles.createAccountButton}
+                textStyle={styles.createAccountButtonText}
+                outline
+                disabled={isSubmitting}
+              />
+              <ThemedText type="defaultSemiBold" style={styles.metaText}>
+                {t("common.appName")}
+              </ThemedText>
+            </View>
+          </>
+        ), [
+          t,
+          values.email,
+          values.password,
+          touched.email,
+          touched.password,
+          errors.email,
+          errors.password,
+          isSubmitting,
+          handleSubmit,
+        ]);
 
-          {/* Toast for errors */}
-          <ThemedToast
-            duration={5000}
-            message={errorMessage}
-            isVisible={isToastVisible}
-            style={styles.toastContainer}
-            onDismiss={onDismissToast}
-            onVisibilityToggle={setIsToastVisible}
-            iconName="error"
-          />
+        return (
+          <KeyboardAwareScrollView
+            ref={scrollViewRef}
+            keyboardShouldPersistTaps="handled"
+            style={{ backgroundColor }}
+            contentContainerStyle={styles.container}
+            extraScrollHeight={
+              Platform.OS === "ios" ? getResponsiveHeight(4) : 0
+            }
+            enableOnAndroid={true}
+            enableResetScrollToCoords={false}
+            showsVerticalScrollIndicator={false}
+            scrollEnabled={true}
+            keyboardOpeningTime={0}
+          >
+            {FormContent}
 
-          {/* Bottom Sheet for Language Selection */}
-          <ThemedReuseableSheet
-            ref={bottomSheetRef}
-            title={t("loginScreen.selectLanguage")}
-            snapPoints={["40%"]}
-            showCloseButton={true}
-            contentType="custom"
-            customContent={languageOptionsContent}
-          />
-        </KeyboardAwareScrollView>
-      )}
+            {/* Toast for errors */}
+            {isToastVisible && (
+              <Suspense fallback={<LoadingPlaceholder />}>
+                <ThemedToast
+                  duration={5000}
+                  message={errorMessage}
+                  isVisible={isToastVisible}
+                  style={styles.toastContainer}
+                  onDismiss={onDismissToast}
+                  onVisibilityToggle={setIsToastVisible}
+                  iconName="error"
+                />
+              </Suspense>
+            )}
+
+            {/* Bottom Sheet for Language Selection */}
+            {isLanguageSheetReady && (
+              <Suspense fallback={<LoadingPlaceholder />}>
+                <ThemedReuseableSheet
+                  ref={bottomSheetRef}
+                  title={t("loginScreen.selectLanguage")}
+                  snapPoints={["40%"]}
+                  showCloseButton={true}
+                  contentType="custom"
+                  customContent={languageOptionsContent}
+                />
+              </Suspense>
+            )}
+          </KeyboardAwareScrollView>
+        );
+      }}
     </Formik>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    paddingHorizontal: getResponsiveWidth(3.6),
-    justifyContent: "space-between",
-  },
-  contentContainer: {
-    flex: 1,
-  },
-  languageSelectorContainer: {
-    alignItems: "center",
-    marginTop: getResponsiveHeight(10),
-  },
-  logoContainer: {
-    alignItems: "center",
-    marginVertical: getResponsiveHeight(6),
-  },
-  inputsWrapper: {
-    gap: getResponsiveHeight(2),
-    width: "100%",
-    marginBottom: getResponsiveHeight(2),
-  },
-  loginButton: {
-    marginBottom: getResponsiveHeight(2),
-  },
-  loginButtonText: {},
-  forgotButtonContainer: {
-    alignItems: "center",
-    marginBottom: getResponsiveHeight(4),
-    marginTop: getResponsiveHeight(2),
-  },
-  createAccountButton: {
-    borderRadius: getResponsiveWidth(8),
-    width: "100%",
-    marginBottom: getResponsiveHeight(2),
-  },
-  createAccountButtonText: {},
-  appNameContainer: {
-    alignItems: "center",
-    marginBottom:
-      Platform.OS === "ios"
-        ? getResponsiveHeight(4)
-        : getResponsiveHeight(3),
-    paddingBottom: Platform.OS === "android" ? getResponsiveHeight(1) : 0,
-  },
-  metaText: {
-    opacity: 0.7,
-  },
-  toastContainer: {
-    position: "absolute",
-    bottom: getResponsiveHeight(1.8),
-    left: 0,
-    right: 0,
-    marginHorizontal: getResponsiveWidth(3.6),
-  },
-  flagIconContainer: {
-    width: getResponsiveWidth(4.8),
-    aspectRatio: 1,
-    borderRadius: getResponsiveWidth(12),
-    justifyContent: "center",
-    alignItems: "center",
-    overflow: "hidden",
-  },
-  languageOptionsContainer: {
-    marginVertical: getResponsiveHeight(1),
-    marginHorizontal: getResponsiveWidth(3.6),
-    borderRadius: getResponsiveWidth(4),
-  },
-  languageOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    borderRadius: getResponsiveWidth(2),
-    paddingHorizontal: getResponsiveWidth(4.8),
-    paddingVertical: getResponsiveHeight(1.8),
-  },
-  pressedItem: {
-    opacity: 0.7,
-    backgroundColor:
-      Platform.OS === "ios" ? "rgba(0,0,0,0.05)" : "rgba(0,0,0,0.1)",
-  },
-  leftSectionContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: getResponsiveWidth(2.4),
-  },
-  iconStack: {
-    position: "relative",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  checkIcon: {
-    position: "absolute",
-  },
-});
+// Separate style creation function to improve performance
+function createStyles(currentTheme) {
+  // Pre-calculate responsive values
+  const responsiveHeight1 = getResponsiveHeight(1);
+  const responsiveHeight2 = getResponsiveHeight(2);
+  const responsiveHeight3 = getResponsiveHeight(3);
+  const responsiveHeight4 = getResponsiveHeight(4);
+  const responsiveHeight6 = getResponsiveHeight(6);
+  const responsiveHeight10 = getResponsiveHeight(10);
+  
+  const responsiveWidth2 = getResponsiveWidth(2);
+  const responsiveWidth2_4 = getResponsiveWidth(2.4);
+  const responsiveWidth3_6 = getResponsiveWidth(3.6);
+  const responsiveWidth4 = getResponsiveWidth(4);
+  const responsiveWidth4_8 = getResponsiveWidth(4.8);
+  const responsiveWidth8 = getResponsiveWidth(8);
+  const responsiveWidth12 = getResponsiveWidth(12);
+
+  return StyleSheet.create({
+    container: {
+      flexGrow: 1,
+      paddingHorizontal: responsiveWidth3_6,
+      justifyContent: "space-between",
+    },
+    contentContainer: {
+      flex: 1,
+    },
+    languageSelectorContainer: {
+      alignItems: "center",
+      marginTop: responsiveHeight10,
+    },
+    logoContainer: {
+      alignItems: "center",
+      marginVertical: responsiveHeight6,
+    },
+    inputsWrapper: {
+      gap: responsiveHeight2,
+      width: "100%",
+      marginBottom: responsiveHeight2,
+    },
+    loginButton: {
+      marginBottom: responsiveHeight2,
+    },
+    loginButtonText: {},
+    forgotButtonContainer: {
+      alignItems: "center",
+      marginBottom: responsiveHeight4,
+      marginTop: responsiveHeight2,
+    },
+    createAccountButton: {
+      borderRadius: responsiveWidth8,
+      width: "100%",
+      marginBottom: responsiveHeight2,
+    },
+    createAccountButtonText: {},
+    appNameContainer: {
+      alignItems: "center",
+      marginBottom:
+        Platform.OS === "ios" ? responsiveHeight4 : responsiveHeight3,
+      paddingBottom: Platform.OS === "android" ? responsiveHeight1 : 0,
+    },
+    metaText: {
+      opacity: 0.7,
+    },
+    toastContainer: {
+      position: "absolute",
+      bottom: responsiveHeight1,
+      left: 0,
+      right: 0,
+      marginHorizontal: responsiveWidth3_6,
+    },
+    flagIconContainer: {
+      width: responsiveWidth4_8,
+      aspectRatio: 1,
+      borderRadius: responsiveWidth12,
+      justifyContent: "center",
+      alignItems: "center",
+      overflow: "hidden",
+    },
+    languageOptionsContainer: {
+      marginVertical: responsiveHeight1,
+      marginHorizontal: responsiveWidth3_6,
+      borderRadius: responsiveWidth4,
+    },
+    languageOption: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      borderRadius: responsiveWidth2,
+      paddingHorizontal: responsiveWidth4_8,
+      paddingVertical: responsiveHeight2,
+    },
+    pressedItem: {
+      opacity: 0.7,
+      backgroundColor:
+        Platform.OS === "ios" ? "rgba(0,0,0,0.05)" : "rgba(0,0,0,0.1)",
+    },
+    leftSectionContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: responsiveWidth2_4,
+    },
+    iconStack: {
+      position: "relative",
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    checkIcon: {
+      position: "absolute",
+    },
+  });
+}

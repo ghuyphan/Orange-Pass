@@ -897,6 +897,7 @@ const styles = StyleSheet.create({
   },
   bankList: {
     // Flex grow isn't needed
+    flexGrow: 1
   },
   bankListContent: {
     gap: getResponsiveWidth(2.4), // Reduce gap slightly
