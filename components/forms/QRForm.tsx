@@ -1,7 +1,13 @@
 // QRForm.tsx
-import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { StyleSheet, View, Keyboard } from 'react-native';
-import { Formik, FormikHelpers } from 'formik';
+import React, {
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+  useEffect, // Added useEffect
+} from "react";
+import { StyleSheet, View, Keyboard } from "react-native";
+import { Formik, FormikHelpers } from "formik";
 import Animated, {
   Extrapolation,
   interpolate,
@@ -10,53 +16,58 @@ import Animated, {
   useSharedValue,
   FadeIn,
   FadeOut,
-} from 'react-native-reanimated';
-import BottomSheet from '@gorhom/bottom-sheet';
-import { Colors } from '@/constants/Colors';
-import { useTheme } from '@/context/ThemeContext';
-import { t } from '@/i18n';
-import { ThemedButton } from '@/components/buttons/ThemedButton';
-import ThemedCardItem from '@/components/cards/ThemedCardItem';
-import { ThemedInput, ThemedDisplayInput } from '@/components/Inputs';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import ThemedReuseableSheet from '@/components/bottomsheet/ThemedReusableSheet';
+} from "react-native-reanimated";
+import BottomSheet from "@gorhom/bottom-sheet";
+import { Colors } from "@/constants/Colors";
+import { useTheme } from "@/context/ThemeContext";
+import { t } from "@/i18n";
+import { ThemedButton } from "@/components/buttons/ThemedButton";
+import ThemedCardItem from "@/components/cards/ThemedCardItem";
+import { ThemedInput, ThemedDisplayInput } from "@/components/Inputs";
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
+import ThemedReuseableSheet from "@/components/bottomsheet/ThemedReusableSheet";
 import {
   CategorySheetItem,
   BrandSheetItem,
   MetadataTypeSheetItem,
-} from '@/components/bottomsheet/SheetItem';
-import { qrCodeSchema } from '@/utils/validationSchemas';
-import { returnItemsByType } from '@/utils/returnItemData';
-import { useLocale } from '@/context/LocaleContext';
-import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
-import DataType from '@/types/dataType';
-import { ThemedTopToast } from '@/components/toast/ThemedTopToast';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import ModalManager from '../modals/ModalManager';
+} from "@/components/bottomsheet/SheetItem";
+import { qrCodeSchema } from "@/utils/validationSchemas";
+import { returnItemsByType } from "@/utils/returnItemData";
+import { useLocale } from "@/context/LocaleContext";
+import {
+  getResponsiveFontSize,
+  getResponsiveWidth,
+  getResponsiveHeight,
+} from "@/utils/responsive";
+import DataType from "@/types/dataType";
+import { ThemedTopToast } from "@/components/toast/ThemedTopToast";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import ModalManager from "../modals/ModalManager";
 
-const AnimatedKeyboardAwareScrollView = Animated.createAnimatedComponent(KeyboardAwareScrollView);
+const AnimatedKeyboardAwareScrollView =
+  Animated.createAnimatedComponent(KeyboardAwareScrollView);
 
 export interface CategoryItem {
   display: string;
-  value: 'bank' | 'ewallet' | 'store';
+  value: "bank" | "ewallet" | "store";
 }
 
 export interface BrandItem {
   code: string;
   name: string;
   full_name: string;
-  type: 'bank' | 'ewallet' | 'store';
+  type: "bank" | "ewallet" | "store";
   bin?: string;
 }
 
 export interface MetadataTypeItem {
   display: string;
-  value: 'qr' | 'barcode';
+  value: "qr" | "barcode";
 }
 
 export type SheetItem = CategoryItem | BrandItem | MetadataTypeItem;
-export type SheetType = 'category' | 'brand' | 'metadataType';
+export type SheetType = "category" | "brand" | "metadataType";
 
 export interface FormParams {
   category: CategoryItem | null;
@@ -69,7 +80,10 @@ export interface FormParams {
 
 interface QRFormProps {
   initialValues: FormParams;
-  onSubmit: (values: FormParams, formikHelpers: FormikHelpers<FormParams>) => Promise<void>;
+  onSubmit: (
+    values: FormParams,
+    formikHelpers: FormikHelpers<FormParams>,
+  ) => Promise<void>;
   isEditing: boolean;
   onNavigateBack: () => void;
   codeProvider?: string;
@@ -80,26 +94,31 @@ const QRForm: React.FC<QRFormProps> = ({
   onSubmit,
   isEditing,
   onNavigateBack,
-  codeProvider
+  codeProvider,
 }) => {
   // Context and theme setup
   const { currentTheme } = useTheme();
   const { locale: currentLocale } = useLocale();
-  const locale = currentLocale ?? 'en';
-  const { text: colors, icon: iconColors, cardBackground: sectionsColors } = Colors[currentTheme];
-  
+  const locale = currentLocale ?? "en";
+  const {
+    text: colors,
+    icon: iconColors,
+    cardBackground: sectionsColors,
+  } = Colors[currentTheme];
+
   // State management
   const isSheetVisible = useRef(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [sheetType, setSheetType] = useState<SheetType | null>(null);
   const [isToastVisible, setIsToastVisible] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
+  const [toastMessage, setToastMessage] = useState("");
   const [toastKey, setToastKey] = useState(0);
-  
+
   // Refs
   const bottomSheetRef = useRef<BottomSheet>(null);
   const modalManagerRef = useRef<any>(null);
-  
+  const openSheetTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Ref for the timeout
+
   // Animation setup
   const scrollY = useSharedValue(0);
   const scrollThreshold = getResponsiveHeight(7);
@@ -110,160 +129,198 @@ const QRForm: React.FC<QRFormProps> = ({
   // Memoized data
   const categoryData: CategoryItem[] = useMemo(
     () => [
-      { display: t('addScreen.bankCategory'), value: 'bank' },
-      { display: t('addScreen.ewalletCategory'), value: 'ewallet' },
-      { display: t('addScreen.storeCategory'), value: 'store' },
+      { display: t("addScreen.bankCategory"), value: "bank" },
+      { display: t("addScreen.ewalletCategory"), value: "ewallet" },
+      { display: t("addScreen.storeCategory"), value: "store" },
     ],
-    [t]
+    [t],
   );
 
   const metadataTypeData: MetadataTypeItem[] = useMemo(
     () => [
-      { display: t('addScreen.qr'), value: 'qr' },
-      { display: t('addScreen.barcode'), value: 'barcode' },
+      { display: t("addScreen.qr"), value: "qr" },
+      { display: t("addScreen.barcode"), value: "barcode" },
     ],
-    [t]
+    [t],
   );
 
-  // Callbacks
-// Helper function to map DataType to BrandItem.type
-function mapDataTypeToBrandItemType(dataType: DataType): 'bank' | 'ewallet' | 'store' {
-  switch (dataType) {
-    case 'bank':
-      return 'bank';
-    case 'ewallet':
-      return 'ewallet';
-    case 'store':
-      return 'store';
-    case 'vietqr':  //Example of handling the vietqr case
-        return 'bank'; //Or whatever type is logical
-    // Add other cases as needed
-    default:
-      // Handle unexpected DataType values.  Throwing an error
-      // is usually a good idea to catch configuration issues early.
-      throw new Error(`Unexpected DataType: ${dataType}`);
-  }
-}
+  // useEffect for cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (openSheetTimeoutRef.current) {
+        clearTimeout(openSheetTimeoutRef.current);
+      }
+    };
+  }, []); // Empty dependency array ensures this runs only on mount and unmount
 
-const getItemsByTypeHelper = useCallback(
-  (type: DataType, locale: string): BrandItem[] =>
-    returnItemsByType(type).map((item) => ({
-      code: item.code,
-      name: item.name,
-      full_name: item.full_name[locale],
-      type: mapDataTypeToBrandItemType(type), // Use the mapping function
-      ...(type === 'bank' || type === 'store' || type === 'ewallet' ? { bin: item.bin } : {})
-    })),
-  [returnItemsByType] // Add returnItemsByType to the dependency array
-);
-  
+  // Callbacks
+  // Helper function to map DataType to BrandItem.type
+  function mapDataTypeToBrandItemType(
+    dataType: DataType,
+  ): "bank" | "ewallet" | "store" {
+    switch (dataType) {
+      case "bank":
+        return "bank";
+      case "ewallet":
+        return "ewallet";
+      case "store":
+        return "store";
+      case "vietqr": //Example of handling the vietqr case
+        return "bank"; //Or whatever type is logical
+      // Add other cases as needed
+      default:
+        // Handle unexpected DataType values.  Throwing an error
+        // is usually a good idea to catch configuration issues early.
+        throw new Error(`Unexpected DataType: ${dataType}`);
+    }
+  }
+
+  const getItemsByTypeHelper = useCallback(
+    (type: DataType, locale: string): BrandItem[] =>
+      returnItemsByType(type).map((item) => ({
+        code: item.code,
+        name: item.name,
+        full_name: item.full_name[locale],
+        type: mapDataTypeToBrandItemType(type), // Use the mapping function
+        ...(type === "bank" || type === "store" || type === "ewallet"
+          ? { bin: item.bin }
+          : {}),
+      })),
+    [returnItemsByType], // Add returnItemsByType to the dependency array
+  );
+
   const showToast = useCallback((message: string) => {
     setToastMessage(message);
     setIsToastVisible(true);
-    setToastKey(prevKey => prevKey + 1);
+    setToastKey((prevKey) => prevKey + 1);
   }, []);
 
   const onToastHidden = useCallback(() => {
     setIsToastVisible(false);
   }, []);
 
-  const handleFieldClear = useCallback((
-    field: 'category' | 'brand' | 'metadataType',
-    setFieldValue: (field: string, value: any, shouldValidate?: boolean) => void
-  ) => {
-    switch(field) {
-      case 'category':
-        setFieldValue('category', null);
-        setFieldValue('brand', null);
-        setFieldValue('accountName', '');
-        setFieldValue('accountNumber', '');
-        setFieldValue('metadata', '');
-        break;
-      case 'brand':
-        setFieldValue('brand', null);
-        break;
-      case 'metadataType':
-        setFieldValue('metadataType', metadataTypeData[0]);
-        break;
-    }
-  }, [metadataTypeData]);
+  const handleFieldClear = useCallback(
+    (
+      field: "category" | "brand" | "metadataType",
+      setFieldValue: (
+        field: string,
+        value: any,
+        shouldValidate?: boolean,
+      ) => void,
+    ) => {
+      switch (field) {
+        case "category":
+          setFieldValue("category", null);
+          setFieldValue("brand", null);
+          setFieldValue("accountName", "");
+          setFieldValue("accountNumber", "");
+          setFieldValue("metadata", "");
+          break;
+        case "brand":
+          setFieldValue("brand", null);
+          break;
+        case "metadataType":
+          setFieldValue("metadataType", metadataTypeData[0]);
+          break;
+      }
+    },
+    [metadataTypeData],
+  );
 
-  const onEmptyInputPress = useCallback((inputType: string) => {
-    showToast(t('addScreen.errors.emptyInputMessage'));
-  }, [t, showToast]);
+  const onEmptyInputPress = useCallback(
+    (inputType: string) => {
+      showToast(t("addScreen.errors.emptyInputMessage"));
+    },
+    [t, showToast],
+  );
 
   const shouldShowAccountSection = useCallback(
-    (category: CategoryItem | null) => 
-      category?.value !== 'store' && 
-      typeof category?.value === 'string' && 
+    (category: CategoryItem | null) =>
+      category?.value !== "store" &&
+      typeof category?.value === "string" &&
       category.value.length > 0,
-    []
+    [],
   );
 
   const sheetData = useCallback(
     (category: CategoryItem | null) => {
       switch (sheetType) {
-        case 'category':
+        case "category":
           return categoryData;
-        case 'brand':
-          return category ? getItemsByTypeHelper(category.value as DataType, locale) : [];
-        case 'metadataType':
+        case "brand":
+          return category
+            ? getItemsByTypeHelper(category.value as DataType, locale)
+            : [];
+        case "metadataType":
           return metadataTypeData;
         default:
           return [];
       }
     },
-    [sheetType, categoryData, metadataTypeData, getItemsByTypeHelper, locale]
+    [sheetType, categoryData, metadataTypeData, getItemsByTypeHelper, locale],
   );
 
   const onOpenSheet = useCallback(
     (
       type: SheetType,
       category: CategoryItem | null,
-      setFieldValue: (field: string, value: any, shouldValidate?: boolean) => void
+      setFieldValue: (
+        field: string,
+        value: any,
+        shouldValidate?: boolean,
+      ) => void,
     ) => {
       // Validate category first before opening brand or metadata type sheet
-      if ((type === 'brand' || type === 'metadataType') && !category) {
-        showToast(t('addScreen.errors.selectCategoryFirstMessage'));
+      if ((type === "brand" || type === "metadataType") && !category) {
+        showToast(t("addScreen.errors.selectCategoryFirstMessage"));
         return;
       }
-      
+
       setSheetType(type);
       Keyboard.dismiss();
-      
+
+      // Clear any existing timeout before starting a new one
+      if (openSheetTimeoutRef.current) {
+        clearTimeout(openSheetTimeoutRef.current);
+      }
+
       requestAnimationFrame(() => {
         setIsSheetOpen(true);
-        setTimeout(() => {
+        openSheetTimeoutRef.current = setTimeout(() => {
           bottomSheetRef.current?.snapToIndex(0);
         }, 150);
       });
     },
-    [t, showToast]
+    [t, showToast],
   );
 
   const handleSheetItemSelect = useCallback(
     (
       item: SheetItem,
       type: SheetType,
-      setFieldValue: (field: string, value: any, shouldValidate?: boolean) => void
+      setFieldValue: (
+        field: string,
+        value: any,
+        shouldValidate?: boolean,
+      ) => void,
     ) => {
       switch (type) {
-        case 'category':
-          setFieldValue('category', item as CategoryItem);
-          setFieldValue('brand', null);
-          setFieldValue('accountName', '');
-          setFieldValue('accountNumber', '');
+        case "category":
+          setFieldValue("category", item as CategoryItem);
+          setFieldValue("brand", null);
+          setFieldValue("accountName", "");
+          setFieldValue("accountNumber", "");
           break;
-        case 'brand':
-          setFieldValue('brand', item as BrandItem);
+        case "brand":
+          setFieldValue("brand", item as BrandItem);
           break;
-        case 'metadataType':
-          setFieldValue('metadataType', item as MetadataTypeItem);
+        case "metadataType":
+          setFieldValue("metadataType", item as MetadataTypeItem);
           break;
       }
       bottomSheetRef.current?.close();
     },
-    []
+    [],
   );
 
   const handleSheetChange = useCallback((index: number) => {
@@ -271,13 +328,14 @@ const getItemsByTypeHelper = useCallback(
     setIsSheetOpen(index !== -1);
   }, []);
 
-  const keyExtractor = useCallback((item: SheetItem | unknown) => 
-    'value' in (item as SheetItem)
-      ? (item as CategoryItem | MetadataTypeItem).value
-      : 'code' in (item as SheetItem)
-        ? (item as BrandItem).code
-        : String(item),
-    []
+  const keyExtractor = useCallback(
+    (item: SheetItem | unknown) =>
+      "value" in (item as SheetItem)
+        ? (item as CategoryItem | MetadataTypeItem).value
+        : "code" in (item as SheetItem)
+          ? (item as BrandItem).code
+          : String(item),
+    [],
   );
 
   // Animation handlers
@@ -293,7 +351,7 @@ const getItemsByTypeHelper = useCallback(
         scrollY.value,
         [scrollThreshold, scrollThreshold + animationRange],
         [1, 0],
-        Extrapolation.CLAMP
+        Extrapolation.CLAMP,
       ),
       transform: [
         {
@@ -301,13 +359,13 @@ const getItemsByTypeHelper = useCallback(
             scrollY.value,
             [0, scrollThreshold],
             [0, translateYValue],
-            Extrapolation.CLAMP
+            Extrapolation.CLAMP,
           ),
         },
       ],
       zIndex: isSheetOpen ? 0 : 1,
     }),
-    [isSheetOpen]
+    [isSheetOpen],
   );
 
   const cardStyle = useAnimatedStyle(
@@ -318,12 +376,12 @@ const getItemsByTypeHelper = useCallback(
             scrollY.value,
             [0, scrollThreshold],
             [1, scaleValue],
-            Extrapolation.CLAMP
+            Extrapolation.CLAMP,
           ),
         },
       ],
     }),
-    []
+    [],
   );
 
   // Rendering functions
@@ -334,20 +392,23 @@ const getItemsByTypeHelper = useCallback(
       accountNumber: string,
       category: CategoryItem | null,
       brand: BrandItem | null,
-      metadataType: MetadataTypeItem | null
+      metadataType: MetadataTypeItem | null,
     ) => (
       <ThemedCardItem
         accountName={accountName}
         accountNumber={accountNumber}
-        code={codeProvider ? codeProvider : brand?.code || ''}
-        type={category?.value || 'store'}
+        code={codeProvider ? codeProvider : brand?.code || ""}
+        type={category?.value || "store"}
         metadata={metadata}
         metadata_type={metadataType?.value}
         animatedStyle={cardStyle}
-        cardHolderStyle={{ maxWidth: getResponsiveWidth(40), fontSize: getResponsiveFontSize(12) }}
+        cardHolderStyle={{
+          maxWidth: getResponsiveWidth(40),
+          fontSize: getResponsiveFontSize(12),
+        }}
       />
     ),
-    [cardStyle, codeProvider]
+    [cardStyle, codeProvider],
   );
 
   const renderSheetItem = useCallback(
@@ -356,13 +417,20 @@ const getItemsByTypeHelper = useCallback(
       category: CategoryItem | null,
       brand: BrandItem | null,
       metadataType: MetadataTypeItem | null,
-      setFieldValue: (field: string, value: any, shouldValidate?: boolean) => void
+      setFieldValue: (
+        field: string,
+        value: any,
+        shouldValidate?: boolean,
+      ) => void,
     ) => {
       if (!item) return null;
 
-      const isCategory = 'value' in item && ['store', 'bank', 'ewallet'].includes(item.value);
-      const isMetadataType = 'value' in item && ['qr', 'barcode'].includes(item.value);
-      const isBrand = 'code' in item;
+      const isCategory =
+        "value" in item &&
+        ["store", "bank", "ewallet"].includes(item.value);
+      const isMetadataType =
+        "value" in item && ["qr", "barcode"].includes(item.value);
+      const isBrand = "code" in item;
 
       const isSelected = isCategory
         ? category?.value === item.value
@@ -383,28 +451,32 @@ const getItemsByTypeHelper = useCallback(
         return (
           <CategorySheetItem
             {...commonProps}
-            onPress={() => handleSheetItemSelect(item, 'category', setFieldValue)}
+            onPress={() =>
+              handleSheetItemSelect(item, "category", setFieldValue)
+            }
           />
         );
       } else if (isBrand) {
         return (
           <BrandSheetItem
             {...commonProps}
-            onPress={() => handleSheetItemSelect(item, 'brand', setFieldValue)}
+            onPress={() => handleSheetItemSelect(item, "brand", setFieldValue)}
           />
         );
       } else if (isMetadataType) {
         return (
           <MetadataTypeSheetItem
             {...commonProps}
-            onPress={() => handleSheetItemSelect(item, 'metadataType', setFieldValue)}
+            onPress={() =>
+              handleSheetItemSelect(item, "metadataType", setFieldValue)
+            }
           />
         );
       }
-      
+
       return null;
     },
-    [colors, handleSheetItemSelect, iconColors]
+    [colors, handleSheetItemSelect, iconColors],
   );
 
   return (
@@ -423,7 +495,7 @@ const getItemsByTypeHelper = useCallback(
         touched,
         isSubmitting,
         setFieldValue,
-        dirty
+        dirty,
       }) => (
         <ThemedView style={styles.container}>
           <ThemedTopToast
@@ -433,7 +505,7 @@ const getItemsByTypeHelper = useCallback(
             onVisibilityToggle={onToastHidden}
             duration={2000}
           />
-          
+
           {/* Title container with animation */}
           <Animated.View style={[styles.titleContainer, titleContainerStyle]}>
             <View style={styles.headerContainer}>
@@ -451,7 +523,7 @@ const getItemsByTypeHelper = useCallback(
                 />
               </View>
               <ThemedText style={styles.title} type="title">
-                {isEditing ? t('editScreen.title') : t('addScreen.title')}
+                {isEditing ? t("editScreen.title") : t("addScreen.title")}
               </ThemedText>
             </View>
           </Animated.View>
@@ -472,34 +544,52 @@ const getItemsByTypeHelper = useCallback(
               values.accountNumber,
               values.category,
               values.brand,
-              values.metadataType
+              values.metadataType,
             )}
 
             {/* Main form section */}
-            <ThemedView style={[styles.formContainer, { backgroundColor: sectionsColors }]}>
+            <ThemedView
+              style={[
+                styles.formContainer,
+                { backgroundColor: sectionsColors },
+              ]}
+            >
               <ThemedDisplayInput
                 iconName="format-list-bulleted-type"
-                placeholder={t('addScreen.categoryPlaceholder')}
+                placeholder={t("addScreen.categoryPlaceholder")}
                 value={values.category?.display}
-                onPress={() => onOpenSheet('category', values.category, setFieldValue)}
-                onClear={() => handleFieldClear('category', setFieldValue)}
-                errorMessage={touched.category && errors.category ? String(errors.category) : undefined}
+                onPress={() =>
+                  onOpenSheet("category", values.category, setFieldValue)
+                }
+                onClear={() => handleFieldClear("category", setFieldValue)}
+                errorMessage={
+                  touched.category && errors.category
+                    ? String(errors.category)
+                    : undefined
+                }
                 isError={touched.category && !!errors.category}
               />
-              
+
               <ThemedDisplayInput
                 iconName="domain"
-                placeholder={t('addScreen.brandPlaceholder')}
+                placeholder={t("addScreen.brandPlaceholder")}
                 logoCode={codeProvider ? codeProvider : values.brand?.code}
                 value={values.brand?.full_name}
-                onPress={() => onOpenSheet('brand', values.category, setFieldValue)}
-                onClear={() => handleFieldClear('brand', setFieldValue)}
-                errorMessage={touched.brand && errors.brand ? String(errors.brand) : undefined}
+                onPress={() =>
+                  onOpenSheet("brand", values.category, setFieldValue)
+                }
+                onClear={() => handleFieldClear("brand", setFieldValue)}
+                errorMessage={
+                  touched.brand && errors.brand
+                    ? String(errors.brand)
+                    : undefined
+                }
                 isError={touched.brand && !!errors.brand}
               />
-              
+
               {/* Conditional metadata input for store or ewallet */}
-              {(values.category?.value === 'store' || values.category?.value === 'ewallet') && (
+              {(values.category?.value === "store" ||
+                values.category?.value === "ewallet") && (
                 <Animated.View
                   style={{ backgroundColor: sectionsColors }}
                   entering={FadeIn.duration(300)}
@@ -507,26 +597,32 @@ const getItemsByTypeHelper = useCallback(
                 >
                   <ThemedInput
                     iconName="credit-card-outline"
-                    placeholder={t('addScreen.metadataPlaceholder')}
+                    placeholder={t("addScreen.metadataPlaceholder")}
                     value={values.metadata}
-                    onChangeText={handleChange('metadata')}
-                    onBlur={handleBlur('metadata')}
+                    onChangeText={handleChange("metadata")}
+                    onBlur={handleBlur("metadata")}
                     backgroundColor={sectionsColors}
                     disabled={!!codeProvider && !isEditing}
-                     disableOpacityChange={false}
-                    errorMessage={touched.metadata && errors.metadata ? String(errors.metadata) : undefined}
+                    disableOpacityChange={false}
+                    errorMessage={
+                      touched.metadata && errors.metadata
+                        ? String(errors.metadata)
+                        : undefined
+                    }
                     isError={touched.metadata && !!errors.metadata}
-                    onDisabledPress={() => onEmptyInputPress('metadata')}
+                    onDisabledPress={() => onEmptyInputPress("metadata")}
                   />
                 </Animated.View>
               )}
-              
+
               <ThemedDisplayInput
                 iconName="qrcode"
-                placeholder={t('addScreen.metadataTypePlaceholder')}
+                placeholder={t("addScreen.metadataTypePlaceholder")}
                 value={values.metadataType?.display}
-                onPress={() => onOpenSheet('metadataType', values.category, setFieldValue)}
-                onClear={() => handleFieldClear('metadataType', setFieldValue)}
+                onPress={() =>
+                  onOpenSheet("metadataType", values.category, setFieldValue)
+                }
+                onClear={() => handleFieldClear("metadataType", setFieldValue)}
                 showClearButton={false}
               />
             </ThemedView>
@@ -534,69 +630,86 @@ const getItemsByTypeHelper = useCallback(
             {/* Account section (conditionally rendered) */}
             {shouldShowAccountSection(values.category) && (
               <Animated.View
-                style={[styles.formContainer, { backgroundColor: sectionsColors }]}
+                style={[
+                  styles.formContainer,
+                  { backgroundColor: sectionsColors },
+                ]}
                 entering={FadeIn.duration(300)}
                 exiting={FadeOut.duration(300)}
               >
                 <ThemedInput
                   iconName="account"
-                  placeholder={t('addScreen.accountNamePlaceholder')}
+                  placeholder={t("addScreen.accountNamePlaceholder")}
                   value={values.accountName}
-                  onChangeText={handleChange('accountName')}
-                  onBlur={handleBlur('accountName')}
+                  onChangeText={handleChange("accountName")}
+                  onBlur={handleBlur("accountName")}
                   backgroundColor={sectionsColors}
-                   disableOpacityChange={false}
-                  errorMessage={touched.accountName && errors.accountName ? String(errors.accountName) : undefined}
+                  disableOpacityChange={false}
+                  errorMessage={
+                    touched.accountName && errors.accountName
+                      ? String(errors.accountName)
+                      : undefined
+                  }
                   isError={touched.accountName && !!errors.accountName}
-                  onDisabledPress={() => onEmptyInputPress('account')}
+                  onDisabledPress={() => onEmptyInputPress("account")}
                 />
-                
+
                 <ThemedInput
                   iconName="account-cash"
-                  placeholder={t('addScreen.accountNumberPlaceholder')}
+                  placeholder={t("addScreen.accountNumberPlaceholder")}
                   value={values.accountNumber}
-                  onChangeText={handleChange('accountNumber')}
-                  onBlur={handleBlur('accountNumber')}
+                  onChangeText={handleChange("accountNumber")}
+                  onBlur={handleBlur("accountNumber")}
                   backgroundColor={sectionsColors}
                   keyboardType="numeric"
-                   disableOpacityChange={false}
-                  errorMessage={touched.accountNumber && errors.accountNumber ? String(errors.accountNumber) : undefined}
+                  disableOpacityChange={false}
+                  errorMessage={
+                    touched.accountNumber && errors.accountNumber
+                      ? String(errors.accountNumber)
+                      : undefined
+                  }
                   isError={touched.accountNumber && !!errors.accountNumber}
-                  onDisabledPress={() => onEmptyInputPress('account')}
+                  onDisabledPress={() => onEmptyInputPress("account")}
                 />
               </Animated.View>
             )}
 
             {/* Save button */}
             <ThemedButton
-              label={isEditing ? t('editScreen.saveButton') : t('addScreen.saveButton')}
+              label={
+                isEditing
+                  ? t("editScreen.saveButton")
+                  : t("addScreen.saveButton")
+              }
               onPress={handleSubmit}
               style={styles.saveButton}
               disabled={isSubmitting}
               loading={isSubmitting}
-              loadingLabel={isEditing ? t('editScreen.saving') : t('addScreen.saving')}
+              loadingLabel={
+                isEditing ? t("editScreen.saving") : t("addScreen.saving")
+              }
             />
           </AnimatedKeyboardAwareScrollView>
 
           {/* Bottom sheet */}
           <ThemedReuseableSheet
             ref={bottomSheetRef}
-            showSearchBar={sheetType === 'brand'}
+            showSearchBar={sheetType === "brand"}
             title={
-              sheetType === 'category'
-                ? t('addScreen.categoryTitle')
-                : sheetType === 'brand'
-                  ? t('addScreen.brandTitle')
-                  : sheetType === 'metadataType'
-                    ? t('addScreen.metadataTypeTitle')
-                    : ''
+              sheetType === "category"
+                ? t("addScreen.categoryTitle")
+                : sheetType === "brand"
+                  ? t("addScreen.brandTitle")
+                  : sheetType === "metadataType"
+                    ? t("addScreen.metadataTypeTitle")
+                    : ""
             }
             snapPoints={
-              sheetType === 'category'
-                ? ['32%']
-                : sheetType === 'metadataType'
-                  ? ['25%']
-                  : ['85%']
+              sheetType === "category"
+                ? ["32%"]
+                : sheetType === "metadataType"
+                  ? ["25%"]
+                  : ["85%"]
             }
             onChange={handleSheetChange}
             contentType="flat"
@@ -610,7 +723,7 @@ const getItemsByTypeHelper = useCallback(
                     values.category,
                     values.brand,
                     values.metadataType,
-                    setFieldValue
+                    setFieldValue,
                   ),
                 keyExtractor: keyExtractor,
                 style: {
@@ -620,14 +733,14 @@ const getItemsByTypeHelper = useCallback(
               },
             }}
           />
-          
+
           {/* Modal manager for unsaved changes */}
-          <ModalManager 
-            ref={modalManagerRef} 
-            onNavigateBack={onNavigateBack} 
-            dirty={dirty} 
-            isSheetVisible={isSheetVisible} 
-            bottomSheetRef={bottomSheetRef} 
+          <ModalManager
+            ref={modalManagerRef}
+            onNavigateBack={onNavigateBack}
+            dirty={dirty}
+            isSheetVisible={isSheetVisible}
+            bottomSheetRef={bottomSheetRef}
           />
         </ThemedView>
       )}
@@ -645,20 +758,20 @@ const styles = StyleSheet.create({
     paddingTop: getResponsiveHeight(18),
   },
   titleContainer: {
-    position: 'absolute',
+    position: "absolute",
     top: getResponsiveHeight(10),
     left: 0,
     right: 0,
   },
   headerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: getResponsiveWidth(4.8),
     gap: getResponsiveWidth(4.8),
   },
   titleButtonContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: getResponsiveWidth(4.8),
   },
   title: {
@@ -666,7 +779,7 @@ const styles = StyleSheet.create({
   },
   titleButton: {},
   formContainer: {
-    justifyContent: 'center',
+    justifyContent: "center",
     borderRadius: getResponsiveWidth(4),
     marginTop: getResponsiveHeight(1.2),
     marginBottom: getResponsiveHeight(2.4),

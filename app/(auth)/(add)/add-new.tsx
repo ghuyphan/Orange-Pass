@@ -108,13 +108,13 @@ const AddScreen: React.FC = () => {
 
         if (values.category?.value === 'bank' && values.brand?.bin) {
           const response = await getVietQRData(
-            values.accountNumber ?? '', // Use provided account number, fallback if empty
-            values.accountName ?? '',  // Use provided account name
+            values.accountNumber ?? '',
+            values.accountName ?? '',
             values.brand?.bin,
             0,
             '',
           );
-          metadata = response.data.qrCode; // Update metadata from VietQR
+          metadata = response.data.qrCode;
         }
 
         const newQrRecord: QRRecord = {
@@ -122,7 +122,7 @@ const AddScreen: React.FC = () => {
           qr_index: nextIndex,
           user_id: userId,
           code: values.brand?.code || '',
-          metadata: metadata, // Use the potentially updated metadata
+          metadata: metadata,
           metadata_type: values.metadataType?.value || 'qr',
           account_name: values.accountName,
           account_number: values.accountNumber,
@@ -135,17 +135,20 @@ const AddScreen: React.FC = () => {
 
         dispatch(addQrData(newQrRecord));
         await insertOrUpdateQrCodes([newQrRecord]);
+
+        // ADD THIS: Short delay to allow React to update the UI with loading state
+        await new Promise(resolve => setTimeout(resolve, 300));
+
+        router.replace('/(auth)/home');
       } catch (error) {
         console.error('Submission error:', error);
         dispatch(removeQrData(newId));
-        // Consider using a toast or other UI feedback instead of console.error
-      } finally {
-        router.replace('/(auth)/home');
-        formikHelpers.setSubmitting(false);
+        formikHelpers.setSubmitting(false); // Only set false on error
       }
     },
-    [dispatch, userId, codeBin] // Include codeBin in dependencies
+    [dispatch, userId, codeBin]
   );
+
 
   return (
     <QRForm

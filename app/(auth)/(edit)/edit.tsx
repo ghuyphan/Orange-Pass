@@ -98,6 +98,10 @@ const EditScreen: React.FC = () => {
     try {
       // Database update *after* the optimistic UI update.
       await insertOrUpdateQrCodes([updatedQrRecord]);
+
+      // ADD THIS: Short delay to allow React to update the UI with loading state
+      await new Promise(resolve => setTimeout(resolve, 300));
+
       router.replace('/(auth)/home'); // Navigate after successful update
     } catch (error) {
       console.error('Submission error:', error);
@@ -106,6 +110,7 @@ const EditScreen: React.FC = () => {
       setSubmitting(false); // Turn off loading *after* everything (success or error)
     }
   }, [dispatch, qrRecord, router]);
+
 
   // useCallback for onNavigateBack
   const onNavigateBack = useCallback(() => {

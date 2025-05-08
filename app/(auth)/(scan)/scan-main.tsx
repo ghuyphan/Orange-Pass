@@ -167,12 +167,34 @@ export default function ScanScreen() {
   const showToast = useCallback((message: string) => {
     setToastMessage(message);
     setIsToastVisible(true);
-    setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       if (isMounted.current) {
         setIsToastVisible(false);
       }
     }, 2500);
+    
+    // Store the timeout ID for cleanup
+    return timeoutId;
   }, []);
+  
+  // Add an effect to clean up toast timeouts
+  useEffect(() => {
+    let toastTimeoutId: NodeJS.Timeout | null = null;
+    
+    // Replace the original showToast with a wrapper that tracks the timeout
+    const showToastWithCleanup = (message: string) => {
+      if (toastTimeoutId) clearTimeout(toastTimeoutId);
+      toastTimeoutId = showToast(message);
+    };
+    
+    // Make showToastWithCleanup available to the component
+    // You could use a ref or replace all showToast calls with this version
+    
+    return () => {
+      if (toastTimeoutId) clearTimeout(toastTimeoutId);
+    };
+  }, [showToast]);
+  
 
   const handleExpandPress = useCallback(() => {
     bottomSheetRef.current?.snapToIndex(0);

@@ -70,7 +70,6 @@ function HomeScreen() {
   // Loading and Syncing
   const [isLoading, setIsLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
-  // const [isEmpty, setIsEmpty] = useState(false);
   const isEmpty = useMemo(() => qrData.length === 0, [qrData]);
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced' | 'error'>('idle');
 
@@ -95,19 +94,35 @@ function HomeScreen() {
   const [wifiIsHidden, setWifiIsHidden] = useState(false);
   const [filter, setFilter] = useState('all');
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
-  // const [wasOffline, setWasOffline] = useState(false);
 
   // Refs
   const flatListRef = useRef<FlatList<QRRecord> | null>(null);
   const bottomSheetRef = useRef<BottomSheet>(null);
+  const timeoutRefs = useRef<{[key: string]: NodeJS.Timeout | null}>({
+    sync: null,
+    idle: null,
+    edit: null,
+    delete: null,
+    sheet: null,
+    toast: null,
+    network: null,
+  });
 
   // Shared Values (Reanimated)
   const isEmptyShared = useSharedValue(qrData.length === 0 ? 1 : 0);
   const emptyCardOffset = useSharedValue(350);
   const scrollY = useSharedValue(0);
 
+  // Clear all timeouts on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(timeoutRefs.current).forEach(timer => {
+        if (timer) clearTimeout(timer);
+      });
+    };
+  }, []);
+
   // Sync with server
-  // Assuming showToast is useCallback'd and t is stable
   const syncWithServer = useCallback(async (userIdToSync: string) => {
     // Prevent concurrent syncs or syncing when offline
     if (isOffline || isSyncing) {
@@ -115,7 +130,10 @@ function HomeScreen() {
     }
     setIsSyncing(true);
     setSyncStatus('syncing');
-    // setIsLoading(true); // Optional: Indicate general loading during sync
+    
+    // Show top toast for sync starting
+    setTopToastMessage(t('homeScreen.syncStarted'));
+    setIsTopToastVisible(true);
 
     try {
       // Step 1: Upload local changes (if any) to the server
@@ -137,31 +155,26 @@ function HomeScreen() {
 
       // Step 6: Update sync status and notify user
       setSyncStatus('synced');
-      showToast(t('homeScreen.syncSuccess'));
+      setTopToastMessage(t('homeScreen.syncSuccess'));
+      setIsTopToastVisible(true);
 
       // Step 7: Reset status back to idle after a delay
-      const timer = setTimeout(() => setSyncStatus('idle'), 3000);
-      // No cleanup needed here as it's unlikely to unmount mid-timeout *within* the callback itself
+      if (timeoutRefs.current.sync) clearTimeout(timeoutRefs.current.sync);
+      timeoutRefs.current.sync = setTimeout(() => setSyncStatus('idle'), 3000);
 
     } catch (error) {
       console.error('Error during sync process:', error);
       setSyncStatus('error');
-      showToast(t('homeScreen.syncError'));
-      // Optional: Reset status after error display
-      // const errorTimer = setTimeout(() => setSyncStatus('idle'), 5000);
+      setTopToastMessage(t('homeScreen.syncError'));
+      setIsTopToastVisible(true);
     } finally {
       // Step 8: Always ensure syncing state is reset
       setIsSyncing(false);
-      // setIsLoading(false); // Reset loading if it was set at the start
     }
-  },
-    // Dependencies: Include all external variables/functions used
-    [isOffline, isSyncing, dispatch]
-  );
+  }, [isOffline, isSyncing, dispatch]);
 
   // Initialize data
   useEffect(() => {
-
     if (!userId) {
       setIsLoading(false);
       setSyncStatus('idle');
@@ -190,7 +203,8 @@ function HomeScreen() {
       } catch (error) {
         if (isMounted) {
           setSyncStatus('error'); // Indicate error state
-          showToast(t('homeScreen.loadError'));
+          setTopToastMessage(t('homeScreen.loadError'));
+          setIsTopToastVisible(true);
         }
       } finally {
         if (isMounted) {
@@ -203,14 +217,13 @@ function HomeScreen() {
         return; // Don't proceed if local load failed or component unmounted
       }
 
-      // No need to store the handle if not cancelling
       InteractionManager.runAfterInteractions(async () => {
         if (!isMounted) {
           return;
         }
 
         if (syncStatus === 'error') {
-          return
+          return;
         }
 
         if (isOffline) {
@@ -219,7 +232,7 @@ function HomeScreen() {
 
         try {
           const unsyncedCodes = await getUnsyncedQrCodes(userId);
-          const localDbExists = await hasLocalData(userId); // Check existence again, might be redundant if Phase 1 guarantees data, but safe
+          const localDbExists = await hasLocalData(userId);
           const needsSync = !localDbExists || unsyncedCodes.length > 0;
 
           if (needsSync) {
@@ -227,10 +240,9 @@ function HomeScreen() {
           } else {
             if (isMounted) {
               setSyncStatus('synced'); // Indicate up-to-date status
-              // No need to store timer ID if not clearing it
-              setTimeout(() => {
-                // Reset to idle only if still mounted and status hasn't changed
-                // (e.g., user didn't trigger manual sync in the meantime)
+              
+              if (timeoutRefs.current.idle) clearTimeout(timeoutRefs.current.idle);
+              timeoutRefs.current.idle = setTimeout(() => {
                 if (isMounted && syncStatus === 'synced') {
                   setSyncStatus('idle');
                 }
@@ -240,22 +252,21 @@ function HomeScreen() {
         } catch (error) {
           if (isMounted) {
             setSyncStatus('error');
-            // Maybe show a specific toast? Be careful not to double-toast if syncWithServer failed.
-            // showToast(t('homeScreen.syncCheckError'));
           }
         }
-      }); // End InteractionManager
+      });
     };
 
     initializeData();
 
-    // --- Cleanup Function ---
+    // Cleanup function
     return () => {
       console.log('[Init Effect] Cleanup running.');
       isMounted = false;
-      // No timers or handles requiring explicit cleanup based on this logic
+      
+      // Clear any pending timeouts from this effect
+      if (timeoutRefs.current.idle) clearTimeout(timeoutRefs.current.idle);
     };
-
   }, [userId]);
 
   // Network status toasts
@@ -274,10 +285,10 @@ function HomeScreen() {
         setBottomToastMessage(t('homeScreen.online'));
         setBottomToastColor('#4caf50');
         setIsBottomToastVisible(true);
+        
         // Hide after a delay
-        const timer = setTimeout(() => setIsBottomToastVisible(false), 2000); // Increased duration slightly
-        // Cleanup timer if component unmounts or isOffline changes again quickly
-        return () => clearTimeout(timer);
+        if (timeoutRefs.current.network) clearTimeout(timeoutRefs.current.network);
+        timeoutRefs.current.network = setTimeout(() => setIsBottomToastVisible(false), 2000);
       } else {
         // If it was already online, ensure the toast is hidden
         setIsBottomToastVisible(false);
@@ -285,14 +296,17 @@ function HomeScreen() {
     }
     // Update ref for next render
     prevIsOffline.current = isOffline;
-  }, [isOffline, t]); // Assuming t is stable
+    
+    return () => {
+      if (timeoutRefs.current.network) clearTimeout(timeoutRefs.current.network);
+    };
+  }, [isOffline, t]);
 
   // Animate empty card
   useEffect(() => {
     isEmptyShared.value = isEmpty ? 1 : 0;
     animateEmptyCard();
   }, [isEmpty, isEmptyShared]);
-
 
   const animateEmptyCard = () => {
     emptyCardOffset.value = withSpring(0, { damping: 30, stiffness: 150 });
@@ -382,7 +396,11 @@ function HomeScreen() {
     throttle(() => {
       if (!selectedItemId) return;
       bottomSheetRef.current?.close();
-      setTimeout(() => router.push({ pathname: `/(edit)/edit`, params: { id: selectedItemId } }), 200);
+      
+      if (timeoutRefs.current.edit) clearTimeout(timeoutRefs.current.edit);
+      timeoutRefs.current.edit = setTimeout(() => {
+        router.push({ pathname: `/(edit)/edit`, params: { id: selectedItemId } });
+      }, 200);
     }, 300),
     [selectedItemId]
   );
@@ -445,11 +463,10 @@ function HomeScreen() {
   const handleSync = useCallback(() => {
     // Directly call the actual sync function
     syncWithServer(userId);
-  }, [syncWithServer, userId]); // Depend on the stable syncWithServer function and userId
+  }, [syncWithServer, userId]);
 
   const handleFilterChange = useCallback((newFilter: string) => {
     setFilter(newFilter);
-    // filterQrCodesByType(userId, newFilter).then((filteredData) => dispatch(setQrData(filteredData)));
   }, []);
 
   // Optimize renderItem with useCallback
@@ -475,62 +492,63 @@ function HomeScreen() {
 
   // Optimize onDragEnd with useCallback
   const onDragEnd = useCallback(
-    ({ data: reorderedFilteredData }: { data: QRRecord[] }) => {
-      // Provide immediate haptic feedback and update UI state
+    ({ data: reorderedData }: { data: QRRecord[] }) => {
+      // Provide immediate haptic feedback
       triggerHapticFeedback();
       setIsActive(false);
       
-      try {
-        // Prepare the updated data
-        let finalUpdatedData;
+      // Handle filtered vs unfiltered case differently
+      if (filter === 'all') {
+        // Simple case: no filtering - update everything
+        dispatch(setQrData(reorderedData));
         
-        if (filter === 'all') {
-          finalUpdatedData = reorderedFilteredData.map((item, index) => ({
-            ...item,
-            qr_index: index,
-            updated: new Date().toISOString(),
-          }));
-        } else {
-          // Your existing filter logic for merging filtered data
-          const reorderedFilteredMap = new Map(
-            reorderedFilteredData.map((item) => [item.id, item])
-          );
-          
-          let filteredIndex = 0;
-          const mergedData = qrData.map((originalItem) => {
-            if (reorderedFilteredMap.has(originalItem.id)) {
-              const itemToReturn = reorderedFilteredData[filteredIndex];
-              filteredIndex++;
-              return itemToReturn;
-            } else {
-              return originalItem;
-            }
-          });
-          
-          finalUpdatedData = mergedData.map((item, index) => ({
-            ...item,
-            qr_index: index,
-            updated: new Date().toISOString(),
-          }));
-        }
-        
-        // Update Redux immediately for responsive UI
-        dispatch(setQrData(finalUpdatedData));
-        
-        // Defer database update until after animations complete
         InteractionManager.runAfterInteractions(() => {
-          updateQrIndexes(finalUpdatedData)
-            .catch(error => {
-              console.error('Error updating QR indexes:', error);
-              // Optionally show an error toast
-            });
+          const updatedData = reorderedData.map((item, index) => ({
+            ...item,
+            qr_index: index,
+            updated: new Date().toISOString()
+          }));
+          updateQrIndexes(updatedData).catch(console.error);
         });
-      } catch (error) {
-        console.error('Error processing reordered data:', error);
+      } else {
+        // Complex case: filtering is active - need to merge changes
+        
+        // Create a map of the filtered items by ID for quick lookup
+        const reorderedItemsMap = new Map(
+          reorderedData.map(item => [item.id, item])
+        );
+        
+        // Get IDs of all items in the filter 
+        const filteredItemIds = new Set(reorderedData.map(item => item.id));
+        
+        // Create a new array with non-filtered items preserved
+        // and filtered items in their new order
+        const newFullList = qrData.map(item => {
+          // If item is part of the current filter, return the reordered version
+          if (filteredItemIds.has(item.id)) {
+            return reorderedItemsMap.get(item.id)!;
+          }
+          // Otherwise return the original item (not part of the filter)
+          return item;
+        });
+        
+        // Update UI immediately
+        dispatch(setQrData(newFullList));
+        
+        // Defer database update
+        InteractionManager.runAfterInteractions(() => {
+          const finalData = newFullList.map((item, index) => ({
+            ...item,
+            qr_index: index, 
+            updated: new Date().toISOString()
+          }));
+          updateQrIndexes(finalData).catch(console.error);
+        });
       }
     },
     [dispatch, qrData, filter]
   );
+  
   
   // Toast handler
   const showToast = useCallback((message: string) => {
@@ -538,7 +556,7 @@ function HomeScreen() {
     setIsTopToastVisible(true);
   }, []);
 
-  const handleCopySuccess = useCallback(() => showToast(t('homeScreen.copied')), []);
+  const handleCopySuccess = useCallback(() => showToast(t('homeScreen.copied')), [showToast, t]);
 
   // Delete handlers
   const onDeleteSheetPress = useCallback(() => {
@@ -571,9 +589,11 @@ function HomeScreen() {
       setIsToastVisible(true);
     } finally {
       setSelectedItemId(null);
-      setTimeout(() => setIsSyncing(false), 400);
+      
+      if (timeoutRefs.current.delete) clearTimeout(timeoutRefs.current.delete);
+      timeoutRefs.current.delete = setTimeout(() => setIsSyncing(false), 400);
     }
-  }, [selectedItemId, qrData, dispatch]);
+  }, [selectedItemId, qrData, dispatch, t]);
 
   // Padding values
   const paddingValues = useMemo(() => {
@@ -590,10 +610,9 @@ function HomeScreen() {
       default:
         return 100; // Default padding for more than three items
     }
-  }, [qrData.length, height]);
+  }, [qrData.length]);
 
   const listContainerPadding = useMemo(() => paddingValues, [paddingValues]);
-
 
   // Sheet content
   const renderSheetContent = () => {
@@ -687,7 +706,7 @@ function HomeScreen() {
         titleContainerStyle={titleContainerStyle}
         syncStatus={syncStatus}
         isLoading={isLoading}
-        onSync={() => handleSync()}
+        onSync={handleSync}
         onScan={onNavigateToScanScreen}
         onSettings={onNavigateToSettingsScreen}
       />
@@ -734,7 +753,7 @@ function HomeScreen() {
             dragItemOverflow={false}
             onScrollOffsetChange={onScrollOffsetChange}
             decelerationRate={'fast'}
-            scrollEnabled={!fabOpen}
+            // scrollEnabled={!fabOpen}
           />
         </Animated.View>
       )}
@@ -782,7 +801,10 @@ function HomeScreen() {
                 ? t('homeScreen.linking')
                 : t('homeScreen.settings')
         }
-        onClose={() => setTimeout(() => setIsSheetOpen(false), 50)}
+        onClose={() => {
+          if (timeoutRefs.current.sheet) clearTimeout(timeoutRefs.current.sheet);
+          timeoutRefs.current.sheet = setTimeout(() => setIsSheetOpen(false), 50);
+        }}
         snapPoints={
           sheetType === 'setting'
             ? ['25%']
