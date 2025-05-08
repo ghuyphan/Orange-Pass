@@ -6,7 +6,6 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 
 import { ThemedButton } from '@/components/buttons/ThemedButton';
 import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
 import { t } from '@/i18n';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { storage } from '@/utils/storage';
@@ -166,10 +165,6 @@ const OnBoardScreen = () => {
         <View style={styles.logoContainer}>
           <LOGO width={getResponsiveWidth(14)} height={getResponsiveWidth(14)} />
         </View>
-        
-        {/* <ThemedText style={styles.screenTitle} type="title">
-          {t('onboardingScreen.title')}
-        </ThemedText> */}
 
         <View style={styles.featuresContainer}>
           {features.map((feature, index) => (

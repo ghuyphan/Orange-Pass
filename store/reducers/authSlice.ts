@@ -1,3 +1,4 @@
+// In your authSlice.ts file:
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import UserRecord from "@/types/userType";
 import { AvatarConfig } from "@zamplyy/react-native-nice-avatar";
@@ -7,6 +8,9 @@ interface AuthState {
   user: UserRecord | null;
   isAuthenticated: boolean;
   avatarConfig: AvatarConfig | null;
+  // Store dates as strings for Redux serialization
+  isSyncing: boolean;
+  lastSynced: string | null; // ISO string instead of Date
 }
 
 const initialState: AuthState = {
@@ -14,6 +18,8 @@ const initialState: AuthState = {
   user: null,
   isAuthenticated: false,
   avatarConfig: null,
+  isSyncing: false,
+  lastSynced: null,
 };
 
 const authSlice = createSlice({
@@ -49,6 +55,8 @@ const authSlice = createSlice({
       state.user = null;
       state.isAuthenticated = false;
       state.avatarConfig = null;
+      // Keep sync information when clearing auth
+      state.lastSynced = null;
     },
     updateAvatarConfig: (
       state,
@@ -61,9 +69,24 @@ const authSlice = createSlice({
         state.user.avatar = action.payload;
       }
     },
+    // Modified to accept string instead of Date
+    setSyncStatus: (
+      state,
+      action: PayloadAction<{ isSyncing: boolean; lastSynced?: string }>
+    ) => {
+      state.isSyncing = action.payload.isSyncing;
+      if (action.payload.lastSynced) {
+        state.lastSynced = action.payload.lastSynced;
+      }
+    },
   },
 });
 
-export const { setAuthData, clearAuthData, updateAvatarConfig } =
-  authSlice.actions;
+export const { 
+  setAuthData, 
+  clearAuthData, 
+  updateAvatarConfig,
+  setSyncStatus 
+} = authSlice.actions;
+
 export default authSlice.reducer;

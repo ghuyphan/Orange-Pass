@@ -1,4 +1,10 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, {
+  useEffect,
+  useState,
+  useCallback,
+  useRef,
+  useMemo, // Added useMemo
+} from "react";
 import { StyleSheet, View, Keyboard, Pressable, Platform } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Formik } from "formik";
@@ -149,7 +155,7 @@ export default function LoginScreen() {
     bottomSheetRef.current?.expand();
   };
 
-  const renderLanguageOptions = () => {
+  const languageOptionsContent = useMemo(() => {
     const colors =
       currentTheme === "light" ? Colors.light.icon : Colors.dark.icon;
     const textColors =
@@ -177,11 +183,24 @@ export default function LoginScreen() {
             </View>
             {storedLocale === key ? (
               <View style={styles.iconStack}>
-                <MaterialCommunityIcons name="circle-outline" size={getResponsiveFontSize(18)} color={colors} />
-                <MaterialIcons name="circle" size={getResponsiveFontSize(10)} color={colors} style={styles.checkIcon} />
+                <MaterialCommunityIcons
+                  name="circle-outline"
+                  size={getResponsiveFontSize(18)}
+                  color={colors}
+                />
+                <MaterialIcons
+                  name="circle"
+                  size={getResponsiveFontSize(10)}
+                  color={colors}
+                  style={styles.checkIcon}
+                />
               </View>
             ) : (
-              <MaterialCommunityIcons name="circle-outline" size={getResponsiveFontSize(18)} color={colors} />
+              <MaterialCommunityIcons
+                name="circle-outline"
+                size={getResponsiveFontSize(18)}
+                color={colors}
+              />
             )}
           </Pressable>
         ))}
@@ -204,16 +223,36 @@ export default function LoginScreen() {
           </View>
           {storedLocale === undefined ? (
             <View style={styles.iconStack}>
-              <MaterialCommunityIcons name="circle-outline" size={getResponsiveFontSize(18)} color={colors} />
-              <MaterialIcons name="circle" size={getResponsiveFontSize(10)} color={colors} style={styles.checkIcon} />
+              <MaterialCommunityIcons
+                name="circle-outline"
+                size={getResponsiveFontSize(18)}
+                color={colors}
+              />
+              <MaterialIcons
+                name="circle"
+                size={getResponsiveFontSize(10)}
+                color={colors}
+                style={styles.checkIcon}
+              />
             </View>
           ) : (
-            <MaterialCommunityIcons name="circle-outline" size={getResponsiveFontSize(18)} color={colors} />
+            <MaterialCommunityIcons
+              name="circle-outline"
+              size={getResponsiveFontSize(18)}
+              color={colors}
+            />
           )}
         </Pressable>
       </View>
     );
-  };
+  }, [
+    currentTheme,
+    cardColor,
+    storedLocale,
+    handleLanguageChange,
+    handleSystemLocale,
+    t, // Added t as a dependency
+  ]);
 
   return (
     <Formik
@@ -226,7 +265,9 @@ export default function LoginScreen() {
           const authData = await login(values.email, values.password);
 
           // Check if user has already made a decision about quick login
-          const hasPreference = await hasQuickLoginPreference(authData.record.id); // Use userID instead of email
+          const hasPreference = await hasQuickLoginPreference(
+            authData.record.id
+          ); // Use userID instead of email
 
           if (hasPreference) {
             // User has already decided, go directly to home
@@ -279,7 +320,7 @@ export default function LoginScreen() {
                 label={
                   storedLocale
                     ? languageOptions[storedLocale as LanguageKey]?.label ||
-                    t("languageScreen.system")
+                      t("languageScreen.system")
                     : t("languageScreen.system")
                 }
                 rightIconName="chevron-down"
@@ -382,7 +423,7 @@ export default function LoginScreen() {
             snapPoints={["40%"]}
             showCloseButton={true}
             contentType="custom"
-            customContent={renderLanguageOptions()}
+            customContent={languageOptionsContent}
           />
         </KeyboardAwareScrollView>
       )}
@@ -413,11 +454,9 @@ const styles = StyleSheet.create({
     marginBottom: getResponsiveHeight(2),
   },
   loginButton: {
-
     marginBottom: getResponsiveHeight(2),
   },
-  loginButtonText: {
-  },
+  loginButtonText: {},
   forgotButtonContainer: {
     alignItems: "center",
     marginBottom: getResponsiveHeight(4),
@@ -425,15 +464,16 @@ const styles = StyleSheet.create({
   },
   createAccountButton: {
     borderRadius: getResponsiveWidth(8),
-
     width: "100%",
     marginBottom: getResponsiveHeight(2),
   },
-  createAccountButtonText: {
-  },
+  createAccountButtonText: {},
   appNameContainer: {
     alignItems: "center",
-    marginBottom: Platform.OS === "ios" ? getResponsiveHeight(4) : getResponsiveHeight(3),
+    marginBottom:
+      Platform.OS === "ios"
+        ? getResponsiveHeight(4)
+        : getResponsiveHeight(3),
     paddingBottom: Platform.OS === "android" ? getResponsiveHeight(1) : 0,
   },
   metaText: {
@@ -469,7 +509,8 @@ const styles = StyleSheet.create({
   },
   pressedItem: {
     opacity: 0.7,
-    backgroundColor: Platform.OS === "ios" ? "rgba(0,0,0,0.05)" : "rgba(0,0,0,0.1)",
+    backgroundColor:
+      Platform.OS === "ios" ? "rgba(0,0,0,0.05)" : "rgba(0,0,0,0.1)",
   },
   leftSectionContainer: {
     flexDirection: "row",
@@ -477,14 +518,11 @@ const styles = StyleSheet.create({
     gap: getResponsiveWidth(2.4),
   },
   iconStack: {
-    position: 'relative',
-    justifyContent: 'center',
-    alignItems: 'center',
+    position: "relative",
+    justifyContent: "center",
+    alignItems: "center",
   },
   checkIcon: {
-    position: 'absolute',
-    // top: '50%',
-    // left: '50%',
-    // transform: [{ translateX: -6 }, { translateY: -6 }], // Adjust to center the checkmark
+    position: "absolute",
   },
 });

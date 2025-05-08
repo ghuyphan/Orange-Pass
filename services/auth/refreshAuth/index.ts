@@ -3,7 +3,7 @@ import UserRecord from "@/types/userType";
 import * as SecureStore from 'expo-secure-store';
 import { store } from "@/store";
 import { setQrData } from "@/store/reducers/qrSlice";
-import { setAuthData } from "@/store/reducers/authSlice";
+import { setAuthData, clearAuthData, setSyncStatus } from "@/store/reducers/authSlice";
 import { setErrorMessage } from "@/store/reducers/errorSlice";
 import { getTokenExpirationDate } from "@/utils/JWTdecode";
 import { getUserById } from '@/services/localDB/userDB';
@@ -38,6 +38,76 @@ function mapRecordToUserData(record: Record<string, any>): UserRecord {
 
 let isRefreshing = false;
 
+/**
+ * Loads local user data and QR codes without waiting for network
+ * Returns true if local data is available, false otherwise
+ */
+async function loadLocalData(): Promise<boolean> {
+  try {
+    const userID = await SecureStore.getItemAsync('userID');
+    const authToken = await SecureStore.getItemAsync('authToken');
+    
+    if (!userID) return false;
+    
+    const localUserData = await getUserById(userID);
+    if (!localUserData) return false;
+    
+    const localQrData = await getQrCodesByUserId(userID);
+    
+    // Dispatch local data to Redux store immediately
+    store.dispatch(setAuthData({ 
+      token: authToken || '', 
+      user: localUserData
+    }));
+    store.dispatch(setQrData(localQrData));
+    
+    // Initialize sync status
+    store.dispatch(setSyncStatus({ isSyncing: false }));
+    
+    return true;
+  } catch (error) {
+    console.error('Failed to load local data', error);
+    return false;
+  }
+}
+
+/**
+ * Start app with local data, then initiate background sync if online
+ */
+async function checkInitialAuth(): Promise<boolean> {
+  try {
+    // Load local data immediately - this is the key to the local-first approach
+    const hasLocalData = await loadLocalData();
+    
+    // Get network status from store
+    const isOffline = store.getState().network.isOffline;
+    
+    // Start background sync process if online
+    if (!isOffline) {
+      // Use setTimeout to make sure this runs non-blocking
+      setTimeout(async () => {
+        const authToken = await SecureStore.getItemAsync('authToken');
+        if (authToken) {
+          store.dispatch(setSyncStatus({ isSyncing: true }));
+          await refreshAuthToken(authToken);
+          store.dispatch(setSyncStatus({ 
+            isSyncing: false, 
+            lastSynced: new Date().toISOString() // Convert Date to ISO string
+          }));
+        }
+      }, 0);
+    } else if (hasLocalData) {
+      // If offline but has local data, show offline mode message
+      store.dispatch(setErrorMessage(t('network.offlineMode')));
+    }
+    
+    return hasLocalData;
+  } catch (error) {
+    console.error('Initial authentication check failed', error);
+    return false;
+  }
+}
+
 async function handleTokenRefreshError(error: AuthError, authToken: string): Promise<boolean> {
   const errorStatus = error.status ?? error.data?.status ?? 0;
   const userID = await SecureStore.getItemAsync('userID');
@@ -48,111 +118,38 @@ async function handleTokenRefreshError(error: AuthError, authToken: string): Pro
     originalError: error
   });
 
+  // For server errors, just continue with local data
   if (errorStatus === AuthErrorStatus.ServerError || errorStatus === 0) {
     if (userID) {
-      try {
-        const expirationDate = getTokenExpirationDate(authToken);
-        if (expirationDate && expirationDate > new Date()) {
-          const localUserData = await getUserById(userID);
-          const localQrData = await getQrCodesByUserId(userID);
-
-          if (localUserData) {
-            store.dispatch(setAuthData({ token: authToken, user: localUserData }));
-            store.dispatch(setQrData(localQrData));
-            store.dispatch(setErrorMessage(t('authRefresh.warnings.usingOfflineData')));
-            return true;
-          }
-        }
-        // If we reach here, either token is expired or no local user data
-        await SecureStore.deleteItemAsync('authToken');
-        await SecureStore.deleteItemAsync('userID');
-        store.dispatch(setErrorMessage(t('authRefresh.errors.sessionExpired')));
-      } catch (localDbError) {
-        console.error('Failed to retrieve local user or QR data', localDbError);
-      }
+      store.dispatch(setErrorMessage(t('authRefresh.warnings.usingOfflineData')));
+      return true; // Continue with local data
     }
   }
 
+  // For auth errors, silently update state but don't interrupt user
   if (errorStatus === AuthErrorStatus.Unauthorized) {
     await SecureStore.deleteItemAsync('authToken');
-    await SecureStore.deleteItemAsync('userID');
-    store.dispatch(setErrorMessage(t('authRefresh.errors.sessionExpired')));
+    store.dispatch(setErrorMessage(t('authRefresh.warnings.sessionExpiredBackground')));
     return false;
   }
 
   switch (errorStatus) {
     case AuthErrorStatus.Forbidden:
     case AuthErrorStatus.NotFound:
-      await SecureStore.deleteItemAsync('authToken');
-      store.dispatch(setErrorMessage(t(`authRefresh.errors.${errorStatus}`)));
+      store.dispatch(setErrorMessage(t(`authRefresh.warnings.${errorStatus}`)));
       return false;
     default:
-      await SecureStore.deleteItemAsync('authToken');
-      store.dispatch(setErrorMessage(t('authRefresh.errors.unknown')));
+      store.dispatch(setErrorMessage(t('authRefresh.warnings.syncFailed')));
       return false;
   }
 }
 
-async function checkInitialAuth(): Promise<boolean> {
-  try {
-    const { network: { isOffline } } = store.getState();
-    const authToken = await SecureStore.getItemAsync('authToken');
-    const userID = await SecureStore.getItemAsync('userID');
-
-    if (!authToken || !userID) return false;
-
-    const expirationDate = getTokenExpirationDate(authToken);
-
-    if (!expirationDate || expirationDate <= new Date()) {
-      // Attempt to refresh token only if online. Otherwise, continue with local data
-      if (!isOffline && !await refreshAuthToken(authToken)) return false;
-    }
-
-    const localUserData = await getUserById(userID);
-    if (!localUserData) return false;
-
-    store.dispatch(setAuthData({ token: authToken, user: localUserData }));
-
-    // Fetch QR data from local DB regardless of network state
-    try {
-      const localQrData = await getQrCodesByUserId(userID);
-      store.dispatch(setQrData(localQrData));
-    } catch (error) {
-      console.error('Failed to fetch initial QR data', error);
-      // Handle the error appropriately (e.g., show a message to the user)
-      store.dispatch(setErrorMessage(t('authRefresh.errors.info.qr.localFetchFailed')));
-    }
-
-    // Initiate background refresh only if online
-    if (!isOffline) {
-      refreshAuthToken(authToken).catch(error => {
-        console.warn('Background token refresh failed', error);
-      });
-    }
-
-    return true;
-  } catch (error) {
-    console.error('Initial authentication check failed', error);
-    return false;
-  }
-}
-
-async function refreshAuthToken(authToken: string, maxRetries = 5, maxTimeout = 60000): Promise<boolean> {
+async function refreshAuthToken(authToken: string, maxRetries = 2, maxTimeout = 10000): Promise<boolean> {
   const isOffline = store.getState().network.isOffline;
   const userID = await SecureStore.getItemAsync('userID');
 
   if (isOffline || !userID) {
-    try {
-      if (userID) {
-        const localQrData = await getQrCodesByUserId(userID);
-        store.dispatch(setQrData(localQrData));
-        store.dispatch(setErrorMessage(t('network.offlineMode')));
-      }
-      return userID ? true : false;
-    } catch (localQrError) {
-      store.dispatch(setErrorMessage(t('authRefresh.errors.info.qr.localFetchFailed')));
-      return false;
-    }
+    return userID ? true : false; // Just use local data if offline
   }
 
   if (isRefreshing) return false;
@@ -164,7 +161,6 @@ async function refreshAuthToken(authToken: string, maxRetries = 5, maxTimeout = 
         pb.authStore.save(authToken, null);
         if (!pb.authStore.isValid) {
           await SecureStore.deleteItemAsync('authToken');
-          store.dispatch(setErrorMessage(t('authRefresh.errors.invalidToken')));
           return false;
         }
 
@@ -186,15 +182,14 @@ async function refreshAuthToken(authToken: string, maxRetries = 5, maxTimeout = 
         }));
 
         return true;
-
       } catch (error) {
         if (attempt === maxRetries) {
           return handleTokenRefreshError(error as AuthError, authToken);
         }
 
-        const backoffTime = Math.pow(2, attempt) * 1000 + Math.random() * 1000;
-        const timeout = Math.min(backoffTime, maxTimeout);
-        await new Promise(resolve => setTimeout(resolve, timeout));
+        // Use shorter backoff times to avoid long waits
+        const backoffTime = Math.min(Math.pow(2, attempt) * 500, maxTimeout);
+        await new Promise(resolve => setTimeout(resolve, backoffTime));
       }
     }
   } finally {
@@ -204,4 +199,30 @@ async function refreshAuthToken(authToken: string, maxRetries = 5, maxTimeout = 
   return false;
 }
 
-export { mapRecordToUserData, checkInitialAuth, refreshAuthToken };
+// Function to manually trigger sync when user requests it
+async function syncWithServer(): Promise<boolean> {
+  const { network: { isOffline } } = store.getState();
+  const authToken = await SecureStore.getItemAsync('authToken');
+  
+  if (isOffline || !authToken) {
+    store.dispatch(setErrorMessage(t('network.syncUnavailable')));
+    return false;
+  }
+  
+  store.dispatch(setSyncStatus({ isSyncing: true }));
+  const success = await refreshAuthToken(authToken);
+  
+  if (success) {
+    store.dispatch(setSyncStatus({ 
+      isSyncing: false, 
+      lastSynced: new Date().toISOString() // Convert Date to ISO string
+    }));
+    store.dispatch(setErrorMessage(t('network.syncComplete')));
+  } else {
+    store.dispatch(setSyncStatus({ isSyncing: false }));
+  }
+  
+  return success;
+}
+
+export { mapRecordToUserData, checkInitialAuth, refreshAuthToken, syncWithServer };

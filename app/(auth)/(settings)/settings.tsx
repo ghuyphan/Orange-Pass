@@ -68,9 +68,9 @@ function SettingsScreen() {
   const [isAvatarReady, setIsAvatarReady] = useState(false); // State to manage avatar rendering
   const dispatch = useDispatch();
   const scrollY = useSharedValue(0);
-  const email = useSelector(
-    (state: RootState) => state.auth.user?.email ?? '-'
-  );
+  // const email = useSelector(
+  //   (state: RootState) => state.auth.user?.email ?? '-'
+  // );
   const name = useSelector((state: RootState) => state.auth.user?.name ?? '-');
   const appVersion = Application.nativeApplicationVersion;
 
@@ -89,14 +89,29 @@ function SettingsScreen() {
 
   // Effect to defer avatar rendering until after interactions
   useEffect(() => {
-    // Schedule setIsAvatarReady(true) to run after interactions/animations
+    let timerId: NodeJS.Timeout | undefined; // Or 'number' for React Native
+  
     const interactionPromise = InteractionManager.runAfterInteractions(() => {
-      setIsAvatarReady(true);
+      console.log('InteractionManager fired. Waiting to render Avatar...');
+      // Assign to the outer scope timerId
+      timerId = setTimeout(() => {
+        console.log('Setting isAvatarReady to true.');
+        setIsAvatarReady(true); // Make sure setIsAvatarReady is the correct state setter
+      }, 200);
     });
-
-    // Cleanup function to cancel the task if the component unmounts
-    return () => interactionPromise.cancel();
-  }, []); // Empty dependency array ensures this runs only once on mount
+  
+    return () => {
+      console.log(
+        "SettingsScreen unmounting or effect re-running. Cancelling interaction and timeout."
+      );
+      interactionPromise.cancel(); // Good for the InteractionManager task
+      if (timerId) {
+        clearTimeout(timerId); // Essential for the setTimeout
+      }
+    };
+  }, []); // Add dependencies if `setIsAvatarReady` or other external variables are used and might change
+  
+  
 
   const scrollHandler = useAnimatedScrollHandler((event) => {
     scrollY.value = event.contentOffset.y;
