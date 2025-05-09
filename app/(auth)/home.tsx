@@ -128,50 +128,55 @@ function HomeScreen() {
     if (isOffline || isSyncing) {
       return;
     }
+    
+    // Update UI states immediately
     setIsSyncing(true);
     setSyncStatus('syncing');
     
     // Show top toast for sync starting
     setTopToastMessage(t('homeScreen.syncStarted'));
     setIsTopToastVisible(true);
-
-    try {
-      // Step 1: Upload local changes (if any) to the server
-      await syncQrCodes(userIdToSync);
-
-      // Step 2: Fetch latest data from the server
-      const serverData: ServerRecord[] = await fetchServerData(userIdToSync);
-
-      // Step 3: Insert or update local DB with server data (if any)
-      if (serverData.length > 0) {
-        await insertOrUpdateQrCodes(serverData);
+  
+    // Wait for any animations/interactions to complete before starting network operations
+    InteractionManager.runAfterInteractions(async () => {
+      try {
+        // Step 1: Upload local changes (if any) to the server
+        await syncQrCodes(userIdToSync);
+  
+        // Step 2: Fetch latest data from the server
+        const serverData: ServerRecord[] = await fetchServerData(userIdToSync);
+  
+        // Step 3: Insert or update local DB with server data (if any)
+        if (serverData.length > 0) {
+          await insertOrUpdateQrCodes(serverData);
+        }
+  
+        // Step 4: Get the final, merged data from the local DB
+        const finalLocalData = await getQrCodesByUserId(userIdToSync);
+  
+        // Step 5: Update the UI state via Redux
+        dispatch(setQrData(finalLocalData));
+  
+        // Step 6: Update sync status and notify user
+        setSyncStatus('synced');
+        setTopToastMessage(t('homeScreen.syncSuccess'));
+        setIsTopToastVisible(true);
+  
+        // Step 7: Reset status back to idle after a delay
+        if (timeoutRefs.current.sync) clearTimeout(timeoutRefs.current.sync);
+        timeoutRefs.current.sync = setTimeout(() => setSyncStatus('idle'), 3000);
+  
+      } catch (error) {
+        console.error('Error during sync process:', error);
+        setSyncStatus('error');
+        setTopToastMessage(t('homeScreen.syncError'));
+        setIsTopToastVisible(true);
+      } finally {
+        // Step 8: Always ensure syncing state is reset
+        setIsSyncing(false);
       }
-
-      // Step 4: Get the final, merged data from the local DB
-      const finalLocalData = await getQrCodesByUserId(userIdToSync);
-
-      // Step 5: Update the UI state via Redux
-      dispatch(setQrData(finalLocalData));
-
-      // Step 6: Update sync status and notify user
-      setSyncStatus('synced');
-      setTopToastMessage(t('homeScreen.syncSuccess'));
-      setIsTopToastVisible(true);
-
-      // Step 7: Reset status back to idle after a delay
-      if (timeoutRefs.current.sync) clearTimeout(timeoutRefs.current.sync);
-      timeoutRefs.current.sync = setTimeout(() => setSyncStatus('idle'), 3000);
-
-    } catch (error) {
-      console.error('Error during sync process:', error);
-      setSyncStatus('error');
-      setTopToastMessage(t('homeScreen.syncError'));
-      setIsTopToastVisible(true);
-    } finally {
-      // Step 8: Always ensure syncing state is reset
-      setIsSyncing(false);
-    }
-  }, [isOffline, isSyncing, dispatch]);
+    });
+  }, [isOffline, isSyncing, dispatch, t]);  
 
   // Initialize data
   useEffect(() => {
@@ -180,26 +185,26 @@ function HomeScreen() {
       setSyncStatus('idle');
       return; // Stop execution
     }
-
+  
     let isMounted = true; // Flag to prevent state updates after unmount
-
+  
     const initializeData = async () => {
       // --- Phase 1: Load and Display Local Data Quickly ---
       setIsLoading(true);
-
+  
       let localLoadSuccess = false;
       try {
         const currentLocalData = await getQrCodesByUserId(userId);
-
+  
         if (!isMounted) {
           // No state updates, but ensure loading stops in finally
           return; // Exit initializeData early
         }
-
+  
         dispatch(setQrData(currentLocalData));
         setSyncStatus('idle'); // Reset sync status after successful local load
         localLoadSuccess = true;
-
+  
       } catch (error) {
         if (isMounted) {
           setSyncStatus('error'); // Indicate error state
@@ -211,43 +216,82 @@ function HomeScreen() {
           setIsLoading(false);
         }
       }
-
+  
       // --- Phase 2: Schedule Network Sync (Only if Phase 1 succeeded & mounted) ---
       if (!localLoadSuccess || !isMounted) {
         return; // Don't proceed if local load failed or component unmounted
       }
-
+  
       InteractionManager.runAfterInteractions(async () => {
-        if (!isMounted) {
+        if (!isMounted || syncStatus === 'error' || isOffline) {
           return;
         }
-
-        if (syncStatus === 'error') {
-          return;
-        }
-
-        if (isOffline) {
-          return;
-        }
-
+  
         try {
           const unsyncedCodes = await getUnsyncedQrCodes(userId);
           const localDbExists = await hasLocalData(userId);
           const needsSync = !localDbExists || unsyncedCodes.length > 0;
-
-          if (needsSync) {
-            await syncWithServer(userId);
-          } else {
-            if (isMounted) {
-              setSyncStatus('synced'); // Indicate up-to-date status
-              
-              if (timeoutRefs.current.idle) clearTimeout(timeoutRefs.current.idle);
-              timeoutRefs.current.idle = setTimeout(() => {
-                if (isMounted && syncStatus === 'synced') {
-                  setSyncStatus('idle');
-                }
-              }, 3000);
+  
+          if (needsSync && isMounted) {
+            // Directly perform sync operations instead of calling syncWithServer
+            // to avoid nested InteractionManager calls
+            setIsSyncing(true);
+            setSyncStatus('syncing');
+            setTopToastMessage(t('homeScreen.syncStarted'));
+            setIsTopToastVisible(true);
+  
+            try {
+              // Step 1: Upload local changes to the server
+              await syncQrCodes(userId);
+  
+              // Step 2: Fetch latest data from the server
+              const serverData = await fetchServerData(userId);
+  
+              // Step 3: Insert or update local DB with server data
+              if (serverData.length > 0) {
+                await insertOrUpdateQrCodes(serverData);
+              }
+  
+              // Step 4: Get the final, merged data
+              const finalLocalData = await getQrCodesByUserId(userId);
+  
+              if (isMounted) {
+                // Step 5: Update Redux state
+                dispatch(setQrData(finalLocalData));
+                
+                // Step 6: Update sync status and notify
+                setSyncStatus('synced');
+                setTopToastMessage(t('homeScreen.syncSuccess'));
+                setIsTopToastVisible(true);
+                
+                // Step 7: Reset status after delay
+                if (timeoutRefs.current.sync) clearTimeout(timeoutRefs.current.sync);
+                timeoutRefs.current.sync = setTimeout(() => {
+                  if (isMounted) setSyncStatus('idle');
+                }, 3000);
+              }
+            } catch (syncError) {
+              console.error('Error during sync process:', syncError);
+              if (isMounted) {
+                setSyncStatus('error');
+                setTopToastMessage(t('homeScreen.syncError'));
+                setIsTopToastVisible(true);
+              }
+            } finally {
+              if (isMounted) {
+                setIsSyncing(false);
+              }
             }
+          } else if (isMounted) {
+            // Already in sync
+            setSyncStatus('synced');
+            
+            if (timeoutRefs.current.idle) clearTimeout(timeoutRefs.current.idle);
+            timeoutRefs.current.idle = setTimeout(() => {
+              if (isMounted && syncStatus === 'synced') {
+                setSyncStatus('idle');
+              }
+            }, 3000);
           }
         } catch (error) {
           if (isMounted) {
@@ -256,19 +300,19 @@ function HomeScreen() {
         }
       });
     };
-
+  
     initializeData();
-
+  
     // Cleanup function
     return () => {
-      console.log('[Init Effect] Cleanup running.');
       isMounted = false;
       
       // Clear any pending timeouts from this effect
       if (timeoutRefs.current.idle) clearTimeout(timeoutRefs.current.idle);
+      if (timeoutRefs.current.sync) clearTimeout(timeoutRefs.current.sync);
     };
   }, [userId]);
-
+  
   // Network status toasts
   const prevIsOffline = useRef(isOffline);
   useEffect(() => {
