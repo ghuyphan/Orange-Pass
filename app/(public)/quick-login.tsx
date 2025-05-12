@@ -536,7 +536,7 @@ const styles = StyleSheet.create({
     fontSize: getResponsiveFontSize(40),
     color: 'white',
     fontWeight: 'bold',
-    lineHeight: getResponsiveFontSize(100)
+    lineHeight: getResponsiveFontSize(100),
   },
 
   // User display name
@@ -545,6 +545,7 @@ const styles = StyleSheet.create({
     marginBottom: getResponsiveHeight(4),
     textAlign: 'center',
     maxWidth: '90%',
+    marginTop: getResponsiveHeight(2),
   },
 
   // Password input

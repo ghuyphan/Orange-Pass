@@ -13,7 +13,7 @@ import {
   Pressable,
   Image,
   ActivityIndicator,
-  Platform, // Import Platform
+  Platform,
 } from "react-native";
 import * as Linking from "expo-linking";
 import { useDispatch, useSelector } from "react-redux";
@@ -65,11 +65,13 @@ const DEFAULT_AMOUNT_SUGGESTIONS = [
   "500,000",
   "1,000,000",
 ];
-const SUGGESTION_MULTIPLIERS = [1000, 10000, 100000, 1000000]; // Define multipliers
+const SUGGESTION_MULTIPLIERS = [1000, 10000, 100000, 1000000];
 const LAST_USED_BANK_KEY = "lastUsedBank";
 const BANK_LOAD_DELAY = 300;
 const EDIT_NAVIGATION_DELAY = 10;
 const THROTTLE_WAIT = 500;
+const INITIAL_BANK_COUNT = 6; // Show only first 6 banks initially
+const BANK_BATCH_SIZE = 6; // Number of banks to load each time
 
 // Types
 interface ItemData {
@@ -100,7 +102,7 @@ const generateSuggestion = (prefix: number, multiplier: number): string => {
   const result = prefix * multiplier;
   if (!Number.isSafeInteger(result)) {
     console.warn(`Generated suggestion exceeds safe integer limit: ${result}`);
-    return result.toLocaleString("en-US"); // Use localeString for large numbers
+    return result.toLocaleString("en-US");
   }
   return formatAmount(String(result));
 };
@@ -112,11 +114,9 @@ const DetailScreen = () => {
   const qrData = useSelector((state: RootState) => state.qr.qrData);
   const isOffline = useSelector((state: RootState) => state.network.isOffline);
   const router = useRouter();
-  // Consider if brightness needs to be max on this screen vs. the QR screen
-  // useUnmountBrightness(1, true);
 
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const editNavigationTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Ref for edit navigation timeout
+  const editNavigationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const [toastKey, setToastKey] = useState(0);
   const [amount, setAmount] = useState("");
@@ -126,7 +126,12 @@ const DetailScreen = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isTopToastVisible, setIsTopToastVisible] = useState(false);
   const [topToastMessage, setTopToastMessage] = useState("");
+  
+  // Modified state for progressive loading
   const [vietQRBanks, setVietQRBanks] = useState<BankItem[]>([]);
+  const [allBanks, setAllBanks] = useState<BankItem[]>([]);
+  const [isLoadingMoreBanks, setIsLoadingMoreBanks] = useState(false);
+  const [isBanksInitiallyLoading, setIsBanksInitiallyLoading] = useState(true);
 
   const item = useMemo<ItemData | null>(() => {
     if (!encodedItem) return null;
@@ -194,9 +199,9 @@ const DetailScreen = () => {
     [currentTheme],
   );
 
-  // *** Dynamic suggestion list based on user input and multipliers ***
+  // Dynamic suggestion list based on user input and multipliers
   const dynamicSuggestions = useMemo(() => {
-    const numericString = amount.replace(/,/g, ""); // Get raw digits
+    const numericString = amount.replace(/,/g, "");
 
     if (!numericString || numericString === "0") {
       return DEFAULT_AMOUNT_SUGGESTIONS;
@@ -214,35 +219,45 @@ const DetailScreen = () => {
       return generatedSuggestions;
     } catch (error) {
       console.error("Error generating suggestions:", error);
-      return DEFAULT_AMOUNT_SUGGESTIONS; // Fallback
+      return DEFAULT_AMOUNT_SUGGESTIONS;
     }
   }, [amount]);
 
-  // Load banks effect
+  // Load banks effect - modified for progressive loading
   useEffect(() => {
-    const loadBanks = async () => {
+    const loadInitialBanks = async () => {
       if (item?.type !== "store") return;
-      const lastUsedBankCode = storage.getString(LAST_USED_BANK_KEY);
-      let banks = returnItemsByType("vietqr"); // Assuming this might be slow
-      if (lastUsedBankCode) {
-        const lastUsedBankIndex = banks.findIndex(
-          (bank) => bank.code === lastUsedBankCode,
-        );
-        if (lastUsedBankIndex > -1) {
-          // Check if found
-          const lastUsedBank = banks.splice(lastUsedBankIndex, 1)[0];
-          banks.unshift(lastUsedBank);
+      
+      setIsBanksInitiallyLoading(true);
+      
+      // Initial banks load with delay to prevent transition lag
+      const timerId = setTimeout(() => {
+        let banks = returnItemsByType("vietqr");
+        const lastUsedBankCode = storage.getString(LAST_USED_BANK_KEY);
+        
+        // Save all banks for later use
+        setAllBanks(banks);
+        
+        // Prioritize last used bank if available
+        if (lastUsedBankCode) {
+          const lastUsedBankIndex = banks.findIndex(
+            (bank) => bank.code === lastUsedBankCode,
+          );
+          if (lastUsedBankIndex > -1) {
+            const lastUsedBank = banks.splice(lastUsedBankIndex, 1)[0];
+            banks.unshift(lastUsedBank);
+          }
         }
-      }
-      setVietQRBanks(banks);
+        
+        // Only set the first few banks initially
+        setVietQRBanks(banks.slice(0, INITIAL_BANK_COUNT));
+        setIsBanksInitiallyLoading(false);
+      }, BANK_LOAD_DELAY);
+
+      return () => clearTimeout(timerId);
     };
 
-    // Delay bank loading slightly to prevent transition lag
-    const timerId = setTimeout(() => {
-      loadBanks();
-    }, BANK_LOAD_DELAY);
-
-    return () => clearTimeout(timerId); // Cleanup timeout
+    loadInitialBanks();
   }, [item?.type]);
 
   // Cleanup for editNavigationTimeoutRef
@@ -280,6 +295,24 @@ const DetailScreen = () => {
     setIsModalVisible(true);
   }, []);
 
+  // Handle loading more banks when user scrolls
+  const handleLoadMoreBanks = useCallback(() => {
+    if (vietQRBanks.length >= allBanks.length || isLoadingMoreBanks) return;
+    
+    setIsLoadingMoreBanks(true);
+    
+    // Add a small delay to prevent UI jank during scroll
+    setTimeout(() => {
+      const nextBatch = allBanks.slice(
+        vietQRBanks.length, 
+        vietQRBanks.length + BANK_BATCH_SIZE
+      );
+      
+      setVietQRBanks(current => [...current, ...nextBatch]);
+      setIsLoadingMoreBanks(false);
+    }, 100);
+  }, [vietQRBanks.length, allBanks, isLoadingMoreBanks]);
+
   const onDeleteItem = useCallback(async () => {
     if (!id || Array.isArray(id)) return;
 
@@ -300,12 +333,12 @@ const DetailScreen = () => {
 
       setIsModalVisible(false);
       setIsToastVisible(false);
-      router.replace("/home"); // Navigate back after successful deletion
+      router.replace("/home");
     } catch (error) {
       console.error("Error deleting QR code:", error);
       setToastMessage(t("homeScreen.deleteError"));
-      setIsToastVisible(true); // Keep toast visible on error
-      setIsModalVisible(false); // Close modal even on error
+      setIsToastVisible(true);
+      setIsModalVisible(false);
     } finally {
       setIsSyncing(false);
     }
@@ -321,7 +354,7 @@ const DetailScreen = () => {
     )}`;
     Linking.openURL(url).catch((err) => {
       console.error("Failed to open Google Maps:", err);
-      setIsToastVisible(true); // Use the status toast for this error
+      setIsToastVisible(true);
       setToastMessage(t("detailsScreen.failedToOpenGoogleMaps"));
     });
   }, [item]);
@@ -345,27 +378,38 @@ const DetailScreen = () => {
               const updatedBanks = [...currentBanks];
               const bankIndex = updatedBanks.findIndex((b) => b.code === code);
               if (bankIndex > 0) {
-                // Only move if not already first
                 const [selectedBank] = updatedBanks.splice(bankIndex, 1);
                 updatedBanks.unshift(selectedBank);
                 return updatedBanks;
               }
-              return currentBanks; // Return unchanged if already first or not found
+              return currentBanks;
+            });
+            
+            // Also update allBanks for consistency
+            setAllBanks((currentBanks) => {
+              const updatedBanks = [...currentBanks];
+              const bankIndex = updatedBanks.findIndex((b) => b.code === code);
+              if (bankIndex > 0) {
+                const [selectedBank] = updatedBanks.splice(bankIndex, 1);
+                updatedBanks.unshift(selectedBank);
+                return updatedBanks;
+              }
+              return currentBanks;
             });
           }
         } else {
           console.warn(`Cannot open URL: ${url}`);
-          setIsToastVisible(true); // Use status toast
+          setIsToastVisible(true);
           setToastMessage(t("detailsScreen.cannotOpenBankApp"));
           await Linking.openURL("https://vietqr.io");
         }
       } catch (err) {
         console.error("Failed to open bank app:", err);
-        setIsToastVisible(true); // Use status toast
+        setIsToastVisible(true);
         setToastMessage(t("detailsScreen.failedToOpenBankApp"));
       }
     },
-    [item?.type], // Dependencies: only item type affects the logic here
+    [item?.type],
   );
 
   const showTopToast = useCallback((message: string) => {
@@ -379,8 +423,14 @@ const DetailScreen = () => {
   }, []);
 
   const onNavigateToSelectScreen = useCallback(() => {
-    router.push("/(auth)/(detail)/bank-select");
-  }, [router]);
+    router.push({
+      pathname: "/(auth)/(detail)/bank-select",
+      params: { 
+        banks: JSON.stringify(allBanks), // Send all banks to avoid reloading
+        selectedBankCode: storage.getString(LAST_USED_BANK_KEY) || ""
+      }
+    });
+  }, [router, allBanks]);
 
   const handleTransferAmount = useCallback(
     throttle(async () => {
@@ -423,23 +473,18 @@ const DetailScreen = () => {
           pathname: "/qr-screen",
           params: {
             metadata: qrCode,
-            amount: amount, // Pass the formatted amount string
+            amount: amount,
             originalItem: encodeURIComponent(JSON.stringify(item)),
           },
         });
-        // Success: Don't hide toast immediately, let navigation happen
       } catch (error) {
         console.error("Error generating QR code:", error);
         setToastMessage(t("detailsScreen.generateError"));
-        setIsToastVisible(true); // Keep toast visible on error
-        setIsSyncing(false); // Stop syncing indicator on error
-      } finally {
-        // Only set syncing false here if it wasn't already set in catch
-        // setIsSyncing(false); // Moved to catch block for error case
-        // Let the QR screen handle hiding the toast or further actions
+        setIsToastVisible(true);
+        setIsSyncing(false);
       }
     }, THROTTLE_WAIT),
-    [item, amount, router, showTopToast, isOffline], // Added isOffline
+    [item, amount, router, showTopToast, isOffline],
   );
 
   const onCopyAccountNumber = useCallback(() => {
@@ -453,13 +498,13 @@ const DetailScreen = () => {
   const renderSuggestionItem = useCallback(
     ({ item: suggestionItem }: { item: string }) => (
       <Pressable
-        onPress={() => setAmount(suggestionItem)} // Set input to the full suggestion
+        onPress={() => setAmount(suggestionItem)}
         style={[styles.suggestionItem, { backgroundColor: buttonColor }]}
       >
         <ThemedText style={styles.suggestionText}>{suggestionItem}</ThemedText>
       </Pressable>
     ),
-    [buttonColor], // Depends only on buttonColor (derived from theme)
+    [buttonColor],
   );
 
   const renderPaymentMethodItem = useCallback(
@@ -497,6 +542,40 @@ const DetailScreen = () => {
     ),
     [iconColor],
   );
+  
+  // Add footer component for bank list
+  const renderBankListFooter = useCallback(() => {
+    if (isLoadingMoreBanks) {
+      return (
+        <View style={styles.bankListFooter}>
+          <ActivityIndicator size="small" color={iconColor} />
+        </View>
+      );
+    }
+    if (vietQRBanks.length < allBanks.length) {
+      return (
+        <Pressable 
+          style={[styles.bankItemPressable, { backgroundColor: buttonColor }]}
+          onPress={handleLoadMoreBanks}
+        >
+          <View style={styles.bankIconContainer}>
+            <MaterialCommunityIcons 
+              name="dots-horizontal" 
+              size={getResponsiveFontSize(24)} 
+              color={iconColor} 
+            />
+          </View>
+          <ThemedText 
+            numberOfLines={1}
+            style={[styles.bankItemText, { color: buttonTextColor }]}
+          >
+            {t("detailsScreen.loadMore")}
+          </ThemedText>
+        </Pressable>
+      );
+    }
+    return null;
+  }, [isLoadingMoreBanks, vietQRBanks.length, allBanks.length, iconColor, buttonColor, buttonTextColor, handleLoadMoreBanks]);
 
   // --- Main Render ---
   if (!item) {
@@ -512,9 +591,9 @@ const DetailScreen = () => {
       keyboardShouldPersistTaps="handled"
       style={[{ backgroundColor: backgroundColor, flex: 1 }]}
       contentContainerStyle={styles.container}
-      enableOnAndroid={Platform.OS === "android"} // Enable specifically for Android
-      enableAutomaticScroll={Platform.OS === "ios"} // Default behavior for iOS
-      extraScrollHeight={Platform.OS === "ios" ? 0 : -getResponsiveHeight(5)} // Adjust extra scroll height, potentially platform-specific
+      enableOnAndroid={Platform.OS === "android"}
+      enableAutomaticScroll={Platform.OS === "ios"}
+      extraScrollHeight={Platform.OS === "ios" ? 0 : -getResponsiveHeight(5)}
       showsVerticalScrollIndicator={false}
     >
       {/* Header */}
@@ -577,15 +656,14 @@ const DetailScreen = () => {
                     style={[styles.inputField, { color: textColor }]}
                     placeholder={t("detailsScreen.receivePlaceholder")}
                     keyboardType="numeric"
-                    value={amount} // Value is the user's potentially partial input
+                    value={amount}
                     placeholderTextColor={placeholderColor}
-                    // Update amount state, formatting happens here
                     onChangeText={(text) => setAmount(formatAmount(text))}
                   />
-                  {amount ? ( // Show clear button only if there's text
+                  {amount ? (
                     <Pressable
                       hitSlop={styles.hitSlop}
-                      onPress={() => setAmount("")} // Clear input
+                      onPress={() => setAmount("")}
                       style={styles.clearButton}
                     >
                       <MaterialCommunityIcons
@@ -612,15 +690,15 @@ const DetailScreen = () => {
                   </View>
                   <Pressable
                     hitSlop={styles.hitSlop}
-                    onPress={handleTransferAmount} // Uses the current 'amount' state
+                    onPress={handleTransferAmount}
                     style={[
                       styles.transferButton,
                       { opacity: amount ? 1 : 0.3 },
                     ]}
-                    disabled={!amount || isSyncing} // Disable if no amount or syncing
+                    disabled={!amount || isSyncing}
                   >
                     <MaterialCommunityIcons
-                      name={"chevron-right"} // Always show right arrow
+                      name={"chevron-right"}
                       size={getResponsiveFontSize(16)}
                       color={iconColor}
                     />
@@ -628,16 +706,16 @@ const DetailScreen = () => {
                 </View>
                 {/* Suggestions */}
                 <FlatList
-                  data={dynamicSuggestions} // Use the NEW dynamic list
+                  data={dynamicSuggestions}
                   horizontal
                   style={styles.suggestionList}
                   showsHorizontalScrollIndicator={false}
                   keyExtractor={(suggItem, index) =>
                     `suggestion-${suggItem}-${index}`
-                  } // Add index for safety
+                  }
                   contentContainerStyle={styles.suggestionListContent}
-                  renderItem={renderSuggestionItem} // renderSuggestionItem now sets the full suggestion
-                  initialNumToRender={4} // Render a bit more initially
+                  renderItem={renderSuggestionItem}
+                  initialNumToRender={4}
                   maxToRenderPerBatch={4}
                   windowSize={5}
                 />
@@ -679,7 +757,13 @@ const DetailScreen = () => {
                 keyExtractor={(bankItem) => bankItem.code}
                 contentContainerStyle={styles.bankListContent}
                 renderItem={renderPaymentMethodItem}
-                ListEmptyComponent={renderEmptyComponent}
+                ListEmptyComponent={isBanksInitiallyLoading ? renderEmptyComponent : null}
+                ListFooterComponent={renderBankListFooter}
+                onEndReached={handleLoadMoreBanks}
+                onEndReachedThreshold={0.3}
+                initialNumToRender={INITIAL_BANK_COUNT}
+                maxToRenderPerBatch={BANK_BATCH_SIZE}
+                windowSize={3}
               />
             </View>
           )}
@@ -690,7 +774,7 @@ const DetailScreen = () => {
       <ThemedReuseableSheet
         ref={bottomSheetRef}
         title={t("homeScreen.manage")}
-        snapPoints={["25%"]} // Adjust if content height changes
+        snapPoints={["25%"]}
         customContent={
           <SettingSheetContent onEdit={onEditPress} onDelete={onDeletePress} />
         }
@@ -710,7 +794,7 @@ const DetailScreen = () => {
         iconName="delete-outline"
       />
       <ThemedTopToast
-        key={toastKey} // Use key to re-trigger animation
+        key={toastKey}
         isVisible={isTopToastVisible}
         message={topToastMessage}
         onVisibilityToggle={onVisibilityToggle}
@@ -720,9 +804,8 @@ const DetailScreen = () => {
         isSyncing={isSyncing}
         isVisible={isToastVisible}
         message={toastMessage}
-        // iconName="wifi-off" // Consider if icon is always needed
         onDismiss={() => setIsToastVisible(false)}
-        style={styles.toastContainer} // Ensure zIndex is high
+        style={styles.toastContainer}
       />
     </KeyboardAwareScrollView>
   );
@@ -731,7 +814,7 @@ const DetailScreen = () => {
 // --- Styles ---
 const styles = StyleSheet.create({
   container: {
-    paddingBottom: getResponsiveHeight(5), // Add padding at the bottom
+    paddingBottom: getResponsiveHeight(5),
     paddingHorizontal: getResponsiveWidth(3.6),
     flexGrow: 1
   },
@@ -743,14 +826,12 @@ const styles = StyleSheet.create({
     marginBottom: getResponsiveHeight(3.6),
   },
   pinnedCardWrapper: {
-    // Removed marginTop as headerWrapper provides top space
     marginBottom: getResponsiveHeight(3.6),
   },
   infoWrapper: {
-    // paddingBottom: getResponsiveHeight(1.8), // Removed paddingBottom, rely on inner content spacing
     borderRadius: getResponsiveWidth(4),
-    overflow: "hidden", // Keep overflow hidden
-    marginBottom: getResponsiveHeight(3.6), // Add margin below info section
+    overflow: "hidden",
+    marginBottom: getResponsiveHeight(3.6),
   },
   actionButton: {
     flexDirection: "row",
@@ -758,8 +839,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: getResponsiveWidth(4.8),
     paddingVertical: getResponsiveHeight(1.8),
-    // Removed gap, rely on justify-content
-    // Removed borderRadius and overflow, handled by infoWrapper
   },
   actionHeader: {
     flexDirection: "row",
@@ -781,37 +860,34 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: getResponsiveWidth(4.8),
-    paddingTop: getResponsiveHeight(1.8), // Add top padding
-    paddingBottom: getResponsiveHeight(0.6), // Reduce bottom padding
+    paddingTop: getResponsiveHeight(1.8),
+    paddingBottom: getResponsiveHeight(0.6),
     gap: getResponsiveWidth(2.4),
   },
   transferSection: {
     gap: getResponsiveHeight(1.2),
-    paddingBottom: getResponsiveHeight(1.8), // Add padding below suggestions
+    paddingBottom: getResponsiveHeight(1.8),
   },
   inputWrapper: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: getResponsiveWidth(4.8),
-    // No vertical padding needed here
   },
   inputField: {
-    // marginVertical: getResponsiveHeight(1.8), // Remove vertical margin
-    paddingVertical: getResponsiveHeight(1.2), // Use padding instead
+    paddingVertical: getResponsiveHeight(1.2),
     fontSize: getResponsiveFontSize(16),
     flexGrow: 1,
-    flexShrink: 1, // Allow shrinking
+    flexShrink: 1,
   },
   clearButton: {
-    padding: getResponsiveWidth(1.2), // Add padding for easier tap
+    padding: getResponsiveWidth(1.2),
     marginLeft: getResponsiveWidth(1.2),
   },
   transferButton: {
-    padding: getResponsiveWidth(1.2), // Add padding for easier tap
+    padding: getResponsiveWidth(1.2),
     marginLeft: getResponsiveWidth(1.2),
   },
   hitSlop: {
-    // Define hitSlop for easier tapping
     bottom: getResponsiveHeight(1.2),
     left: getResponsiveWidth(2.4),
     right: getResponsiveWidth(2.4),
@@ -822,8 +898,25 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     flex: 1,
-    height: getResponsiveHeight(9.6), // Match bank item height
-    paddingHorizontal: getResponsiveWidth(4.8), // Match bank list padding
+    height: getResponsiveHeight(9.6),
+    width: '100%',
+    paddingHorizontal: getResponsiveWidth(4.8),
+  },
+  bankListFooter: {
+    paddingHorizontal: getResponsiveWidth(2),
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: getResponsiveHeight(9.6),
+    width: getResponsiveWidth(16.8),
+  },
+  bankListContent: {
+    gap: getResponsiveWidth(2.4),
+    paddingHorizontal: getResponsiveWidth(4.8),
+    paddingBottom: getResponsiveHeight(1.8),
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minWidth: '100%',
   },
   bankItemPressable: {
     borderRadius: getResponsiveWidth(4),
@@ -834,7 +927,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexDirection: "column",
     gap: getResponsiveHeight(0.36),
-    padding: getResponsiveWidth(1), // Add small padding
+    padding: getResponsiveWidth(1),
   },
   bankIcon: {
     width: "55%",
@@ -845,76 +938,66 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: getResponsiveWidth(8.4),
     height: getResponsiveWidth(8.4),
-    backgroundColor: "white", // Keep white background for visibility
-    borderRadius: getResponsiveWidth(4.2), // Make it circular
+    backgroundColor: "white",
+    borderRadius: getResponsiveWidth(4.2),
     overflow: "hidden",
   },
   bankItemText: {
     fontSize: getResponsiveFontSize(12),
-    maxWidth: "90%", // Allow slightly more width
+    maxWidth: "90%",
     textAlign: "center",
   },
   vietQRLogo: {
     height: getResponsiveHeight(3.6),
     width: getResponsiveWidth(16.8),
-    // Removed negative margin
   },
   currencyContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    width: getResponsiveWidth(6), // Slightly wider
-    height: getResponsiveWidth(6), // Slightly wider
-    borderRadius: getResponsiveWidth(3), // Circular
+    width: getResponsiveWidth(6),
+    height: getResponsiveWidth(6),
+    borderRadius: getResponsiveWidth(3),
     overflow: "hidden",
-    marginHorizontal: getResponsiveWidth(2.4), // Adjust spacing
+    marginHorizontal: getResponsiveWidth(2.4),
     borderWidth: 1,
   },
   currencyText: {
     fontSize: getResponsiveFontSize(16),
-    fontWeight: "500", // Slightly bolder
-    textAlign: "center", // Center text
-    // Removed marginRight
+    fontWeight: "500",
+    textAlign: "center",
   },
   suggestionList: {
     // Flex grow isn't needed for horizontal list
   },
   suggestionListContent: {
     gap: getResponsiveWidth(2.4),
-    paddingHorizontal: getResponsiveWidth(4.8), // Match input wrapper padding
-    paddingVertical: getResponsiveHeight(0.6), // Add slight vertical padding
+    paddingHorizontal: getResponsiveWidth(4.8),
+    paddingVertical: getResponsiveHeight(0.6),
   },
   suggestionItem: {
     paddingHorizontal: getResponsiveWidth(3.6),
-    paddingVertical: getResponsiveHeight(0.9), // Slightly taller
+    paddingVertical: getResponsiveHeight(0.9),
     borderRadius: getResponsiveWidth(4),
     overflow: "hidden",
-    justifyContent: "center", // Center text vertically
-    alignItems: "center", // Center text horizontally
+    justifyContent: "center",
+    alignItems: "center",
   },
   suggestionText: {
-    fontSize: getResponsiveFontSize(14), // Slightly smaller for consistency
+    fontSize: getResponsiveFontSize(14),
   },
   bankList: {
-    // Flex grow isn't needed
     flexGrow: 1
-  },
-  bankListContent: {
-    gap: getResponsiveWidth(2.4), // Reduce gap slightly
-    paddingHorizontal: getResponsiveWidth(4.8),
-    paddingBottom: getResponsiveHeight(1.8), // Add padding below bank list
-    // flexGrow: 1, // Remove flexGrow
   },
   toastContainer: {
     position: "absolute",
-    bottom: getResponsiveHeight(2), // Adjust position slightly
+    bottom: getResponsiveHeight(2),
     left: getResponsiveWidth(3.6),
     right: getResponsiveWidth(3.6),
-    zIndex: 10, // Ensure it's above other elements
+    zIndex: 10,
   },
   bottomContainer: {
     flexDirection: "column",
-    // Removed borderRadius, handled by infoWrapper
   },
   bankTransferHeader: {
     flexDirection: "row",
@@ -927,8 +1010,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: getResponsiveWidth(4.8),
-    paddingTop: getResponsiveHeight(1.8), // Add top padding
-    paddingBottom: getResponsiveHeight(1.2), // Add bottom padding before list
+    paddingTop: getResponsiveHeight(1.8),
+    paddingBottom: getResponsiveHeight(1.2),
   },
 });
 

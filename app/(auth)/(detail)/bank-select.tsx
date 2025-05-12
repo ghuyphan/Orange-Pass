@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { StyleSheet, View, FlatList, TextInput, Image, Pressable, ActivityIndicator, Linking } from 'react-native'; // Added Linking
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { StyleSheet, View, FlatList, Image, Pressable, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import * as Linking from 'expo-linking';
 import { Colors } from '@/constants/Colors';
 import { useTheme } from '@/context/ThemeContext';
 import { t } from '@/i18n';
@@ -20,50 +21,92 @@ interface BankItem {
 }
 
 const storage = new MMKV();
-const LAST_USED_BANK_KEY = 'lastUsedBank'; // Keeping this for storing the LAST used bank, even if not sorting.
+const LAST_USED_BANK_KEY = 'lastUsedBank';
+const BATCH_SIZE = 20; // Load banks in batches
 
 const BankSelectScreen = () => {
     const { currentTheme } = useTheme();
     const router = useRouter();
-    const { selectedBankCode: initialSelectedBankCode } = useLocalSearchParams(); // Get initial selection
-
+    const { banks: encodedBanks, selectedBankCode: initialSelectedBankCode } = useLocalSearchParams();
+    
     const [searchQuery, setSearchQuery] = useState('');
     const [allBanks, setAllBanks] = useState<BankItem[]>([]);
-    const [filteredBanks, setFilteredBanks] = useState<BankItem[]>([]);
+    const [displayedBanks, setDisplayedBanks] = useState<BankItem[]>([]);
     const [selectedBankCode, setSelectedBankCode] = useState<string | null>(
         String(initialSelectedBankCode) || null
-    ); // Track selected bank
+    );
+    const [isLoading, setIsLoading] = useState(true);
+    const [currentBatch, setCurrentBatch] = useState(1);
+    
+    // Memoize theme-dependent styles and colors
+    const iconColor = useMemo(() => 
+        currentTheme === 'light' ? Colors.light.icon : Colors.dark.icon,
+    [currentTheme]);
+    
+    const bankNameStyle = useMemo(() => [
+        styles.bankName, 
+        { color: currentTheme === 'light' ? Colors.light.text : Colors.dark.text }
+    ], [currentTheme]);
+    
+    const listStyle = useMemo(() => [
+        styles.listStyle, 
+        { backgroundColor: currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground }
+    ], [currentTheme]);
 
-
+    // Initial load of banks data
     useEffect(() => {
-        const loadBanks = () => {
-            let banks = returnItemsByType('vietqr');
-            setAllBanks(banks);
-            setFilteredBanks(banks);
-
-        };
-        loadBanks();
-
-    }, []);
-
+        let banksData: BankItem[] = [];
+        
+        try {
+            if (encodedBanks) {
+                // Use the banks passed from detail screen
+                banksData = JSON.parse(String(encodedBanks)) as BankItem[];
+            } else {
+                // Fallback if no banks were passed
+                banksData = returnItemsByType('vietqr');
+            }
+        } catch (e) {
+            console.error("Error processing banks:", e);
+            // Fallback to loading banks if there's an error
+            banksData = returnItemsByType('vietqr');
+        }
+        
+        // Store all banks but only display the first batch
+        setAllBanks(banksData);
+        setIsLoading(false);
+    }, [encodedBanks]);
+    
+    // Handle batch display of banks
     useEffect(() => {
-        if (searchQuery === '') {
-            setFilteredBanks(allBanks);
-        } else {
+        // When all banks or search changes, update displayed banks in batches
+        if (searchQuery) {
+            // For search, show all matching results immediately
+            const lowerQuery = searchQuery.toLowerCase();
             const filtered = allBanks.filter(
                 (bank) =>
-                    bank.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    bank.code.toLowerCase().includes(searchQuery.toLowerCase())
+                    bank.name.toLowerCase().includes(lowerQuery) ||
+                    bank.code.toLowerCase().includes(lowerQuery)
             );
-            setFilteredBanks(filtered);
+            setDisplayedBanks(filtered);
+        } else {
+            // For initial display, load in batches
+            const endIndex = currentBatch * BATCH_SIZE;
+            setDisplayedBanks(allBanks.slice(0, endIndex));
         }
-    }, [searchQuery, allBanks]);
+    }, [allBanks, searchQuery, currentBatch]);
+
+    // Load more banks when user scrolls near the end
+    const handleLoadMore = useCallback(() => {
+        if (searchQuery === '' && displayedBanks.length < allBanks.length) {
+            setCurrentBatch(prev => prev + 1);
+        }
+    }, [searchQuery, displayedBanks.length, allBanks.length]);
 
     const handleBankSelect = useCallback(async (bankCode: string) => {
-        setSelectedBankCode(bankCode); // Update selected bank
+        setSelectedBankCode(bankCode);
         storage.set(LAST_USED_BANK_KEY, bankCode);
 
-        // Open the banking app (like in DetailScreen)
+        // Prepare URL for bank app
         let lowerCaseCode = bankCode.toLowerCase();
         if (lowerCaseCode === 'vib') {
             lowerCaseCode = 'vib-2';
@@ -71,52 +114,66 @@ const BankSelectScreen = () => {
             lowerCaseCode = 'acb-biz';
         }
         const url = `https://dl.vietqr.io/pay?app=${lowerCaseCode}`;
+        
         try {
             await Linking.openURL(url);
-            router.back(); // Navigate back after opening the app
+            router.back();
         } catch (err) {
             console.error('Failed to open URL:', err);
-            // Consider adding a toast message here to inform the user.
+            router.back();
         }
     }, [router]);
 
-    const renderBankItem = useCallback(({ item }: { item: BankItem }) => {
-        return (
-            <Pressable
-                style={[
-                    styles.bankItem,
-                    // { backgroundColor: currentTheme === 'light' ? Colors.light.buttonBackground : Colors.dark.buttonBackground },
-                ]}
-                onPress={() => handleBankSelect(item.code)}
-            >
-                <View style={styles.bankIconContainer}>
-                    <Image source={getIconPath(item.code)} style={styles.bankIcon} resizeMode="contain" />
-                </View>
-                <ThemedText style={[styles.bankName, { color: currentTheme === 'light' ? Colors.light.text : Colors.dark.text }]}>{item.name}</ThemedText>
-                <MaterialCommunityIcons
-                    name="chevron-right"
-                    size={getResponsiveFontSize(16)}
-                    color={currentTheme === 'light' ? Colors.light.icon : Colors.dark.icon}
+    const renderBankItem = useCallback(({ item }: { item: BankItem }) => (
+        <Pressable
+            style={styles.bankItem}
+            onPress={() => handleBankSelect(item.code)}
+        >
+            <View style={styles.bankIconContainer}>
+                <Image 
+                    source={getIconPath(item.code)} 
+                    style={styles.bankIcon} 
+                    resizeMode="contain" 
                 />
-            </Pressable>
-        );
-    }, [currentTheme, handleBankSelect, selectedBankCode]);
+            </View>
+            <ThemedText style={bankNameStyle}>{item.name}</ThemedText>
+            <MaterialCommunityIcons
+                name="chevron-right"
+                size={getResponsiveFontSize(16)}
+                color={iconColor}
+            />
+        </Pressable>
+    ), [handleBankSelect, bankNameStyle, iconColor]);
 
+    const renderFooter = useCallback(() => {
+        if (isLoading && displayedBanks.length > 0) {
+            return (
+                <View style={styles.footerLoader}>
+                    <ActivityIndicator size="small" color={iconColor} />
+                </View>
+            );
+        }
+        return null;
+    }, [isLoading, displayedBanks.length, iconColor]);
 
-    const renderEmptyComponent = useCallback(() => (
+    const renderEmptyComponent = useMemo(() => (
         <View style={styles.emptyContainer}>
             {searchQuery ? (
                 <ThemedText>{t('detailsScreen.noBanksFound')}</ThemedText>
+            ) : isLoading ? (
+                <ActivityIndicator size={getResponsiveFontSize(25)} color={iconColor} />
             ) : (
-                <ActivityIndicator size={getResponsiveFontSize(25)} color={currentTheme === 'light' ? Colors.light.icon : Colors.dark.icon} />
+                <ThemedText>{t('detailsScreen.noBanksAvailable')}</ThemedText>
             )}
         </View>
-    ), [searchQuery, currentTheme]);
+    ), [searchQuery, isLoading, iconColor]);
+
+    const keyExtractor = useCallback((item: BankItem) => item.code, []);
 
     return (
         <ThemedView style={styles.container}>
             <View style={styles.headerWrapper}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: getResponsiveHeight(4) }}>
+                <View style={styles.headerButtonRow}>
                     <ThemedButton onPress={router.back} iconName="chevron-left" />
                 </View>
                 <ThemedInput
@@ -124,18 +181,25 @@ const BankSelectScreen = () => {
                     placeholder={t('detailsScreen.searchBank')}
                     value={searchQuery}
                     onChangeText={setSearchQuery}
-                    style={{ borderRadius: getResponsiveWidth(16), paddingVertical: getResponsiveHeight(1) }}
+                    style={styles.searchInput}
                 />
             </View>
 
             <FlatList
-                style={[styles.listStyle, { backgroundColor: currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground }]}
-                data={filteredBanks}
+                style={listStyle}
+                data={displayedBanks}
                 renderItem={renderBankItem}
-                keyExtractor={(item) => item.code}
+                keyExtractor={keyExtractor}
                 ListEmptyComponent={renderEmptyComponent}
-                contentContainerStyle={[styles.listContent]}
+                contentContainerStyle={styles.listContent}
                 showsVerticalScrollIndicator={false}
+                initialNumToRender={8}
+                maxToRenderPerBatch={5}
+                windowSize={5}
+                removeClippedSubviews={true}
+                onEndReached={handleLoadMore}
+                onEndReachedThreshold={0.3}
+                ListFooterComponent={renderFooter}
             />
         </ThemedView>
     );
@@ -144,11 +208,20 @@ const BankSelectScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        paddingTop: getResponsiveHeight(8.5), // Adjusted paddingTop to match DetailScreen
+        paddingTop: getResponsiveHeight(8.5),
     },
     headerWrapper: {
         flexDirection: 'column',
         paddingHorizontal: getResponsiveWidth(3.6),
+    },
+    headerButtonRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: getResponsiveHeight(4),
+    },
+    searchInput: {
+        borderRadius: getResponsiveWidth(16),
+        paddingVertical: getResponsiveHeight(1),
     },
     bankItem: {
         flexDirection: 'row',
@@ -181,6 +254,11 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         paddingTop: getResponsiveHeight(3.6),
+        minHeight: getResponsiveHeight(20),
+    },
+    footerLoader: {
+        paddingVertical: getResponsiveHeight(2),
+        alignItems: 'center',
     },
     listStyle: {
         marginHorizontal: getResponsiveWidth(3.6),
@@ -190,23 +268,8 @@ const styles = StyleSheet.create({
     },
     listContent: {
         borderRadius: getResponsiveWidth(4),
+        paddingVertical: getResponsiveHeight(1),
     },
-    selectedBankItem: {
-        borderWidth: 1,
-        borderColor: Colors.light.background, // Or any color indicating selection
-    },
-    selectedIconContainer: {
-        backgroundColor: Colors.light.background,
-        borderRadius: getResponsiveFontSize(100),
-        width: getResponsiveFontSize(20),
-        height: getResponsiveFontSize(20),
-        justifyContent: 'center',
-        alignItems: 'center'
-    },
-    checkIcon: {
-        color: '#fff', // Checkmark color
-        fontSize: getResponsiveFontSize(12)
-    }
 });
 
 export default BankSelectScreen;
