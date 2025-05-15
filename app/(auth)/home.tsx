@@ -179,139 +179,119 @@ function HomeScreen() {
   }, [isOffline, isSyncing, dispatch, t]);  
 
   // Initialize data
-  useEffect(() => {
-    if (!userId) {
-      setIsLoading(false);
-      setSyncStatus('idle');
-      return; // Stop execution
+// Initialize data
+useEffect(() => {
+  if (!userId) {
+    // Ensure loading and sync states are reset if userId is not available
+    setIsLoading(false);
+    setSyncStatus("idle");
+    // isSyncing will be false if syncStatus is 'idle' due to other logic,
+    // but explicitly setting it here can be a safeguard if needed.
+    // setIsSyncing(false);
+    return; // Stop execution
+  }
+
+  let isMounted = true; // Flag to prevent state updates after unmount
+
+  const initializeData = async () => {
+    // --- Phase 1: Load and Display Local Data Quickly ---
+    setIsLoading(true);
+
+    let localLoadSuccess = false;
+    try {
+      const currentLocalData = await getQrCodesByUserId(userId);
+
+      if (!isMounted) {
+        return; // Exit initializeData early
+      }
+
+      dispatch(setQrData(currentLocalData));
+      // Don't set syncStatus here yet, let Phase 2 determine it
+      localLoadSuccess = true;
+    } catch (error) {
+      console.error("Error loading local data:", error); // More specific log
+      if (isMounted) {
+        setSyncStatus("error"); // Indicate error state
+        setTopToastMessage(t("homeScreen.loadError"));
+        setIsTopToastVisible(true);
+        // No local data loaded, so qrData might be empty or stale
+        // Consider if dispatch(setQrData([])); is needed on critical load error
+      }
+    } finally {
+      if (isMounted) {
+        setIsLoading(false);
+      }
     }
-  
-    let isMounted = true; // Flag to prevent state updates after unmount
-  
-    const initializeData = async () => {
-      // --- Phase 1: Load and Display Local Data Quickly ---
-      setIsLoading(true);
-  
-      let localLoadSuccess = false;
-      try {
-        const currentLocalData = await getQrCodesByUserId(userId);
-  
-        if (!isMounted) {
-          // No state updates, but ensure loading stops in finally
-          return; // Exit initializeData early
+
+    // --- Phase 2: Schedule Network Sync (Only if Phase 1 succeeded & mounted) ---
+    if (!localLoadSuccess || !isMounted) {
+      return; // Don't proceed if local load failed or component unmounted
+    }
+
+    InteractionManager.runAfterInteractions(async () => {
+      if (!isMounted || isOffline) {
+        // If offline, we can't sync. Set status based on local data.
+        // If we reached here, local data was loaded.
+        // We can assume 'synced' if no unsynced items, or 'idle' otherwise.
+        // For simplicity, let's set to idle, user can manually sync when online.
+        if (isMounted && syncStatus !== "error") {
+          // Avoid overriding an error status from Phase 1
+          setSyncStatus("idle");
         }
-  
-        dispatch(setQrData(currentLocalData));
-        setSyncStatus('idle'); // Reset sync status after successful local load
-        localLoadSuccess = true;
-  
+        return;
+      }
+
+      // If already in an error state from Phase 1, don't attempt to sync.
+      if (syncStatus === "error") {
+        return;
+      }
+
+      try {
+        const unsyncedCodes = await getUnsyncedQrCodes(userId);
+        const localDbExists = await hasLocalData(userId); // Or check qrData.length from Redux if Phase 1 was successful
+        const needsSync = !localDbExists || unsyncedCodes.length > 0;
+
+        if (needsSync && isMounted) {
+          // Call the existing syncWithServer function
+          // It handles its own InteractionManager, toasts, and state updates
+          await syncWithServer(userId);
+        } else if (isMounted) {
+          // Already in sync or no data to sync
+          setSyncStatus("synced");
+          // No toast needed here, it's the initial state
+
+          if (timeoutRefs.current.idle)
+            clearTimeout(timeoutRefs.current.idle);
+          timeoutRefs.current.idle = setTimeout(() => {
+            if (isMounted && syncStatus === "synced") {
+              // Only transition to idle if still 'synced' (not changed by another op)
+              setSyncStatus("idle");
+            }
+          }, 3000);
+        }
       } catch (error) {
+        // This catch is for errors from getUnsyncedQrCodes or hasLocalData
+        console.error("Error determining sync necessity:", error);
         if (isMounted) {
-          setSyncStatus('error'); // Indicate error state
-          setTopToastMessage(t('homeScreen.loadError'));
+          setSyncStatus("error");
+          setTopToastMessage(t("homeScreen.syncCheckError")); // More specific error
           setIsTopToastVisible(true);
         }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
       }
-  
-      // --- Phase 2: Schedule Network Sync (Only if Phase 1 succeeded & mounted) ---
-      if (!localLoadSuccess || !isMounted) {
-        return; // Don't proceed if local load failed or component unmounted
-      }
-  
-      InteractionManager.runAfterInteractions(async () => {
-        if (!isMounted || syncStatus === 'error' || isOffline) {
-          return;
-        }
-  
-        try {
-          const unsyncedCodes = await getUnsyncedQrCodes(userId);
-          const localDbExists = await hasLocalData(userId);
-          const needsSync = !localDbExists || unsyncedCodes.length > 0;
-  
-          if (needsSync && isMounted) {
-            // Directly perform sync operations instead of calling syncWithServer
-            // to avoid nested InteractionManager calls
-            setIsSyncing(true);
-            setSyncStatus('syncing');
-            setTopToastMessage(t('homeScreen.syncStarted'));
-            setIsTopToastVisible(true);
-  
-            try {
-              // Step 1: Upload local changes to the server
-              await syncQrCodes(userId);
-  
-              // Step 2: Fetch latest data from the server
-              const serverData = await fetchServerData(userId);
-  
-              // Step 3: Insert or update local DB with server data
-              if (serverData.length > 0) {
-                await insertOrUpdateQrCodes(serverData);
-              }
-  
-              // Step 4: Get the final, merged data
-              const finalLocalData = await getQrCodesByUserId(userId);
-  
-              if (isMounted) {
-                // Step 5: Update Redux state
-                dispatch(setQrData(finalLocalData));
-                
-                // Step 6: Update sync status and notify
-                setSyncStatus('synced');
-                setTopToastMessage(t('homeScreen.syncSuccess'));
-                setIsTopToastVisible(true);
-                
-                // Step 7: Reset status after delay
-                if (timeoutRefs.current.sync) clearTimeout(timeoutRefs.current.sync);
-                timeoutRefs.current.sync = setTimeout(() => {
-                  if (isMounted) setSyncStatus('idle');
-                }, 3000);
-              }
-            } catch (syncError) {
-              console.error('Error during sync process:', syncError);
-              if (isMounted) {
-                setSyncStatus('error');
-                setTopToastMessage(t('homeScreen.syncError'));
-                setIsTopToastVisible(true);
-              }
-            } finally {
-              if (isMounted) {
-                setIsSyncing(false);
-              }
-            }
-          } else if (isMounted) {
-            // Already in sync
-            setSyncStatus('synced');
-            
-            if (timeoutRefs.current.idle) clearTimeout(timeoutRefs.current.idle);
-            timeoutRefs.current.idle = setTimeout(() => {
-              if (isMounted && syncStatus === 'synced') {
-                setSyncStatus('idle');
-              }
-            }, 3000);
-          }
-        } catch (error) {
-          if (isMounted) {
-            setSyncStatus('error');
-          }
-        }
-      });
-    };
-  
-    initializeData();
-  
-    // Cleanup function
-    return () => {
-      isMounted = false;
-      
-      // Clear any pending timeouts from this effect
-      if (timeoutRefs.current.idle) clearTimeout(timeoutRefs.current.idle);
-      if (timeoutRefs.current.sync) clearTimeout(timeoutRefs.current.sync);
-    };
-  }, [userId]);
+      // No finally block needed here for setIsSyncing, as syncWithServer handles it.
+    });
+  };
+
+  initializeData();
+
+  // Cleanup function
+  return () => {
+    isMounted = false;
+    if (timeoutRefs.current.idle) clearTimeout(timeoutRefs.current.idle);
+    // syncWithServer handles its own sync timeout
+  };
+}, [userId]); // Added syncWithServer to deps
+
   
   // Network status toasts
   const prevIsOffline = useRef(isOffline);
