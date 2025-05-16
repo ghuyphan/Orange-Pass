@@ -90,3 +90,40 @@ export const qrCodeSchema = yup.object({
     otherwise: () => yup.string().nullable()
 }),
 });
+
+export const profileSchema = yup.object().shape({
+  name: yup
+    .string()
+    .matches(
+      /^[\w'\-,.][^0-9_!¡?÷?¿/\\+=@#$%ˆ&*(){}|~<>;:[\]]{1,}$/i,
+      'nameInvalid'
+    )
+    .required('nameRequired'),
+  email: yup
+    .string()
+    .email('invalidEmail')
+    .required('emailRequired'),
+  currentPassword: yup.string().when('newPassword', {
+    is: (val: string) => !!val && val.length > 0,
+    then: (schema) => schema.required('currentPasswordRequired'),
+    otherwise: (schema) => schema.notRequired(),
+  }),
+  newPassword: yup
+    .string()
+    .nullable()
+    .transform((v) => (v === '' ? null : v))
+    .min(8, 'invalidPasswordLength')
+    .matches(/[a-z]/, 'invalidPasswordLowerCase')
+    .matches(/[A-Z]/, 'invalidPasswordUpperCase')
+    .matches(/\d/, 'invalidPasswordNumber')
+    .matches(/[@$!%*?&_]/, 'invalidPasswordSpecialChar')
+    .notRequired(),
+  confirmNewPassword: yup.string().when('newPassword', {
+    is: (val: string) => !!val && val.length > 0,
+    then: (schema) =>
+      schema
+        .required('confirmNewPasswordRequired')
+        .oneOf([yup.ref('newPassword')], 'passwordsDontMatch'),
+    otherwise: (schema) => schema.notRequired(),
+  }),
+});
