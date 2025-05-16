@@ -97,7 +97,7 @@ function SettingsScreen() {
       timerId = setTimeout(() => {
         console.log('Setting isAvatarReady to true.');
         setIsAvatarReady(true); // Make sure setIsAvatarReady is the correct state setter
-      }, 200);
+      }, 150);
     });
   
     return () => {

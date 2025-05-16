@@ -298,7 +298,7 @@ const EditAvatarScreen = () => {
     const interactionPromise = InteractionManager.runAfterInteractions(() => {
       timerId = setTimeout(() => {
         setIsAvatarPreviewReady(true);
-      }, 200);
+      }, 150);
     });
     return () => {
       interactionPromise.cancel();
