@@ -48,7 +48,7 @@
   },
   "quickLoginPrompt": {
     "saveLoginInfo": "Save login info?",
-    "saveDescription": "We'll save {name}'s login info to your device's cloud backup, so you won't need to enter it again on this device or any device you restore.",
+    "saveDescription": "We will securely save your login info on this device, so you can log in quickly without entering your password again next time.",
     "save": "Save",
     "saving": "Saving...",
     "notNow": "Not now"
@@ -150,6 +150,10 @@
     "syncError": "Failed to sync. Please try again.",
     "syncSuccess": "Synced successfully",
     "copied": "Link copied",
+    "syncStarted": "Sync starting...",
+    "loadError": "Failed to load local data.",
+    "deleteError": "Failed to delete card.",
+    "settings": "Card settings",
     "wifi": "Wi-Fi Details",
     "connectButton": "Connect",
     "passwordPlaceholder": "Enter password",

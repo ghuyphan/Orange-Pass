@@ -8,10 +8,18 @@ import { ThemedView } from '@/components/ThemedView';
 import { getResponsiveHeight, getResponsiveWidth } from '@/utils/responsive';
 import { storage } from '@/utils/storage';
 import { MMKV_KEYS } from '@/services/auth/login';
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/rootReducer";
+
 export default function AuthLayout() {
   const segments = useSegments() as string[];
   const router = useRouter();
   const [hasQuickLoginAccounts, setHasQuickLoginAccounts] = useState(false);
+
+  // Redux: is login in progress?
+  const isLoginInProgress = useSelector(
+    (state: RootState) => state.authStatus.isLoginInProgress
+  );
 
   // Check if any accounts have quick login enabled
   useEffect(() => {
@@ -24,7 +32,9 @@ export default function AuthLayout() {
         }
 
         const prefs = JSON.parse(prefsString);
-        const hasEnabledAccounts = Object.values(prefs).some(value => value === true);
+        const hasEnabledAccounts = Object.values(prefs).some(
+          value => value === true
+        );
         setHasQuickLoginAccounts(hasEnabledAccounts);
       } catch (error) {
         console.error('Error checking quick login accounts:', error);
@@ -37,14 +47,20 @@ export default function AuthLayout() {
 
   // Determine if the current screen is 'register', 'forgot-password', or 'login' with quick login accounts
   const showHeader = useMemo(() => {
-    return segments.includes('register') ||
+    return (
+      segments.includes('register') ||
       segments.includes('forgot-password') ||
-      (segments.includes('login') && hasQuickLoginAccounts);
+      (segments.includes('login') && hasQuickLoginAccounts)
+    );
   }, [segments, hasQuickLoginAccounts]);
+
+  // Disable back button if logging in, or on login screen with no quick login accounts
+  const disableBackButton = useMemo(() => {
+    return isLoginInProgress || (segments.includes('login') && !hasQuickLoginAccounts);
+  }, [isLoginInProgress, segments, hasQuickLoginAccounts]);
 
   // Determine where the back button should navigate
   const handleBackPress = () => {
-    // Otherwise use the default back behavior
     router.back();
   };
 
@@ -54,13 +70,13 @@ export default function AuthLayout() {
         <Stack
           screenOptions={{
             headerShown: false,
-            animation: 'ios'
+            animation: 'ios',
           }}
         >
           <Stack.Screen name="login" />
           <Stack.Screen name="register" />
           <Stack.Screen name="forgot-password" />
-          <Stack.Screen name="quick-login"/>
+          <Stack.Screen name="quick-login" />
         </Stack>
       </View>
       {showHeader && (
@@ -68,6 +84,7 @@ export default function AuthLayout() {
           <ThemedButton
             onPress={handleBackPress}
             iconName="chevron-left"
+            disabled={disableBackButton}
           />
         </View>
       )}

@@ -34,6 +34,8 @@ import {
   getResponsiveWidth,
   getResponsiveHeight,
 } from "@/utils/responsive";
+import { useDispatch } from "react-redux";
+import { setLoginInProgress } from "@/store/reducers/authStatusSlice";
 
 // Types
 type LanguageKey = "vi" | "ru" | "en";
@@ -171,6 +173,7 @@ export default function LoginScreen() {
   const { locale, updateLocale } = useLocale();
   const [storedLocale, setStoredLocale] = useMMKVString("locale");
   const { currentTheme } = useTheme();
+  const dispatch = useDispatch();
   
   // Redux state
   const authRefreshError = useSelector(
@@ -270,6 +273,7 @@ export default function LoginScreen() {
   // Form submission handler
   const handleFormSubmit = useCallback(async (values, { setSubmitting }) => {
     setSubmitting(true);
+    dispatch(setLoginInProgress(true));
     try {
       const authData = await login(values.email, values.password);
       const hasPreference = await hasQuickLoginPreference(authData.record.id);
@@ -285,6 +289,7 @@ export default function LoginScreen() {
       setErrorMessage(errorAsError.toString());
     } finally {
       setSubmitting(false);
+      dispatch(setLoginInProgress(false));
     }
   }, []);
 
