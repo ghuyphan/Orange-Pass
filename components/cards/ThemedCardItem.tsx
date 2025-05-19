@@ -51,7 +51,7 @@ const defaultIconPath = null; // Or require a placeholder image: require('@/asse
 
 export type ThemedCardItemProps = {
   isActive?: boolean;
-  code: string;
+  code: string | null; // Code can be string or null
   type: "bank" | "store" | "ewallet";
   metadata: string;
   metadata_type?: "qr" | "barcode";
@@ -67,7 +67,7 @@ export type ThemedCardItemProps = {
 
 const ThemedCardItem = memo(function ThemedCardItem({
   isActive = false,
-  code,
+  code: rawCode, // Renamed prop to rawCode
   type,
   metadata,
   metadata_type = "qr",
@@ -80,29 +80,46 @@ const ThemedCardItem = memo(function ThemedCardItem({
   onDrag,
   cardHolderStyle
 }: ThemedCardItemProps): JSX.Element {
-  // Derived data from the code using memoization
-  // Use logical OR (||) to provide defaultItemData if returnItemData is falsy
-  const itemData = useMemo(
-    () => returnItemData(code) || defaultItemData,
+  // Normalize code: treat null as an empty string.
+  const code = useMemo(() => (rawCode === null ? "" : rawCode), [rawCode]);
+
+  // Determine if the code signifies an empty or specific placeholder state ("N/A")
+  const isCodeEmptyOrPlaceholder = useMemo(
+    () => code === "" || code === "N/A",
     [code]
   );
+
+  // Derived data from the code using memoization
+  const itemData = useMemo(() => {
+    if (isCodeEmptyOrPlaceholder) {
+      return defaultItemData; // Use default data directly if code is empty or "N/A"
+    }
+    // Otherwise, attempt to fetch item data, falling back to default if not found
+    return returnItemData(code) || defaultItemData;
+  }, [code, isCodeEmptyOrPlaceholder]);
 
   // Now destructuring is safe because itemData is guaranteed to be an object
   const { name, color, accent_color, type: itemDataType } = itemData;
 
-  const isDefaultCode = useMemo(() => code === "N/A", [code]);
+  // Specifically check if the normalized code is "N/A"
+  const isN_ACode = useMemo(() => code === "N/A", [code]);
 
   const cardType = useMemo(() => {
     // Prioritize the explicitly passed 'type' prop
     if (type) return type;
     // Fallback to the type from itemData (which might be the default 'store')
     if (itemDataType) return itemDataType;
-    // Final fallback based on isDefaultCode (less likely needed now)
-    return isDefaultCode ? "bank" : "store";
-  }, [type, itemDataType, isDefaultCode]);
+    // Final fallback based on isN_ACode (less likely needed if defaultItemData.type is set)
+    return isN_ACode ? "bank" : "store";
+  }, [type, itemDataType, isN_ACode]);
 
   // Use a default icon path if needed, or ensure getIconPath handles unknown codes gracefully
-  const iconPath = useMemo(() => getIconPath(code) || defaultIconPath, [code]);
+  const iconPath = useMemo(() => {
+    if (isCodeEmptyOrPlaceholder) {
+      return defaultIconPath; // Use default icon directly if code is empty or "N/A"
+    }
+    return getIconPath(code) || defaultIconPath;
+  }, [code, isCodeEmptyOrPlaceholder]);
 
   const accountDisplayName = useMemo(() => {
     if (cardType !== "store" && accountNumber) {
@@ -113,11 +130,13 @@ const ThemedCardItem = memo(function ThemedCardItem({
   }, [cardType, accountNumber]);
 
   const displayMetadata = useMemo(() => {
-    // Ensure metadata is treated as string even if null/undefined initially
     const safeMetadata = metadata || "";
-    // Don't display metadata if it's the default code or metadata is empty
-    return !isDefaultCode && safeMetadata ? safeMetadata : "";
-  }, [metadata, isDefaultCode]);
+    // Don't display metadata if code is empty/placeholder or metadata itself is empty
+    if (isCodeEmptyOrPlaceholder || !safeMetadata) {
+      return "";
+    }
+    return safeMetadata;
+  }, [metadata, isCodeEmptyOrPlaceholder]);
 
   // Memoize the footer text so that we do not re-calculate it each render
   const footerText = useMemo(() => {
@@ -145,11 +164,11 @@ const ThemedCardItem = memo(function ThemedCardItem({
       placeholderWidth.value = QR_SIZE;
       placeholderHeight.value = QR_SIZE;
     }
-  }, [metadata_type, placeholderWidth, placeholderHeight]); // Added dependencies
+  }, [metadata_type, placeholderWidth, placeholderHeight]);
 
   // Memoize the metadata content (QR code or Barcode or placeholder)
   const metadataContent = useMemo(() => {
-    // Use the safe displayMetadata which defaults to ''
+    // displayMetadata will be "" if code is empty/placeholder or metadata prop is empty
     if (!displayMetadata) {
       return (
         <Animated.View
@@ -174,15 +193,11 @@ const ThemedCardItem = memo(function ThemedCardItem({
         format="CODE128"
       />
     );
-  }, [
-    displayMetadata,
-    metadata_type,
-    animatedPlaceholderStyle
-  ]);
+  }, [displayMetadata, metadata_type, animatedPlaceholderStyle]);
 
   const gradientColors = useMemo(
     () =>
-      // Use optional chaining for safety, though defaults make it less critical now
+      // itemData.color and itemData.accent_color will be from defaultItemData if code was empty/placeholder
       returnMidpointColors(
         color?.light,
         accent_color?.light,

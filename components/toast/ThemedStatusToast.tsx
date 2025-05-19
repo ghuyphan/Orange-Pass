@@ -99,30 +99,35 @@ export function ThemedStatusToast({
   }));
 
   // Visibility and animation management
-  useEffect(() => {
+useEffect(() => {
+    let timer: NodeJS.Timeout | undefined;
+    let animationTimeout: NodeJS.Timeout | undefined;
+
     if (isVisible) {
-      // Animate toast in
-      opacity.value = withTiming(1, { duration: 300 });
-      translateY.value = withTiming(0, { duration: 300 });
+        opacity.value = withTiming(1, { duration: 300 });
+        translateY.value = withTiming(0, { duration: 300 });
 
-      // Auto-dismiss timer
-      const timer = setTimeout(() => {
-        onVisibilityToggle?.(false);
-      }, duration);
-
-      return () => clearTimeout(timer);
+        timer = setTimeout(() => {
+            if (onVisibilityToggle) {
+                onVisibilityToggle(false);
+            }
+        }, duration);
     } else {
-      // Animate toast out
-      setIsAnimationComplete(true);
-      opacity.value = withTiming(0, { duration: 300 });
-      translateY.value = withTiming(getResponsiveHeight(6), { duration: 300 });
+        setIsAnimationComplete(true); 
+        opacity.value = withTiming(0, { duration: 300 });
+        translateY.value = withTiming(50, { duration: 300 });
 
-      // Reset animation state
-      setTimeout(() => {
-        setIsAnimationComplete(false);
-      }, 300);
+        animationTimeout = setTimeout(() => {
+            setIsAnimationComplete(false);
+        }, 300);
     }
-  }, [isVisible, duration, onVisibilityToggle, opacity, translateY]);
+
+    return () => {
+        if (timer) clearTimeout(timer);
+        if (animationTimeout) clearTimeout(animationTimeout);
+    };
+}, [isVisible, duration, onVisibilityToggle, opacity, translateY]);
+
 
   const handleOnDismiss = useCallback(() => {
     if (onDismiss) {

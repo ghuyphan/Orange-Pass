@@ -16,6 +16,7 @@ import ThemedReuseableSheet from '@/components/bottomsheet/ThemedReusableSheet';
 import BottomSheet from '@gorhom/bottom-sheet';
 import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
 import { useTheme } from '@/context/ThemeContext';
+import { initializeGuestMode } from '@/services/auth';
 
 // Define a type for features
 type Feature = {
@@ -94,6 +95,7 @@ const OnBoardScreen = () => {
   const { currentTheme } = useTheme();
   const iconColor = useThemeColor({ light: Colors.light.icon, dark: Colors.dark.icon }, 'buttonBackground');
   const cardColor = useThemeColor({ light: Colors.light.cardBackground, dark: Colors.dark.cardBackground }, 'buttonBackground');
+  const accentColor = useThemeColor({ light: '#FFC107', dark: '#FFC107' }, 'text');
   const bottomSheetRef = useRef<BottomSheet>(null);
   const [sheetType, setSheetType] = useState<SheetType>(null);
 
@@ -120,7 +122,18 @@ const OnBoardScreen = () => {
     storage.set('hasSeenOnboarding', true);
     triggerSuccessHapticFeedback();
     router.replace('/login');
-  }, []);
+  }, [router]);
+
+  const onContinueAsGuest = useCallback(async () => {
+    storage.set('hasSeenOnboarding', true);
+    triggerSuccessHapticFeedback();
+    
+    // Initialize guest mode
+    await initializeGuestMode();
+    
+    // Navigate to guest home
+    router.replace('/guest-home');
+  }, [router]);
 
   const onOpenSheet = useCallback((type: SheetType) => {
     setSheetType(type);
@@ -221,8 +234,16 @@ const OnBoardScreen = () => {
           label={t('onboardingScreen.finishButton')}
           style={styles.button}
           textStyle={styles.buttonText}
-          onPress={onFinish}
+          onPress={onContinueAsGuest}
         />
+        
+        {/* <ThemedButton
+          label={t('onboardingScreen.continueAsGuest')} // Add this to your translation
+          style={styles.guestButton}
+          textStyle={styles.guestButtonText}
+          onPress={onContinueAsGuest}
+          mode="text" // Using text mode for less emphasis
+        /> */}
         
         <ThemedText type="defaultSemiBold" style={styles.metaText}>
           {t("common.appName")}
@@ -266,7 +287,6 @@ const styles = StyleSheet.create({
     padding: getResponsiveWidth(3.5),
     borderRadius: getResponsiveWidth(5),
     marginTop: getResponsiveHeight(10),
-    // marginBottom: getResponsiveHeight(3),
     marginBottom: getResponsiveHeight(9),
   },
   screenTitle: {
@@ -339,12 +359,20 @@ const styles = StyleSheet.create({
   },
   button: {
     width: '100%',
- 
-    marginBottom: getResponsiveHeight(2),
+    marginBottom: getResponsiveHeight(1.5), // Reduced to make room for the guest button
   },
   buttonText: {
     fontWeight: 'bold',
     fontSize: getResponsiveFontSize(16),
+  },
+  // New guest button styles
+  guestButton: {
+    width: '100%',
+    marginBottom: getResponsiveHeight(2),
+  },
+  guestButtonText: {
+    fontSize: getResponsiveFontSize(14),
+    opacity: 0.8,
   },
   metaText: {
     fontSize: getResponsiveFontSize(16),

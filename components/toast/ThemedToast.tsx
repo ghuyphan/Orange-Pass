@@ -66,33 +66,35 @@ export function ThemedToast({
     });
 
     // Effect hook to handle toast visibility and animation
-    useEffect(() => {
-        if (isVisible) {
-            // Animate in
-            opacity.value = withTiming(1, { duration: 300 });
-            translateY.value = withTiming(0, { duration: 300 });
+useEffect(() => {
+    let timer: NodeJS.Timeout | undefined;
+    let animationTimeout: NodeJS.Timeout | undefined;
 
-            // Automatically hide the toast after the specified duration
-            const timer = setTimeout(() => {
-                if (onVisibilityToggle) {
-                    onVisibilityToggle(false);
-                }
-            }, duration);
+    if (isVisible) {
+        opacity.value = withTiming(1, { duration: 300 });
+        translateY.value = withTiming(0, { duration: 300 });
 
-            // Clear the timeout on unmount or when visibility changes
-            return () => clearTimeout(timer);
-        } else {
-            // Animate out
-            setIsAnimationComplete(true); 
-            opacity.value = withTiming(0, { duration: 300 });
-            translateY.value = withTiming(50, { duration: 300 });
+        timer = setTimeout(() => {
+            if (onVisibilityToggle) {
+                onVisibilityToggle(false);
+            }
+        }, duration);
+    } else {
+        setIsAnimationComplete(true); 
+        opacity.value = withTiming(0, { duration: 300 });
+        translateY.value = withTiming(50, { duration: 300 });
 
-            // Reset animation complete state after animation finishes
-            setTimeout(() => {
-                setIsAnimationComplete(false);
-            }, 300); 
-        }
-    }, [isVisible, duration, onVisibilityToggle, opacity, translateY]);
+        animationTimeout = setTimeout(() => {
+            setIsAnimationComplete(false);
+        }, 300);
+    }
+
+    return () => {
+        if (timer) clearTimeout(timer);
+        if (animationTimeout) clearTimeout(animationTimeout);
+    };
+}, [isVisible, duration, onVisibilityToggle, opacity, translateY]);
+
 
     // Don't render the toast if it's not visible and the animation is complete
     if (!isVisible && !isAnimationComplete) {

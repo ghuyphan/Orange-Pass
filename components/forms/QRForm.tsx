@@ -338,6 +338,17 @@ const QRForm: React.FC<QRFormProps> = ({
     [],
   );
 
+  const handleFormSubmit = useCallback(
+  async (
+    values: FormParams,
+    formikHelpers: FormikHelpers<FormParams>
+  ) => {
+    Keyboard.dismiss();
+    await onSubmit(values, formikHelpers);
+  },
+  [onSubmit]
+);
+
   // Animation handlers
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
@@ -483,7 +494,7 @@ const QRForm: React.FC<QRFormProps> = ({
     <Formik<FormParams>
       initialValues={initialValues}
       validationSchema={qrCodeSchema}
-      onSubmit={onSubmit}
+      onSubmit={handleFormSubmit}
       enableReinitialize={true}
     >
       {({

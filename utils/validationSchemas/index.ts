@@ -127,3 +127,13 @@ export const profileSchema = yup.object().shape({
     otherwise: (schema) => schema.notRequired(),
   }),
 });
+
+export const passwordChangeSchema = yup.object().shape({
+  currentPassword: yup.string().required('currentPasswordRequired'),
+  newPassword: yup.string()
+    .min(8, 'passwordTooShort')
+    .required('newPasswordRequired'),
+  confirmNewPassword: yup.string()
+    .oneOf([yup.ref('newPassword')], 'passwordsMustMatch')
+    .required('confirmNewPasswordRequired'),
+});

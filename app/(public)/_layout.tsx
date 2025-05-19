@@ -77,6 +77,7 @@ export default function AuthLayout() {
           <Stack.Screen name="register" />
           <Stack.Screen name="forgot-password" />
           <Stack.Screen name="quick-login" />
+          <Stack.Screen name="guest-home" />
         </Stack>
       </View>
       {showHeader && (

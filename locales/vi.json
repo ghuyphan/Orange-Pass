@@ -419,72 +419,129 @@
     "confirmLogoutButton": "Đăng xuất",
     "appVersion": "Phiên bản:"
   },
+  "editProfileScreen": {
+    "title": "Chỉnh sửa hồ sơ",
+    "name": "Họ và tên",
+    "namePlaceholder": "Nhập họ và tên của bạn",
+    "email": "Email",
+    "emailPlaceholder": "Nhập email",
+    "currentPassword": "Mật khẩu hiện tại",
+    "currentPasswordPlaceholder": "Nhập mật khẩu hiện tại",
+    "newPassword": "Mật khẩu mới",
+    "newPasswordPlaceholder": "Nhập mật khẩu mới",
+    "confirmNewPassword": "Xác nhận mật khẩu mới",
+    "confirmNewPasswordPlaceholder": "Nhập lại mật khẩu mới",
+    "saveChanges": "Lưu thay đổi",
+    "saving": "Đang lưu...",
+    "updateSuccess": "Cập nhật hồ sơ thành công!",
+    "noChanges": "Không có thay đổi nào để lưu.",
+    "errors": {
+      "nameRequired": "Vui lòng nhập họ và tên.",
+      "nameInvalid": "Họ và tên không hợp lệ.",
+      "invalidEmail": "Email không hợp lệ.",
+      "emailRequired": "Vui lòng nhập email.",
+      "currentPasswordRequired": "Vui lòng nhập mật khẩu hiện tại.",
+      "invalidPasswordLength": "Mật khẩu phải tối thiểu 8 ký tự.",
+      "invalidPasswordLowerCase": "Mật khẩu cần có chữ thường.",
+      "invalidPasswordUpperCase": "Mật khẩu cần có chữ hoa.",
+      "invalidPasswordNumber": "Mật khẩu cần có số.",
+      "invalidPasswordSpecialChar": "Mật khẩu cần có ký tự đặc biệt (ví dụ: !@#$%^&*()_).",
+      "passwordRequired": "Vui lòng nhập mật khẩu.",
+      "confirmNewPasswordRequired": "Vui lòng xác nhận lại mật khẩu mới.",
+      "passwordsDontMatch": "Hai mật khẩu không khớp."
+    }
+  },
+  "changePasswordScreen": {
+    "title": "Đổi mật khẩu",
+    "currentPassword": "Mật khẩu hiện tại",
+    "currentPasswordPlaceholder": "Nhập mật khẩu hiện tại của bạn",
+    "newPassword": "Mật khẩu mới",
+    "newPasswordPlaceholder": "Nhập mật khẩu mới (tối thiểu 8 ký tự)",
+    "confirmNewPassword": "Xác nhận mật khẩu mới",
+    "confirmNewPasswordPlaceholder": "Nhập lại mật khẩu mới",
+    "saveChanges": "Lưu thay đổi",
+    "saving": "Đang lưu...",
+    "updateSuccess": "Đổi mật khẩu thành công!",
+    "errors": {
+      "currentPasswordRequired": "Vui lòng nhập mật khẩu hiện tại.",
+      "invalidCurrentPassword": "Mật khẩu hiện tại không đúng.",
+      "passwordRequired": "Vui lòng nhập mật khẩu mới.",
+      "invalidPasswordLength": "Mật khẩu mới phải có ít nhất 8 ký tự.",
+      "invalidPasswordLowerCase": "Mật khẩu mới cần có ít nhất một chữ thường.",
+      "invalidPasswordUpperCase": "Mật khẩu mới cần có ít nhất một chữ hoa.",
+      "invalidPasswordNumber": "Mật khẩu mới cần có ít nhất một số.",
+      "invalidPasswordSpecialChar": "Mật khẩu mới cần có ít nhất một ký tự đặc biệt (ví dụ: !@#$%^&*()_).",
+      "confirmNewPasswordRequired": "Vui lòng xác nhận lại mật khẩu mới.",
+      "passwordsDontMatch": "Mật khẩu mới và mật khẩu xác nhận không khớp.",
+      "updateFailed": "Không thể cập nhật mật khẩu. Vui lòng thử lại."
+    }
+  },
   "editAvatarScreen": {
-      "title": "Sửa Avatar",
-      "save": "Lưu",
-      "gender": "Giới tính",
-      "faceColor": "Màu da",
-      "earSize": "Kích thước tai",
-      "hairStyle": "Kiểu tóc",
-      "hairColor": "Màu tóc",
-      "hatStyle": "Kiểu mũ",
-      "hatColor": "Màu mũ",
-      "eyeStyle": "Kiểu mắt",
-      "glassesStyle": "Kiểu kính",
-      "noseStyle": "Kiểu mũi",
-      "mouthStyle": "Kiểu miệng",
-      "shirtStyle": "Kiểu áo",
-      "shirtColor": "Màu áo",
-      "options": {
-        "sex": {
-          "man": "Nam",
-          "woman": "Nữ"
-        },
-        "earSize": {
-          "small": "Nhỏ",
-          "big": "Lớn"
-        },
-        "hairStyle": {
-          "normal": "Thường",
-          "thick": "Dày",
-          "mohawk": "Mohawk",
-          "womanLong": "Tóc dài",
-          "womanShort": "Tóc ngắn"
-        },
-        "hatStyle": {
-          "none": "Không",
-          "beanie": "Mũ len",
-          "turban": "Khăn xếp"
-        },
-        "eyeStyle": {
-          "circle": "Tròn",
-          "oval": "Oval",
-          "smile": "Mắt cười"
-        },
-        "glassesStyle": {
-          "none": "Không",
-          "round": "Tròn",
-          "square": "Vuông"
-        },
-        "noseStyle": {
-          "short": "Ngắn",
-          "long": "Dài",
-          "round": "Tròn"
-        },
-        "mouthStyle": {
-          "laugh": "Cười lớn",
-          "smile": "Mỉm cười",
-          "peace": "Peace"
-        },
-        "shirtStyle": {
-          "hoody": "Áo hoodie",
-          "short": "Áo tay ngắn",
-          "polo": "Áo polo"
-        }
+    "title": "Sửa Avatar",
+    "save": "Lưu",
+    "gender": "Giới tính",
+    "faceColor": "Màu da",
+    "earSize": "Kích thước tai",
+    "hairStyle": "Kiểu tóc",
+    "hairColor": "Màu tóc",
+    "hatStyle": "Kiểu mũ",
+    "hatColor": "Màu mũ",
+    "eyeStyle": "Kiểu mắt",
+    "glassesStyle": "Kiểu kính",
+    "noseStyle": "Kiểu mũi",
+    "mouthStyle": "Kiểu miệng",
+    "shirtStyle": "Kiểu áo",
+    "shirtColor": "Màu áo",
+    "options": {
+      "sex": {
+        "man": "Nam",
+        "woman": "Nữ"
       },
-      "customColor": "Màu tùy chỉnh",
-      "enterCustomHexCode": "Nhập mã màu hex tùy chỉnh",
-      "hexCode": "Mã hex"
+      "earSize": {
+        "small": "Nhỏ",
+        "big": "Lớn"
+      },
+      "hairStyle": {
+        "normal": "Thường",
+        "thick": "Dày",
+        "mohawk": "Mohawk",
+        "womanLong": "Tóc dài",
+        "womanShort": "Tóc ngắn"
+      },
+      "hatStyle": {
+        "none": "Không",
+        "beanie": "Mũ len",
+        "turban": "Khăn xếp"
+      },
+      "eyeStyle": {
+        "circle": "Tròn",
+        "oval": "Oval",
+        "smile": "Mắt cười"
+      },
+      "glassesStyle": {
+        "none": "Không",
+        "round": "Tròn",
+        "square": "Vuông"
+      },
+      "noseStyle": {
+        "short": "Ngắn",
+        "long": "Dài",
+        "round": "Tròn"
+      },
+      "mouthStyle": {
+        "laugh": "Cười lớn",
+        "smile": "Mỉm cười",
+        "peace": "Peace"
+      },
+      "shirtStyle": {
+        "hoody": "Áo hoodie",
+        "short": "Áo tay ngắn",
+        "polo": "Áo polo"
+      }
+    },
+    "customColor": "Màu tùy chỉnh",
+    "enterCustomHexCode": "Nhập mã màu hex tùy chỉnh",
+    "hexCode": "Mã hex"
   },
   "languageScreen": {
     "title": "Ngôn ngữ",
