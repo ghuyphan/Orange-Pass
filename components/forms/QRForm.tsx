@@ -4,9 +4,9 @@ import React, {
   useMemo,
   useRef,
   useState,
-  useEffect, // Added useEffect
+  useEffect,
 } from "react";
-import { StyleSheet, View, Keyboard } from "react-native";
+import { StyleSheet, View, Keyboard, Platform } from "react-native";
 import { Formik, FormikHelpers } from "formik";
 import Animated, {
   Extrapolation,
@@ -87,6 +87,7 @@ interface QRFormProps {
   isEditing: boolean;
   onNavigateBack: () => void;
   codeProvider?: string;
+  isMetadataLoading?: boolean; // Added prop for VietQR loading
 }
 
 const QRForm: React.FC<QRFormProps> = ({
@@ -95,6 +96,7 @@ const QRForm: React.FC<QRFormProps> = ({
   isEditing,
   onNavigateBack,
   codeProvider,
+  isMetadataLoading = false, // Default to false
 }) => {
   // Context and theme setup
   const { currentTheme } = useTheme();
@@ -104,6 +106,7 @@ const QRForm: React.FC<QRFormProps> = ({
     text: colors,
     icon: iconColors,
     cardBackground: sectionsColors,
+    inputBackground: inputBackgroundColor, // For consistency
   } = Colors[currentTheme];
 
   // State management
@@ -117,7 +120,7 @@ const QRForm: React.FC<QRFormProps> = ({
   // Refs
   const bottomSheetRef = useRef<BottomSheet>(null);
   const modalManagerRef = useRef<any>(null);
-  const openSheetTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Ref for the timeout
+  const openSheetTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Animation setup
   const scrollY = useSharedValue(0);
@@ -133,7 +136,7 @@ const QRForm: React.FC<QRFormProps> = ({
       { display: t("addScreen.ewalletCategory"), value: "ewallet" },
       { display: t("addScreen.storeCategory"), value: "store" },
     ],
-    [t],
+    [t], // Assuming t is stable or add it if i18n re-instantiates it
   );
 
   const metadataTypeData: MetadataTypeItem[] = useMemo(
@@ -141,37 +144,35 @@ const QRForm: React.FC<QRFormProps> = ({
       { display: t("addScreen.qr"), value: "qr" },
       { display: t("addScreen.barcode"), value: "barcode" },
     ],
-    [t],
+    [t], // Assuming t is stable
   );
 
-  // useEffect for cleanup on unmount
   useEffect(() => {
     return () => {
       if (openSheetTimeoutRef.current) {
         clearTimeout(openSheetTimeoutRef.current);
       }
     };
-  }, []); // Empty dependency array ensures this runs only on mount and unmount
+  }, []);
 
-  // Callbacks
-  // Helper function to map DataType to BrandItem.type
   function mapDataTypeToBrandItemType(
     dataType: DataType,
   ): "bank" | "ewallet" | "store" {
     switch (dataType) {
       case "bank":
+      case "vietqr": // vietqr maps to bank type for BrandItem
         return "bank";
       case "ewallet":
         return "ewallet";
       case "store":
         return "store";
-      case "vietqr": //Example of handling the vietqr case
-        return "bank"; //Or whatever type is logical
-      // Add other cases as needed
       default:
-        // Handle unexpected DataType values.  Throwing an error
-        // is usually a good idea to catch configuration issues early.
-        throw new Error(`Unexpected DataType: ${dataType}`);
+        // This ensures that all paths return a value or throw.
+        // You might want to log the unexpected dataType or handle it differently.
+        console.warn(`Unexpected DataType encountered: ${dataType}`);
+        // Fallback or throw, depending on how strict you want to be.
+        // For now, let's assume it might be a new type that can be treated as 'store'.
+        return "store"; // Or throw new Error(`Unexpected DataType: ${dataType}`);
     }
   }
 
@@ -180,13 +181,13 @@ const QRForm: React.FC<QRFormProps> = ({
       returnItemsByType(type).map((item) => ({
         code: item.code,
         name: item.name,
-        full_name: item.full_name[locale],
-        type: mapDataTypeToBrandItemType(type), // Use the mapping function
+        full_name: item.full_name[locale] || item.name, // Fallback to name
+        type: mapDataTypeToBrandItemType(type),
         ...(type === "bank" || type === "store" || type === "ewallet"
           ? { bin: item.bin }
           : {}),
       })),
-    [returnItemsByType], // Add returnItemsByType to the dependency array
+    [locale], // returnItemsByType should be stable if it's a pure function
   );
 
   const showToast = useCallback((message: string) => {
@@ -236,9 +237,7 @@ const QRForm: React.FC<QRFormProps> = ({
 
   const shouldShowAccountSection = useCallback(
     (category: CategoryItem | null) =>
-      category?.value !== "store" &&
-      typeof category?.value === "string" &&
-      category.value.length > 0,
+      category?.value === "bank" || category?.value === "ewallet",
     [],
   );
 
@@ -270,7 +269,8 @@ const QRForm: React.FC<QRFormProps> = ({
         shouldValidate?: boolean,
       ) => void,
     ) => {
-      // Validate category first before opening brand or metadata type sheet
+      if (isMetadataLoading) return; // Don't open sheet if metadata is loading
+
       if ((type === "brand" || type === "metadataType") && !category) {
         showToast(t("addScreen.errors.selectCategoryFirstMessage"));
         return;
@@ -279,7 +279,6 @@ const QRForm: React.FC<QRFormProps> = ({
       setSheetType(type);
       Keyboard.dismiss();
 
-      // Clear any existing timeout before starting a new one
       if (openSheetTimeoutRef.current) {
         clearTimeout(openSheetTimeoutRef.current);
       }
@@ -291,7 +290,7 @@ const QRForm: React.FC<QRFormProps> = ({
         }, 150);
       });
     },
-    [t, showToast],
+    [t, showToast, isMetadataLoading],
   );
 
   const handleSheetItemSelect = useCallback(
@@ -306,10 +305,17 @@ const QRForm: React.FC<QRFormProps> = ({
     ) => {
       switch (type) {
         case "category":
-          setFieldValue("category", item as CategoryItem);
-          setFieldValue("brand", null);
-          setFieldValue("accountName", "");
-          setFieldValue("accountNumber", "");
+          const newCategory = item as CategoryItem;
+          setFieldValue("category", newCategory);
+          setFieldValue("brand", null); // Reset brand
+          // Reset bank/ewallet specific fields if new category is not bank/ewallet
+          if (newCategory.value === "store") {
+            setFieldValue("accountName", "");
+            setFieldValue("accountNumber", "");
+          }
+          // If switching to bank, metadata might be auto-generated, so clear it
+          // or let AddScreen handle it. For now, let form reflect user action.
+          // setFieldValue("metadata", "");
           break;
         case "brand":
           setFieldValue("brand", item as BrandItem);
@@ -330,26 +336,27 @@ const QRForm: React.FC<QRFormProps> = ({
 
   const keyExtractor = useCallback(
     (item: SheetItem | unknown) =>
-      "value" in (item as SheetItem)
-        ? (item as CategoryItem | MetadataTypeItem).value
-        : "code" in (item as SheetItem)
-          ? (item as BrandItem).code
-          : String(item),
+      item && typeof item === "object"
+        ? "value" in item
+          ? (item as CategoryItem | MetadataTypeItem).value
+          : "code" in item
+            ? (item as BrandItem).code
+            : String(Date.now() + Math.random()) // Fallback key
+        : String(item),
     [],
   );
 
   const handleFormSubmit = useCallback(
-  async (
-    values: FormParams,
-    formikHelpers: FormikHelpers<FormParams>
-  ) => {
-    Keyboard.dismiss();
-    await onSubmit(values, formikHelpers);
-  },
-  [onSubmit]
-);
+    async (
+      values: FormParams,
+      formikHelpers: FormikHelpers<FormParams>,
+    ) => {
+      Keyboard.dismiss();
+      await onSubmit(values, formikHelpers);
+    },
+    [onSubmit],
+  );
 
-  // Animation handlers
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
       scrollY.value = event.contentOffset.y;
@@ -395,7 +402,6 @@ const QRForm: React.FC<QRFormProps> = ({
     [],
   );
 
-  // Rendering functions
   const renderCardItem = useCallback(
     (
       metadata: string,
@@ -417,9 +423,11 @@ const QRForm: React.FC<QRFormProps> = ({
           maxWidth: getResponsiveWidth(40),
           fontSize: getResponsiveFontSize(12),
         }}
+        // Consider adding an isMetadataLoading prop to ThemedCardItem if you want shimmer there too
+        // isContentLoading={isMetadataLoading && category?.value === 'bank'}
       />
     ),
-    [cardStyle, codeProvider],
+    [cardStyle, codeProvider /*, isMetadataLoading - if ThemedCardItem supports it */],
   );
 
   const renderSheetItem = useCallback(
@@ -484,7 +492,6 @@ const QRForm: React.FC<QRFormProps> = ({
           />
         );
       }
-
       return null;
     },
     [colors, handleSheetItemSelect, iconColors],
@@ -493,7 +500,7 @@ const QRForm: React.FC<QRFormProps> = ({
   return (
     <Formik<FormParams>
       initialValues={initialValues}
-      validationSchema={qrCodeSchema}
+      validationSchema={qrCodeSchema} // Make sure qrCodeSchema is flexible or updates with category
       onSubmit={handleFormSubmit}
       enableReinitialize={true}
     >
@@ -507,254 +514,286 @@ const QRForm: React.FC<QRFormProps> = ({
         isSubmitting,
         setFieldValue,
         dirty,
-      }) => (
-        <ThemedView style={styles.container}>
-          <ThemedTopToast
-            key={toastKey}
-            message={toastMessage}
-            isVisible={isToastVisible}
-            onVisibilityToggle={onToastHidden}
-            duration={2000}
-          />
+      }) => {
+        const formDisabled = isSubmitting || isMetadataLoading;
 
-          {/* Title container with animation */}
-          <Animated.View style={[styles.titleContainer, titleContainerStyle]}>
-            <View style={styles.headerContainer}>
-              <View style={styles.titleButtonContainer}>
-                <ThemedButton
-                  iconName="chevron-left"
-                  style={styles.titleButton}
-                  onPress={() => {
-                    if (dirty) {
-                      modalManagerRef.current?.showModal();
-                    } else {
-                      onNavigateBack();
-                    }
-                  }}
-                />
-              </View>
-              <ThemedText style={styles.title} type="title">
-                {isEditing ? t("editScreen.title") : t("addScreen.title")}
-              </ThemedText>
-            </View>
-          </Animated.View>
+        return (
+          <ThemedView style={styles.container}>
+            <ThemedTopToast
+              key={toastKey}
+              message={toastMessage}
+              isVisible={isToastVisible}
+              onVisibilityToggle={onToastHidden}
+              duration={2000}
+            />
 
-          {/* Main content scroll view */}
-          <AnimatedKeyboardAwareScrollView
-            contentContainerStyle={styles.scrollViewContent}
-            enableOnAndroid={true}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-            onScroll={scrollHandler}
-            scrollEnabled={true}
-          >
-            {/* Card preview */}
-            {renderCardItem(
-              values.metadata,
-              values.accountName,
-              values.accountNumber,
-              values.category,
-              values.brand,
-              values.metadataType,
-            )}
-
-            {/* Main form section */}
-            <ThemedView
-              style={[
-                styles.formContainer,
-                { backgroundColor: sectionsColors },
-              ]}
-            >
-              <ThemedDisplayInput
-                iconName="format-list-bulleted-type"
-                placeholder={t("addScreen.categoryPlaceholder")}
-                value={values.category?.display}
-                onPress={() =>
-                  onOpenSheet("category", values.category, setFieldValue)
-                }
-                onClear={() => handleFieldClear("category", setFieldValue)}
-                errorMessage={
-                  touched.category && errors.category
-                    ? String(errors.category)
-                    : undefined
-                }
-                isError={touched.category && !!errors.category}
-              />
-
-              <ThemedDisplayInput
-                iconName="domain"
-                placeholder={t("addScreen.brandPlaceholder")}
-                logoCode={codeProvider ? codeProvider : values.brand?.code}
-                value={values.brand?.full_name}
-                onPress={() =>
-                  onOpenSheet("brand", values.category, setFieldValue)
-                }
-                onClear={() => handleFieldClear("brand", setFieldValue)}
-                errorMessage={
-                  touched.brand && errors.brand
-                    ? String(errors.brand)
-                    : undefined
-                }
-                isError={touched.brand && !!errors.brand}
-              />
-
-              {/* Conditional metadata input for store or ewallet */}
-              {(values.category?.value === "store" ||
-                values.category?.value === "ewallet") && (
-                <Animated.View
-                  style={{ backgroundColor: sectionsColors }}
-                  entering={FadeIn.duration(300)}
-                  exiting={FadeOut.duration(300)}
-                >
-                  <ThemedInput
-                    iconName="credit-card-outline"
-                    placeholder={t("addScreen.metadataPlaceholder")}
-                    value={values.metadata}
-                    onChangeText={handleChange("metadata")}
-                    onBlur={handleBlur("metadata")}
-                    backgroundColor={sectionsColors}
-                    disabled={!!codeProvider && !isEditing}
-                    disableOpacityChange={false}
-                    errorMessage={
-                      touched.metadata && errors.metadata
-                        ? String(errors.metadata)
-                        : undefined
-                    }
-                    isError={touched.metadata && !!errors.metadata}
-                    onDisabledPress={() => onEmptyInputPress("metadata")}
+            <Animated.View style={[styles.titleContainer, titleContainerStyle]}>
+              <View style={styles.headerContainer}>
+                <View style={styles.titleButtonContainer}>
+                  <ThemedButton
+                    iconName="chevron-left"
+                    style={styles.titleButton}
+                    disabled={formDisabled}
+                    onPress={() => {
+                      if (dirty && !formDisabled) {
+                        modalManagerRef.current?.showModal();
+                      } else if (!formDisabled) {
+                        onNavigateBack();
+                      }
+                    }}
                   />
-                </Animated.View>
+                </View>
+                <ThemedText style={styles.title} type="title">
+                  {isEditing ? t("editScreen.title") : t("addScreen.title")}
+                </ThemedText>
+              </View>
+            </Animated.View>
+
+            <AnimatedKeyboardAwareScrollView
+              contentContainerStyle={styles.scrollViewContent}
+              enableOnAndroid={true}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              onScroll={scrollHandler}
+              scrollEnabled={!isSheetOpen && !formDisabled} // Disable scroll when sheet is open or form is globally disabled
+            >
+              {renderCardItem(
+                values.metadata,
+                values.accountName,
+                values.accountNumber,
+                values.category,
+                values.brand,
+                values.metadataType,
               )}
 
-              <ThemedDisplayInput
-                iconName="qrcode"
-                placeholder={t("addScreen.metadataTypePlaceholder")}
-                value={values.metadataType?.display}
-                onPress={() =>
-                  onOpenSheet("metadataType", values.category, setFieldValue)
-                }
-                onClear={() => handleFieldClear("metadataType", setFieldValue)}
-                showClearButton={false}
-              />
-            </ThemedView>
-
-            {/* Account section (conditionally rendered) */}
-            {shouldShowAccountSection(values.category) && (
-              <Animated.View
+              <ThemedView
                 style={[
                   styles.formContainer,
                   { backgroundColor: sectionsColors },
                 ]}
-                entering={FadeIn.duration(300)}
-                exiting={FadeOut.duration(300)}
               >
-                <ThemedInput
-                  iconName="account"
-                  placeholder={t("addScreen.accountNamePlaceholder")}
-                  value={values.accountName}
-                  onChangeText={handleChange("accountName")}
-                  onBlur={handleBlur("accountName")}
-                  backgroundColor={sectionsColors}
-                  disableOpacityChange={false}
+                <ThemedDisplayInput
+                  iconName="format-list-bulleted-type"
+                  placeholder={t("addScreen.categoryPlaceholder")}
+                  value={values.category?.display}
+                  onPress={() =>
+                    onOpenSheet("category", values.category, setFieldValue)
+                  }
+                  onClear={() => handleFieldClear("category", setFieldValue)}
                   errorMessage={
-                    touched.accountName && errors.accountName
-                      ? String(errors.accountName)
+                    touched.category && errors.category
+                      ? String(errors.category)
                       : undefined
                   }
-                  isError={touched.accountName && !!errors.accountName}
-                  onDisabledPress={() => onEmptyInputPress("account")}
+                  isError={touched.category && !!errors.category}
+                  disabled={formDisabled}
                 />
 
-                <ThemedInput
-                  iconName="account-cash"
-                  placeholder={t("addScreen.accountNumberPlaceholder")}
-                  value={values.accountNumber}
-                  onChangeText={handleChange("accountNumber")}
-                  onBlur={handleBlur("accountNumber")}
-                  backgroundColor={sectionsColors}
-                  keyboardType="numeric"
-                  disableOpacityChange={false}
+                <ThemedDisplayInput
+                  iconName="domain"
+                  placeholder={t("addScreen.brandPlaceholder")}
+                  logoCode={codeProvider ? codeProvider : values.brand?.code}
+                  value={values.brand?.full_name}
+                  onPress={() =>
+                    onOpenSheet("brand", values.category, setFieldValue)
+                  }
+                  onClear={() => handleFieldClear("brand", setFieldValue)}
                   errorMessage={
-                    touched.accountNumber && errors.accountNumber
-                      ? String(errors.accountNumber)
+                    touched.brand && errors.brand
+                      ? String(errors.brand)
                       : undefined
                   }
-                  isError={touched.accountNumber && !!errors.accountNumber}
-                  onDisabledPress={() => onEmptyInputPress("account")}
+                  isError={touched.brand && !!errors.brand}
+                  disabled={formDisabled}
                 />
-              </Animated.View>
-            )}
 
-            {/* Save button */}
-            <ThemedButton
-              label={
-                isEditing
-                  ? t("editScreen.saveButton")
-                  : t("addScreen.saveButton")
-              }
-              onPress={handleSubmit}
-              style={styles.saveButton}
-              disabled={isSubmitting}
-              loading={isSubmitting}
-              loadingLabel={
-                isEditing ? t("editScreen.saving") : t("addScreen.saving")
-              }
-            />
-          </AnimatedKeyboardAwareScrollView>
+                {/* Bank QR Data Display - Shows loading shimmer */}
+                {values.category?.value === "bank" && (
+                  <Animated.View
+                    style={{ backgroundColor: sectionsColors }}
+                    entering={FadeIn.duration(300)}
+                    exiting={FadeOut.duration(300)}
+                  >
+                    <ThemedDisplayInput
+                      iconName="qrcode-scan"
+                      label={t("addScreen.qrCodeDataLabel")} // Add this translation
+                      value={values.metadata}
+                      isLoading={isMetadataLoading} // HERE is the loading prop
+                      showClearButton={false}
+                      disabled={formDisabled} // General disable state
+                      // You might want to add multiline & numberOfLines if QR data is long
+                      // multiline={true}
+                      // numberOfLines={3}
+                      placeholder={
+                        isMetadataLoading
+                          ? t("addScreen.qrLoadingPlaceholder") // Add this translation
+                          : t("addScreen.qrGeneratedPlaceholder") // Add this
+                      }
+                    />
+                  </Animated.View>
+                )}
 
-          {/* Bottom sheet */}
-          <ThemedReuseableSheet
-            ref={bottomSheetRef}
-            showSearchBar={sheetType === "brand"}
-            title={
-              sheetType === "category"
-                ? t("addScreen.categoryTitle")
-                : sheetType === "brand"
-                  ? t("addScreen.brandTitle")
+                {/* Store/Ewallet Metadata Input */}
+                {(values.category?.value === "store" ||
+                  values.category?.value === "ewallet") && (
+                  <Animated.View
+                    style={{ backgroundColor: sectionsColors }}
+                    entering={FadeIn.duration(300)}
+                    exiting={FadeOut.duration(300)}
+                  >
+                    <ThemedInput
+                      iconName="credit-card-outline"
+                      placeholder={t("addScreen.metadataPlaceholder")}
+                      value={values.metadata}
+                      onChangeText={handleChange("metadata")}
+                      onBlur={handleBlur("metadata")}
+                      backgroundColor={inputBackgroundColor} // Use consistent input background
+                      disabled={
+                        (!!codeProvider && !isEditing) || formDisabled
+                      }
+                      disableOpacityChange={false}
+                      errorMessage={
+                        touched.metadata && errors.metadata
+                          ? String(errors.metadata)
+                          : undefined
+                      }
+                      isError={touched.metadata && !!errors.metadata}
+                      onDisabledPress={() => onEmptyInputPress("metadata")}
+                    />
+                  </Animated.View>
+                )}
+
+                <ThemedDisplayInput
+                  iconName="qrcode"
+                  placeholder={t("addScreen.metadataTypePlaceholder")}
+                  value={values.metadataType?.display}
+                  onPress={() =>
+                    onOpenSheet("metadataType", values.category, setFieldValue)
+                  }
+                  onClear={() =>
+                    handleFieldClear("metadataType", setFieldValue)
+                  }
+                  showClearButton={false} // Usually metadata type is required
+                  disabled={formDisabled}
+                />
+              </ThemedView>
+
+              {shouldShowAccountSection(values.category) && (
+                <Animated.View
+                  style={[
+                    styles.formContainer,
+                    { backgroundColor: sectionsColors },
+                  ]}
+                  entering={FadeIn.duration(300)}
+                  exiting={FadeOut.duration(300)}
+                >
+                  <ThemedInput
+                    iconName="account"
+                    placeholder={t("addScreen.accountNamePlaceholder")}
+                    value={values.accountName}
+                    onChangeText={handleChange("accountName")}
+                    onBlur={handleBlur("accountName")}
+                    backgroundColor={inputBackgroundColor}
+                    disableOpacityChange={false}
+                    errorMessage={
+                      touched.accountName && errors.accountName
+                        ? String(errors.accountName)
+                        : undefined
+                    }
+                    isError={touched.accountName && !!errors.accountName}
+                    onDisabledPress={() => onEmptyInputPress("account")}
+                    disabled={formDisabled}
+                  />
+
+                  <ThemedInput
+                    iconName="account-cash"
+                    placeholder={t("addScreen.accountNumberPlaceholder")}
+                    value={values.accountNumber}
+                    onChangeText={handleChange("accountNumber")}
+                    onBlur={handleBlur("accountNumber")}
+                    backgroundColor={inputBackgroundColor}
+                    keyboardType="numeric"
+                    disableOpacityChange={false}
+                    errorMessage={
+                      touched.accountNumber && errors.accountNumber
+                        ? String(errors.accountNumber)
+                        : undefined
+                    }
+                    isError={touched.accountNumber && !!errors.accountNumber}
+                    onDisabledPress={() => onEmptyInputPress("account")}
+                    disabled={formDisabled}
+                  />
+                </Animated.View>
+              )}
+
+              <ThemedButton
+                label={
+                  isEditing
+                    ? t("editScreen.saveButton")
+                    : t("addScreen.saveButton")
+                }
+                onPress={() => handleSubmit()}
+                style={styles.saveButton}
+                disabled={formDisabled}
+                // Show button loader for general submit, not if only metadata input is loading
+                loading={isSubmitting && !isMetadataLoading}
+                loadingLabel={
+                  isEditing ? t("editScreen.saving") : t("addScreen.saving")
+                }
+              />
+            </AnimatedKeyboardAwareScrollView>
+
+            <ThemedReuseableSheet
+              ref={bottomSheetRef}
+              showSearchBar={sheetType === "brand"}
+              title={
+                sheetType === "category"
+                  ? t("addScreen.categoryTitle")
+                  : sheetType === "brand"
+                    ? t("addScreen.brandTitle")
+                    : sheetType === "metadataType"
+                      ? t("addScreen.metadataTypeTitle")
+                      : ""
+              }
+              snapPoints={
+                sheetType === "category"
+                  ? ["32%"]
                   : sheetType === "metadataType"
-                    ? t("addScreen.metadataTypeTitle")
-                    : ""
-            }
-            snapPoints={
-              sheetType === "category"
-                ? ["32%"]
-                : sheetType === "metadataType"
-                  ? ["25%"]
-                  : ["85%"]
-            }
-            onChange={handleSheetChange}
-            contentType="flat"
-            contentProps={{
-              flatListProps: {
-                data: sheetData(values.category),
-                showsVerticalScrollIndicator: false,
-                renderItem: ({ item }) =>
-                  renderSheetItem(
-                    item as SheetItem,
-                    values.category,
-                    values.brand,
-                    values.metadataType,
-                    setFieldValue,
-                  ),
-                keyExtractor: keyExtractor,
-                style: {
-                  ...styles.flatListStyle,
-                  backgroundColor: sectionsColors,
+                    ? ["25%"]
+                    : ["85%"]
+              }
+              onChange={handleSheetChange}
+              contentType="flat"
+              contentProps={{
+                flatListProps: {
+                  data: sheetData(values.category),
+                  showsVerticalScrollIndicator: false,
+                  renderItem: ({ item }) =>
+                    renderSheetItem(
+                      item as SheetItem,
+                      values.category,
+                      values.brand,
+                      values.metadataType,
+                      setFieldValue,
+                    ),
+                  keyExtractor: keyExtractor,
+                  style: {
+                    ...styles.flatListStyle,
+                    backgroundColor: sectionsColors,
+                  },
                 },
-              },
-            }}
-          />
-
-          {/* Modal manager for unsaved changes */}
-          <ModalManager
-            ref={modalManagerRef}
-            onNavigateBack={onNavigateBack}
-            dirty={dirty}
-            isSheetVisible={isSheetVisible}
-            bottomSheetRef={bottomSheetRef}
-          />
-        </ThemedView>
-      )}
+              }}
+            />
+            <ModalManager
+              ref={modalManagerRef}
+              onNavigateBack={onNavigateBack}
+              dirty={dirty}
+              isSheetVisible={isSheetVisible}
+              bottomSheetRef={bottomSheetRef}
+            />
+          </ThemedView>
+        );
+      }}
     </Formik>
   );
 };
@@ -766,18 +805,23 @@ const styles = StyleSheet.create({
   scrollViewContent: {
     flexGrow: 1,
     paddingHorizontal: getResponsiveWidth(4.8),
-    paddingTop: getResponsiveHeight(18),
+    paddingTop: getResponsiveHeight(18), // Increased to ensure title is visible initially
+    paddingBottom: getResponsiveHeight(5), // Padding at the bottom
   },
   titleContainer: {
     position: "absolute",
-    top: getResponsiveHeight(10),
+    top: getResponsiveHeight(Platform.OS === "ios" ? 7 : 5), // Adjusted for status bar
     left: 0,
     right: 0,
+    // backgroundColor: Colors.light.background, // Or use theme background
+    zIndex: 10, // Ensure it's above scroll content initially
   },
   headerContainer: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: getResponsiveWidth(4.8),
+    paddingVertical: getResponsiveHeight(1),
+    // backgroundColor: Colors.light.background, // Or use theme background
     gap: getResponsiveWidth(4.8),
   },
   titleButtonContainer: {
@@ -787,16 +831,21 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: getResponsiveFontSize(28),
+    fontWeight: "bold",
   },
-  titleButton: {},
+  titleButton: {
+    // Add styles if needed, e.g., padding for touch area
+  },
   formContainer: {
     justifyContent: "center",
     borderRadius: getResponsiveWidth(4),
     marginTop: getResponsiveHeight(1.2),
     marginBottom: getResponsiveHeight(2.4),
+    padding: getResponsiveWidth(1), // Small padding inside form sections
   },
   saveButton: {
     marginTop: getResponsiveHeight(2.4),
+    marginBottom: getResponsiveHeight(3), // Ensure button is not cut off
   },
   flatListStyle: {
     borderRadius: getResponsiveWidth(4),

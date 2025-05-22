@@ -64,11 +64,8 @@ import {
   getResponsiveFontSize,
 } from "@/utils/responsive";
 import { t } from "@/i18n";
-import { exitGuestMode } from "@/services/auth"; // Assuming this is from your auth service
-import {
-  deleteQrCode,
-  updateQrIndexes,
-} from "@/services/localDB/qrDB"; // Import DB functions
+// import { exitGuestMode } from "@/services/auth"; // Assuming this is from your auth service
+import { deleteQrCode, updateQrIndexes } from "@/services/localDB/qrDB"; // Import DB functions
 
 const GUEST_USER_ID = ""; // Consistent with AuthService
 
@@ -86,6 +83,7 @@ function GuestHomeScreen() {
   const [isLoading, setIsLoading] = useState(true); // Start as true
   const [isProcessing, setIsProcessing] = useState(false); // For local DB operations
   const isEmpty = useMemo(() => qrData.length === 0, [qrData]);
+  const [initialAnimationsDone, setInitialAnimationsDone] = useState(false);
 
   // UI State
   const [isActive, setIsActive] = useState(false); // For drag
@@ -113,7 +111,7 @@ function GuestHomeScreen() {
   const flatListRef = useRef<FlatList<QRRecord> | null>(null);
   const bottomSheetRef = useRef<BottomSheet>(null);
   const timeoutRefs = useRef<{ [key: string]: NodeJS.Timeout | null }>({
-    processing: null, // Renamed from sync
+    processing: null,
     idle: null,
     edit: null,
     delete: null,
@@ -130,7 +128,7 @@ function GuestHomeScreen() {
   // Clear all timeouts on unmount
   useEffect(() => {
     return () => {
-      Object.values(timeoutRefs.current).forEach(timer => {
+      Object.values(timeoutRefs.current).forEach((timer) => {
         if (timer) clearTimeout(timer);
       });
     };
@@ -138,22 +136,16 @@ function GuestHomeScreen() {
 
   // Handle initial loading state based on guest user setup
   useEffect(() => {
-    // Assuming AuthService.initializeGuestMode() populates guestUser and qrData in Redux
     if (guestUser && guestUser.id === GUEST_USER_ID) {
-      // Guest session is initialized
       InteractionManager.runAfterInteractions(() => {
         setIsLoading(false);
+        setInitialAnimationsDone(true); // Allow animations after interactions
       });
     } else {
-      // Still waiting for guest session initialization or not in guest mode
       setIsLoading(true);
+      setInitialAnimationsDone(false); // Reset if guestUser changes
     }
   }, [guestUser]);
-
-  useEffect(() => {
-    console.log("Guest QR data:", qrData);
-  },[qrData])
-
   // Network status toasts
   const prevIsOffline = useRef(isOffline);
   useEffect(() => {
@@ -172,7 +164,7 @@ function GuestHomeScreen() {
           clearTimeout(timeoutRefs.current.network);
         timeoutRefs.current.network = setTimeout(
           () => setIsBottomToastVisible(false),
-          2000
+          2000,
         );
       } else {
         setIsBottomToastVisible(false);
@@ -185,15 +177,17 @@ function GuestHomeScreen() {
     };
   }, [isOffline, t]);
 
+  const animateEmptyCard = useCallback(() => {
+    emptyCardOffset.value = withSpring(0, { damping: 30, stiffness: 150 });
+  }, [emptyCardOffset]);
+
   // Animate empty card
   useEffect(() => {
     isEmptyShared.value = isEmpty ? 1 : 0;
-    animateEmptyCard();
-  }, [isEmpty, isEmptyShared]);
-
-  const animateEmptyCard = () => {
-    emptyCardOffset.value = withSpring(0, { damping: 30, stiffness: 150 });
-  };
+    if (initialAnimationsDone) {
+      animateEmptyCard();
+    }
+  }, [isEmpty, isEmptyShared, initialAnimationsDone, animateEmptyCard]);
 
   // Animated styles
   const titleContainerStyle = useAnimatedStyle(() => {
@@ -203,13 +197,13 @@ function GuestHomeScreen() {
       scrollY.value,
       [SCROLL_THRESHOLD, SCROLL_THRESHOLD + ANIMATION_RANGE],
       [1, 0],
-      Extrapolation.CLAMP
+      Extrapolation.CLAMP,
     );
     const translateY = interpolate(
       scrollY.value,
       [0, SCROLL_THRESHOLD],
       [0, -35],
-      Extrapolation.CLAMP
+      Extrapolation.CLAMP,
     );
     const shouldReduceZIndex = scrollY.value > 120 || isActive || isSheetOpen;
     return {
@@ -222,15 +216,15 @@ function GuestHomeScreen() {
   const listHeaderStyle = useAnimatedStyle(() => {
     const opacity = withTiming(
       interpolate(scrollY.value, [0, 50], [1, 0], Extrapolation.CLAMP),
-      { duration: 200, easing: Easing.out(Easing.ease) }
+      { duration: 200, easing: Easing.out(Easing.ease) },
     );
     const scale = withTiming(
       interpolate(scrollY.value, [0, 50], [1, 0.95], Extrapolation.CLAMP),
-      { duration: 150, easing: Easing.out(Easing.ease) }
+      { duration: 150, easing: Easing.out(Easing.ease) },
     );
     const translateY = withTiming(
       interpolate(scrollY.value, [0, 50], [0, -5], Extrapolation.CLAMP),
-      { duration: 150, easing: Easing.out(Easing.ease) }
+      { duration: 150, easing: Easing.out(Easing.ease) },
     );
     return { opacity, transform: [{ scale }, { translateY }] };
   }, []);
@@ -238,7 +232,7 @@ function GuestHomeScreen() {
   const fabStyle = useAnimatedStyle(() => {
     const marginBottom = withTiming(
       isBottomToastVisible ? 30 : isToastVisible ? 80 : 10,
-      { duration: 200, easing: Easing.bezier(0.25, 0.1, 0.25, 1) }
+      { duration: 200, easing: Easing.bezier(0.25, 0.1, 0.25, 1) },
     );
     return { marginBottom };
   });
@@ -248,29 +242,27 @@ function GuestHomeScreen() {
   }));
 
   // Navigation handlers
-  const onNavigateToEmptyScreen = useCallback(() => router.push("/(guest)/empty-guest"), [
-    router,
-  ]);
+  const onNavigateToEmptyScreen = useCallback(
+    () => router.push("/(guest)/empty-guest"),
+    [], // router is stable from expo-router
+  );
   const onNavigateToDetailScreen = useCallback(
     throttle((item: QRRecord) => {
       router.push({
-        pathname: `/detail`, // Ensure this route is accessible for guests or use a guest-specific detail
+        pathname: `/detail`,
         params: { id: item.id, item: encodeURIComponent(JSON.stringify(item)) },
       });
     }, 300),
-    [router]
+    [],
   );
   const onNavigateToScanScreen = useCallback(
-    () => router.push("/(guest)/scan-guest"), // Corrected path
-    [router]
+    () => router.push("/(guest)/scan-guest"),
+    [],
   );
   const onNavigateToSettingsScreen = useCallback(
-    () => router.push("/(guest)/settings-guest"), // Assuming a guest-specific settings
-    [router]
+    () => router.push("/(guest)/settings-guest"),
+    [],
   );
-  // const onNavigateToLoginScreen = useCallback(() => {
-  //   exitGuestMode().then(() => router.push("/login"));
-  // }, [router]);
 
   const onNavigateToAddScreen = useCallback(
     throttle(
@@ -279,12 +271,12 @@ function GuestHomeScreen() {
         codeValue?: string,
         bin?: string,
         codeType?: string,
-        codeProvider?: string
+        codeProvider?: string,
       ) => {
         router.push({
-          pathname: `/(guest)/add-guest`, // Corrected path
+          pathname: `/(guest)/add-guest`,
           params: {
-            codeFormat: codeFormat?.toString(), // Ensure params are strings
+            codeFormat: codeFormat?.toString(),
             codeValue,
             codeBin: bin,
             codeType,
@@ -292,9 +284,9 @@ function GuestHomeScreen() {
           },
         });
       },
-      300
+      300,
     ),
-    [router]
+    [],
   );
   const onNavigateToEditScreen = useCallback(
     throttle(() => {
@@ -303,12 +295,12 @@ function GuestHomeScreen() {
       if (timeoutRefs.current.edit) clearTimeout(timeoutRefs.current.edit);
       timeoutRefs.current.edit = setTimeout(() => {
         router.push({
-          pathname: `/(guest)/edit-guest`, // Corrected path
+          pathname: `/(guest)/edit-guest`,
           params: { id: selectedItemId },
         });
       }, 200);
     }, 300),
-    [selectedItemId, router]
+    [selectedItemId],
   );
 
   // Sheet handlers
@@ -320,7 +312,7 @@ function GuestHomeScreen() {
       ssid?: string,
       password?: string,
       isWep?: boolean,
-      isHidden?: boolean
+      isHidden?: boolean,
     ) => {
       setSheetType(type);
       setIsSheetOpen(true);
@@ -335,13 +327,16 @@ function GuestHomeScreen() {
       }
       bottomSheetRef.current?.snapToIndex(0);
     },
-    []
+    [],
   );
 
-  const onOpenGallery = useGalleryPicker({ onOpenSheet, onNavigateToAddScreen });
+  const onOpenGallery = useGalleryPicker({
+    onOpenSheet,
+    onNavigateToAddScreen,
+  });
 
   // Scroll handler
-  const scrollHandler = useAnimatedScrollHandler(event => {
+  const scrollHandler = useAnimatedScrollHandler((event) => {
     scrollY.value = event.contentOffset.y;
     if (event.contentOffset.y > 50 && fabOpen) {
       setFabOpen(false);
@@ -354,7 +349,7 @@ function GuestHomeScreen() {
     (offset: number) => {
       scrollY.value = offset;
     },
-    [scrollY]
+    [scrollY],
   );
 
   // Drag handlers
@@ -366,7 +361,7 @@ function GuestHomeScreen() {
   // Memoize filtered data
   const filteredData = useMemo(() => {
     if (filter === "all") return qrData;
-    return qrData.filter(item => item.type === filter);
+    return qrData.filter((item) => item.type === filter);
   }, [qrData, filter]);
 
   const handleFilterChange = useCallback((newFilter: string) => {
@@ -386,20 +381,17 @@ function GuestHomeScreen() {
       setIsToastVisible(true);
       setToastMessage(t("homeScreen.deleting"));
 
-      // Update Redux state first
-      const updatedData = qrData.filter(item => item.id !== selectedItemId);
+      const updatedData = qrData.filter((item) => item.id !== selectedItemId);
       const reindexedData = updatedData.map((item, index) => ({
         ...item,
         qr_index: index,
-        updated: new Date().toISOString(), // Mark as updated
-        is_synced: true, // For guests, local is "synced"
+        updated: new Date().toISOString(),
+        is_synced: true,
       }));
       dispatch(setQrData(reindexedData));
 
-      // Persist deletion and re-indexing to local DB for guest
       await deleteQrCode(selectedItemId, GUEST_USER_ID);
       if (reindexedData.length > 0) {
-        // Only update indexes if there's remaining data
         await updateQrIndexes(reindexedData, GUEST_USER_ID);
       }
 
@@ -416,7 +408,7 @@ function GuestHomeScreen() {
       if (timeoutRefs.current.delete) clearTimeout(timeoutRefs.current.delete);
       timeoutRefs.current.delete = setTimeout(
         () => setIsProcessing(false),
-        400
+        400,
       );
     }
   }, [selectedItemId, qrData, dispatch, t]);
@@ -447,7 +439,7 @@ function GuestHomeScreen() {
         />
       </ScaleDecorator>
     ),
-    [onNavigateToDetailScreen, onOpenSheet]
+    [onNavigateToDetailScreen, onOpenSheet],
   );
 
   // Toast handler
@@ -458,7 +450,7 @@ function GuestHomeScreen() {
 
   const handleCopySuccess = useCallback(
     () => showToast(t("homeScreen.copied")),
-    [showToast, t]
+    [showToast, t],
   );
 
   // Optimize onDragEnd
@@ -466,7 +458,7 @@ function GuestHomeScreen() {
     async ({ data: reorderedData }: { data: QRRecord[] }) => {
       triggerHapticFeedback();
       setIsActive(false);
-      setIsProcessing(true); // Indicate processing for local DB
+      setIsProcessing(true);
       setToastMessage(t("homeScreen.reordering"));
       setIsToastVisible(true);
 
@@ -482,18 +474,18 @@ function GuestHomeScreen() {
         dispatch(setQrData(finalDataToSave));
       } else {
         const reorderedItemsMap = new Map(
-          reorderedData.map(item => [item.id, item])
+          reorderedData.map((item) => [item.id, item]),
         );
-        const filteredItemIds = new Set(reorderedData.map(item => item.id));
+        const filteredItemIds = new Set(reorderedData.map((item) => item.id));
         let currentIndex = 0;
         const newFullList = qrData
-          .map(item => {
+          .map((item) => {
             if (filteredItemIds.has(item.id)) {
-              return reorderedItemsMap.get(item.id)!; // Get the reordered item
+              return reorderedItemsMap.get(item.id)!;
             }
-            return item; // Keep non-filtered items as they are
+            return item;
           })
-          .map(item => ({ // Re-index the entire list
+          .map((item) => ({
             ...item,
             qr_index: currentIndex++,
             updated: new Date().toISOString(),
@@ -507,33 +499,37 @@ function GuestHomeScreen() {
         if (finalDataToSave.length > 0) {
           await updateQrIndexes(finalDataToSave, GUEST_USER_ID);
         }
-        setIsToastVisible(false); // Hide reordering toast
+        setIsToastVisible(false);
         setTopToastMessage(t("homeScreen.reordered"));
         setIsTopToastVisible(true);
       } catch (error) {
         console.error("Error reordering QR for guest:", error);
         setToastMessage(t("homeScreen.reorderError"));
-        // Keep toast visible to show error
       } finally {
-        if (timeoutRefs.current.processing) clearTimeout(timeoutRefs.current.processing);
+        if (timeoutRefs.current.processing)
+          clearTimeout(timeoutRefs.current.processing);
         timeoutRefs.current.processing = setTimeout(() => {
           setIsProcessing(false);
-          // Potentially hide toast if it wasn't an error
           if (!toastMessage.includes("Error")) setIsToastVisible(false);
         }, 400);
       }
     },
-    [dispatch, qrData, filter, t, toastMessage] // Added toastMessage
+    [dispatch, qrData, filter, t, toastMessage],
   );
 
   // Padding values
   const paddingValues = useMemo(() => {
     switch (qrData.length) {
-      case 0: return 0;
-      case 1: return height * 0.7;
-      case 2: return height * 0.45;
-      case 3: return height * 0.2;
-      default: return 100;
+      case 0:
+        return 0;
+      case 1:
+        return height * 0.7;
+      case 2:
+        return height * 0.45;
+      case 3:
+        return height * 0.2;
+      default:
+        return 100;
     }
   }, [qrData.length]);
   const listContainerPadding = useMemo(() => paddingValues, [paddingValues]);
@@ -575,7 +571,6 @@ function GuestHomeScreen() {
       titleContainerStyle,
       onScan,
       onSettings,
-      onLogin,
     }: {
       titleContainerStyle: any;
       onScan: () => void;
@@ -600,7 +595,7 @@ function GuestHomeScreen() {
           </View>
         </View>
       </Animated.View>
-    )
+    ),
   );
 
   const LoadingComponent = React.memo(() => (
@@ -632,7 +627,7 @@ function GuestHomeScreen() {
           onFilterChange={onFilterChange}
         />
       </Animated.View>
-    )
+    ),
   );
 
   const EmptyItemComponent = React.memo(({ color }: { color: string }) => (
@@ -658,7 +653,7 @@ function GuestHomeScreen() {
         <EmptyListItem
           scrollHandler={scrollHandler}
           emptyCardStyle={emptyCardStyle}
-          onNavigateToEmptyScreen={onNavigateToEmptyScreen} // Consider if this is needed for guests
+          onNavigateToEmptyScreen={onNavigateToEmptyScreen}
           onNavigateToScanScreen={onNavigateToScanScreen}
           dropdownOptions={[
             {
@@ -691,9 +686,9 @@ function GuestHomeScreen() {
             initialNumToRender={10}
             maxToRenderPerBatch={5}
             windowSize={5}
-            data={[...filteredData]} // Ensure data is a new array for DraggableFlatList
+            data={[...filteredData]}
             renderItem={renderItem}
-            keyExtractor={item => `draggable-item-${item.id}`}
+            keyExtractor={(item) => `draggable-item-${item.id}`}
             containerStyle={{ flex: 1 }}
             contentContainerStyle={[
               styles.listContainer,
@@ -710,39 +705,41 @@ function GuestHomeScreen() {
         </Animated.View>
       )}
 
-      <ThemedFAB
-        actions={[
-          {
-            text: "homeScreen.fab.add",
-            iconName: "plus-circle",
-            onPress: onNavigateToAddScreen,
-          },
-          {
-            text: "homeScreen.fab.scan",
-            iconName: "camera",
-            onPress: onNavigateToScanScreen,
-          },
-          {
-            text: "homeScreen.fab.gallery",
-            iconName: "image",
-            onPress: onOpenGallery,
-          },
-        ]}
-        style={styles.fab}
-        animatedStyle={fabStyle}
-      />
+      {!isLoading && ( // Show FAB even if list is empty for guests
+        <ThemedFAB
+          actions={[
+            {
+              text: "homeScreen.fab.add",
+              iconName: "plus-circle",
+              onPress: onNavigateToAddScreen,
+            },
+            {
+              text: "homeScreen.fab.scan",
+              iconName: "camera",
+              onPress: onNavigateToScanScreen,
+            },
+            {
+              text: "homeScreen.fab.gallery",
+              iconName: "image",
+              onPress: onOpenGallery,
+            },
+          ]}
+          style={styles.fab}
+          animatedStyle={fabStyle}
+        />
+      )}
 
       <ThemedStatusToast
         isVisible={isToastVisible}
         message={toastMessage}
         onDismiss={() => setIsToastVisible(false)}
         style={styles.toastContainer}
-        isSyncing={isProcessing} // Use isProcessing for local operations
+        isSyncing={isProcessing}
       />
       <ThemedTopToast
         message={topToastMessage}
         isVisible={isTopToastVisible}
-        onVisibilityToggle={isVisible => setIsTopToastVisible(isVisible)}
+        onVisibilityToggle={(isVisible) => setIsTopToastVisible(isVisible)}
         duration={2000}
       />
       <ThemedBottomToast
@@ -763,14 +760,14 @@ function GuestHomeScreen() {
               ? t("homeScreen.wifi")
               : sheetType === "linking"
                 ? t("homeScreen.linking")
-                : t("homeScreen.settings") // Fallback title
+                : t("homeScreen.settings")
         }
         onClose={() => {
           if (timeoutRefs.current.sheet)
             clearTimeout(timeoutRefs.current.sheet);
           timeoutRefs.current.sheet = setTimeout(
             () => setIsSheetOpen(false),
-            50
+            50,
           );
         }}
         snapPoints={
@@ -780,7 +777,7 @@ function GuestHomeScreen() {
               ? ["38%"]
               : sheetType === "linking"
                 ? ["35%"]
-                : ["35%"] // Default snap points
+                : ["35%"]
         }
         styles={{
           customContent: {
@@ -791,7 +788,7 @@ function GuestHomeScreen() {
         customContent={<View>{renderSheetContent()}</View>}
       />
       <ThemedModal
-        primaryActionText={t("homeScreen.delete")} // Changed from "move"
+        primaryActionText={t("homeScreen.delete")}
         onPrimaryAction={onDeletePress}
         onDismiss={() => setIsModalVisible(false)}
         dismissable={true}

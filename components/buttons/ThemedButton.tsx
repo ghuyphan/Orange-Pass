@@ -201,7 +201,7 @@ export function ThemedButton({
     outline,
     borderWidth,
     outlineBorderColor,
-  ]);
+  ]);ActivityIndicator
 
   // Cloud with indicator
   type CloudWithIndicatorProps = {
@@ -295,7 +295,7 @@ export function ThemedButton({
       {loading ? (
         <>
           <ActivityIndicator
-            size={getResponsiveFontSize(23)}
+            size={getResponsiveFontSize(16)}
             color={loadingColor ? loadingColor : textColor}
           />
           {/* {loadingLabel && (

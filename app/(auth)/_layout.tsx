@@ -13,9 +13,11 @@ export default function HomeLayout() {
         <Stack.Screen name="home"/>
         <Stack.Screen name="(add)" />
         <Stack.Screen name="(detail)"/>
+        <Stack.Screen name="(edit)" />
         <Stack.Screen name="(scan)"/>
         <Stack.Screen name="(settings)"/>
         <Stack.Screen name="empty"/>
+        <Stack.Screen name="quick-login-prompt"/>
       </Stack>
   );
 }

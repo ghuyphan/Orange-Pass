@@ -3,7 +3,6 @@ import { View, StyleSheet, ViewStyle } from 'react-native';
 import LOGO from '@/assets/svgs/orange-logo.svg';
 import { getResponsiveWidth } from '@/utils/responsive';
 import { useTheme } from '@/context/ThemeContext';
-import { Colors } from '@/constants/Colors';
 
 interface LogoProps {
   size?: number; // Size in percentage of screen width

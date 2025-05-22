@@ -1,9 +1,21 @@
-import React, { useEffect, useState, useCallback, useRef, useMemo } from "react";
-import { StyleSheet, View, Keyboard, Pressable, Platform } from "react-native";
+import React, {
+  useEffect,
+  useState,
+  useCallback,
+  useRef,
+  useMemo,
+} from "react";
+import {
+  StyleSheet,
+  View,
+  Keyboard,
+  Pressable,
+  Platform,
+} from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Formik } from "formik";
 import { router } from "expo-router";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux"; // Combined useDispatch import
 import { useMMKVString } from "react-native-mmkv";
 import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
 
@@ -26,7 +38,14 @@ import { Colors } from "@/constants/Colors";
 import { RootState } from "@/store/rootReducer";
 import { t } from "@/i18n";
 import { loginSchema } from "@/utils/validationSchemas";
-import { login, hasQuickLoginPreference } from "@/services/auth";
+import {
+  login,
+  hasQuickLoginPreference,
+  exitGuestMode,
+  checkGuestModeStatus,
+} from "@/services/auth";
+// Import transferGuestDataToUser
+import { transferGuestDataToUser } from "@/services/localDB/qrDB";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
 import {
@@ -34,7 +53,6 @@ import {
   getResponsiveWidth,
   getResponsiveHeight,
 } from "@/utils/responsive";
-import { useDispatch } from "react-redux";
 import { setLoginInProgress } from "@/store/reducers/authStatusSlice";
 
 // Types
@@ -45,11 +63,11 @@ interface LanguageOption {
   flag: React.ReactNode;
 }
 
-// Pre-calculate flag sizes to avoid recalculation on every render
+// Pre-calculate flag sizes
 const FLAG_WIDTH = getResponsiveWidth(7.2);
 const FLAG_HEIGHT = getResponsiveHeight(3);
 
-// Create language options outside component to avoid recreation on every render
+// Create language options
 const createLanguageOptions = () => {
   return {
     vi: {
@@ -67,7 +85,7 @@ const createLanguageOptions = () => {
   };
 };
 
-// Pre-calculate styles for better performance
+// Create styles
 const createStyles = () => {
   return StyleSheet.create({
     container: {
@@ -109,7 +127,9 @@ const createStyles = () => {
     appNameContainer: {
       alignItems: "center",
       marginBottom:
-        Platform.OS === "ios" ? getResponsiveHeight(4) : getResponsiveHeight(3),
+        Platform.OS === "ios"
+          ? getResponsiveHeight(4)
+          : getResponsiveHeight(3),
       paddingBottom: Platform.OS === "android" ? getResponsiveHeight(1) : 0,
     },
     metaText: {
@@ -164,53 +184,52 @@ const createStyles = () => {
   });
 };
 
-// Create styles and language options once
 const styles = createStyles();
 const languageOptionsData = createLanguageOptions();
 
 export default function LoginScreen() {
-  // Context hooks
   const { locale, updateLocale } = useLocale();
   const [storedLocale, setStoredLocale] = useMMKVString("locale");
   const { currentTheme } = useTheme();
   const dispatch = useDispatch();
-  
-  // Redux state
+
   const authRefreshError = useSelector(
     (state: RootState) => state.error.message
   );
-  
-  // UI state
+
   const [isToastVisible, setIsToastVisible] = useState(false);
-  const [isKeyboardVisible, setKeyboardVisible] = useState(false);
+  const [isKeyboardVisible, setKeyboardVisible] = useState(false); // Kept for potential future use
   const [errorMessage, setErrorMessage] = useState("");
-  
-  // Refs
+
   const bottomSheetRef = useRef(null);
-  const scrollViewRef = useRef(null);
+  const scrollViewRef = useRef(null); // Kept for potential future use
 
-  // Memoize theme-based colors to prevent recalculation on each render
   const backgroundColor = useMemo(
-    () => currentTheme === "light" ? Colors.light.background : Colors.dark.background,
-    [currentTheme]
-  );
-  
-  const cardColor = useMemo(
-    () => currentTheme === "light" ? Colors.light.cardBackground : Colors.dark.cardBackground,
-    [currentTheme]
-  );
-  
-  const iconColor = useMemo(
-    () => currentTheme === "light" ? Colors.light.icon : Colors.dark.icon,
-    [currentTheme]
-  );
-  
-  const textColor = useMemo(
-    () => currentTheme === "light" ? Colors.light.text : Colors.dark.text,
+    () =>
+      currentTheme === "light"
+        ? Colors.light.background
+        : Colors.dark.background,
     [currentTheme]
   );
 
-  // Handle keyboard events
+  const cardColor = useMemo(
+    () =>
+      currentTheme === "light"
+        ? Colors.light.cardBackground
+        : Colors.dark.cardBackground,
+    [currentTheme]
+  );
+
+  const iconColor = useMemo(
+    () => (currentTheme === "light" ? Colors.light.icon : Colors.dark.icon),
+    [currentTheme]
+  );
+
+  const textColor = useMemo(
+    () => (currentTheme === "light" ? Colors.light.text : Colors.dark.text),
+    [currentTheme]
+  );
+
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
       "keyboardDidShow",
@@ -227,7 +246,6 @@ export default function LoginScreen() {
     };
   }, []);
 
-  // Handle auth errors
   useEffect(() => {
     if (authRefreshError !== null) {
       setIsToastVisible(true);
@@ -235,7 +253,6 @@ export default function LoginScreen() {
     }
   }, [authRefreshError]);
 
-  // Event handlers
   const onDismissToast = useCallback(() => {
     setIsToastVisible(false);
   }, []);
@@ -270,30 +287,66 @@ export default function LoginScreen() {
     bottomSheetRef.current?.expand();
   }, []);
 
-  // Form submission handler
-  const handleFormSubmit = useCallback(async (values, { setSubmitting }) => {
-    setSubmitting(true);
-    dispatch(setLoginInProgress(true));
-    try {
-      const authData = await login(values.email, values.password);
-      const hasPreference = await hasQuickLoginPreference(authData.record.id);
-      
-      if (hasPreference) {
-        router.replace("/(auth)/home");
-      } else {
-        router.replace("/(auth)/quick-login-prompt");
-      }
-    } catch (error) {
-      const errorAsError = error as Error;
-      setIsToastVisible(true);
-      setErrorMessage(errorAsError.toString());
-    } finally {
-      setSubmitting(false);
-      dispatch(setLoginInProgress(false));
-    }
-  }, []);
+  const handleFormSubmit = useCallback(
+    async (values, { setSubmitting }) => {
+      setSubmitting(true);
+      dispatch(setLoginInProgress(true));
 
-  // Memoize language options content for bottom sheet
+      try {
+        const authData = await login(values.email, values.password);
+        const newUserId = authData.record.id;
+
+        const wasGuest = await checkGuestModeStatus();
+        if (wasGuest) {
+          console.log(
+            "[LoginScreen] User was guest, attempting to transfer data..."
+          );
+          try {
+            await transferGuestDataToUser(newUserId);
+            console.log(
+              "[LoginScreen] Guest data transfer successful."
+            );
+          } catch (transferError) {
+            console.error(
+              "[LoginScreen] Error during guest data transfer:",
+              transferError
+            );
+            // Decide if this error should prevent login or just be logged
+          }
+          // Exit guest mode regardless of transfer success to ensure GUEST_MODE_KEY is false
+          const exitedSuccessfully = await exitGuestMode();
+          if (exitedSuccessfully) {
+            console.log(
+              "[LoginScreen] Successfully exited guest mode after login attempt."
+            );
+          } else {
+            console.warn(
+              "[LoginScreen] Failed to cleanly exit guest mode state. The GUEST_MODE_KEY might be stale."
+            );
+          }
+        }
+
+        const hasPreference = await hasQuickLoginPreference(newUserId);
+
+        if (hasPreference) {
+          router.replace("/(auth)/home");
+        } else {
+          router.replace("/(auth)/quick-login-prompt");
+        }
+      } catch (error) {
+        const errorAsError = error as Error;
+        setIsToastVisible(true);
+        setErrorMessage(
+          errorAsError.message || t("loginScreen.errors.genericError")
+        );
+      } finally {
+        setSubmitting(false);
+        dispatch(setLoginInProgress(false));
+      }
+    },
+    [dispatch, t] // Removed setIsToastVisible, setErrorMessage as they are component state setters
+  );
+
   const languageOptionsContent = useMemo(() => {
     return (
       <View
@@ -379,12 +432,21 @@ export default function LoginScreen() {
         </Pressable>
       </View>
     );
-  }, [cardColor, textColor, iconColor, storedLocale, handleLanguageChange, handleSystemLocale]);
+  }, [
+    cardColor,
+    textColor,
+    iconColor,
+    storedLocale,
+    handleLanguageChange,
+    handleSystemLocale,
+  ]);
 
-  // Memoize language selector label
   const languageSelectorLabel = useMemo(() => {
     if (!storedLocale) return t("languageScreen.system");
-    return languageOptionsData[storedLocale as LanguageKey]?.label || t("languageScreen.system");
+    return (
+      languageOptionsData[storedLocale as LanguageKey]?.label ||
+      t("languageScreen.system")
+    );
   }, [storedLocale, t]);
 
   return (
@@ -425,17 +487,15 @@ export default function LoginScreen() {
               />
             </View>
 
-            {/* Logo Centered */}
             <View style={styles.logoContainer}>
               <Logo size={getResponsiveWidth(3.5)} />
             </View>
 
-            {/* Input Fields */}
             <View style={styles.inputsWrapper}>
               <ThemedInput
                 placeholder={t("loginScreen.email")}
                 onChangeText={handleChange("email")}
-                isError={touched.email && errors.email ? true : false}
+                isError={touched.email && !!errors.email}
                 onBlur={handleBlur("email")}
                 value={values.email}
                 errorMessage={
@@ -451,7 +511,7 @@ export default function LoginScreen() {
                 placeholder={t("loginScreen.password")}
                 secureTextEntry={true}
                 onChangeText={handleChange("password")}
-                isError={touched.password && errors.password ? true : false}
+                isError={touched.password && !!errors.password}
                 onBlur={handleBlur("password")}
                 value={values.password}
                 errorMessage={
@@ -464,7 +524,6 @@ export default function LoginScreen() {
               />
             </View>
 
-            {/* Login Button */}
             <ThemedButton
               label={t("loginScreen.login")}
               style={styles.loginButton}
@@ -478,7 +537,6 @@ export default function LoginScreen() {
               disabled={isSubmitting}
             />
 
-            {/* Forgot Password */}
             <View style={styles.forgotButtonContainer}>
               <ThemedTextButton
                 label={t("loginScreen.forgotPassword")}
@@ -503,7 +561,6 @@ export default function LoginScreen() {
             </ThemedText>
           </View>
 
-          {/* Toast for errors */}
           <ThemedToast
             duration={5000}
             message={errorMessage}
@@ -514,7 +571,6 @@ export default function LoginScreen() {
             iconName="error"
           />
 
-          {/* Bottom Sheet for Language Selection */}
           <ThemedReuseableSheet
             ref={bottomSheetRef}
             title={t("loginScreen.selectLanguage")}

@@ -5,21 +5,20 @@ import { store } from "@/store";
 import { setQrData } from "@/store/reducers/qrSlice";
 import {
   setAuthData,
-  clearAuthData, // Import clearAuthData
+  clearAuthData,
   setSyncStatus,
 } from "@/store/reducers/authSlice";
 import { setErrorMessage } from "@/store/reducers/errorSlice";
 import { getUserById } from "@/services/localDB/userDB";
 import { t } from "@/i18n";
-import {
-  getQrCodesByUserId
-} from "@/services/localDB/qrDB";
+// Ensure getQrCodesByUserId is imported
+import { getQrCodesByUserId } from "@/services/localDB/qrDB";
 import { getTokenExpirationDate } from "@/utils/JWTdecode";
 import { storage } from "@/utils/storage";
 
 const LOG_PREFIX_AUTH = "[AuthService]";
-const GUEST_MODE_KEY = "useGuestMode";
-const GUEST_USER_ID = "";
+export const GUEST_MODE_KEY = "useGuestMode";
+export const GUEST_USER_ID = ""; // Ensure this is an empty string or a unique constant
 
 const AuthErrorStatus = {
   Unauthorized: 401,
@@ -36,9 +35,8 @@ interface AuthError extends Error {
   };
 }
 
-function mapRecordToUserData(record: Record<string, any>): UserRecord {
-  // Assuming avatar in record might be string (JSON) or object
-  let avatarData: any = record.avatar ?? {}; // Default to empty object
+export function mapRecordToUserData(record: Record<string, any>): UserRecord {
+  let avatarData: any = record.avatar ?? {};
   if (typeof record.avatar === "string") {
     try {
       avatarData = JSON.parse(record.avatar);
@@ -48,7 +46,6 @@ function mapRecordToUserData(record: Record<string, any>): UserRecord {
         "Failed to parse avatar string from record, using raw or default.",
         e
       );
-      // Keep record.avatar if it's a non-JSON string (e.g., URL) or default
       avatarData = record.avatar ?? {};
     }
   } else if (typeof record.avatar === "object" && record.avatar !== null) {
@@ -61,7 +58,7 @@ function mapRecordToUserData(record: Record<string, any>): UserRecord {
     email: record.email ?? "",
     verified: record.verified ?? false,
     name: record.name ?? "",
-    avatar: avatarData, // This should align with AvatarConfig or how UserRecord defines it
+    avatar: avatarData,
   };
 }
 
@@ -89,7 +86,7 @@ async function loadLocalData(): Promise<boolean> {
           LOG_PREFIX_AUTH,
           "Token expired, cannot authenticate in offline mode with this token."
         );
-        await clearAuthDataAndSecureStorage(); // Clear everything if token expired
+        await clearAuthDataAndSecureStorage();
         return false;
       }
     } else {
@@ -115,19 +112,13 @@ async function loadLocalData(): Promise<boolean> {
     const localQrData = await getQrCodesByUserId(userID);
     console.log(LOG_PREFIX_AUTH, "Local QR data loaded for logged-in user.");
 
-    // setAuthData expects a full UserRecord
     store.dispatch(
       setAuthData({
         token: authToken,
-        user: localUserData, // localUserData should be a valid UserRecord
+        user: localUserData,
       })
     );
     store.dispatch(setQrData(localQrData));
-    // lastSynced is string | null. Initialize to undefined if not set, or load from storage if persisted.
-    // For simplicity, on fresh load, we can set it to undefined (meaning not yet synced in this session)
-    // or null if that's the preferred "never synced" state.
-    // Your slice sets lastSynced to null in clearAuthData.
-    // Let's keep it undefined here to let the slice's initial state or clearAuthData handle null.
     store.dispatch(setSyncStatus({ isSyncing: false, lastSynced: undefined }));
     console.log(
       LOG_PREFIX_AUTH,
@@ -146,7 +137,7 @@ async function loadLocalData(): Promise<boolean> {
   }
 }
 
-async function checkGuestModeStatus(): Promise<boolean> {
+export async function checkGuestModeStatus(): Promise<boolean> {
   try {
     return storage.getBoolean(GUEST_MODE_KEY) ?? false;
   } catch (error) {
@@ -155,12 +146,13 @@ async function checkGuestModeStatus(): Promise<boolean> {
   }
 }
 
-async function initializeGuestMode(): Promise<boolean> {
+export async function initializeGuestMode(): Promise<boolean> {
   try {
-    console.log(LOG_PREFIX_AUTH, "Initializing guest mode...");
+    await Promise.all([
+      SecureStore.deleteItemAsync("authToken"),
+      SecureStore.deleteItemAsync("userID"),
+    ]);
 
-    await SecureStore.deleteItemAsync("authToken");
-    await SecureStore.deleteItemAsync("userID");
     storage.set(GUEST_MODE_KEY, true);
 
     const guestUser: UserRecord = {
@@ -169,37 +161,69 @@ async function initializeGuestMode(): Promise<boolean> {
       email: "",
       verified: false,
       name: "Guest User",
-      avatar: {}, // Default avatar config for guest
+      avatar: {},
     };
 
-    // Use setAuthData for guest user, as guestUser is a valid UserRecord
     store.dispatch(setAuthData({ token: "", user: guestUser }));
-
-    const guestQrData = await getQrCodesByUserId(GUEST_USER_ID);
-    store.dispatch(setQrData(guestQrData));
-    // For guests, lastSynced can be undefined or null.
-    // Let's use undefined to signify it's not applicable or not set.
+    // Initialize QR data as empty. loadGuestQrData will populate it if needed.
+    store.dispatch(setQrData([]));
     store.dispatch(setSyncStatus({ isSyncing: false, lastSynced: undefined }));
 
-    console.log(
-      LOG_PREFIX_AUTH,
-      "Guest mode initialized successfully with local data."
-    );
+    console.log(LOG_PREFIX_AUTH, "Guest mode session initialized.");
     return true;
   } catch (error) {
-    console.error(LOG_PREFIX_AUTH, "Failed to initialize guest mode:", error);
-    store.dispatch(clearAuthData()); // Use clearAuthData to reset state
+    console.error(
+      LOG_PREFIX_AUTH,
+      "Failed to initialize guest mode session:",
+      error
+    );
+    store.dispatch(clearAuthData());
     store.dispatch(setQrData([]));
     return false;
   }
 }
 
-async function exitGuestMode(): Promise<boolean> {
+/**
+ * Loads QR codes for the GUEST_USER_ID from local DB into Redux.
+ * This function is called by RootLayout after guest mode session is confirmed.
+ */
+export async function loadGuestQrData(): Promise<boolean> {
+  try {
+    console.log(
+      LOG_PREFIX_AUTH,
+      "Attempting to load QR data for guest user..."
+    );
+    const startTime = performance.now(); // Or Date.now()
+    const guestQrData = await getQrCodesByUserId(GUEST_USER_ID);
+    const endTime = performance.now();
+    console.log(
+      LOG_PREFIX_AUTH,
+      `getQrCodesByUserId took ${endTime - startTime} ms`
+    );
+    store.dispatch(setQrData(guestQrData));
+    console.log(
+      LOG_PREFIX_AUTH,
+      `Loaded ${guestQrData.length} QR codes for guest user.`
+    );
+    return true;
+  } catch (dbError) {
+    console.error(
+      LOG_PREFIX_AUTH,
+      "Failed to load QR data for guest user from local DB:",
+      dbError
+    );
+    store.dispatch(setQrData([])); // Fallback to empty if DB read fails
+    return false;
+  }
+}
+
+export async function exitGuestMode(): Promise<boolean> {
   try {
     console.log(LOG_PREFIX_AUTH, "Exiting guest mode...");
     storage.set(GUEST_MODE_KEY, false);
+    // Note: Clearing auth data (SecureStore, Redux user) will be handled
+    // by the subsequent login process or by checkInitialAuth on next app start.
     console.log(LOG_PREFIX_AUTH, "Guest mode flag set to false.");
-    // Data will be cleared/replaced upon successful login.
     return true;
   } catch (error) {
     console.error(LOG_PREFIX_AUTH, "Failed to exit guest mode:", error);
@@ -207,59 +231,107 @@ async function exitGuestMode(): Promise<boolean> {
   }
 }
 
-async function clearAuthDataAndSecureStorage() {
-  await SecureStore.deleteItemAsync("authToken");
-  await SecureStore.deleteItemAsync("userID");
+export async function clearAuthDataAndSecureStorage() {
+  try {
+    await Promise.all([
+      SecureStore.deleteItemAsync("authToken"),
+      SecureStore.deleteItemAsync("userID"),
+    ]);
+  } catch (secureStoreError) {
+    console.error(
+      LOG_PREFIX_AUTH,
+      "Error clearing SecureStore:",
+      secureStoreError
+    );
+    // Continue to clear Redux state even if SecureStore fails
+  }
   store.dispatch(clearAuthData());
-  store.dispatch(setQrData([])); // Also clear QR data
+  store.dispatch(setQrData([])); // Also clear QR data from Redux
   console.log(
     LOG_PREFIX_AUTH,
-    "Cleared auth data from Redux and SecureStorage."
+    "Cleared auth data from Redux and attempted to clear SecureStorage."
   );
 }
 
-async function checkInitialAuth(): Promise<boolean> {
+export async function checkInitialAuth(
+  onboardingPending: boolean
+): Promise<boolean> {
   try {
-    console.log(LOG_PREFIX_AUTH, "Starting initial auth check...");
-    const useGuestMode = await checkGuestModeStatus();
+    console.log(
+      LOG_PREFIX_AUTH,
+      `checkInitialAuth: Starting... Onboarding pending: ${onboardingPending}`
+    );
+    const useGuestModeStorage = await checkGuestModeStatus();
 
-    if (useGuestMode) {
+    if (useGuestModeStorage) {
       console.log(
         LOG_PREFIX_AUTH,
-        "User is in guest mode. Initializing guest session..."
+        "checkInitialAuth: User prefers guest mode (from storage)."
       );
-      return await initializeGuestMode();
+      const guestSessionInitialized = await initializeGuestMode();
+      if (guestSessionInitialized) {
+        console.log(
+          LOG_PREFIX_AUTH,
+          "checkInitialAuth: Guest session initialized by initializeGuestMode, now loading associated QR data..."
+        );
+        await loadGuestQrData(); // Load QR data immediately after guest session setup
+        console.log(
+          LOG_PREFIX_AUTH,
+          "checkInitialAuth: Guest QR data loading complete."
+        );
+        return true; // Guest session is active
+      } else {
+        console.warn(
+          LOG_PREFIX_AUTH,
+          "checkInitialAuth: Failed to initialize guest session despite preference. No active session."
+        );
+        return false; // Guest session initialization failed
+      }
     }
 
+    // Not in guest mode (preference is false)
+    if (onboardingPending) {
+      console.log(
+        LOG_PREFIX_AUTH,
+        "checkInitialAuth: Onboarding is pending and not in guest mode; no active user session."
+      );
+      return false; // No authenticated session if onboarding isn't complete
+    }
+
+    // Onboarding is complete, and not in guest mode. Check for logged-in user.
+    console.log(
+      LOG_PREFIX_AUTH,
+      "checkInitialAuth: Onboarding complete, not guest. Checking for logged-in user data..."
+    );
     const hasLocalLoggedInData = await loadLocalData();
     console.log(
       LOG_PREFIX_AUTH,
-      `Local logged-in data presence: ${hasLocalLoggedInData}`
+      `checkInitialAuth: Local logged-in data presence: ${hasLocalLoggedInData}`
     );
 
+    // Token refresh logic for authenticated users
     const isOffline = store.getState().network.isOffline;
-    const currentLastSynced = store.getState().auth.lastSynced; // Preserve current lastSynced (string | null)
-    console.log(
-      LOG_PREFIX_AUTH,
-      `Network status: ${isOffline ? "Offline" : "Online"}`
-    );
-
     if (!isOffline && hasLocalLoggedInData) {
       const authToken = await SecureStore.getItemAsync("authToken");
-      if (authToken) {
+      const currentUserID = store.getState().auth.user?.id; // Get current user ID from Redux
+
+      // Ensure token and user ID are valid and not for guest
+      if (authToken && currentUserID && currentUserID !== GUEST_USER_ID) {
         console.log(
           LOG_PREFIX_AUTH,
-          "Device is online, scheduling background token refresh for logged-in user."
+          "checkInitialAuth: Device online, logged-in user. Scheduling background token refresh."
         );
+        // Run as a fire-and-forget, non-blocking task
         setTimeout(async () => {
+          const currentLastSynced = store.getState().auth.lastSynced;
           console.log(
             LOG_PREFIX_AUTH,
-            "Starting background token refresh task..."
+            "checkInitialAuth: Background token refresh task starting..."
           );
           store.dispatch(
             setSyncStatus({
               isSyncing: true,
-              lastSynced: currentLastSynced ?? undefined, // MODIFIED HERE
+              lastSynced: currentLastSynced ?? undefined,
             })
           );
           const refreshSuccess = await refreshAuthToken(authToken);
@@ -268,31 +340,31 @@ async function checkInitialAuth(): Promise<boolean> {
               isSyncing: false,
               lastSynced: refreshSuccess
                 ? new Date().toISOString()
-                : currentLastSynced ?? undefined, // MODIFIED HERE for consistency, though `?? ""` was also fine
+                : currentLastSynced ?? undefined,
             })
           );
           console.log(
             LOG_PREFIX_AUTH,
-            "Background token refresh task completed."
+            "checkInitialAuth: Background token refresh task completed."
           );
         }, 0);
       }
     } else if (isOffline && hasLocalLoggedInData) {
       console.log(
         LOG_PREFIX_AUTH,
-        "Device is offline, but local logged-in data exists. Setting offline message."
+        "checkInitialAuth: Device offline, but local logged-in data exists. Setting offline message."
       );
       store.dispatch(setErrorMessage(t("network.offlineMode")));
     }
 
-    return hasLocalLoggedInData;
+    return hasLocalLoggedInData; // True if authenticated user data loaded, false otherwise
   } catch (error) {
     console.error(
       LOG_PREFIX_AUTH,
-      "Initial authentication check failed:",
+      "checkInitialAuth: CRITICAL error during initial auth check:",
       error
     );
-    await clearAuthDataAndSecureStorage(); // Clear everything on major failure
+    await clearAuthDataAndSecureStorage(); // Ensure clean state on critical failure
     return false;
   }
 }
@@ -319,7 +391,7 @@ async function handleTokenRefreshError(error: AuthError): Promise<boolean> {
       LOG_PREFIX_AUTH,
       "Unauthorized error during token refresh. Clearing all auth data."
     );
-    await clearAuthDataAndSecureStorage(); // Use the centralized clearing function
+    await clearAuthDataAndSecureStorage();
     store.dispatch(
       setErrorMessage(t("authRefresh.warnings.sessionExpiredBackground"))
     );
@@ -339,21 +411,23 @@ async function handleTokenRefreshError(error: AuthError): Promise<boolean> {
   return false; // Refresh failed
 }
 
-async function refreshAuthToken(authToken: string): Promise<boolean> {
+export async function refreshAuthToken(authToken: string): Promise<boolean> {
   const isOffline = store.getState().network.isOffline;
-  const storedUserID = await SecureStore.getItemAsync("userID"); // Use a different name to avoid conflict
+  const storedUserID = await SecureStore.getItemAsync("userID");
 
   if (isOffline || !storedUserID || storedUserID === GUEST_USER_ID) {
     console.log(
       LOG_PREFIX_AUTH,
       "RefreshAuthToken: Skipped due to offline, no userID, or guest user."
     );
+    // Return true if there's a valid non-guest user ID, even if offline,
+    // as the session might still be considered valid locally.
     return !!storedUserID && storedUserID !== GUEST_USER_ID;
   }
 
   if (isRefreshing) {
     console.log(LOG_PREFIX_AUTH, "RefreshAuthToken: Already in progress.");
-    return false;
+    return false; // Or return a promise that resolves when the current refresh completes
   }
 
   isRefreshing = true;
@@ -364,18 +438,24 @@ async function refreshAuthToken(authToken: string): Promise<boolean> {
   );
 
   try {
-    pb.authStore.save(authToken, null); // Load current token into PocketBase
+    pb.authStore.save(authToken, null);
 
     if (!pb.authStore.isValid) {
       console.log(
         LOG_PREFIX_AUTH,
         "RefreshAuthToken: Token in PocketBase store is invalid before refresh."
       );
-      // Don't clear userID from SecureStore yet, just the token.
       await SecureStore.deleteItemAsync("authToken");
-      store.dispatch(
-        setAuthData({ token: "", user: store.getState().auth.user! })
-      ); // Clear token in Redux, keep user if present
+      const currentUser = store.getState().auth.user;
+      if (currentUser && currentUser.id === storedUserID) {
+        // Ensure we only modify current user's token
+        store.dispatch(setAuthData({ token: "", user: currentUser }));
+      } else {
+        // This case should ideally not happen if storedUserID matches Redux user.
+        // If they don't match, clearing all might be too aggressive.
+        // Consider just clearing the token from Redux if user is null or different.
+        store.dispatch(clearAuthData());
+      }
       throw {
         status: AuthErrorStatus.Unauthorized,
         message: "Token invalid before refresh",
@@ -394,7 +474,7 @@ async function refreshAuthToken(authToken: string): Promise<boolean> {
 
     const newAuthToken = authDataResponse.token;
     const refreshedUserRecord = authDataResponse.record;
-    const userData = mapRecordToUserData(refreshedUserRecord); // This is UserRecord
+    const userData = mapRecordToUserData(refreshedUserRecord);
 
     if (userData.id !== storedUserID) {
       console.error(
@@ -408,11 +488,11 @@ async function refreshAuthToken(authToken: string): Promise<boolean> {
     await SecureStore.setItemAsync("authToken", newAuthToken);
     // pb.authStore is already updated by authRefresh()
 
+    // Refresh local QR data for the user after successful token refresh
     const updatedLocalQrData = await getQrCodesByUserId(userData.id);
     store.dispatch(setQrData(updatedLocalQrData));
     store.dispatch(
       setAuthData({
-        // This expects UserRecord, userData is UserRecord
         token: newAuthToken,
         user: userData,
       })
@@ -431,10 +511,10 @@ async function refreshAuthToken(authToken: string): Promise<boolean> {
   return success;
 }
 
-async function syncWithServer(): Promise<boolean> {
+export async function syncWithServer(): Promise<boolean> {
   const {
     network: { isOffline },
-    auth: { user, token: currentToken, lastSynced: currentLastSynced }, // currentLastSynced is string | null
+    auth: { user, token: currentToken, lastSynced: currentLastSynced },
   } = store.getState();
 
   if (isOffline) {
@@ -456,10 +536,11 @@ async function syncWithServer(): Promise<boolean> {
   store.dispatch(
     setSyncStatus({
       isSyncing: true,
-      lastSynced: currentLastSynced ?? undefined, // MODIFIED HERE
+      lastSynced: currentLastSynced ?? undefined,
     })
   );
 
+  // Attempt to refresh token before syncing data
   const tokenRefreshSuccess = await refreshAuthToken(currentToken);
 
   if (!tokenRefreshSuccess) {
@@ -467,10 +548,30 @@ async function syncWithServer(): Promise<boolean> {
       LOG_PREFIX_AUTH,
       "Manual sync failed: Auth token refresh failed."
     );
+    // Don't set error message here, refreshAuthToken might have set one
+    // or indicated fallback to local data.
     store.dispatch(
       setSyncStatus({
         isSyncing: false,
-        lastSynced: currentLastSynced ?? undefined, // MODIFIED HERE
+        lastSynced: currentLastSynced ?? undefined, // Keep last synced if refresh failed
+      })
+    );
+    return false; // Sync cannot proceed if token refresh fails and doesn't allow fallback
+  }
+
+  // Token is now valid (either refreshed or was already valid and didn't need refresh)
+  // Or, refresh failed but handleTokenRefreshError returned true (allowing offline data use)
+  // We need to re-fetch the token from store as refreshAuthToken might have updated it.
+  const potentiallyRefreshedToken = store.getState().auth.token;
+  if (!potentiallyRefreshedToken) {
+    console.warn(
+      LOG_PREFIX_AUTH,
+      "Sync failed: No valid token after refresh attempt."
+    );
+    store.dispatch(
+      setSyncStatus({
+        isSyncing: false,
+        lastSynced: currentLastSynced ?? undefined,
       })
     );
     return false;
@@ -482,14 +583,13 @@ async function syncWithServer(): Promise<boolean> {
       LOG_PREFIX_AUTH,
       `Starting data synchronization for user ${user.id}...`
     );
-    // Actual sync logic:
-    // 1. Push local changes (unsynced and deleted)
-    // await qrDB.syncQrCodes(user.id);
-    // 2. Fetch new/updated data from server
-    // const serverData = await qrDB.fetchServerData(user.id);
-    // 3. Insert/update local DB with server data
-    // await qrDB.insertOrUpdateQrCodes(serverData);
-    // 4. Reload all local data to update Redux state
+    // Placeholder for actual data push/pull logic with server using qrDB's sync functions
+    // For example:
+    // await qrDB.syncQrCodes(user.id); // Pushes local changes
+    // const serverUpdates = await qrDB.fetchServerData(user.id); // Fetches server changes
+    // await qrDB.insertOrUpdateQrCodes(serverUpdates); // Applies server changes locally
+
+    // After sync operations, reload all local data for the user to update Redux
     const finalLocalData = await getQrCodesByUserId(user.id);
     store.dispatch(setQrData(finalLocalData));
 
@@ -498,14 +598,14 @@ async function syncWithServer(): Promise<boolean> {
       LOG_PREFIX_AUTH,
       `Data synchronization successful for user ${user.id}.`
     );
-    store.dispatch(setErrorMessage(t("network.syncComplete")));
+    store.dispatch(setErrorMessage(t("network.syncComplete"))); // Success message
   } catch (syncError) {
     console.error(
       LOG_PREFIX_AUTH,
       `Data synchronization error for user ${user.id}:`,
       syncError
     );
-    store.dispatch(setErrorMessage(t("network.syncFailed")));
+    store.dispatch(setErrorMessage(t("network.syncFailed"))); // Failure message
     dataSyncSuccess = false;
   }
 
@@ -514,19 +614,13 @@ async function syncWithServer(): Promise<boolean> {
       isSyncing: false,
       lastSynced: dataSyncSuccess
         ? new Date().toISOString()
-        : currentLastSynced ?? undefined, // MODIFIED HERE
+        : currentLastSynced ?? undefined,
     })
   );
 
   return dataSyncSuccess;
 }
-export {
-  mapRecordToUserData,
-  checkInitialAuth,
-  refreshAuthToken,
-  syncWithServer,
-  checkGuestModeStatus,
-  initializeGuestMode,
-  exitGuestMode,
-  clearAuthDataAndSecureStorage, // Export if needed elsewhere
-};
+
+// Ensure all necessary functions are exported
+// checkInitialAuth is already exported by being a top-level async function
+// Other functions like refreshAuthToken, syncWithServer, etc., are also top-level and thus exported.

@@ -1,22 +1,31 @@
-import React, { useRef, useState, useCallback, useMemo } from 'react';
-import { StyleSheet, View, TouchableWithoutFeedback, Platform } from 'react-native';
-import { useRouter } from 'expo-router';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import React, { useRef, useState, useCallback, useMemo } from "react";
+import {
+  StyleSheet,
+  View,
+  TouchableWithoutFeedback,
+  Platform,
+} from "react-native";
+import { useRouter } from "expo-router";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
-import { ThemedButton } from '@/components/buttons/ThemedButton';
-import { ThemedText } from '@/components/ThemedText';
-import { t } from '@/i18n';
-import { useThemeColor } from '@/hooks/useThemeColor';
-import { storage } from '@/utils/storage';
-import { triggerSuccessHapticFeedback } from '@/utils/haptic';
-import { Colors } from '@/constants/Colors';
-import LOGO from '@/assets/svgs/orange-logo.svg';
-import ThemedReuseableSheet from '@/components/bottomsheet/ThemedReusableSheet';
-import BottomSheet from '@gorhom/bottom-sheet';
-import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
-import { useTheme } from '@/context/ThemeContext';
-import { initializeGuestMode } from '@/services/auth';
+import { ThemedButton } from "@/components/buttons/ThemedButton";
+import { ThemedText } from "@/components/ThemedText";
+import { t } from "@/i18n";
+import { useThemeColor } from "@/hooks/useThemeColor";
+import { storage } from "@/utils/storage";
+import { triggerSuccessHapticFeedback } from "@/utils/haptic";
+import { Colors } from "@/constants/Colors";
+import LOGO from "@/assets/svgs/orange-logo.svg";
+import ThemedReuseableSheet from "@/components/bottomsheet/ThemedReusableSheet";
+import BottomSheet from "@gorhom/bottom-sheet";
+import {
+  getResponsiveFontSize,
+  getResponsiveWidth,
+  getResponsiveHeight,
+} from "@/utils/responsive";
+import { useTheme } from "@/context/ThemeContext";
+import { initializeGuestMode, GUEST_MODE_KEY } from "@/services/auth";
 
 // Define a type for features
 type Feature = {
@@ -26,31 +35,38 @@ type Feature = {
 };
 
 // Type for bottom sheet types
-type SheetType = 'tos' | 'privacy' | null;
+type SheetType = "tos" | "privacy" | null;
 
 // Terms of Service Content
 const TermsOfServiceContent = ({ cardColor }: { cardColor: string }) => (
   <>
-    <View style={[styles.sectionContainer, { backgroundColor: cardColor, marginBottom: getResponsiveHeight(2.4) }]}>
+    <View
+      style={[
+        styles.sectionContainer,
+        { backgroundColor: cardColor, marginBottom: getResponsiveHeight(2.4) },
+      ]}
+    >
       <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
-        {t('onboardingScreen.termsOfService.termsOfServiceTitle')} 🚀
+        {t("onboardingScreen.termsOfService.termsOfServiceTitle")} 🚀
       </ThemedText>
       <ThemedText style={styles.sectionText}>
-        {t('onboardingScreen.termsOfService.termsOfServiceContent1')}
+        {t("onboardingScreen.termsOfService.termsOfServiceContent1")}
       </ThemedText>
     </View>
     <View style={[styles.sectionContainer, { backgroundColor: cardColor }]}>
       <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
-        {t('onboardingScreen.termsOfService.termsOfServiceDescription')} 📋
+        {t("onboardingScreen.termsOfService.termsOfServiceDescription")} 📋
       </ThemedText>
       <View style={styles.bulletContainer}>
-        {t('onboardingScreen.termsOfService.termsOfServiceContent2')
-          .split('\n')
+        {t("onboardingScreen.termsOfService.termsOfServiceContent2")
+          .split("\n")
           .map((bullet, index) =>
-            bullet.trim().startsWith('*') ? (
+            bullet.trim().startsWith("*") ? (
               <View key={index} style={styles.bulletPoint}>
                 <ThemedText style={styles.bulletIcon}>•</ThemedText>
-                <ThemedText style={styles.bulletText}>{bullet.replace('*', '').trim()}</ThemedText>
+                <ThemedText style={styles.bulletText}>
+                  {bullet.replace("*", "").trim()}
+                </ThemedText>
               </View>
             ) : null
           )}
@@ -62,26 +78,33 @@ const TermsOfServiceContent = ({ cardColor }: { cardColor: string }) => (
 // Privacy Policy Content
 const PrivacyPolicyContent = ({ cardColor }: { cardColor: string }) => (
   <>
-    <View style={[styles.sectionContainer, { backgroundColor: cardColor, marginBottom: getResponsiveHeight(2.4) }]}>
+    <View
+      style={[
+        styles.sectionContainer,
+        { backgroundColor: cardColor, marginBottom: getResponsiveHeight(2.4) },
+      ]}
+    >
       <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
-        {t('onboardingScreen.termsOfService.privacyPolicyTitle')} 🔒
+        {t("onboardingScreen.termsOfService.privacyPolicyTitle")} 🔒
       </ThemedText>
       <ThemedText style={styles.sectionText}>
-        {t('onboardingScreen.termsOfService.privacyPolicyContent1')}
+        {t("onboardingScreen.termsOfService.privacyPolicyContent1")}
       </ThemedText>
     </View>
     <View style={[styles.sectionContainer, { backgroundColor: cardColor }]}>
       <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
-        {t('onboardingScreen.termsOfService.privacyPolicyDescription')} 🤝
+        {t("onboardingScreen.termsOfService.privacyPolicyDescription")} 🤝
       </ThemedText>
       <View style={styles.bulletContainer}>
-        {t('onboardingScreen.termsOfService.privacyPolicyContent2')
-          .split('\n')
+        {t("onboardingScreen.termsOfService.privacyPolicyContent2")
+          .split("\n")
           .map((bullet, index) =>
-            bullet.trim().startsWith('*') ? (
+            bullet.trim().startsWith("*") ? (
               <View key={index} style={styles.bulletPoint}>
                 <ThemedText style={styles.bulletIcon}>•</ThemedText>
-                <ThemedText style={styles.bulletText}>{bullet.replace('*', '').trim()}</ThemedText>
+                <ThemedText style={styles.bulletText}>
+                  {bullet.replace("*", "").trim()}
+                </ThemedText>
               </View>
             ) : null
           )}
@@ -93,46 +116,88 @@ const PrivacyPolicyContent = ({ cardColor }: { cardColor: string }) => (
 const OnBoardScreen = () => {
   const router = useRouter();
   const { currentTheme } = useTheme();
-  const iconColor = useThemeColor({ light: Colors.light.icon, dark: Colors.dark.icon }, 'buttonBackground');
-  const cardColor = useThemeColor({ light: Colors.light.cardBackground, dark: Colors.dark.cardBackground }, 'buttonBackground');
-  const accentColor = useThemeColor({ light: '#FFC107', dark: '#FFC107' }, 'text');
+  const iconColor = useThemeColor(
+    { light: Colors.light.icon, dark: Colors.dark.icon },
+    "buttonBackground"
+  );
+  const cardColor = useThemeColor(
+    {
+      light: Colors.light.cardBackground,
+      dark: Colors.dark.cardBackground,
+    },
+    "buttonBackground"
+  );
+  const accentColor = useThemeColor(
+    { light: "#FFC107", dark: "#FFC107" },
+    "text"
+  ); // Not used in the provided snippet, but kept for completeness
   const bottomSheetRef = useRef<BottomSheet>(null);
   const [sheetType, setSheetType] = useState<SheetType>(null);
+  const [isLoading, setLoading] = useState(false);
 
-  // Array of features to display
   const features: Feature[] = [
     {
-      icon: 'qrcode-scan',
-      title: t('onboardingScreen.title1'),
-      subtitle: t('onboardingScreen.subtitle1'),
+      icon: "qrcode-scan",
+      title: t("onboardingScreen.title1"),
+      subtitle: t("onboardingScreen.subtitle1"),
     },
     {
-      icon: 'cloud-sync-outline',
-      title: t('onboardingScreen.title2'),
-      subtitle: t('onboardingScreen.subtitle2'),
+      icon: "cloud-sync-outline",
+      title: t("onboardingScreen.title2"),
+      subtitle: t("onboardingScreen.subtitle2"),
     },
     {
-      icon: 'earth',
-      title: t('onboardingScreen.title3'),
-      subtitle: t('onboardingScreen.subtitle3'),
+      icon: "earth",
+      title: t("onboardingScreen.title3"),
+      subtitle: t("onboardingScreen.subtitle3"),
     },
   ];
 
-  const onFinish = useCallback(() => {
-    storage.set('hasSeenOnboarding', true);
-    triggerSuccessHapticFeedback();
-    router.replace('/login');
-  }, [router]);
-
   const onContinueAsGuest = useCallback(async () => {
-    storage.set('hasSeenOnboarding', true);
-    triggerSuccessHapticFeedback();
-    
-    // Initialize guest mode
-    await initializeGuestMode();
-    
-    // Navigate to guest home
-    router.replace('/guest-home');
+    setLoading(true); // Set loading state
+
+    // Defer the rest of the logic to allow the UI to update
+    setTimeout(async () => {
+      try {
+        // 1. Set onboarding complete flag
+        storage.set("hasSeenOnboarding", true);
+
+        // 2. Set guest mode preference flag IMMEDIATELY
+        storage.set(GUEST_MODE_KEY, true);
+
+        triggerSuccessHapticFeedback();
+
+        // 3. Navigate optimistically.
+        // By this point, the loading state on the button should be visible.
+        router.replace("/(guest)/guest-home");
+
+        // 4. Perform the full guest initialization in the background.
+        initializeGuestMode()
+          .then(() => {
+            console.log(
+              "[OnBoardScreen] Background guest mode initialization successful."
+            );
+          })
+          .catch((err) => {
+            console.error(
+              "[OnBoardScreen] Background guest mode initialization failed:",
+              err
+            );
+            // Optionally, handle critical failure here if needed,
+            // though the user has already navigated.
+          });
+        // setLoading(false) is not called here on success because the screen
+        // will unmount due to navigation.
+      } catch (error) {
+        console.error(
+          "[OnBoardScreen] Error during guest mode setup (inside timeout):",
+          error
+        );
+        // If an error occurs before or during navigation,
+        // and the screen is still visible, turn off loading.
+        setLoading(false);
+      }
+    }, 0); // A 0ms delay is usually enough.
   }, [router]);
 
   const onOpenSheet = useCallback((type: SheetType) => {
@@ -145,12 +210,11 @@ const OnBoardScreen = () => {
     setSheetType(null);
   }, []);
 
-  // Memoize the sheet content based on sheetType and cardColor
   const renderSheetContent = useMemo(() => {
     return () => {
-      if (sheetType === 'tos') {
+      if (sheetType === "tos") {
         return <TermsOfServiceContent cardColor={cardColor} />;
-      } else if (sheetType === 'privacy') {
+      } else if (sheetType === "privacy") {
         return <PrivacyPolicyContent cardColor={cardColor} />;
       }
       return null;
@@ -176,24 +240,34 @@ const OnBoardScreen = () => {
     >
       <View style={styles.contentContainer}>
         <View style={styles.logoContainer}>
-          <LOGO width={getResponsiveWidth(14)} height={getResponsiveWidth(14)} />
+          <LOGO
+            width={getResponsiveWidth(14)}
+            height={getResponsiveWidth(14)}
+          />
         </View>
 
         <View style={styles.featuresContainer}>
           {features.map((feature, index) => (
             <View key={index} style={styles.featureContainer}>
-              <View style={[styles.iconContainer, { backgroundColor: cardColor }]}>
-                <MaterialCommunityIcons 
-                  name={feature.icon as any} 
-                  size={getResponsiveWidth(7)} 
-                  color={iconColor} 
+              <View
+                style={[
+                  styles.iconContainer,
+                  { backgroundColor: cardColor },
+                ]}
+              >
+                <MaterialCommunityIcons
+                  name={feature.icon as any}
+                  size={getResponsiveWidth(7)}
+                  color={iconColor}
                 />
               </View>
               <View style={styles.featureTextContainer}>
                 <ThemedText type="defaultSemiBold" style={styles.title}>
                   {feature.title}
                 </ThemedText>
-                <ThemedText style={styles.subtitle}>{feature.subtitle}</ThemedText>
+                <ThemedText style={styles.subtitle}>
+                  {feature.subtitle}
+                </ThemedText>
               </View>
             </View>
           ))}
@@ -204,67 +278,70 @@ const OnBoardScreen = () => {
         <View style={styles.termsContainer}>
           <View style={styles.termsTextContainer}>
             <ThemedText style={styles.termsText}>
-              {t('onboardingScreen.termsOfService.agreementPrefix')}
+              {t("onboardingScreen.termsOfService.agreementPrefix")}
             </ThemedText>
             <TouchableWithoutFeedback
-              hitSlop={{ top: getResponsiveHeight(1.2), bottom: getResponsiveHeight(1.2), left: getResponsiveWidth(2.4), right: getResponsiveWidth(2.4) }}
-              onPress={() => onOpenSheet('tos')}
+              hitSlop={{
+                top: getResponsiveHeight(1.2),
+                bottom: getResponsiveHeight(1.2),
+                left: getResponsiveWidth(2.4),
+                right: getResponsiveWidth(2.4),
+              }}
+              onPress={() => onOpenSheet("tos")}
             >
               <ThemedText style={[styles.termsText, styles.highlightText]}>
-                {t('onboardingScreen.termsOfService.termsOfServiceLink')}
+                {t("onboardingScreen.termsOfService.termsOfServiceLink")}
               </ThemedText>
             </TouchableWithoutFeedback>
           </View>
           <View style={styles.privacyPolicyTextContainer}>
             <ThemedText style={styles.termsText}>
-              {t('onboardingScreen.termsOfService.privacyPolicyPrefix')}
+              {t("onboardingScreen.termsOfService.privacyPolicyPrefix")}
             </ThemedText>
             <TouchableWithoutFeedback
-              hitSlop={{ top: getResponsiveHeight(1.2), bottom: getResponsiveHeight(1.2), left: getResponsiveWidth(2.4), right: getResponsiveWidth(2.4) }}
-              onPress={() => onOpenSheet('privacy')}
+              hitSlop={{
+                top: getResponsiveHeight(1.2),
+                bottom: getResponsiveHeight(1.2),
+                left: getResponsiveWidth(2.4),
+                right: getResponsiveWidth(2.4),
+              }}
+              onPress={() => onOpenSheet("privacy")}
             >
               <ThemedText style={[styles.termsText, styles.highlightText]}>
-                {t('onboardingScreen.termsOfService.privacyPolicyLink')}
+                {t("onboardingScreen.termsOfService.privacyPolicyLink")}
               </ThemedText>
             </TouchableWithoutFeedback>
           </View>
         </View>
 
         <ThemedButton
-          label={t('onboardingScreen.finishButton')}
+          label={t("onboardingScreen.finishButton")}
           style={styles.button}
           textStyle={styles.buttonText}
           onPress={onContinueAsGuest}
+          loading={isLoading}
         />
-        
-        {/* <ThemedButton
-          label={t('onboardingScreen.continueAsGuest')} // Add this to your translation
-          style={styles.guestButton}
-          textStyle={styles.guestButtonText}
-          onPress={onContinueAsGuest}
-          mode="text" // Using text mode for less emphasis
-        /> */}
-        
+
         <ThemedText type="defaultSemiBold" style={styles.metaText}>
           {t("common.appName")}
         </ThemedText>
       </View>
-      
+
       <ThemedReuseableSheet
         ref={bottomSheetRef}
         title={
-          sheetType === 'tos'
-            ? t('onboardingScreen.termsOfService.termsOfServiceSheetTitle')
-            : t('onboardingScreen.termsOfService.privacyPolicySheetTitle')
+          sheetType === "tos"
+            ? t("onboardingScreen.termsOfService.termsOfServiceSheetTitle")
+            : t("onboardingScreen.termsOfService.privacyPolicySheetTitle")
         }
         contentType="scroll"
         styles={{
           scrollViewContent: {
             borderRadius: getResponsiveWidth(4),
             marginHorizontal: getResponsiveWidth(3.6),
-          }
+          },
         }}
-        snapPoints={['65%']}
+        snapPoints={["65%"]}
         customContent={renderSheetContent()}
         showCloseButton={true}
       />
@@ -280,10 +357,10 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: "center",
   },
   logoContainer: {
-    backgroundColor: '#FFF5E1',
+    backgroundColor: "#FFF5E1",
     padding: getResponsiveWidth(3.5),
     borderRadius: getResponsiveWidth(5),
     marginTop: getResponsiveHeight(10),
@@ -291,25 +368,25 @@ const styles = StyleSheet.create({
   },
   screenTitle: {
     fontSize: getResponsiveFontSize(24),
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: getResponsiveHeight(6),
   },
   featuresContainer: {
-    width: '100%',
+    width: "100%",
     gap: getResponsiveHeight(4),
     paddingHorizontal: getResponsiveWidth(2),
   },
   featureContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: getResponsiveWidth(4),
   },
   iconContainer: {
     width: getResponsiveWidth(12),
     height: getResponsiveWidth(12),
     borderRadius: getResponsiveWidth(6),
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   featureTextContainer: {
     flex: 1,
@@ -324,53 +401,55 @@ const styles = StyleSheet.create({
     lineHeight: getResponsiveFontSize(20),
   },
   bottomContainer: {
-    width: '100%',
-    alignItems: 'center',
-    marginBottom: Platform.OS === 'ios' ? getResponsiveHeight(4) : getResponsiveHeight(3),
+    width: "100%",
+    alignItems: "center",
+    marginBottom:
+      Platform.OS === "ios"
+        ? getResponsiveHeight(4)
+        : getResponsiveHeight(3),
   },
   termsContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: getResponsiveHeight(2.5),
   },
   termsText: {
     fontSize: getResponsiveFontSize(12),
     letterSpacing: 0.5,
-    textAlign: 'center',
+    textAlign: "center",
   },
   termsTextContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    justifyContent: "center",
     gap: getResponsiveWidth(1),
     marginBottom: getResponsiveHeight(0.5),
   },
   privacyPolicyTextContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    justifyContent: "center",
     gap: getResponsiveWidth(1),
   },
   highlightText: {
-    color: '#FFC107',
+    color: "#FFC107", // This was accentColor before, hardcoding for simplicity or ensure accentColor is defined if used
     fontSize: getResponsiveFontSize(12),
     letterSpacing: 0.5,
   },
   button: {
-    width: '100%',
-    marginBottom: getResponsiveHeight(1.5), // Reduced to make room for the guest button
+    width: "100%",
+    marginBottom: getResponsiveHeight(1.5),
   },
   buttonText: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
     fontSize: getResponsiveFontSize(16),
   },
-  // New guest button styles
-  guestButton: {
-    width: '100%',
+  guestButton: { // This style is defined but not used in the provided JSX
+    width: "100%",
     marginBottom: getResponsiveHeight(2),
   },
-  guestButtonText: {
+  guestButtonText: { // This style is defined but not used in the provided JSX
     fontSize: getResponsiveFontSize(14),
     opacity: 0.8,
   },
@@ -395,8 +474,8 @@ const styles = StyleSheet.create({
     gap: getResponsiveHeight(1.2),
   },
   bulletPoint: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    alignItems: "flex-start",
   },
   bulletIcon: {
     fontSize: getResponsiveFontSize(20),
