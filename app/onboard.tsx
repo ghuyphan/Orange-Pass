@@ -200,6 +200,7 @@ const OnBoardScreen = () => {
       }
     }, 0); // A 0ms delay is usually enough.
   }, [router]);
+  
 
   const onOpenSheet = useCallback((type: SheetType) => {
     setSheetType(type);
