@@ -46,6 +46,7 @@ const onNavigateToAddScreen = () => {
           footerStyle={{ borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }}
           paddingTop={getResponsiveHeight(3)}
           dropdownOptions={dropdownOptions}
+          menuElevation={0}
         />
         <ThemedText style={styles.content} type="default">
           {t('homeScreen.emptyCard.content')}

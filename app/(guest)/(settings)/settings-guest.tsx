@@ -47,7 +47,9 @@ import {
   getResponsiveHeight,
 } from "@/utils/responsive";
 import * as Application from "expo-application";
-import { MMKV_KEYS, SECURE_KEYS, exitGuestMode } from "@/services/auth"; // Import exitGuestMode
+import { MMKV_KEYS, SECURE_KEYS } from "@/services/auth"; // Import exitGuestMode
+import { useLocale } from "@/context/LocaleContext";
+import { useMMKVString } from "react-native-mmkv";
 
 const GUEST_USER_ID = ""; // Consistent with AuthService
 
@@ -59,6 +61,8 @@ interface SettingsCardItem {
 }
 
 function SettingsScreen() {
+    const { updateLocale } = useLocale();
+    const [locale, setLocale] = useMMKVString('locale', storage);
   const avatarConfig = useSelector(
     (state: RootState) => state.auth.avatarConfig
   );
@@ -73,7 +77,7 @@ function SettingsScreen() {
   const dispatch = useDispatch();
   const scrollY = useSharedValue(0);
 
-  const name = isGuest ? t("settingsScreen.guestName") : user?.name ?? "-";
+  const name = isGuest ? t("settingsScreen.guestLoginPrompt") : user?.name ?? "-";
   const appVersion = Application.nativeApplicationVersion;
 
   const sectionsColors = useMemo(

@@ -44,6 +44,7 @@ const EmptyListItem: React.FC<EmptyListItemProps> = ({
           cardOnPress={onNavigateToEmptyScreen}
           buttonOnPress={onNavigateToScanScreen}
           dropdownOptions={dropdownOptions}
+          menuElevation={4}
         />
       </Animated.View>
     </Animated.ScrollView>

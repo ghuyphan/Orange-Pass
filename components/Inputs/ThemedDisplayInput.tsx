@@ -2,7 +2,7 @@ import React, {
   useState,
   useMemo,
   forwardRef,
-  useEffect
+  useEffect,
 } from "react";
 import {
   StyleSheet,
@@ -10,14 +10,14 @@ import {
   ViewStyle,
   View,
   Pressable,
-  Image
+  Image,
 } from "react-native";
 import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient"; // Added import
+import { LinearGradient } from "expo-linear-gradient";
 import { ThemedText } from "../ThemedText";
 import { ThemedView } from "../ThemedView";
 import { useTheme } from "@/context/ThemeContext";
-import { Colors } from "@/constants/Colors"; // Assuming your Colors are here
+import { Colors } from "@/constants/Colors";
 import { getIconPath } from "@/utils/returnIcon";
 import {
   getResponsiveFontSize,
@@ -25,7 +25,6 @@ import {
   getResponsiveHeight,
 } from "@/utils/responsive";
 
-// --- Reanimated Imports ---
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -34,14 +33,13 @@ import Animated, {
   Easing,
   withRepeat,
   cancelAnimation,
-  interpolateColor, // Though not used for gradient colors directly here, good to have if needed
 } from "react-native-reanimated";
 
-// Create an animatable version of LinearGradient
 const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
 
-const SHIMMER_STRIP_WIDTH = getResponsiveWidth(25); // Width of the moving gradient strip
-const SHIMMER_DURATION = 1500; // Duration of one shimmer pass
+const SHIMMER_STRIP_WIDTH = getResponsiveWidth(25);
+const SHIMMER_DURATION = 1500;
+const LOADING_LINE_HEIGHT = getResponsiveHeight(0.25);
 
 export type ThemedDisplayInputProps = {
   iconName?: keyof typeof MaterialCommunityIcons.glyphMap;
@@ -57,7 +55,7 @@ export type ThemedDisplayInputProps = {
   showClearButton?: boolean;
   disabled?: boolean;
   backgroundColor?: string;
-  isLoading?: boolean; // Added isLoading prop
+  isLoading?: boolean;
 };
 
 export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
@@ -76,7 +74,7 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
       showClearButton = true,
       disabled = false,
       backgroundColor,
-      isLoading = false, // Added isLoading prop
+      isLoading = false,
     },
     ref
   ) => {
@@ -84,7 +82,6 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
     const [displayValue, setDisplayValue] = useState(value);
     const [inputRowWidth, setInputRowWidth] = useState(0);
 
-    // Color configurations
     const color =
       currentTheme === "light" ? Colors.light.text : Colors.dark.text;
     const placeholderColor =
@@ -108,19 +105,17 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
           backgroundColor: themedInputBackgroundColor,
         },
       ],
-      [currentTheme, themedInputBackgroundColor] // Use themedInputBackgroundColor
+      [currentTheme, themedInputBackgroundColor]
     );
 
-    // --- Reanimated Shared Values ---
     const animatedBorderWidth = useSharedValue(
       isError && errorMessage ? getResponsiveWidth(0.3) : 0
     );
     const errorTextHeight = useSharedValue(0);
     const errorTextOpacity = useSharedValue(0);
     const errorShakeValue = useSharedValue(0);
-    const shimmerTranslateX = useSharedValue(-SHIMMER_STRIP_WIDTH); // For loading shimmer
+    const shimmerProgress = useSharedValue(0);
 
-    // --- Reanimated Styles ---
     const animatedBorderStyle = useAnimatedStyle(() => ({
       borderBottomWidth: animatedBorderWidth.value,
     }));
@@ -135,7 +130,6 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
       transform: [{ translateX: errorShakeValue.value }],
     }));
 
-    // --- Shimmer Gradient Animation ---
     const shimmerGradientColors = useMemo(() => {
       const baseBg =
         currentTheme === "light"
@@ -144,7 +138,6 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
       const tint =
         currentTheme === "light" ? Colors.light.tint : Colors.dark.tint;
 
-      // Make baseBg transparent for the shimmer effect
       const transparentVersion = (hex: string, alpha: number = 0) => {
         let r = 0,
           g = 0,
@@ -161,37 +154,55 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
         return `rgba(${r}, ${g}, ${b}, ${alpha})`;
       };
 
-      // Using a slightly visible base for a more subtle shimmer over the input's actual background
       const shimmerBase = transparentVersion(baseBg, 0.1);
       const shimmerHighlight = tint;
 
       return [shimmerBase, shimmerHighlight, shimmerBase];
     }, [currentTheme]);
 
-    const animatedShimmerStyle = useAnimatedStyle(() => {
+    const animatedLeftShimmerStyle = useAnimatedStyle(() => {
+      if (inputRowWidth === 0) return { transform: [{ translateX: -10000 }] };
+      // Start with strip's center at inputRowWidth / 2
+      const startX = inputRowWidth / 2 - SHIMMER_STRIP_WIDTH / 2;
+      // End with strip's left edge at -SHIMMER_STRIP_WIDTH (fully off-screen left)
+      const endX = -SHIMMER_STRIP_WIDTH;
+      const currentX =
+        startX + shimmerProgress.value * (endX - startX);
       return {
-        transform: [{ translateX: shimmerTranslateX.value }],
+        transform: [{ translateX: currentX }],
+      };
+    });
+
+    const animatedRightShimmerStyle = useAnimatedStyle(() => {
+      if (inputRowWidth === 0) return { transform: [{ translateX: 10000 }] };
+      // Start with strip's center at inputRowWidth / 2
+      const startX = inputRowWidth / 2 - SHIMMER_STRIP_WIDTH / 2;
+      // End with strip's left edge at inputRowWidth (fully off-screen right)
+      const endX = inputRowWidth;
+      const currentX =
+        startX + shimmerProgress.value * (endX - startX);
+      return {
+        transform: [{ translateX: currentX }],
       };
     });
 
     useEffect(() => {
       if (isLoading && inputRowWidth > 0) {
-        shimmerTranslateX.value = -SHIMMER_STRIP_WIDTH; // Start off-screen left
-        shimmerTranslateX.value = withRepeat(
-          withTiming(inputRowWidth, {
+        shimmerProgress.value = 0;
+        shimmerProgress.value = withRepeat(
+          withTiming(1, {
             duration: SHIMMER_DURATION,
             easing: Easing.linear,
           }),
-          -1, // Loop indefinitely
-          false // Don't reverse, restart from the beginning
+          -1,
+          false
         );
       } else {
-        cancelAnimation(shimmerTranslateX);
-        shimmerTranslateX.value = -SHIMMER_STRIP_WIDTH; // Reset/hide
+        cancelAnimation(shimmerProgress);
+        shimmerProgress.value = 0;
       }
-    }, [isLoading, inputRowWidth, shimmerTranslateX]); // Added shimmerTranslateX
+    }, [isLoading, inputRowWidth, shimmerProgress]);
 
-    // Animate error-related styles when error state changes
     useEffect(() => {
       if (isError && errorMessage) {
         animatedBorderWidth.value = withTiming(getResponsiveWidth(0.3), {
@@ -214,9 +225,15 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
         errorTextHeight.value = withTiming(0, { duration: 150 });
         errorTextOpacity.value = withTiming(0, { duration: 100 });
       }
-    }, [isError, errorMessage, animatedBorderWidth, errorTextHeight, errorTextOpacity, errorShakeValue]); // Added dependencies
+    }, [
+      isError,
+      errorMessage,
+      animatedBorderWidth,
+      errorTextHeight,
+      errorTextOpacity,
+      errorShakeValue,
+    ]);
 
-    // Update local display value when the external prop changes
     useEffect(() => {
       setDisplayValue(value);
     }, [value]);
@@ -229,7 +246,7 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
     return (
       <View style={[styles.container, style]}>
         <ThemedView style={inputContainerStyle}>
-          {!iconName && !logoCode && !isLoading && ( // Hide label if loading
+          {!iconName && !logoCode && !isLoading && (
             <ThemedText style={[styles.label, { color }]} type="defaultSemiBold">
               {label}
             </ThemedText>
@@ -237,7 +254,7 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
 
           <Pressable
             onPress={onPress}
-            disabled={disabled || isLoading} // Disable pressable when loading
+            disabled={disabled || isLoading}
             style={styles.pressableContainer}
           >
             <Animated.View
@@ -248,24 +265,35 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
                 styles.inputRow,
                 {
                   borderBottomColor: errorColor,
-                  overflow: "hidden", // Important for containing the shimmer
                 },
                 animatedBorderStyle,
               ]}
             >
-              {/* Shimmer Gradient - Rendered first to be in the background */}
               {isLoading && inputRowWidth > 0 && (
-                <AnimatedLinearGradient
-                  style={[styles.shimmerGradient, animatedShimmerStyle]}
-                  colors={shimmerGradientColors}
-                  start={{ x: 0, y: 0.5 }} // Horizontal gradient
-                  end={{ x: 1, y: 0.5 }}
-                  locations={[0.2, 0.5, 0.8]} // Adjust for desired shimmer appearance
-                />
+                <>
+                  <AnimatedLinearGradient
+                    style={[styles.shimmerStrip, animatedLeftShimmerStyle]}
+                    colors={shimmerGradientColors}
+                    start={{ x: 0, y: 0.5 }}
+                    end={{ x: 1, y: 0.5 }}
+                    locations={[0.2, 0.5, 0.8]} // Highlight is in the middle of the strip
+                  />
+                  <AnimatedLinearGradient
+                    style={[styles.shimmerStrip, animatedRightShimmerStyle]}
+                    colors={shimmerGradientColors}
+                    start={{ x: 0, y: 0.5 }}
+                    end={{ x: 1, y: 0.5 }}
+                    locations={[0.2, 0.5, 0.8]} // Highlight is in the middle of the strip
+                  />
+                </>
               )}
 
-              {/* Input Content - Optionally hide or fade when loading */}
-              <View style={[styles.inputContentContainer, isLoading && styles.contentHidden]}>
+              <View
+                style={[
+                  styles.inputContentContainer,
+                  isLoading && styles.contentHidden,
+                ]}
+              >
                 {iconName && (
                   <MaterialCommunityIcons
                     name={iconName}
@@ -305,7 +333,7 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
                 <View style={styles.rightContainer}>
                   {showClearButton &&
                     !disabled &&
-                    !isLoading && // Hide clear button when loading
+                    !isLoading &&
                     displayValue.length > 0 && (
                       <Pressable
                         onPress={handleClear}
@@ -324,7 +352,7 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
                         />
                       </Pressable>
                     )}
-                  {isError && errorMessage && !isLoading && ( // Hide error icon when loading
+                  {isError && errorMessage && !isLoading && (
                     <Animated.View
                       style={[
                         styles.errorIconContainer,
@@ -344,8 +372,7 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
           </Pressable>
         </ThemedView>
 
-        {/* Animated error message container */}
-        {!isLoading && ( // Hide error message when loading
+        {!isLoading && (
           <Animated.View
             style={[styles.errorContainer, animatedErrorTextStyle]}
           >
@@ -390,7 +417,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "white",
     borderRadius: getResponsiveWidth(6),
-    // marginRight: getResponsiveWidth(0), // Kept original, adjust if needed
   },
   logo: {
     width: "55%",
@@ -400,15 +426,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     minHeight: getResponsiveHeight(3.6),
-    position: "relative", // For absolute positioning of shimmer
+    position: "relative",
+    overflow: "hidden",
   },
-  inputContentContainer: { // Wrapper for content that can be hidden
-    flexDirection: 'row',
-    alignItems: 'center',
+  inputContentContainer: {
+    flexDirection: "row",
+    alignItems: "center",
     flex: 1,
+    zIndex: 1,
   },
   contentHidden: {
-    opacity: 0.3, // Or 0 to completely hide
+    opacity: 0.3,
   },
   input: {
     fontSize: getResponsiveFontSize(16),
@@ -436,13 +464,12 @@ const styles = StyleSheet.create({
     fontSize: getResponsiveFontSize(11),
     lineHeight: getResponsiveHeight(2.2),
   },
-  shimmerGradient: {
+  shimmerStrip: {
     position: "absolute",
-    top: 0,
-    left: 0, // translateX will move it
-    height: "100%",
+    bottom: 0,
+    height: LOADING_LINE_HEIGHT,
     width: SHIMMER_STRIP_WIDTH,
-    zIndex: 0, // Ensure it's behind content if content isn't hidden
+    zIndex: 0,
   },
 });
 

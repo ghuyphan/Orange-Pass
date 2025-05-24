@@ -23,6 +23,7 @@ import Animated, {
   useAnimatedStyle,
   withTiming
 } from "react-native-reanimated";
+import { Surface } from "react-native-paper";
 
 // Constants
 const MIDPOINT_COUNT = 6;
@@ -298,26 +299,29 @@ const ThemedCardItem = memo(function ThemedCardItem({
   );
 
   return (
+
     <View style={styles.outerContainer}>
-      {onItemPress ? (
-        <Pressable
-          disabled={isActive}
-          onPress={onItemPress}
-          onLongPress={onDrag}
-          delayLongPress={250}
-          android_ripple={{
-            color: "rgba(0, 0, 0, 0.2)",
-            foreground: true,
-            borderless: false
-          }}
-          style={styles.pressableContainer}
-        >
-          {cardContent}
-        </Pressable>
-      ) : (
-        cardContent
-      )}
+        {onItemPress ? (
+          <Pressable
+            disabled={isActive}
+            onPress={onItemPress}
+            onLongPress={onDrag}
+            delayLongPress={250}
+            android_ripple={{
+              color: "rgba(0, 0, 0, 0.2)",
+              foreground: true,
+              borderless: false
+            }}
+            style={styles.pressableContainer}
+          >
+            {cardContent}
+          </Pressable>
+
+        ) : (
+          cardContent
+        )}
     </View>
+
   );
 });
 

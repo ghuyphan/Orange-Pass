@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "Orange⁺",
+    "appName": "Orange Pass",
     "back": "Quay lại",
     "discard": "Hủy bỏ",
     "unsavedChangesTitle": "Thay đổi chưa lưu",
@@ -92,7 +92,7 @@
     "passwordPlaceholder": "Mật khẩu (tối thiểu 8 ký tự, có chữ hoa, số)",
     "confirmPassword": "Xác nhận mật khẩu",
     "confirmPasswordPlaceholder": "Nhập lại mật khẩu",
-    "registerNewAccount": "Tham gia Orange⁺",
+    "registerNewAccount": "Tham gia Orange Pass",
     "register": "Đăng ký",
     "registering": "Đang đăng ký...",
     "registerSuccess": "Tạo tài khoản thành công!",
@@ -130,7 +130,7 @@
     }
   },
   "homeScreen": {
-    "title": "Orange⁺",
+    "title": "Orange Pass",
     "searchPlaceholder": "Tìm kiếm thẻ của bạn",
     "noItemFound": "Không tìm thấy thẻ. Vui lòng thử lại.",
     "manage": "Quản lý thẻ",
@@ -359,7 +359,7 @@
     "cancelButton": "Từ chối"
   },
   "onboardingScreen": {
-    "title": "Orange⁺",
+    "title": "Orange Pass",
     "title1": "Trình quản lý mã QR của bạn",
     "subtitle1": "Sắp xếp và lưu trữ mã QR cho tài khoản ngân hàng, thẻ thành viên và ví điện tử của bạn.",
     "title2": "Đồng bộ hóa đám mây",
@@ -373,14 +373,14 @@
       "privacyPolicyPrefix": "và đã xem qua",
       "privacyPolicyLink": "Chính sách bảo mật",
       "termsOfServiceSheetTitle": "Điều khoản dịch vụ",
-      "termsOfServiceTitle": "Chào mừng bạn đến với Orange⁺",
+      "termsOfServiceTitle": "Chào mừng bạn đến với Orange Pass",
       "termsOfServiceDescription": "Nguyên tắc cộng đồng",
       "termsOfServiceContent1": "Để đảm bảo trải nghiệm tích cực cho tất cả người dùng, vui lòng tuân thủ các nguyên tắc cộng đồng sau:",
       "termsOfServiceContent2": "Các điểm chính cần lưu ý:\n* Không thực hiện hành vi bất hợp pháp hoặc gây hại. Không đăng tải nội dung không phù hợp.\n* Tôn trọng quyền riêng tư. Không chia sẻ mã QR của người khác mà không có sự cho phép.\n* Bảo vệ tài khoản của bạn. Không chia sẻ thông tin đăng nhập.",
       "privacyPolicySheetTitle": "Chính sách bảo mật",
-      "privacyPolicyTitle": "Dữ liệu của bạn, Orange⁺ bảo vệ",
+      "privacyPolicyTitle": "Dữ liệu của bạn, Orange Pass bảo vệ",
       "privacyPolicyDescription": "Cam kết về quyền riêng tư",
-      "privacyPolicyContent1": "Orange⁺ cam kết bảo vệ quyền riêng tư của bạn. Chúng tôi chỉ thu thập thông tin cần thiết để cải thiện trải nghiệm ứng dụng, chẳng hạn như tên và email để cá nhân hóa tài khoản và liên lạc.",
+      "privacyPolicyContent1": "Orange Pass cam kết bảo vệ quyền riêng tư của bạn. Chúng tôi chỉ thu thập thông tin cần thiết để cải thiện trải nghiệm ứng dụng, chẳng hạn như tên và email để cá nhân hóa tài khoản và liên lạc.",
       "privacyPolicyContent2": "Chúng tôi cam kết:\n* Bảo mật dữ liệu của bạn. Không chia sẻ thông tin cá nhân khi chưa có sự đồng ý.\n* Sử dụng các biện pháp bảo mật tiên tiến để bảo vệ thông tin.\n* Bạn có toàn quyền kiểm soát dữ liệu, bao gồm cả quyền xóa tài khoản."
     }
   },
@@ -405,7 +405,7 @@
   "settingsScreen": {
     "title": "Cài đặt",
     "language": "Ngôn ngữ",
-    "about": "Về Orange⁺",
+    "about": "Về Orange Pass",
     "editProfile": "Chỉnh sửa hồ sơ",
     "changePassword": "Đổi mật khẩu",
     "changeEmail": "Đổi email",

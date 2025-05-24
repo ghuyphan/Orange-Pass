@@ -25,7 +25,8 @@ import {
   getResponsiveHeight,
 } from "@/utils/responsive";
 import { useTheme } from "@/context/ThemeContext";
-import { initializeGuestMode, GUEST_MODE_KEY } from "@/services/auth";
+import { GUEST_MODE_KEY } from "@/constants/Constants";
+import { initializeGuestMode } from "@/services/auth";
 
 // Define a type for features
 type Feature = {

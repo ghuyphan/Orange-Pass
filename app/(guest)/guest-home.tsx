@@ -122,7 +122,8 @@ function GuestHomeScreen() {
 
   // Shared Values (Reanimated)
   const isEmptyShared = useSharedValue(qrData.length === 0 ? 1 : 0);
-  const emptyCardOffset = useSharedValue(350);
+  const emptyCardOffset = useSharedValue(350); // For EmptyListItem slide-in
+  const listOpacity = useSharedValue(0); // For DraggableFlatList fade-in
   const scrollY = useSharedValue(0);
 
   // Clear all timeouts on unmount
@@ -142,10 +143,11 @@ function GuestHomeScreen() {
         setInitialAnimationsDone(true); // Allow animations after interactions
       });
     } else {
-      setIsLoading(true);
+      setIsLoading(true); // Should ideally not happen if this screen is only for guests
       setInitialAnimationsDone(false); // Reset if guestUser changes
     }
   }, [guestUser]);
+
   // Network status toasts
   const prevIsOffline = useRef(isOffline);
   useEffect(() => {
@@ -181,13 +183,27 @@ function GuestHomeScreen() {
     emptyCardOffset.value = withSpring(0, { damping: 30, stiffness: 150 });
   }, [emptyCardOffset]);
 
-  // Animate empty card
+  // Animate empty card or list appearance
   useEffect(() => {
     isEmptyShared.value = isEmpty ? 1 : 0;
     if (initialAnimationsDone) {
-      animateEmptyCard();
+      if (isEmpty) {
+        listOpacity.value = 0; // Hide list
+        emptyCardOffset.value = 350; // Reset for slide-in animation
+        animateEmptyCard(); // Slide in EmptyListItem
+      } else {
+        emptyCardOffset.value = 350; // Ensure EmptyListItem is "off-screen"
+        listOpacity.value = withTiming(1, { duration: 300 }); // Fade in list
+      }
     }
-  }, [isEmpty, isEmptyShared, initialAnimationsDone, animateEmptyCard]);
+  }, [
+    isEmpty,
+    initialAnimationsDone,
+    animateEmptyCard,
+    listOpacity,
+    emptyCardOffset,
+    isEmptyShared,
+  ]);
 
   // Animated styles
   const titleContainerStyle = useAnimatedStyle(() => {
@@ -239,18 +255,28 @@ function GuestHomeScreen() {
 
   const emptyCardStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: emptyCardOffset.value }],
+    flex: 1, // Ensure EmptyListItem takes space if it's a ScrollView
+  }));
+
+  const listContainerAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: listOpacity.value,
+    flex: 1,
   }));
 
   // Navigation handlers
   const onNavigateToEmptyScreen = useCallback(
     () => router.push("/(guest)/empty-guest"),
-    [], // router is stable from expo-router
+    [],
   );
   const onNavigateToDetailScreen = useCallback(
     throttle((item: QRRecord) => {
       router.push({
-        pathname: `/detail`,
-        params: { id: item.id, item: encodeURIComponent(JSON.stringify(item)) },
+        pathname: `/detail`, // Assuming guest detail is same or handled by params
+        params: {
+          id: item.id,
+          item: encodeURIComponent(JSON.stringify(item)),
+          isGuest: "true", // Optional: flag for detail screen
+        },
       });
     }, 300),
     [],
@@ -386,7 +412,7 @@ function GuestHomeScreen() {
         ...item,
         qr_index: index,
         updated: new Date().toISOString(),
-        is_synced: true,
+        is_synced: true, // For guest mode, local changes are "synced" locally
       }));
       dispatch(setQrData(reindexedData));
 
@@ -469,7 +495,7 @@ function GuestHomeScreen() {
           ...item,
           qr_index: index,
           updated: new Date().toISOString(),
-          is_synced: true,
+          is_synced: true, // For guest mode
         }));
         dispatch(setQrData(finalDataToSave));
       } else {
@@ -481,15 +507,17 @@ function GuestHomeScreen() {
         const newFullList = qrData
           .map((item) => {
             if (filteredItemIds.has(item.id)) {
+              // Use the reordered item from the filtered list
               return reorderedItemsMap.get(item.id)!;
             }
-            return item;
+            return item; // Keep non-filtered items as they are
           })
           .map((item) => ({
+            // Re-index the entire list based on the new order
             ...item,
             qr_index: currentIndex++,
             updated: new Date().toISOString(),
-            is_synced: true,
+            is_synced: true, // For guest mode
           }));
         finalDataToSave = newFullList;
         dispatch(setQrData(finalDataToSave));
@@ -499,22 +527,26 @@ function GuestHomeScreen() {
         if (finalDataToSave.length > 0) {
           await updateQrIndexes(finalDataToSave, GUEST_USER_ID);
         }
-        setIsToastVisible(false);
+        setIsToastVisible(false); // Clear "reordering" toast
         setTopToastMessage(t("homeScreen.reordered"));
         setIsTopToastVisible(true);
       } catch (error) {
         console.error("Error reordering QR for guest:", error);
         setToastMessage(t("homeScreen.reorderError"));
+        // Keep isToastVisible true to show the error
       } finally {
         if (timeoutRefs.current.processing)
           clearTimeout(timeoutRefs.current.processing);
         timeoutRefs.current.processing = setTimeout(() => {
           setIsProcessing(false);
-          if (!toastMessage.includes("Error")) setIsToastVisible(false);
+          // Only hide toast if it wasn't an error message
+          if (!toastMessage.toLowerCase().includes("error")) {
+            setIsToastVisible(false);
+          }
         }, 400);
       }
     },
-    [dispatch, qrData, filter, t, toastMessage],
+    [dispatch, qrData, filter, t, toastMessage], // Added toastMessage
   );
 
   // Padding values
@@ -586,11 +618,13 @@ function GuestHomeScreen() {
               iconName="camera"
               style={styles.titleButton}
               onPress={onScan}
+              disabled={isLoading} // Disable if still loading
             />
             <ThemedButton
               iconName="cog"
               style={styles.titleButton}
               onPress={onSettings}
+              disabled={isLoading} // Disable if still loading
             />
           </View>
         </View>
@@ -652,7 +686,7 @@ function GuestHomeScreen() {
       ) : isEmpty ? (
         <EmptyListItem
           scrollHandler={scrollHandler}
-          emptyCardStyle={emptyCardStyle}
+          emptyCardStyle={emptyCardStyle} // Apply slide-in animation here
           onNavigateToEmptyScreen={onNavigateToEmptyScreen}
           onNavigateToScanScreen={onNavigateToScanScreen}
           dropdownOptions={[
@@ -671,7 +705,8 @@ function GuestHomeScreen() {
           ]}
         />
       ) : (
-        <Animated.View style={[emptyCardStyle, { flex: 1 }]}>
+        // Apply fade-in animation here
+        <Animated.View style={listContainerAnimatedStyle}>
           <DraggableFlatList
             ref={flatListRef}
             bounces={true}
@@ -734,7 +769,7 @@ function GuestHomeScreen() {
         message={toastMessage}
         onDismiss={() => setIsToastVisible(false)}
         style={styles.toastContainer}
-        isSyncing={isProcessing}
+        isSyncing={isProcessing} // Use isProcessing for guest mode
       />
       <ThemedTopToast
         message={topToastMessage}

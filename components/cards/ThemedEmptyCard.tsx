@@ -7,7 +7,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { Colors } from '@/constants/Colors';
 import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
 import { t } from '@/i18n';
-import { Menu } from 'react-native-paper';
+import { Menu, Surface } from 'react-native-paper';
 import { useThemeColor } from '@/hooks/useThemeColor';
 
 export type ThemedEmptyCardProps = {
@@ -50,7 +50,7 @@ export function ThemedEmptyCard({
   dropdownOptions,
   menuStyle,
   menuContentStyle,
-  menuElevation = 2,
+  menuElevation = 0,
   menuMode = 'elevated',
 }: ThemedEmptyCardProps) {
   const { currentTheme: colorScheme } = useTheme();
@@ -83,6 +83,7 @@ export function ThemedEmptyCard({
   };
 
   const renderDropdownItem = (option: { label: string; onPress: () => void; testID?: string; icon?: string }, index: number) => (
+
     <Pressable
       key={index}
       style={styles.dropdownItem}
@@ -105,47 +106,49 @@ export function ThemedEmptyCard({
       testID={testID}
       disabled={!cardOnPress}
     >
-      <ThemedView style={cardContainerStyle}>
-        <View style={styles.cardHeaderContainer}>
-          <ThemedText style={[styles.label, { color: colors.text }]} type="title" numberOfLines={2}>
-            {t(headerLabel)}
-          </ThemedText>
-        </View>
+      <Surface style={{ borderRadius: getResponsiveWidth(4) }} elevation={menuElevation}>
+        <ThemedView style={cardContainerStyle}>
+          <View style={styles.cardHeaderContainer}>
+            <ThemedText style={[styles.label, { color: colors.text }]} type="title" numberOfLines={2}>
+              {t(headerLabel)}
+            </ThemedText>
+          </View>
 
-        <View style={styles.cardImageContainer}>
-          <Image
-            source={image}
-            style={styles.image}
-            accessibilityRole="image"
-            accessibilityLabel={t(headerLabel)}
-          />
-        </View>
+          <View style={styles.cardImageContainer}>
+            <Image
+              source={image}
+              style={styles.image}
+              accessibilityRole="image"
+              accessibilityLabel={t(headerLabel)}
+            />
+          </View>
 
-        <View style={[styles.cardFooterContainer, footerBackground, footerStyle]}>
-          <ThemedText style={{fontSize: getResponsiveFontSize(16)}} numberOfLines={1}>{t(footerLabel)}</ThemedText>
-          {showFooterButton && (
-            <Menu
-              visible={isMenuVisible}
-              onDismiss={() => setIsMenuVisible(false)}
-              anchor={
-                <ThemedButton
-                  // ref={buttonRef}
-                  label={t(footButtonLabel)}
-                  onPress={handleButtonPress}
-                  style={[styles.cardFooterButton, { backgroundColor: colors.buttonBackground }]}
-                />
-              }
-              anchorPosition="bottom"
-              style={menuStyle}
-              contentStyle={[{ borderRadius: getResponsiveWidth(6), backgroundColor: colors.buttonBackground, paddingHorizontal: getResponsiveWidth(2.4) }, menuContentStyle]}
-              mode={menuMode}
-            >
-              {dropdownOptions.map(renderDropdownItem)}
-            </Menu>
-          )}
-        </View>
-      </ThemedView>
-    </Pressable>
+          <View style={[styles.cardFooterContainer, footerBackground, footerStyle]}>
+            <ThemedText style={{ fontSize: getResponsiveFontSize(16) }} numberOfLines={1}>{t(footerLabel)}</ThemedText>
+            {showFooterButton && (
+              <Menu
+                visible={isMenuVisible}
+                onDismiss={() => setIsMenuVisible(false)}
+                anchor={
+                  <ThemedButton
+                    // ref={buttonRef}
+                    label={t(footButtonLabel)}
+                    onPress={handleButtonPress}
+                    style={[styles.cardFooterButton, { backgroundColor: colors.buttonBackground }]}
+                  />
+                }
+                anchorPosition="bottom"
+                style={menuStyle}
+                contentStyle={[{ borderRadius: getResponsiveWidth(6), backgroundColor: colors.buttonBackground, paddingHorizontal: getResponsiveWidth(2.4) }, menuContentStyle]}
+                mode={menuMode}
+              >
+                {dropdownOptions.map(renderDropdownItem)}
+              </Menu>
+            )}
+          </View>
+        </ThemedView>
+      </Surface>
+    </Pressable >
   );
 }
 

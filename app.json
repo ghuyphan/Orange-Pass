@@ -35,8 +35,8 @@
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.ACCESS_WIFI_STATE",
         "android.permission.CHANGE_WIFI_STATE"
-
-      ]
+      ],
+      "allowBackup": false
     },
     "web": {
       "bundler": "metro",
@@ -57,9 +57,9 @@
       "expo-secure-store",
       [
         "react-native-wifi-reborn",
-          {
-            "fineLocationPermission": true
-          }
+        {
+          "fineLocationPermission": true
+        }
       ]
     ],
     "experiments": {

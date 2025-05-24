@@ -5,7 +5,7 @@ import ServerRecord from "@/types/serverDataTypes"; // Assuming you have this ty
 
 import { returnItems } from "@/utils/returnItemData";
 
-import { GUEST_USER_ID } from "@/services/auth";
+import { GUEST_USER_ID } from "@/constants/Constants";
 const ITEMS_PER_PAGE = 50;
 
 /**

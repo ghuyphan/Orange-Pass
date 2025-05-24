@@ -29,11 +29,9 @@ import { setSyncStatus } from "@/store/reducers/authSlice";
 import { createTable as createUserTable } from "@/services/localDB/userDB";
 import { createQrTable } from "@/services/localDB/qrDB";
 import {
-  GUEST_USER_ID,
   checkInitialAuth,
   refreshAuthToken,
   checkGuestModeStatus,
-  // loadGuestQrData, // No longer directly called by RootLayout
   getQuickLoginStatus,
 } from "@/services/auth";
 import { checkOfflineStatus } from "@/services/network";
@@ -46,6 +44,7 @@ import { ThemeProvider } from "@/context/ThemeContext";
 // --- Components & Utils ---
 import { ThemedView } from "@/components/ThemedView";
 import { cleanupResponsiveManager } from "@/utils/responsive";
+import { GUEST_USER_ID } from "@/constants/Constants";
 
 // --- Constants ---
 const ONBOARDING_STORAGE_KEY = "hasSeenOnboarding";
@@ -61,8 +60,8 @@ type AppRoute =
 SplashScreen.preventAutoHideAsync();
 
 interface AppInitState {
-  isAppReady: boolean;
-  isAuthenticated: boolean | null; // Represents if any valid session (guest or auth) is active
+  initializationComplete: boolean; // True when fonts settled AND prepareApp logic is done
+  isAuthenticated: boolean | null; // Active session (guest or auth)
   hasSeenOnboarding: boolean | null;
   hasQuickLoginEnabled: boolean | null;
   useGuestMode: boolean; // User's preference for guest mode
@@ -79,13 +78,13 @@ export default function RootLayout() {
   const router = useRouter();
   const [fontsLoaded, fontError] = useFonts(fontAssets);
   const [appState, setAppState] = useState<AppInitState>({
-    isAppReady: false,
+    initializationComplete: false,
     isAuthenticated: null,
     hasSeenOnboarding: null,
     hasQuickLoginEnabled: null,
     useGuestMode: false,
   });
-  const initializationRan = useRef(false);
+  const initializationRan = useRef(false); // Tracks if prepareApp has been initiated
   const appStateRef = useRef<AppStateStatus>(AppState.currentState);
   const splashHiddenRef = useRef(false);
 
@@ -109,7 +108,7 @@ export default function RootLayout() {
         "[RootLayout] Failed to initialize database tables:",
         error
       );
-      throw error; // Re-throw to be caught by prepareApp
+      throw error;
     }
   }, []);
 
@@ -118,13 +117,13 @@ export default function RootLayout() {
       return storage.getBoolean(ONBOARDING_STORAGE_KEY) ?? false;
     } catch (error) {
       console.error("[RootLayout] Error reading onboarding status:", error);
-      return false; // Default to false on error
+      return false;
     }
   }, []);
 
   const prepareApp = useCallback(async () => {
     if (initializationRan.current) {
-      console.log("[RootLayout] prepareApp: Already ran.");
+      console.log("[RootLayout] prepareApp: Already ran or in progress.");
       return;
     }
     initializationRan.current = true;
@@ -140,62 +139,58 @@ export default function RootLayout() {
         `[RootLayout] prepareApp: Onboarding: ${onboardingStatus}, QuickLogin: ${quickLoginEnabled}, GuestPref: ${guestModePreference}`
       );
 
-      // checkInitialAuth will now handle guest data loading internally if a guest session is established.
-      // It determines if a session (either authenticated user or guest) is active.
       const sessionActive = await checkInitialAuth(!onboardingStatus);
       console.log(
         `[RootLayout] prepareApp: checkInitialAuth completed. SessionActive: ${sessionActive}`
       );
 
-      // IMPORTANT: The `loadGuestQrData()` call previously here has been removed.
-      // It's assumed that `checkInitialAuth` in `authService.ts` now handles
-      // calling `loadGuestQrData` if it initializes or confirms a guest session.
-      // See the comment at the top of this file for the required change in `authService.ts`.
-
       console.log(
         "[RootLayout] prepareApp: All checks complete. Setting app state."
       );
       setAppState({
-        isAppReady: true,
-        isAuthenticated: sessionActive, // Reflects if any valid session is active
+        initializationComplete: true,
+        isAuthenticated: sessionActive,
         hasSeenOnboarding: onboardingStatus,
         hasQuickLoginEnabled: quickLoginEnabled,
-        useGuestMode: guestModePreference, // Store the preference
+        useGuestMode: guestModePreference,
       });
-      console.log("[RootLayout] prepareApp: App state set. Preparation complete.");
+      console.log(
+        "[RootLayout] prepareApp: App state set. Preparation complete."
+      );
     } catch (error) {
       console.error(
         "[RootLayout] prepareApp: CRITICAL App initialization error:",
         error
       );
-      // Fallback state to allow app to potentially recover or show a login screen
       setAppState({
-        isAppReady: true,
+        initializationComplete: true, // Mark as complete to allow fallback UI
         isAuthenticated: false,
-        hasSeenOnboarding: false, // Or try to read it again if possible
+        hasSeenOnboarding: (await checkOnboardingStatus()) ?? false, // Attempt to re-check or default
         hasQuickLoginEnabled: false,
         useGuestMode: false,
       });
     }
-  }, [initializeDatabase, checkOnboardingStatus]); // Dependencies for useCallback
+  }, [initializeDatabase, checkOnboardingStatus]);
 
   useEffect(() => {
+    // This effect runs when font loading status changes (fontsLoaded or fontError)
     if (fontsLoaded || fontError) {
       if (fontError) {
         console.error("[RootLayout] Font loading failed:", fontError);
-        // Allow app to proceed without custom fonts, or handle more gracefully
-        setAppState((prevState) => ({
-          ...prevState,
-          isAppReady: true, // Mark as ready to attempt rendering
-          isAuthenticated: false, // Assume no auth if fonts fail critically for UI
-          hasSeenOnboarding: prevState.hasSeenOnboarding ?? false,
-          hasQuickLoginEnabled: false,
-          useGuestMode: false,
-        }));
+        // Proceed with app preparation even if fonts fail. UI can use system fonts.
       }
-      // If fonts loaded successfully, or if there was an error but we decided to proceed
       if (fontsLoaded) {
-        console.log("[RootLayout] Fonts loaded. Preparing app...");
+        console.log("[RootLayout] Fonts loaded successfully.");
+      }
+
+      // Call prepareApp once fonts are settled (loaded or failed),
+      // but only if it hasn't been initiated yet.
+      // The initializationRan ref inside prepareApp handles multiple calls,
+      // but this check prevents calling it if already running due to font state flicker.
+      if (!initializationRan.current) {
+        console.log(
+          "[RootLayout] Font loading settled. Initiating app preparation..."
+        );
         prepareApp();
       }
     }
@@ -213,7 +208,7 @@ export default function RootLayout() {
         if (!isOffline) {
           const authToken = await SecureStore.getItemAsync("authToken");
           const userID = await SecureStore.getItemAsync("userID");
-          // Only refresh if it's an authenticated user, not guest
+
           if (authToken && userID && userID !== GUEST_USER_ID) {
             console.log(
               "[RootLayout] Attempting token refresh on app resume for authenticated user."
@@ -244,7 +239,7 @@ export default function RootLayout() {
                   isSyncing: false,
                   lastSynced: currentLastSynced ?? undefined,
                 })
-              ); // Reset syncing status
+              );
             }
           } else {
             console.log(
@@ -252,13 +247,15 @@ export default function RootLayout() {
             );
           }
         } else {
-          console.log("[RootLayout] App resumed but offline, no token refresh.");
+          console.log(
+            "[RootLayout] App resumed but offline, no token refresh."
+          );
         }
       } else if (
         nextAppState === "inactive" ||
         nextAppState === "background"
       ) {
-        cleanupResponsiveManager(); // Example cleanup task
+        cleanupResponsiveManager();
       }
       appStateRef.current = nextAppState;
     };
@@ -267,69 +264,70 @@ export default function RootLayout() {
       "change",
       handleAppStateChange
     );
-    const networkUnsubscribe = checkOfflineStatus(); // Initialize network status listener
+    const networkUnsubscribe = checkOfflineStatus();
 
     return () => {
       appStateSubscription.remove();
       if (networkUnsubscribe) networkUnsubscribe();
     };
-  }, []); // Empty dependency array: runs once on mount, cleans up on unmount
+  }, []);
 
   useEffect(() => {
-    const {
-      isAppReady,
-      hasSeenOnboarding,
-      isAuthenticated, // True if guest session OR auth session is active
-      hasQuickLoginEnabled,
-      useGuestMode, // The user's preference
-    } = appState;
-
-    // Ensure all critical states are resolved before attempting to navigate
-    const canNavigate =
-      isAppReady &&
-      hasSeenOnboarding !== null &&
-      isAuthenticated !== null && // checkInitialAuth result
-      hasQuickLoginEnabled !== null;
-
-    if (canNavigate) {
-      let targetRoute: AppRoute;
-
-      if (!hasSeenOnboarding) {
-        targetRoute = "/onboard";
-      } else if (useGuestMode) {
-        // User prefers guest mode
-        if (isAuthenticated) {
-          // And a session (which should be guest) is active
-          targetRoute = "/(guest)/guest-home";
-        } else {
-          // Guest mode preferred, but guest session failed to initialize
-          console.warn(
-            "[RootLayout] Guest mode preferred, but no active session. Fallback to login."
-          );
-          targetRoute = "/(public)/login"; // Fallback
-        }
-      } else if (isAuthenticated) {
-        // Not preferring guest mode, and an authenticated session is active
-        targetRoute = "/(auth)/home";
-      } else if (hasQuickLoginEnabled) {
-        // Not preferring guest, no auth session, but quick login is an option
-        targetRoute = "/(public)/quick-login";
-      } else {
-        // Default fallback: login screen
-        targetRoute = "/(public)/login";
-      }
-
+    if (!appState.initializationComplete) {
       console.log(
-        `[RootLayout] Navigating. Onboarding: ${hasSeenOnboarding}, GuestModePref: ${useGuestMode}, SessionActive(isAuthenticated): ${isAuthenticated}, Target: ${targetRoute}`
-      );
-      router.replace(targetRoute);
-    } else {
-      console.log(
-        "[RootLayout] Cannot navigate yet. App initialization not fully complete. AppState:",
+        "[RootLayout] Navigation deferred: App initialization not fully complete.",
         appState
       );
+      return;
     }
-  }, [appState, router]); // Re-run when appState or router changes
+
+    // At this point, all nullable states should have been resolved by prepareApp
+    const {
+      hasSeenOnboarding,
+      isAuthenticated,
+      hasQuickLoginEnabled,
+      useGuestMode,
+    } = appState;
+
+    if (
+      hasSeenOnboarding === null ||
+      isAuthenticated === null ||
+      hasQuickLoginEnabled === null
+    ) {
+      console.error(
+        "[RootLayout] CRITICAL NAVIGATION ERROR: Initialization complete, but essential states are null. Fallback to login.",
+        appState
+      );
+      router.replace("/(public)/login"); // Fallback to a safe route
+      return;
+    }
+
+    let targetRoute: AppRoute;
+
+    if (!hasSeenOnboarding) {
+      targetRoute = "/onboard";
+    } else if (useGuestMode) {
+      if (isAuthenticated) {
+        targetRoute = "/(guest)/guest-home";
+      } else {
+        console.warn(
+          "[RootLayout] Guest mode preferred, but no active session. Fallback to login."
+        );
+        targetRoute = "/(public)/login";
+      }
+    } else if (isAuthenticated) {
+      targetRoute = "/(auth)/home";
+    } else if (hasQuickLoginEnabled) {
+      targetRoute = "/(public)/quick-login";
+    } else {
+      targetRoute = "/(public)/login";
+    }
+
+    console.log(
+      `[RootLayout] Navigating. Onboarding: ${hasSeenOnboarding}, GuestModePref: ${useGuestMode}, SessionActive(isAuthenticated): ${isAuthenticated}, Target: ${targetRoute}`
+    );
+    router.replace(targetRoute);
+  }, [appState, router]); // Re-run when appState (specifically initializationComplete and its dependent values) or router changes
 
   const stackNavigator = useMemo(
     () => (
@@ -337,7 +335,10 @@ export default function RootLayout() {
         <Stack.Screen name="(guest)" options={{ animation: "ios" }} />
         <Stack.Screen name="(public)" options={{ animation: "ios" }} />
         <Stack.Screen name="(auth)" options={{ animation: "none" }} />
-        <Stack.Screen name="onboard" options={{ animation: "ios" }} />
+        <Stack.Screen
+          name="onboard"
+          options={{ animation: "slide_from_bottom" }}
+        />
         <Stack.Screen name="+not-found" />
       </Stack>
     ),
@@ -345,13 +346,7 @@ export default function RootLayout() {
   );
 
   const onLayoutRootView = useCallback(async () => {
-    // Ensure all critical app states are determined before hiding splash
-    if (
-      appState.isAppReady &&
-      appState.hasSeenOnboarding !== null &&
-      appState.isAuthenticated !== null &&
-      appState.hasQuickLoginEnabled !== null
-    ) {
+    if (appState.initializationComplete) {
       if (!splashHiddenRef.current) {
         try {
           console.log("[RootLayout] Hiding splash screen NOW.");
@@ -363,15 +358,10 @@ export default function RootLayout() {
         }
       }
     }
-  }, [appState]); // Depends on the entire appState object
+  }, [appState.initializationComplete]); // Depend only on the flag that matters
 
-  // Render null (and keep splash screen visible) until essential checks are done
-  if (
-    !appState.isAppReady || // Primary flag from prepareApp
-    appState.isAuthenticated === null ||
-    appState.hasSeenOnboarding === null ||
-    appState.hasQuickLoginEnabled === null
-  ) {
+  if (!appState.initializationComplete) {
+    // Keep splash screen visible until all essential setup is done
     return null;
   }
 

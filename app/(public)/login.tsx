@@ -15,7 +15,7 @@ import {
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Formik } from "formik";
 import { router } from "expo-router";
-import { useSelector, useDispatch } from "react-redux"; // Combined useDispatch import
+import { useSelector, useDispatch } from "react-redux";
 import { useMMKVString } from "react-native-mmkv";
 import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
 
@@ -44,7 +44,6 @@ import {
   exitGuestMode,
   checkGuestModeStatus,
 } from "@/services/auth";
-// Import transferGuestDataToUser
 import { transferGuestDataToUser } from "@/services/localDB/qrDB";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
@@ -57,11 +56,6 @@ import { setLoginInProgress } from "@/store/reducers/authStatusSlice";
 
 // Types
 type LanguageKey = "vi" | "ru" | "en";
-
-interface LanguageOption {
-  label: string;
-  flag: React.ReactNode;
-}
 
 // Pre-calculate flag sizes
 const FLAG_WIDTH = getResponsiveWidth(7.2);
@@ -177,6 +171,8 @@ const createStyles = () => {
       position: "relative",
       justifyContent: "center",
       alignItems: "center",
+      width: getResponsiveFontSize(18), // Ensure stack has a defined size
+      height: getResponsiveFontSize(18), // Ensure stack has a defined size
     },
     checkIcon: {
       position: "absolute",
@@ -188,7 +184,7 @@ const styles = createStyles();
 const languageOptionsData = createLanguageOptions();
 
 export default function LoginScreen() {
-  const { locale, updateLocale } = useLocale();
+  const { updateLocale } = useLocale();
   const [storedLocale, setStoredLocale] = useMMKVString("locale");
   const { currentTheme } = useTheme();
   const dispatch = useDispatch();
@@ -204,31 +200,19 @@ export default function LoginScreen() {
   const bottomSheetRef = useRef(null);
   const scrollViewRef = useRef(null); // Kept for potential future use
 
-  const backgroundColor = useMemo(
-    () =>
-      currentTheme === "light"
+  const themeColors = useMemo(() => {
+    const isLight = currentTheme === "light";
+    return {
+      backgroundColor: isLight
         ? Colors.light.background
         : Colors.dark.background,
-    [currentTheme]
-  );
-
-  const cardColor = useMemo(
-    () =>
-      currentTheme === "light"
+      cardColor: isLight
         ? Colors.light.cardBackground
         : Colors.dark.cardBackground,
-    [currentTheme]
-  );
-
-  const iconColor = useMemo(
-    () => (currentTheme === "light" ? Colors.light.icon : Colors.dark.icon),
-    [currentTheme]
-  );
-
-  const textColor = useMemo(
-    () => (currentTheme === "light" ? Colors.light.text : Colors.dark.text),
-    [currentTheme]
-  );
+      iconColor: isLight ? Colors.light.icon : Colors.dark.icon,
+      textColor: isLight ? Colors.light.text : Colors.dark.text,
+    };
+  }, [currentTheme]);
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
@@ -311,9 +295,7 @@ export default function LoginScreen() {
               "[LoginScreen] Error during guest data transfer:",
               transferError
             );
-            // Decide if this error should prevent login or just be logged
           }
-          // Exit guest mode regardless of transfer success to ensure GUEST_MODE_KEY is false
           const exitedSuccessfully = await exitGuestMode();
           if (exitedSuccessfully) {
             console.log(
@@ -344,7 +326,7 @@ export default function LoginScreen() {
         dispatch(setLoginInProgress(false));
       }
     },
-    [dispatch, t] // Removed setIsToastVisible, setErrorMessage as they are component state setters
+    [dispatch, t]
   );
 
   const languageOptionsContent = useMemo(() => {
@@ -352,7 +334,7 @@ export default function LoginScreen() {
       <View
         style={[
           styles.languageOptionsContainer,
-          { backgroundColor: cardColor },
+          { backgroundColor: themeColors.cardColor },
         ]}
       >
         {Object.entries(languageOptionsData).map(([key, { label, flag }]) => (
@@ -366,29 +348,25 @@ export default function LoginScreen() {
           >
             <View style={styles.leftSectionContainer}>
               <View style={styles.flagIconContainer}>{flag}</View>
-              <ThemedText style={{ color: textColor }}>{label}</ThemedText>
+              <ThemedText style={{ color: themeColors.textColor }}>
+                {label}
+              </ThemedText>
             </View>
-            {storedLocale === key ? (
-              <View style={styles.iconStack}>
-                <MaterialCommunityIcons
-                  name="circle-outline"
-                  size={getResponsiveFontSize(18)}
-                  color={iconColor}
-                />
-                <MaterialIcons
-                  name="circle"
-                  size={getResponsiveFontSize(10)}
-                  color={iconColor}
-                  style={styles.checkIcon}
-                />
-              </View>
-            ) : (
+            <View style={styles.iconStack}>
               <MaterialCommunityIcons
                 name="circle-outline"
                 size={getResponsiveFontSize(18)}
-                color={iconColor}
+                color={themeColors.iconColor}
               />
-            )}
+              {storedLocale === key && (
+                <MaterialIcons
+                  name="circle"
+                  size={getResponsiveFontSize(10)}
+                  color={themeColors.iconColor}
+                  style={styles.checkIcon}
+                />
+              )}
+            </View>
           </Pressable>
         ))}
         <Pressable
@@ -402,43 +380,36 @@ export default function LoginScreen() {
             <MaterialCommunityIcons
               name="cog-outline"
               size={getResponsiveFontSize(18)}
-              color={iconColor}
+              color={themeColors.iconColor}
             />
-            <ThemedText style={{ color: textColor }}>
+            <ThemedText style={{ color: themeColors.textColor }}>
               {t("languageScreen.system")}
             </ThemedText>
           </View>
-          {storedLocale === undefined ? (
-            <View style={styles.iconStack}>
-              <MaterialCommunityIcons
-                name="circle-outline"
-                size={getResponsiveFontSize(18)}
-                color={iconColor}
-              />
-              <MaterialIcons
-                name="circle"
-                size={getResponsiveFontSize(10)}
-                color={iconColor}
-                style={styles.checkIcon}
-              />
-            </View>
-          ) : (
+          <View style={styles.iconStack}>
             <MaterialCommunityIcons
               name="circle-outline"
               size={getResponsiveFontSize(18)}
-              color={iconColor}
+              color={themeColors.iconColor}
             />
-          )}
+            {storedLocale === undefined && (
+              <MaterialIcons
+                name="circle"
+                size={getResponsiveFontSize(10)}
+                color={themeColors.iconColor}
+                style={styles.checkIcon}
+              />
+            )}
+          </View>
         </Pressable>
       </View>
     );
   }, [
-    cardColor,
-    textColor,
-    iconColor,
+    themeColors,
     storedLocale,
     handleLanguageChange,
     handleSystemLocale,
+    t,
   ]);
 
   const languageSelectorLabel = useMemo(() => {
@@ -467,7 +438,7 @@ export default function LoginScreen() {
         <KeyboardAwareScrollView
           ref={scrollViewRef}
           keyboardShouldPersistTaps="handled"
-          style={{ backgroundColor }}
+          style={{ backgroundColor: themeColors.backgroundColor }}
           contentContainerStyle={styles.container}
           extraScrollHeight={
             Platform.OS === "ios" ? getResponsiveHeight(4) : 0
@@ -574,7 +545,7 @@ export default function LoginScreen() {
           <ThemedReuseableSheet
             ref={bottomSheetRef}
             title={t("loginScreen.selectLanguage")}
-            snapPoints={["40%"]}
+            snapPoints={["40%"]} // Consider making this dynamic if content changes significantly
             showCloseButton={true}
             contentType="custom"
             customContent={languageOptionsContent}

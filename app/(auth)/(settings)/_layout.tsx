@@ -26,6 +26,7 @@ export default function ScanLayout() {
         <Stack.Screen name="language" />
         <Stack.Screen name="edit" />
         <Stack.Screen name="edit-avatar" />
+        <Stack.Screen name="edit-pass" />
       </Stack>
       {showHeader &&
         <View style={styles.headerContainer}>

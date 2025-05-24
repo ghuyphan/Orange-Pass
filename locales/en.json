@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "Orange⁺",
+    "appName": "Orange Pass",
     "done": "Done",
     "cancel": "Cancel",
     "back": "Back",
@@ -92,7 +92,7 @@
     "passwordPlaceholder": "Password (min 8 characters, uppercase, numbers)",
     "confirmPassword": "Confirm password",
     "confirmPasswordPlaceholder": "Confirm your password",
-    "registerNewAccount": "Join Orange⁺",
+    "registerNewAccount": "Join Orange Pass",
     "register": "Register",
     "registering": "Registering...",
     "registerSuccess": "Your account has been created successfully",
@@ -130,7 +130,7 @@
     }
   },
   "homeScreen": {
-    "title": "Orange⁺",
+    "title": "Orange Pass",
     "searchPlaceholder": "Search your cards",
     "noItemFound": "No cards found. Please try again.",
     "manage": "Manage card",
@@ -359,7 +359,7 @@
     "cancelButton": "Decline"
   },
   "onboardingScreen": {
-    "title": "Orange⁺",
+    "title": "Orange Pass",
     "title1": "Your QR Code Manager",
     "subtitle1": "Organize and store QR codes for your bank accounts, loyalty cards, and e-wallets.",
     "title2": "Cloud Sync",
@@ -373,14 +373,14 @@
       "privacyPolicyPrefix": "and have reviewed our",
       "privacyPolicyLink": "Privacy Policy",
       "termsOfServiceSheetTitle": "Terms of Service",
-      "termsOfServiceTitle": "Welcome to Orange⁺",
+      "termsOfServiceTitle": "Welcome to Orange Pass",
       "termsOfServiceDescription": "Community Guidelines",
       "termsOfServiceContent1": "To ensure a positive experience for all users, please follow these community guidelines:",
       "termsOfServiceContent2": "In summary:\n* Don't engage in illegal or harmful behavior. Don't post inappropriate content.\n* Respect privacy. Don't share others' QR codes without permission.\n* Protect your account. Don't share your login information.",
       "privacyPolicySheetTitle": "Privacy Policy",
-      "privacyPolicyTitle": "Your Data, Orange⁺ Protects",
+      "privacyPolicyTitle": "Your Data, Orange Pass Protects",
       "privacyPolicyDescription": "Our Privacy Promise",
-      "privacyPolicyContent1": "Orange⁺ is committed to protecting your privacy. We only collect information necessary to improve your app experience, such as name and email to personalize your account and communicate with you.",
+      "privacyPolicyContent1": "Orange Pass is committed to protecting your privacy. We only collect information necessary to improve your app experience, such as name and email to personalize your account and communicate with you.",
       "privacyPolicyContent2": "We commit to:\n* Keeping your data secure. Not sharing personal information without consent.\n* Using advanced security measures to protect your information.\n* Giving you full control over your data, including the right to delete your account."
     }
   },
@@ -404,8 +404,9 @@
   },
   "settingsScreen": {
     "title": "Settings",
+"guestLoginPrompt": "Guest (Tap to Sign In)",
     "language": "Language",
-    "about": "About Orange⁺",
+    "about": "About Orange Pass",
     "editProfile": "Edit profile",
     "changePassword": "Change password",
     "changeEmail": "Change email address",

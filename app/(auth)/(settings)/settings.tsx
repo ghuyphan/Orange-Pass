@@ -97,7 +97,7 @@ function SettingsScreen() {
       timerId = setTimeout(() => {
         console.log('Setting isAvatarReady to true.');
         setIsAvatarReady(true); // Make sure setIsAvatarReady is the correct state setter
-      }, 150);
+      }, 180);
     });
   
     return () => {
@@ -146,6 +146,10 @@ function SettingsScreen() {
     router.push('/(auth)/(settings)/edit');
   }, []);
 
+  const onNavigateToEditPasswordScreen = useCallback(() => {
+    router.push('/(auth)/(settings)/edit-pass');
+  }, []);
+
   const logout = useCallback(async () => {
     try {
       setIsModalVisible(false);
@@ -188,7 +192,7 @@ function SettingsScreen() {
       {
         leftIcon: 'lock-outline',
         settingsTitle: t('settingsScreen.changePassword'),
-        onPress: () => {},
+        onPress: () => onNavigateToEditPasswordScreen(),
       },
       {
         leftIcon: 'mail-outline',

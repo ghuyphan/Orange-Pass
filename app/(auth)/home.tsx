@@ -32,7 +32,7 @@ import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 
 // Types, constants, services, hooks, and components
 import QRRecord from "@/types/qrType";
-import ServerRecord from "@/types/serverDataTypes";
+import ServerRecord from "@/types/serverDataTypes"; // Ensure this type is correctly defined
 import { height } from "@/constants/Constants";
 import { RootState } from "@/store/rootReducer";
 import { setQrData } from "@/store/reducers/qrSlice";
@@ -40,9 +40,9 @@ import {
   getQrCodesByUserId,
   deleteQrCode,
   syncQrCodes,
-  fetchServerData,
+  fetchServerData, // This function's return type is crucial
   getUnsyncedQrCodes,
-  insertOrUpdateQrCodes,
+  insertOrUpdateQrCodes, // Expects ServerRecord[]
   updateQrIndexes,
   hasLocalData,
 } from "@/services/localDB/qrDB";
@@ -132,7 +132,8 @@ function HomeScreen() {
 
   // Shared Values (Reanimated)
   const isEmptyShared = useSharedValue(qrData.length === 0 ? 1 : 0);
-  const emptyCardOffset = useSharedValue(350);
+  const emptyCardOffset = useSharedValue(350); // For EmptyListItem slide-in
+  const listOpacity = useSharedValue(0); // For DraggableFlatList fade-in
   const scrollY = useSharedValue(0);
 
   // Clear all timeouts on unmount
@@ -158,13 +159,37 @@ function HomeScreen() {
 
       InteractionManager.runAfterInteractions(async () => {
         try {
-          await syncQrCodes(userIdToSync);
-          const serverData: ServerRecord[] = await fetchServerData(
-            userIdToSync,
-          );
-          if (serverData.length > 0) {
+          await syncQrCodes(userIdToSync); // Push local changes
+
+          // Fetch data from server. This might return QRRecord-like objects.
+          const rawDataFromServer = await fetchServerData(userIdToSync);
+
+          if (rawDataFromServer && rawDataFromServer.length > 0) {
+            // Transform rawDataFromServer to ServerRecord[]
+            // Ensure each item has collectionId and collectionName
+            const serverData: ServerRecord[] = rawDataFromServer.map(
+              (item: any) => {
+                // Ensure item is treated as a base QRRecord and add missing fields
+                const baseRecord = item as QRRecord;
+                return {
+                  ...baseRecord, // Spread all properties from the fetched item
+                  // !!! REPLACE THESE WITH ACTUAL VALUES OR LOGIC !!!
+                  collectionId:
+                    (item as any).collectionId ||
+                    "YOUR_QR_COLLECTION_ID_PLACEHOLDER",
+                  collectionName:
+                    (item as any).collectionName ||
+                    "YOUR_QR_COLLECTION_NAME_PLACEHOLDER",
+                  // Ensure all other fields required by ServerRecord are present
+                  // and correctly typed. For example, if ServerRecord expects dates as ISO strings:
+                  // created: new Date(baseRecord.created).toISOString(),
+                  // updated: new Date(baseRecord.updated).toISOString(),
+                };
+              },
+            );
             await insertOrUpdateQrCodes(serverData);
           }
+
           const finalLocalData = await getQrCodesByUserId(userIdToSync);
           dispatch(setQrData(finalLocalData));
           setSyncStatus("synced");
@@ -186,7 +211,7 @@ function HomeScreen() {
         }
       });
     },
-    [isOffline, isSyncing, dispatch, t],
+    [isOffline, isSyncing, dispatch, t], // Removed userIdToSync from here as it's an arg
   );
 
   // Initialize data
@@ -310,14 +335,28 @@ function HomeScreen() {
     emptyCardOffset.value = withSpring(0, { damping: 30, stiffness: 150 });
   }, [emptyCardOffset]);
 
-  // Animate empty card
+  // Animate empty card or list appearance
   useEffect(() => {
     isEmptyShared.value = isEmpty ? 1 : 0;
-    if (initialAnimationsDone) { // Changed condition
-      animateEmptyCard(); // This will animate emptyCardOffset to 0
-    }
-  }, [isEmpty]); // Added emptyCardOffset to dependencies
 
+    if (initialAnimationsDone) {
+      if (isEmpty) {
+        listOpacity.value = 0; // Hide list
+        emptyCardOffset.value = 350; // Reset for slide-in animation
+        animateEmptyCard(); // Slide in EmptyListItem
+      } else {
+        emptyCardOffset.value = 350; // Ensure EmptyListItem is "off-screen"
+        listOpacity.value = withTiming(1, { duration: 300 }); // Fade in list
+      }
+    }
+  }, [
+    isEmpty,
+    initialAnimationsDone,
+    animateEmptyCard,
+    listOpacity,
+    emptyCardOffset,
+    isEmptyShared,
+  ]);
 
   // Animated styles
   const titleContainerStyle = useAnimatedStyle(() => {
@@ -376,6 +415,12 @@ function HomeScreen() {
 
   const emptyCardStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: emptyCardOffset.value }],
+    flex: 1,
+  }));
+
+  const listContainerAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: listOpacity.value,
+    flex: 1,
   }));
 
   // Navigation handlers
@@ -415,7 +460,13 @@ function HomeScreen() {
       ) => {
         router.push({
           pathname: `/(auth)/(add)/add-new`,
-          params: { codeFormat, codeValue, codeBin: bin, codeType, codeProvider },
+          params: {
+            codeFormat,
+            codeValue,
+            codeBin: bin,
+            codeType,
+            codeProvider,
+          },
         });
       },
       300,
@@ -508,7 +559,7 @@ function HomeScreen() {
   }, [qrData, filter]);
 
   const handleSync = useCallback(() => {
-    syncWithServer(userId);
+    if (userId) syncWithServer(userId);
   }, [syncWithServer, userId]);
 
   const handleFilterChange = useCallback((newFilter: string) => {
@@ -544,12 +595,12 @@ function HomeScreen() {
     [onNavigateToDetailScreen, onOpenSheet],
   );
 
-  // Optimize onDragEnd with useCallback
-  // Optimize onDragEnd with useCallback
   const onDragEnd = useCallback(
     ({ data: reorderedData }: { data: QRRecord[] }) => {
       triggerHapticFeedback();
       setIsActive(false);
+
+      if (!userId) return;
 
       if (filter === "all") {
         dispatch(setQrData(reorderedData));
@@ -559,7 +610,6 @@ function HomeScreen() {
             qr_index: index,
             updated: new Date().toISOString(),
           }));
-          // Pass userId as the second argument
           updateQrIndexes(updatedData, userId).catch(console.error);
         });
       } else {
@@ -580,14 +630,12 @@ function HomeScreen() {
             qr_index: index,
             updated: new Date().toISOString(),
           }));
-          // Pass userId as the second argument
           updateQrIndexes(finalData, userId).catch(console.error);
         });
       }
     },
-    [dispatch, qrData, filter, userId], // Added userId to dependencies
+    [dispatch, qrData, filter, userId],
   );
-
 
   // Toast handler
   const showToast = useCallback((message: string) => {
@@ -607,14 +655,15 @@ function HomeScreen() {
   }, []);
 
   const onDeletePress = useCallback(async () => {
-    if (!selectedItemId || !userId) return; // Ensure userId is present
+    if (!selectedItemId || !userId) return;
+
+    setIsModalVisible(false);
 
     try {
       setIsSyncing(true);
       setIsToastVisible(true);
       setToastMessage(t("homeScreen.deleting"));
 
-      // Pass userId as the second argument
       await deleteQrCode(selectedItemId, userId);
       const updatedData = qrData.filter((item) => item.id !== selectedItemId);
       const reindexedData = updatedData.map((item, index) => ({
@@ -623,7 +672,6 @@ function HomeScreen() {
         updated: new Date().toISOString(),
       }));
       dispatch(setQrData(reindexedData));
-      // Pass userId as the second argument
       await updateQrIndexes(reindexedData, userId);
 
       setIsModalVisible(false);
@@ -638,8 +686,7 @@ function HomeScreen() {
         clearTimeout(timeoutRefs.current.delete);
       timeoutRefs.current.delete = setTimeout(() => setIsSyncing(false), 400);
     }
-  }, [selectedItemId, qrData, dispatch, t, userId]); // Added userId to dependencies
-
+  }, [selectedItemId, qrData, dispatch, t, userId]);
 
   // Padding values
   const paddingValues = useMemo(() => {
@@ -800,6 +847,7 @@ function HomeScreen() {
         <LoadingComponent />
       ) : isEmpty ? (
         <EmptyListItem
+
           scrollHandler={scrollHandler}
           emptyCardStyle={emptyCardStyle}
           onNavigateToEmptyScreen={onNavigateToEmptyScreen}
@@ -811,7 +859,7 @@ function HomeScreen() {
           ]}
         />
       ) : (
-        <Animated.View style={[emptyCardStyle, { flex: 1 }]}>
+        <Animated.View style={listContainerAnimatedStyle}>
           <DraggableFlatList
             ref={flatListRef}
             bounces={true}
@@ -832,8 +880,10 @@ function HomeScreen() {
             containerStyle={{ flex: 1 }}
             contentContainerStyle={[
               styles.listContainer,
-              qrData.length > 0 && { paddingBottom: listContainerPadding },
+              // Apply paddingBottom only when there are filtered items to display
+              filteredData.length > 0 && { paddingBottom: listContainerPadding },
             ]}
+
             scrollEventThrottle={16}
             showsVerticalScrollIndicator={false}
             onDragBegin={onDragBegin}
@@ -841,7 +891,6 @@ function HomeScreen() {
             dragItemOverflow={false}
             onScrollOffsetChange={onScrollOffsetChange}
             decelerationRate={"fast"}
-          // scrollEnabled={!fabOpen}
           />
         </Animated.View>
       )}
