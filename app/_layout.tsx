@@ -23,7 +23,7 @@ import * as SecureStore from "expo-secure-store";
 
 // --- Store ---
 import { store } from "@/store";
-import { setSyncStatus } from "@/store/reducers/authSlice";
+import { setSyncStatus, clearAuthData } from "@/store/reducers/authSlice";
 
 // --- Services ---
 import { createTable as createUserTable } from "@/services/localDB/userDB";
@@ -48,6 +48,8 @@ import { GUEST_USER_ID } from "@/constants/Constants";
 
 // --- Constants ---
 const ONBOARDING_STORAGE_KEY = "hasSeenOnboarding";
+const TOKEN_REFRESH_THRESHOLD = 5 * 60 * 1000; // 5 minutes
+const BACKGROUND_TIME_THRESHOLD = 30 * 60 * 1000; // 30 minutes
 
 // Define possible navigation routes for type safety
 type AppRoute =
@@ -60,11 +62,11 @@ type AppRoute =
 SplashScreen.preventAutoHideAsync();
 
 interface AppInitState {
-  initializationComplete: boolean; // True when fonts settled AND prepareApp logic is done
-  isAuthenticated: boolean | null; // Active session (guest or auth)
+  initializationComplete: boolean;
+  isAuthenticated: boolean | null;
   hasSeenOnboarding: boolean | null;
   hasQuickLoginEnabled: boolean | null;
-  useGuestMode: boolean; // User's preference for guest mode
+  useGuestMode: boolean;
 }
 
 const fontAssets = {
@@ -73,6 +75,116 @@ const fontAssets = {
   "Roboto-Bold": require("../assets/fonts/Roboto-Bold.ttf"),
   "Roboto-Italic": require("../assets/fonts/Roboto-Italic.ttf"),
 };
+
+// Token Management Class
+class TokenManager {
+  private static lastRefreshTime = 0;
+  private static backgroundStartTime = 0;
+  private static isRefreshing = false;
+
+  static shouldRefreshToken(authToken: string | null, userID: string | null): boolean {
+    if (!authToken || !userID || userID === GUEST_USER_ID || this.isRefreshing) {
+      return false;
+    }
+
+    const now = Date.now();
+    const timeSinceLastRefresh = now - this.lastRefreshTime;
+    const backgroundDuration = this.backgroundStartTime > 0 ? now - this.backgroundStartTime : 0;
+
+    // Only refresh if:
+    // 1. Haven't refreshed recently AND
+    // 2. App was in background for significant time
+    return (
+      timeSinceLastRefresh > TOKEN_REFRESH_THRESHOLD &&
+      backgroundDuration > BACKGROUND_TIME_THRESHOLD
+    );
+  }
+
+  static async performTokenRefresh(router: any): Promise<boolean> {
+    if (this.isRefreshing) {
+      console.log("[TokenManager] Refresh already in progress");
+      return true;
+    }
+
+    try {
+      const authToken = await SecureStore.getItemAsync("authToken");
+      const userID = await SecureStore.getItemAsync("userID");
+
+      if (!this.shouldRefreshToken(authToken, userID)) {
+        console.log("[TokenManager] Token refresh not needed");
+        return true;
+      }
+
+      this.isRefreshing = true;
+      console.log("[TokenManager] Starting token refresh after background period");
+
+      const currentLastSynced = store.getState().auth.lastSynced;
+      store.dispatch(setSyncStatus({
+        isSyncing: true,
+        lastSynced: currentLastSynced ?? undefined,
+      }));
+
+      const success = await refreshAuthToken(authToken!);
+
+      if (success) {
+        this.lastRefreshTime = Date.now();
+        store.dispatch(setSyncStatus({
+          isSyncing: false,
+          lastSynced: new Date().toISOString(),
+        }));
+        console.log("[TokenManager] Token refresh successful");
+        return true;
+      } else {
+        console.warn("[TokenManager] Token refresh failed - clearing auth");
+        await this.handleAuthFailure(router);
+        return false;
+      }
+    } catch (error) {
+      console.error("[TokenManager] Token refresh error:", error);
+      await this.handleAuthFailure(router);
+      return false;
+    } finally {
+      this.isRefreshing = false;
+      store.dispatch(setSyncStatus({
+        isSyncing: false,
+        lastSynced: store.getState().auth.lastSynced ?? undefined,
+      }));
+    }
+  }
+
+  private static async handleAuthFailure(router: any): Promise<void> {
+    try {
+      // Clear invalid tokens
+      await SecureStore.deleteItemAsync("authToken");
+      await SecureStore.deleteItemAsync("userID");
+
+      // Reset auth state
+      store.dispatch(clearAuthData());
+
+      // Navigate to login
+      router.replace("/(public)/login");
+    } catch (error) {
+      console.error("[TokenManager] Error handling auth failure:", error);
+    }
+  }
+
+  static onAppBackground(): void {
+    this.backgroundStartTime = Date.now();
+    console.log("[TokenManager] App backgrounded at:", new Date().toISOString());
+  }
+
+  static onAppForeground(): void {
+    console.log("[TokenManager] App foregrounded at:", new Date().toISOString());
+    // Reset background timer but don't automatically refresh
+    this.backgroundStartTime = 0;
+  }
+
+  static reset(): void {
+    this.lastRefreshTime = 0;
+    this.backgroundStartTime = 0;
+    this.isRefreshing = false;
+  }
+}
 
 export default function RootLayout() {
   const router = useRouter();
@@ -84,10 +196,13 @@ export default function RootLayout() {
     hasQuickLoginEnabled: null,
     useGuestMode: false,
   });
-  const initializationRan = useRef(false); // Tracks if prepareApp has been initiated
+
+  // Refs for managing state
+  const initializationPromise = useRef<Promise<void> | null>(null);
   const appStateRef = useRef<AppStateStatus>(AppState.currentState);
   const splashHiddenRef = useRef(false);
 
+  // Initialize Android layout animations
   useEffect(() => {
     if (
       Platform.OS === "android" &&
@@ -97,191 +212,157 @@ export default function RootLayout() {
     }
   }, []);
 
-  const initializeDatabase = useCallback(async () => {
+  // Database initialization
+  const initializeDatabase = useCallback(async (): Promise<void> => {
     try {
       console.log("[RootLayout] Initializing database tables...");
-      await createUserTable();
-      await createQrTable();
-      console.log("[RootLayout] Database tables initialized/verified.");
+      await Promise.all([
+        createUserTable(),
+        createQrTable(),
+      ]);
+      console.log("[RootLayout] Database tables initialized successfully");
     } catch (error) {
-      console.error(
-        "[RootLayout] Failed to initialize database tables:",
-        error
-      );
+      console.error("[RootLayout] Failed to initialize database tables:", error);
       throw error;
     }
   }, []);
 
+  // Check onboarding status
   const checkOnboardingStatus = useCallback(async (): Promise<boolean> => {
     try {
-      return storage.getBoolean(ONBOARDING_STORAGE_KEY) ?? false;
+      const hasSeenOnboarding = storage.getBoolean(ONBOARDING_STORAGE_KEY) ?? false;
+      console.log("[RootLayout] Onboarding status:", hasSeenOnboarding);
+      return hasSeenOnboarding;
     } catch (error) {
       console.error("[RootLayout] Error reading onboarding status:", error);
       return false;
     }
   }, []);
 
-  const prepareApp = useCallback(async () => {
-    if (initializationRan.current) {
-      console.log("[RootLayout] prepareApp: Already ran or in progress.");
-      return;
+  // Main app preparation function
+  const prepareApp = useCallback(async (): Promise<void> => {
+    // Prevent multiple simultaneous initializations
+    if (initializationPromise.current) {
+      console.log("[RootLayout] App preparation already in progress");
+      return initializationPromise.current;
     }
-    initializationRan.current = true;
-    console.log("[RootLayout] prepareApp: Starting application preparation...");
 
-    try {
-      await initializeDatabase();
-      const onboardingStatus = await checkOnboardingStatus();
-      const quickLoginEnabled = await getQuickLoginStatus();
-      const guestModePreference = await checkGuestModeStatus();
+    initializationPromise.current = (async () => {
+      console.log("[RootLayout] Starting app preparation...");
 
-      console.log(
-        `[RootLayout] prepareApp: Onboarding: ${onboardingStatus}, QuickLogin: ${quickLoginEnabled}, GuestPref: ${guestModePreference}`
-      );
+      try {
+        // Initialize core services
+        await initializeDatabase();
 
-      const sessionActive = await checkInitialAuth(!onboardingStatus);
-      console.log(
-        `[RootLayout] prepareApp: checkInitialAuth completed. SessionActive: ${sessionActive}`
-      );
+        // Get all required status checks in parallel
+        const [
+          onboardingStatus,
+          quickLoginEnabled,
+          guestModePreference,
+        ] = await Promise.all([
+          checkOnboardingStatus(),
+          getQuickLoginStatus(),
+          checkGuestModeStatus(),
+        ]);
 
-      console.log(
-        "[RootLayout] prepareApp: All checks complete. Setting app state."
-      );
-      setAppState({
-        initializationComplete: true,
-        isAuthenticated: sessionActive,
-        hasSeenOnboarding: onboardingStatus,
-        hasQuickLoginEnabled: quickLoginEnabled,
-        useGuestMode: guestModePreference,
-      });
-      console.log(
-        "[RootLayout] prepareApp: App state set. Preparation complete."
-      );
-    } catch (error) {
-      console.error(
-        "[RootLayout] prepareApp: CRITICAL App initialization error:",
-        error
-      );
-      setAppState({
-        initializationComplete: true, // Mark as complete to allow fallback UI
-        isAuthenticated: false,
-        hasSeenOnboarding: (await checkOnboardingStatus()) ?? false, // Attempt to re-check or default
-        hasQuickLoginEnabled: false,
-        useGuestMode: false,
-      });
-    }
+        console.log("[RootLayout] Status checks complete:", {
+          onboarding: onboardingStatus,
+          quickLogin: quickLoginEnabled,
+          guestMode: guestModePreference,
+        });
+
+        // Check authentication status
+        const sessionActive = await checkInitialAuth(!onboardingStatus);
+        console.log("[RootLayout] Authentication check complete. Active session:", sessionActive);
+
+        // Update app state with all resolved values
+        setAppState({
+          initializationComplete: true,
+          isAuthenticated: sessionActive,
+          hasSeenOnboarding: onboardingStatus,
+          hasQuickLoginEnabled: quickLoginEnabled,
+          useGuestMode: guestModePreference,
+        });
+
+        console.log("[RootLayout] App preparation completed successfully");
+      } catch (error) {
+        console.error("[RootLayout] CRITICAL: App initialization failed:", error);
+
+        // Set fallback state to prevent app from being stuck
+        setAppState({
+          initializationComplete: true,
+          isAuthenticated: false,
+          hasSeenOnboarding: false,
+          hasQuickLoginEnabled: false,
+          useGuestMode: false,
+        });
+      }
+    })();
+
+    return initializationPromise.current;
   }, [initializeDatabase, checkOnboardingStatus]);
 
+  // Handle font loading and app preparation
   useEffect(() => {
-    // This effect runs when font loading status changes (fontsLoaded or fontError)
     if (fontsLoaded || fontError) {
       if (fontError) {
         console.error("[RootLayout] Font loading failed:", fontError);
-        // Proceed with app preparation even if fonts fail. UI can use system fonts.
-      }
-      if (fontsLoaded) {
-        console.log("[RootLayout] Fonts loaded successfully.");
+      } else {
+        console.log("[RootLayout] Fonts loaded successfully");
       }
 
-      // Call prepareApp once fonts are settled (loaded or failed),
-      // but only if it hasn't been initiated yet.
-      // The initializationRan ref inside prepareApp handles multiple calls,
-      // but this check prevents calling it if already running due to font state flicker.
-      if (!initializationRan.current) {
-        console.log(
-          "[RootLayout] Font loading settled. Initiating app preparation..."
-        );
-        prepareApp();
-      }
+      // Start app preparation once fonts are settled
+      prepareApp().catch(error => {
+        console.error("[RootLayout] prepareApp promise rejected:", error);
+      });
     }
   }, [fontsLoaded, fontError, prepareApp]);
 
+  // Handle app state changes (background/foreground)
   useEffect(() => {
     const handleAppStateChange = async (nextAppState: AppStateStatus) => {
-      const currentLastSynced = store.getState().auth.lastSynced;
-      if (
-        appStateRef.current.match(/inactive|background/) &&
-        nextAppState === "active"
-      ) {
-        console.log("[RootLayout] App has come to the foreground.");
-        const isOffline = store.getState().network.isOffline;
-        if (!isOffline) {
-          const authToken = await SecureStore.getItemAsync("authToken");
-          const userID = await SecureStore.getItemAsync("userID");
+      const prevState = appStateRef.current;
 
-          if (authToken && userID && userID !== GUEST_USER_ID) {
-            console.log(
-              "[RootLayout] Attempting token refresh on app resume for authenticated user."
-            );
-            store.dispatch(
-              setSyncStatus({
-                isSyncing: true,
-                lastSynced: currentLastSynced ?? undefined,
-              })
-            );
-            try {
-              const success = await refreshAuthToken(authToken);
-              store.dispatch(
-                setSyncStatus({
-                  isSyncing: false,
-                  lastSynced: success
-                    ? new Date().toISOString()
-                    : currentLastSynced ?? undefined,
-                })
-              );
-            } catch (error) {
-              console.error(
-                "[RootLayout] Error during token refresh on app resume:",
-                error
-              );
-              store.dispatch(
-                setSyncStatus({
-                  isSyncing: false,
-                  lastSynced: currentLastSynced ?? undefined,
-                })
-              );
-            }
-          } else {
-            console.log(
-              "[RootLayout] No valid auth token for refresh on resume, or user is guest."
-            );
+      if (prevState.match(/inactive|background/) && nextAppState === "active") {
+        console.log("[RootLayout] App resumed from background");
+        TokenManager.onAppForeground();
+
+        // Only attempt token refresh if we're online
+        const isOffline = store.getState().network?.isOffline ?? true;
+        if (!isOffline) {
+          try {
+            await TokenManager.performTokenRefresh(router);
+          } catch (error) {
+            console.error("[RootLayout] Error during token refresh on resume:", error);
           }
         } else {
-          console.log(
-            "[RootLayout] App resumed but offline, no token refresh."
-          );
+          console.log("[RootLayout] App resumed but offline, skipping token refresh");
         }
-      } else if (
-        nextAppState === "inactive" ||
-        nextAppState === "background"
-      ) {
+      } else if (nextAppState === "background" || nextAppState === "inactive") {
+        console.log("[RootLayout] App going to background/inactive");
+        TokenManager.onAppBackground();
         cleanupResponsiveManager();
       }
+
       appStateRef.current = nextAppState;
     };
 
-    const appStateSubscription = AppState.addEventListener(
-      "change",
-      handleAppStateChange
-    );
+    const appStateSubscription = AppState.addEventListener("change", handleAppStateChange);
     const networkUnsubscribe = checkOfflineStatus();
 
     return () => {
       appStateSubscription.remove();
       if (networkUnsubscribe) networkUnsubscribe();
     };
-  }, []);
+  }, [router]);
 
+  // Handle navigation based on app state
   useEffect(() => {
     if (!appState.initializationComplete) {
-      console.log(
-        "[RootLayout] Navigation deferred: App initialization not fully complete.",
-        appState
-      );
+      console.log("[RootLayout] Navigation deferred: initialization incomplete");
       return;
     }
 
-    // At this point, all nullable states should have been resolved by prepareApp
     const {
       hasSeenOnboarding,
       isAuthenticated,
@@ -289,32 +370,24 @@ export default function RootLayout() {
       useGuestMode,
     } = appState;
 
+    // Validate that all required states are resolved
     if (
       hasSeenOnboarding === null ||
       isAuthenticated === null ||
       hasQuickLoginEnabled === null
     ) {
-      console.error(
-        "[RootLayout] CRITICAL NAVIGATION ERROR: Initialization complete, but essential states are null. Fallback to login.",
-        appState
-      );
-      router.replace("/(public)/login"); // Fallback to a safe route
+      console.error("[RootLayout] CRITICAL: Essential states are null after initialization");
+      router.replace("/(public)/login");
       return;
     }
 
+    // Determine target route based on app state
     let targetRoute: AppRoute;
 
     if (!hasSeenOnboarding) {
       targetRoute = "/onboard";
-    } else if (useGuestMode) {
-      if (isAuthenticated) {
-        targetRoute = "/(guest)/guest-home";
-      } else {
-        console.warn(
-          "[RootLayout] Guest mode preferred, but no active session. Fallback to login."
-        );
-        targetRoute = "/(public)/login";
-      }
+    } else if (useGuestMode && isAuthenticated) {
+      targetRoute = "/(guest)/guest-home";
     } else if (isAuthenticated) {
       targetRoute = "/(auth)/home";
     } else if (hasQuickLoginEnabled) {
@@ -323,45 +396,47 @@ export default function RootLayout() {
       targetRoute = "/(public)/login";
     }
 
-    console.log(
-      `[RootLayout] Navigating. Onboarding: ${hasSeenOnboarding}, GuestModePref: ${useGuestMode}, SessionActive(isAuthenticated): ${isAuthenticated}, Target: ${targetRoute}`
-    );
-    router.replace(targetRoute);
-  }, [appState, router]); // Re-run when appState (specifically initializationComplete and its dependent values) or router changes
+    console.log("[RootLayout] Navigation decision:", {
+      onboarding: hasSeenOnboarding,
+      authenticated: isAuthenticated,
+      guestMode: useGuestMode,
+      quickLogin: hasQuickLoginEnabled,
+      target: targetRoute,
+    });
 
+    router.replace(targetRoute);
+  }, [appState, router]);
+
+  // Stack navigator configuration
   const stackNavigator = useMemo(
     () => (
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(guest)" options={{ animation: "ios" }} />
         <Stack.Screen name="(public)" options={{ animation: "ios" }} />
         <Stack.Screen name="(auth)" options={{ animation: "none" }} />
-        <Stack.Screen
-          name="onboard"
-          options={{ animation: "slide_from_bottom" }}
-        />
+        <Stack.Screen name="onboard" options={{ animation: "fade" }} />
         <Stack.Screen name="+not-found" />
       </Stack>
     ),
     []
   );
 
+  // Handle splash screen hiding
   const onLayoutRootView = useCallback(async () => {
-    if (appState.initializationComplete) {
-      if (!splashHiddenRef.current) {
-        try {
-          console.log("[RootLayout] Hiding splash screen NOW.");
-          await SplashScreen.hideAsync();
-          splashHiddenRef.current = true;
-          console.log("[RootLayout] Splash screen hidden.");
-        } catch (error) {
-          console.error("[RootLayout] Failed to hide splash screen:", error);
-        }
+    if (appState.initializationComplete && !splashHiddenRef.current) {
+      try {
+        console.log("[RootLayout] Hiding splash screen");
+        await SplashScreen.hideAsync();
+        splashHiddenRef.current = true;
+        console.log("[RootLayout] Splash screen hidden successfully");
+      } catch (error) {
+        console.error("[RootLayout] Failed to hide splash screen:", error);
       }
     }
-  }, [appState.initializationComplete]); // Depend only on the flag that matters
+  }, [appState.initializationComplete]);
 
+  // Show nothing until initialization is complete (splash screen remains visible)
   if (!appState.initializationComplete) {
-    // Keep splash screen visible until all essential setup is done
     return null;
   }
 

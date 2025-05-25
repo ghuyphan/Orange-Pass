@@ -16,6 +16,7 @@ export default function GuestLayout() {
         <Stack.Screen name="add-guest" />
         <Stack.Screen name="empty-guest" />
         <Stack.Screen name="(settings)" />
+        <Stack.Screen name="(scan)" />
         {/* Add other guest-specific screens here as needed, e.g.: */}
         {/* <Stack.Screen name="guest-info" /> */}
         {/* <Stack.Screen name="guest-settings" /> */}

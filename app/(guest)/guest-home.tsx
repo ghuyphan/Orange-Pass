@@ -282,7 +282,7 @@ function GuestHomeScreen() {
     [],
   );
   const onNavigateToScanScreen = useCallback(
-    () => router.push("/(guest)/scan-guest"),
+    () => router.push("/(guest)/(scan)/scan-main"),
     [],
   );
   const onNavigateToSettingsScreen = useCallback(

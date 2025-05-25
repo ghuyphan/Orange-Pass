@@ -55,6 +55,7 @@ import {
 } from "@/utils/responsive";
 import { ThemedTopToast } from "@/components/toast/ThemedTopToast";
 import SettingSheetContent from "@/components/bottomsheet/SettingSheetContent";
+import { GUEST_USER_ID } from "@/constants/Constants";
 
 // Constants
 const DEFAULT_AMOUNT_SUGGESTIONS = [
@@ -321,7 +322,7 @@ const DetailScreen = () => {
     setToastMessage(t("homeScreen.deleting"));
 
     try {
-      await deleteQrCode(id);
+      await deleteQrCode(id, GUEST_USER_ID);
       const updatedData = qrData.filter((qrItem) => qrItem.id !== id);
       const reindexedData = updatedData.map((qrItem, index) => ({
         ...qrItem,
@@ -329,7 +330,7 @@ const DetailScreen = () => {
         updated: new Date().toISOString(),
       }));
       dispatch(setQrData(reindexedData));
-      await updateQrIndexes(reindexedData);
+      await updateQrIndexes(reindexedData, GUEST_USER_ID);
 
       setIsModalVisible(false);
       setIsToastVisible(false);
