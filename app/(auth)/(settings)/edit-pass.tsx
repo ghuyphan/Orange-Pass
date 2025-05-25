@@ -249,6 +249,7 @@ const styles = StyleSheet.create({
   sectionContainer: {
     borderRadius: getResponsiveWidth(4),
     overflow: 'hidden',
+    marginTop: getResponsiveHeight(2),
   },
   saveButton: {
     marginTop: getResponsiveHeight(2.4),

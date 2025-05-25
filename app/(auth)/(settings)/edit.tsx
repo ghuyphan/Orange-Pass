@@ -269,7 +269,7 @@ const EditProfileScreen = () => {
 
               <ThemedView style={styles.divider} />
 
-              <ThemedInput
+              {/* <ThemedInput
                 label={t('editProfileScreen.currentPassword')}
                 placeholder={t('editProfileScreen.currentPasswordPlaceholder')}
                 secureTextEntry
@@ -317,7 +317,7 @@ const EditProfileScreen = () => {
                 }
                 disabled={isSubmitting}
                 disableOpacityChange={false}
-              />
+              /> */}
             </View>
             <ThemedButton
               label={t('editProfileScreen.saveChanges')}

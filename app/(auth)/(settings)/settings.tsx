@@ -194,11 +194,6 @@ function SettingsScreen() {
         settingsTitle: t('settingsScreen.changePassword'),
         onPress: () => onNavigateToEditPasswordScreen(),
       },
-      {
-        leftIcon: 'mail-outline',
-        settingsTitle: t('settingsScreen.changeEmail'),
-        onPress: () => {},
-      },
     ],
     [
       {
