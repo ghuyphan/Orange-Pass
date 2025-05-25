@@ -1,12 +1,12 @@
 {
   "common": {
     "appName": "Orange Pass",
+    "done": "Xong",
+    "cancel": "Huỷ",
     "back": "Quay lại",
     "discard": "Hủy bỏ",
     "unsavedChangesTitle": "Thay đổi chưa lưu",
-    "unsavedChanges": "Bạn có thay đổi chưa lưu. Bạn có chắc chắn muốn rời đi?",
-    "done": "Xong",
-    "cancel": "Huỷ"
+    "unsavedChanges": "Bạn có thay đổi chưa lưu. Bạn có chắc chắn muốn rời đi?"
   },
   "authRefresh": {
     "errors": {
@@ -154,6 +154,9 @@
     "loadError": "Lỗi tải dữ liệu cục bộ.",
     "deleteError": "Lỗi xóa thẻ.",
     "settings": "Cài đặt thẻ",
+    "wifi": "Chi tiết Wi-Fi",
+    "connectButton": "Kết nối",
+    "passwordPlaceholder": "Nhập mật khẩu",
     "filters": {
       "all": "Tất cả",
       "bank": "Ngân hàng",
@@ -177,10 +180,7 @@
       "open": "Mở",
       "copy": "Sao chép",
       "warning": "Liên kết này không bảo mật"
-    },
-    "wifi": "Chi tiết Wi-Fi",
-    "connectButton": "Kết nối",
-    "passwordPlaceholder": "Nhập mật khẩu"
+    }
   },
   "locationPermission": {
     "title": "Yêu cầu Quyền Vị trí",
@@ -262,6 +262,10 @@
     "accountNumberTitle": "Số tài khoản/Số thẻ",
     "accountNumberPlaceholder": "Nhập số tài khoản/số thẻ",
     "saving": "Đang lưu thẻ...",
+    "vietQrApiError": "Lỗi lấy dữ liệu QR từ dịch vụ VietQR. Vui lòng thử lại.",
+    "qrCodeDataLabel": "Dữ liệu mã QR",
+    "qrLoadingPlaceholder": "Đang tải dữ liệu QR...",
+    "qrGeneratedPlaceholder": "Dữ liệu QR sẽ được tạo tự động",
     "errors": {
       "categoryRequired": "Vui lòng chọn loại thẻ.",
       "brandRequired": "Vui lòng nhập thương hiệu của thẻ.",
@@ -404,6 +408,7 @@
   },
   "settingsScreen": {
     "title": "Cài đặt",
+    "guestLoginPrompt": "Khách (Chạm để đăng nhập)",
     "language": "Ngôn ngữ",
     "about": "Về Orange Pass",
     "editProfile": "Chỉnh sửa hồ sơ",

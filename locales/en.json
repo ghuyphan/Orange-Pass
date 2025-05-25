@@ -262,6 +262,10 @@
     "accountNumberTitle": "Account Number/Card Number",
     "accountNumberPlaceholder": "Enter account number/card number",
     "saving": "Saving card...",
+    "vietQrApiError": "Error fetching QR data from VietQR service. Please try again.",
+    "qrCodeDataLabel": "QR Code Data",
+    "qrLoadingPlaceholder": "Loading QR data...",
+    "qrGeneratedPlaceholder": "QR data will be auto-generated",
     "errors": {
       "categoryRequired": "You need to select a card type first!",
       "brandRequired": "Please provide the brand of the card.",

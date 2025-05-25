@@ -67,7 +67,7 @@
     "loggingIn": "Вход...",
     "errors": {
       "invalidEmail": "Неверный email",
-      "emailRequired": "Введите имя пользователя",
+      "emailRequired": "Введите email",
       "invalidPassword": "Неверный пароль",
       "passwordRequired": "Введите пароль",
       "offlineNotice": "Нет подключения. Подключитесь к интернету для входа.",
@@ -150,6 +150,10 @@
     "syncError": "Не удалось синхронизировать. Повторите попытку.",
     "syncSuccess": "Синхронизировано успешно",
     "copied": "Ссылка скопирована",
+    "syncStarted": "Sync starting...",
+    "loadError": "Failed to load local data.",
+    "deleteError": "Failed to delete card.",
+    "settings": "Card settings",
     "wifi": "Детали Wi-Fi",
     "connectButton": "Подключиться",
     "passwordPlaceholder": "Введите пароль",
@@ -258,6 +262,10 @@
     "accountNumberTitle": "Номер счета/Номер карты",
     "accountNumberPlaceholder": "Введите номер счета/карты",
     "saving": "Сохранение карты...",
+    "vietQrApiError": "Error fetching QR data from VietQR service. Please try again.",
+    "qrCodeDataLabel": "QR Code Data",
+    "qrLoadingPlaceholder": "Loading QR data...",
+    "qrGeneratedPlaceholder": "QR data will be auto-generated",
     "errors": {
       "categoryRequired": "Сначала нужно выбрать тип карты!",
       "brandRequired": "Пожалуйста, укажите бренд карты.",
@@ -400,6 +408,7 @@
   },
   "settingsScreen": {
     "title": "Настройки",
+    "guestLoginPrompt": "Guest (Tap to Sign In)",
     "language": "Язык",
     "about": "О Orange Pass",
     "editProfile": "Редактировать профиль",

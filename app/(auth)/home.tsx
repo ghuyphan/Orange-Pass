@@ -694,7 +694,7 @@ function HomeScreen() {
       case 0:
         return 0;
       case 1:
-        return height * 0.7;
+        return height * 0.72;
       case 2:
         return height * 0.45;
       case 3:
@@ -843,7 +843,7 @@ function HomeScreen() {
         onSettings={onNavigateToSettingsScreen}
       />
 
-      {isLoading ? (
+      {(isLoading || (isSyncing )) ? ( // Or just (isLoading || isSyncing) if you always want it
         <LoadingComponent />
       ) : isEmpty ? (
         <EmptyListItem

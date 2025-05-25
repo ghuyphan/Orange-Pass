@@ -19,7 +19,7 @@ import * as Linking from "expo-linking";
 import { useDispatch, useSelector } from "react-redux";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { useUnmountBrightness } from "@reeq/react-native-device-brightness";
+// import { useUnmountBrightness } from "@reeq/react-native-device-brightness"; // Matched first file
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import BottomSheet from "@gorhom/bottom-sheet";
 import { throttle } from "lodash";
@@ -65,14 +65,17 @@ const DEFAULT_AMOUNT_SUGGESTIONS = [
   "100,000",
   "500,000",
   "1,000,000",
+  "5,000,000", // Updated
+  "10,000,000", // Updated
 ];
 const SUGGESTION_MULTIPLIERS = [1000, 10000, 100000, 1000000];
+const MAX_SUGGESTION_AMOUNT = 100_000_000_000; // Added: 100 Billion VND cap for suggestions
 const LAST_USED_BANK_KEY = "lastUsedBank";
 const BANK_LOAD_DELAY = 300;
 const EDIT_NAVIGATION_DELAY = 10;
 const THROTTLE_WAIT = 500;
-const INITIAL_BANK_COUNT = 6; // Show only first 6 banks initially
-const BANK_BATCH_SIZE = 6; // Number of banks to load each time
+const INITIAL_BANK_COUNT = 6;
+const BANK_BATCH_SIZE = 6;
 
 // Types
 interface ItemData {
@@ -91,14 +94,11 @@ interface BankItem {
   name: string;
 }
 
-// MMKV instance
 const storage = new MMKV();
 
-// Utility function to format the amount
 const formatAmount = (numStr: string): string =>
   numStr.replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
-// Helper to safely parse and format suggestions
 const generateSuggestion = (prefix: number, multiplier: number): string => {
   const result = prefix * multiplier;
   if (!Number.isSafeInteger(result)) {
@@ -115,20 +115,21 @@ const DetailScreen = () => {
   const qrData = useSelector((state: RootState) => state.qr.qrData);
   const isOffline = useSelector((state: RootState) => state.network.isOffline);
   const router = useRouter();
+  // useUnmountBrightness(); // Matched first file (commented out)
 
   const bottomSheetRef = useRef<BottomSheet>(null);
   const editNavigationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const [toastKey, setToastKey] = useState(0);
   const [amount, setAmount] = useState("");
-  const [isSyncing, setIsSyncing] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false); // Used for transfer button loading
+  const [isDeleteSyncing, setIsDeleteSyncing] = useState(false); // Separate state for delete
   const [isToastVisible, setIsToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isTopToastVisible, setIsTopToastVisible] = useState(false);
   const [topToastMessage, setTopToastMessage] = useState("");
-  
-  // Modified state for progressive loading
+
   const [vietQRBanks, setVietQRBanks] = useState<BankItem[]>([]);
   const [allBanks, setAllBanks] = useState<BankItem[]>([]);
   const [isLoadingMoreBanks, setIsLoadingMoreBanks] = useState(false);
@@ -144,7 +145,6 @@ const DetailScreen = () => {
     }
   }, [encodedItem]);
 
-  // Theme-based colors
   const cardColor = useMemo(
     () =>
       currentTheme === "light"
@@ -200,7 +200,6 @@ const DetailScreen = () => {
     [currentTheme],
   );
 
-  // Dynamic suggestion list based on user input and multipliers
   const dynamicSuggestions = useMemo(() => {
     const numericString = amount.replace(/,/g, "");
 
@@ -210,36 +209,60 @@ const DetailScreen = () => {
 
     try {
       const numericPrefix = parseInt(numericString, 10);
-      if (isNaN(numericPrefix) || numericPrefix === 0) {
+      if (isNaN(numericPrefix) || numericPrefix <= 0) {
         return DEFAULT_AMOUNT_SUGGESTIONS;
       }
 
-      const generatedSuggestions = SUGGESTION_MULTIPLIERS.map((multiplier) =>
-        generateSuggestion(numericPrefix, multiplier),
-      );
-      return generatedSuggestions;
+      if (numericPrefix >= MAX_SUGGESTION_AMOUNT) {
+        return DEFAULT_AMOUNT_SUGGESTIONS.filter((sugg) => {
+          const suggVal = parseInt(sugg.replace(/,/g, ""), 10);
+          return (
+            suggVal > numericPrefix && suggVal <= MAX_SUGGESTION_AMOUNT
+          );
+        });
+      }
+
+      const generated = SUGGESTION_MULTIPLIERS.map((multiplier) => {
+        if (
+          multiplier > 0 &&
+          numericPrefix > Number.MAX_SAFE_INTEGER / multiplier
+        ) {
+          return null;
+        }
+        const result = numericPrefix * multiplier;
+        if (
+          result > MAX_SUGGESTION_AMOUNT ||
+          !Number.isSafeInteger(result) ||
+          result <= numericPrefix
+        ) {
+          return null;
+        }
+        return formatAmount(String(result));
+      }).filter((s) => s !== null) as string[];
+
+      if (generated.length === 0) {
+        return DEFAULT_AMOUNT_SUGGESTIONS.filter((sugg) => {
+          const suggVal = parseInt(sugg.replace(/,/g, ""), 10);
+          return (
+            suggVal > numericPrefix && suggVal <= MAX_SUGGESTION_AMOUNT
+          );
+        });
+      }
+      return generated;
     } catch (error) {
       console.error("Error generating suggestions:", error);
       return DEFAULT_AMOUNT_SUGGESTIONS;
     }
   }, [amount]);
 
-  // Load banks effect - modified for progressive loading
   useEffect(() => {
     const loadInitialBanks = async () => {
       if (item?.type !== "store") return;
-      
       setIsBanksInitiallyLoading(true);
-      
-      // Initial banks load with delay to prevent transition lag
       const timerId = setTimeout(() => {
         let banks = returnItemsByType("vietqr");
         const lastUsedBankCode = storage.getString(LAST_USED_BANK_KEY);
-        
-        // Save all banks for later use
         setAllBanks(banks);
-        
-        // Prioritize last used bank if available
         if (lastUsedBankCode) {
           const lastUsedBankIndex = banks.findIndex(
             (bank) => bank.code === lastUsedBankCode,
@@ -249,19 +272,14 @@ const DetailScreen = () => {
             banks.unshift(lastUsedBank);
           }
         }
-        
-        // Only set the first few banks initially
         setVietQRBanks(banks.slice(0, INITIAL_BANK_COUNT));
         setIsBanksInitiallyLoading(false);
       }, BANK_LOAD_DELAY);
-
       return () => clearTimeout(timerId);
     };
-
     loadInitialBanks();
   }, [item?.type]);
 
-  // Cleanup for editNavigationTimeoutRef
   useEffect(() => {
     return () => {
       if (editNavigationTimeoutRef.current) {
@@ -270,7 +288,6 @@ const DetailScreen = () => {
     };
   }, []);
 
-  // --- Callbacks ---
   const handleExpandPress = useCallback(() => {
     bottomSheetRef.current?.snapToIndex(0);
   }, []);
@@ -281,10 +298,13 @@ const DetailScreen = () => {
       if (editNavigationTimeoutRef.current) {
         clearTimeout(editNavigationTimeoutRef.current);
       }
+      const editId = Array.isArray(id) ? id[0] : id;
+      if (!editId) return;
+
       editNavigationTimeoutRef.current = setTimeout(() => {
         router.push({
           pathname: `/(edit)/edit`,
-          params: { id: id },
+          params: { id: editId },
         });
       }, EDIT_NAVIGATION_DELAY);
     }, THROTTLE_WAIT),
@@ -296,52 +316,50 @@ const DetailScreen = () => {
     setIsModalVisible(true);
   }, []);
 
-  // Handle loading more banks when user scrolls
   const handleLoadMoreBanks = useCallback(() => {
     if (vietQRBanks.length >= allBanks.length || isLoadingMoreBanks) return;
-    
     setIsLoadingMoreBanks(true);
-    
-    // Add a small delay to prevent UI jank during scroll
     setTimeout(() => {
       const nextBatch = allBanks.slice(
-        vietQRBanks.length, 
-        vietQRBanks.length + BANK_BATCH_SIZE
+        vietQRBanks.length,
+        vietQRBanks.length + BANK_BATCH_SIZE,
       );
-      
-      setVietQRBanks(current => [...current, ...nextBatch]);
+      setVietQRBanks((current) => [...current, ...nextBatch]);
       setIsLoadingMoreBanks(false);
     }, 100);
   }, [vietQRBanks.length, allBanks, isLoadingMoreBanks]);
 
   const onDeleteItem = useCallback(async () => {
-    if (!id || Array.isArray(id)) return;
+    const itemId = Array.isArray(id) ? id[0] : id;
+    if (!itemId) return;
 
-    setIsSyncing(true);
+    const userIdToUse = GUEST_USER_ID; // Using GUEST_USER_ID for guest screen
+
+    setIsDeleteSyncing(true);
     setIsToastVisible(true);
     setToastMessage(t("homeScreen.deleting"));
 
     try {
-      await deleteQrCode(id, GUEST_USER_ID);
-      const updatedData = qrData.filter((qrItem) => qrItem.id !== id);
+      await deleteQrCode(itemId, userIdToUse);
+      const updatedData = qrData.filter((qrItem) => qrItem.id !== itemId);
       const reindexedData = updatedData.map((qrItem, index) => ({
         ...qrItem,
         qr_index: index,
         updated: new Date().toISOString(),
       }));
-      dispatch(setQrData(reindexedData));
-      await updateQrIndexes(reindexedData, GUEST_USER_ID);
+      dispatch(setQrData(reindexedData as any));
+      await updateQrIndexes(reindexedData, userIdToUse);
 
       setIsModalVisible(false);
-      setIsToastVisible(false);
+      setIsToastVisible(false); // Hide toast on success
       router.replace("/home");
     } catch (error) {
       console.error("Error deleting QR code:", error);
       setToastMessage(t("homeScreen.deleteError"));
-      setIsToastVisible(true);
+      setIsToastVisible(true); // Keep toast for error
       setIsModalVisible(false);
     } finally {
-      setIsSyncing(false);
+      setIsDeleteSyncing(false);
     }
   }, [id, qrData, dispatch, router]);
 
@@ -349,7 +367,6 @@ const DetailScreen = () => {
     if (!item) return;
     const itemName = returnItemData(item.code, item.type);
     if (!itemName?.name) return;
-
     const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
       itemName.name,
     )}`;
@@ -365,15 +382,12 @@ const DetailScreen = () => {
       let lowerCaseCode = code.toLowerCase();
       if (lowerCaseCode === "vib") lowerCaseCode = "vib-2";
       else if (lowerCaseCode === "acb") lowerCaseCode = "acb-biz";
-
       const url = `https://dl.vietqr.io/pay?app=${lowerCaseCode}`;
-
       try {
         const canOpen = await Linking.canOpenURL(url);
         if (canOpen) {
           await Linking.openURL(url);
           storage.set(LAST_USED_BANK_KEY, code);
-
           if (item?.type === "store") {
             setVietQRBanks((currentBanks) => {
               const updatedBanks = [...currentBanks];
@@ -381,31 +395,25 @@ const DetailScreen = () => {
               if (bankIndex > 0) {
                 const [selectedBank] = updatedBanks.splice(bankIndex, 1);
                 updatedBanks.unshift(selectedBank);
-                return updatedBanks;
               }
-              return currentBanks;
+              return updatedBanks;
             });
-            
-            // Also update allBanks for consistency
             setAllBanks((currentBanks) => {
               const updatedBanks = [...currentBanks];
               const bankIndex = updatedBanks.findIndex((b) => b.code === code);
               if (bankIndex > 0) {
                 const [selectedBank] = updatedBanks.splice(bankIndex, 1);
                 updatedBanks.unshift(selectedBank);
-                return updatedBanks;
               }
-              return currentBanks;
+              return updatedBanks;
             });
           }
         } else {
-          console.warn(`Cannot open URL: ${url}`);
           setIsToastVisible(true);
           setToastMessage(t("detailsScreen.cannotOpenBankApp"));
           await Linking.openURL("https://vietqr.io");
         }
       } catch (err) {
-        console.error("Failed to open bank app:", err);
         setIsToastVisible(true);
         setToastMessage(t("detailsScreen.failedToOpenBankApp"));
       }
@@ -426,25 +434,23 @@ const DetailScreen = () => {
   const onNavigateToSelectScreen = useCallback(() => {
     router.push({
       pathname: "/(auth)/(detail)/bank-select",
-      params: { 
-        banks: JSON.stringify(allBanks), // Send all banks to avoid reloading
-        selectedBankCode: storage.getString(LAST_USED_BANK_KEY) || ""
-      }
+      params: {
+        banks: JSON.stringify(allBanks),
+        selectedBankCode: storage.getString(LAST_USED_BANK_KEY) || "",
+      },
     });
   }, [router, allBanks]);
 
   const handleTransferAmount = useCallback(
     throttle(async () => {
       if (!item || !amount) return;
-
       if (isOffline) {
         showTopToast(t("detailsScreen.offlineMessage"));
         return;
       }
 
-      setIsSyncing(true);
-      setIsToastVisible(true);
-      setToastMessage(t("detailsScreen.generatingQRCode"));
+      setIsSyncing(true); // This will show loader on button
+      // Removed toast for "Generating QR Code"
 
       try {
         const itemName = returnItemData(item.code, item.type);
@@ -452,10 +458,7 @@ const DetailScreen = () => {
           item.account_name
         }`;
         const numericAmount = parseInt(amount.replace(/,/g, ""), 10);
-
-        if (isNaN(numericAmount)) {
-          throw new Error("Invalid amount format");
-        }
+        if (isNaN(numericAmount)) throw new Error("Invalid amount format");
 
         const response = await getVietQRData(
           item.account_number ?? "",
@@ -464,11 +467,8 @@ const DetailScreen = () => {
           numericAmount,
           message,
         );
-
         const qrCode = response?.data?.qrCode;
-        if (!qrCode) {
-          throw new Error("Failed to retrieve QR code from response");
-        }
+        if (!qrCode) throw new Error("Failed to retrieve QR code");
 
         router.replace({
           pathname: "/qr-screen",
@@ -478,11 +478,13 @@ const DetailScreen = () => {
             originalItem: encodeURIComponent(JSON.stringify(item)),
           },
         });
+        // Success: No toast needed here as we navigate away.
       } catch (error) {
         console.error("Error generating QR code:", error);
         setToastMessage(t("detailsScreen.generateError"));
-        setIsToastVisible(true);
-        setIsSyncing(false);
+        setIsToastVisible(true); // Show error toast
+      } finally {
+        setIsSyncing(false); // Hide loader on button
       }
     }, THROTTLE_WAIT),
     [item, amount, router, showTopToast, isOffline],
@@ -495,7 +497,6 @@ const DetailScreen = () => {
     }
   }, [item?.account_number, showTopToast]);
 
-  // --- Render Functions ---
   const renderSuggestionItem = useCallback(
     ({ item: suggestionItem }: { item: string }) => (
       <Pressable
@@ -543,8 +544,7 @@ const DetailScreen = () => {
     ),
     [iconColor],
   );
-  
-  // Add footer component for bank list
+
   const renderBankListFooter = useCallback(() => {
     if (isLoadingMoreBanks) {
       return (
@@ -555,18 +555,18 @@ const DetailScreen = () => {
     }
     if (vietQRBanks.length < allBanks.length) {
       return (
-        <Pressable 
+        <Pressable
           style={[styles.bankItemPressable, { backgroundColor: buttonColor }]}
           onPress={handleLoadMoreBanks}
         >
           <View style={styles.bankIconContainer}>
-            <MaterialCommunityIcons 
-              name="dots-horizontal" 
-              size={getResponsiveFontSize(24)} 
-              color={iconColor} 
+            <MaterialCommunityIcons
+              name="dots-horizontal"
+              size={getResponsiveFontSize(24)}
+              color={iconColor}
             />
           </View>
-          <ThemedText 
+          <ThemedText
             numberOfLines={1}
             style={[styles.bankItemText, { color: buttonTextColor }]}
           >
@@ -576,9 +576,16 @@ const DetailScreen = () => {
       );
     }
     return null;
-  }, [isLoadingMoreBanks, vietQRBanks.length, allBanks.length, iconColor, buttonColor, buttonTextColor, handleLoadMoreBanks]);
+  }, [
+    isLoadingMoreBanks,
+    vietQRBanks.length,
+    allBanks.length,
+    iconColor,
+    buttonColor,
+    buttonTextColor,
+    handleLoadMoreBanks,
+  ]);
 
-  // --- Main Render ---
   if (!item) {
     return (
       <ThemedView style={styles.loadingWrapper}>
@@ -597,13 +604,11 @@ const DetailScreen = () => {
       extraScrollHeight={Platform.OS === "ios" ? 0 : -getResponsiveHeight(5)}
       showsVerticalScrollIndicator={false}
     >
-      {/* Header */}
       <View style={styles.headerWrapper}>
         <ThemedButton onPress={router.back} iconName="chevron-left" />
         <ThemedButton onPress={handleExpandPress} iconName="dots-vertical" />
       </View>
 
-      {/* Pinned Card */}
       <ThemedPinnedCard
         style={styles.pinnedCardWrapper}
         metadata_type={item.metadata_type}
@@ -615,10 +620,8 @@ const DetailScreen = () => {
         onAccountNumberPress={onCopyAccountNumber}
       />
 
-      {/* Info Section (Map, Transfer, Bank List) */}
       {(item.type === "bank" || item.type === "store") && (
         <View style={[styles.infoWrapper, { backgroundColor: cardColor }]}>
-          {/* Map Action */}
           <Pressable onPress={handleOpenMap} style={styles.actionButton}>
             <View style={styles.actionHeader}>
               <MaterialCommunityIcons
@@ -637,7 +640,6 @@ const DetailScreen = () => {
             />
           </Pressable>
 
-          {/* Transfer Section (Bank Only) */}
           {item.type === "bank" && (
             <View style={styles.transferContainer}>
               <View style={styles.transferHeader}>
@@ -651,7 +653,6 @@ const DetailScreen = () => {
                 </ThemedText>
               </View>
               <View style={styles.transferSection}>
-                {/* Input */}
                 <View style={styles.inputWrapper}>
                   <TextInput
                     style={[styles.inputField, { color: textColor }]}
@@ -694,18 +695,24 @@ const DetailScreen = () => {
                     onPress={handleTransferAmount}
                     style={[
                       styles.transferButton,
-                      { opacity: amount ? 1 : 0.3 },
+                      { opacity: amount && !isSyncing ? 1 : 0.5 },
                     ]}
                     disabled={!amount || isSyncing}
                   >
-                    <MaterialCommunityIcons
-                      name={"chevron-right"}
-                      size={getResponsiveFontSize(16)}
-                      color={iconColor}
-                    />
+                    {isSyncing ? (
+                      <ActivityIndicator
+                        size={getResponsiveFontSize(16)}
+                        color={iconColor}
+                      />
+                    ) : (
+                      <MaterialCommunityIcons
+                        name={"chevron-right"}
+                        size={getResponsiveFontSize(16)}
+                        color={iconColor}
+                      />
+                    )}
                   </Pressable>
                 </View>
-                {/* Suggestions */}
                 <FlatList
                   data={dynamicSuggestions}
                   horizontal
@@ -724,7 +731,6 @@ const DetailScreen = () => {
             </View>
           )}
 
-          {/* Bank Transfer Section (Store Only) */}
           {item.type === "store" && (
             <View style={styles.bottomContainer}>
               <Pressable
@@ -758,7 +764,9 @@ const DetailScreen = () => {
                 keyExtractor={(bankItem) => bankItem.code}
                 contentContainerStyle={styles.bankListContent}
                 renderItem={renderPaymentMethodItem}
-                ListEmptyComponent={isBanksInitiallyLoading ? renderEmptyComponent : null}
+                ListEmptyComponent={
+                  isBanksInitiallyLoading ? renderEmptyComponent : null
+                }
                 ListFooterComponent={renderBankListFooter}
                 onEndReached={handleLoadMoreBanks}
                 onEndReachedThreshold={0.3}
@@ -771,7 +779,6 @@ const DetailScreen = () => {
         </View>
       )}
 
-      {/* Bottom Sheet */}
       <ThemedReuseableSheet
         ref={bottomSheetRef}
         title={t("homeScreen.manage")}
@@ -781,7 +788,6 @@ const DetailScreen = () => {
         }
       />
 
-      {/* Modals and Toasts */}
       <ThemedModal
         primaryActionText={t("homeScreen.move")}
         onPrimaryAction={onDeleteItem}
@@ -793,6 +799,7 @@ const DetailScreen = () => {
         message={t("homeScreen.confirmDeleteMessage")}
         isVisible={isModalVisible}
         iconName="delete-outline"
+        // isPrimaryActionLoading={isDeleteSyncing} // Added
       />
       <ThemedTopToast
         key={toastKey}
@@ -800,9 +807,8 @@ const DetailScreen = () => {
         message={topToastMessage}
         onVisibilityToggle={onVisibilityToggle}
       />
-      {/* Status Toast should be rendered last to appear on top */}
       <ThemedStatusToast
-        isSyncing={isSyncing}
+        isSyncing={isDeleteSyncing} // Use delete syncing state for this toast
         isVisible={isToastVisible}
         message={toastMessage}
         onDismiss={() => setIsToastVisible(false)}
@@ -812,12 +818,11 @@ const DetailScreen = () => {
   );
 };
 
-// --- Styles ---
 const styles = StyleSheet.create({
   container: {
     paddingBottom: getResponsiveHeight(5),
     paddingHorizontal: getResponsiveWidth(3.6),
-    flexGrow: 1
+    flexGrow: 1,
   },
   headerWrapper: {
     paddingTop: getResponsiveHeight(10),
@@ -887,6 +892,10 @@ const styles = StyleSheet.create({
   transferButton: {
     padding: getResponsiveWidth(1.2),
     marginLeft: getResponsiveWidth(1.2),
+    width: getResponsiveWidth(6), // Give it a fixed width
+    height: getResponsiveWidth(6), // Give it a fixed height
+    justifyContent: "center",
+    alignItems: "center",
   },
   hitSlop: {
     bottom: getResponsiveHeight(1.2),
@@ -900,13 +909,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     flex: 1,
     height: getResponsiveHeight(9.6),
-    width: '100%',
+    width: "100%",
     paddingHorizontal: getResponsiveWidth(4.8),
   },
   bankListFooter: {
     paddingHorizontal: getResponsiveWidth(2),
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     height: getResponsiveHeight(9.6),
     width: getResponsiveWidth(16.8),
   },
@@ -914,10 +923,10 @@ const styles = StyleSheet.create({
     gap: getResponsiveWidth(2.4),
     paddingHorizontal: getResponsiveWidth(4.8),
     paddingBottom: getResponsiveHeight(1.8),
-    flexGrow: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    minWidth: '100%',
+    // flexGrow: 1, // Adjusted from original second file
+    // justifyContent: 'center', // Adjusted
+    // alignItems: 'center', // Adjusted
+    // minWidth: '100%', // Adjusted
   },
   bankItemPressable: {
     borderRadius: getResponsiveWidth(4),
@@ -988,7 +997,7 @@ const styles = StyleSheet.create({
     fontSize: getResponsiveFontSize(14),
   },
   bankList: {
-    flexGrow: 1
+    // flexGrow: 1, // Adjusted from original second file
   },
   toastContainer: {
     position: "absolute",

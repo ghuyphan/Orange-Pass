@@ -445,8 +445,8 @@ const QRForm: React.FC<QRFormProps> = ({
           setCardAccountName("");
           setFieldValue("accountNumber", "");
           setCardAccountNumber("");
-          setFieldValue("metadata", "");
-          setCardMetadata("");
+          // setFieldValue("metadata", "");
+          // setCardMetadata("");
           setDisplayedBrandItems([]);
           setBrandItemsOffset(0);
           setHasMoreBrandItems(true);
@@ -456,8 +456,8 @@ const QRForm: React.FC<QRFormProps> = ({
         case "brand":
           setFieldValue("brand", null);
           setCardBrand(null);
-          setFieldValue("metadata", ""); // Clear metadata if brand is cleared, esp. for banks
-          setCardMetadata("");
+          // setFieldValue("metadata", ""); // Clear metadata if brand is cleared, esp. for banks
+          // setCardMetadata("");
           break;
         case "metadataType":
           // Assuming metadataTypeData[0] is the default/desired clear state
@@ -492,7 +492,7 @@ const QRForm: React.FC<QRFormProps> = ({
       if (type === "brand" && currentCategoryFromForm?.value) {
         if (
           lastLoadedBrandCategoryValueRef.current !==
-            currentCategoryFromForm.value ||
+          currentCategoryFromForm.value ||
           displayedBrandItems.length === 0 // Load if empty even if category seems same
         ) {
           setDisplayedBrandItems([]); // Clear before loading new set
@@ -544,8 +544,8 @@ const QRForm: React.FC<QRFormProps> = ({
           setCardCategory(newCategory);
           setFieldValue("brand", null); // Clear brand when category changes
           setCardBrand(null);
-          setFieldValue("metadata", ""); // Clear metadata
-          setCardMetadata("");
+          // setFieldValue("metadata", ""); // Clear metadata
+          // setCardMetadata("");
 
           if (newCategory.value === "store") {
             setFieldValue("accountName", "");
@@ -572,8 +572,8 @@ const QRForm: React.FC<QRFormProps> = ({
           if (newBrand.type === "bank") {
             // If a bank brand is selected, clear existing metadata
             // to allow BankMetadataFetcher to attempt a new fetch.
-            setFieldValue("metadata", "");
-            setCardMetadata("");
+            // setFieldValue("metadata", "");
+            // setCardMetadata("");
           }
           break;
         case "metadataType":
@@ -781,7 +781,7 @@ const QRForm: React.FC<QRFormProps> = ({
       // Prepare brands for the initial category if present
       if (
         lastLoadedBrandCategoryValueRef.current !==
-          initialValues.category.value ||
+        initialValues.category.value ||
         allBrandsForCurrentCategoryRef.current.length === 0
       ) {
         prepareAllBrandsForCategory(initialValues.category.value as DataType);
@@ -820,12 +820,14 @@ const QRForm: React.FC<QRFormProps> = ({
         dirty,
         isValid, // Added isValid from Formik
       }) => {
+        console.log('metadata', values.metadata);
         // Updated formDisabled logic
         const formDisabled =
           !isValid || // Disable if form is not valid
           (isEditing && !dirty) || // Disable if editing and no changes made
           isSubmitting ||
           isMetadataLoading;
+
 
         const createFormFieldBlurHandler = (
           fieldName: keyof FormParams,
@@ -945,7 +947,7 @@ const QRForm: React.FC<QRFormProps> = ({
                         isMetadataLoading
                           ? t("addScreen.qrLoadingPlaceholder")
                           : values.metadata ||
-                            t("addScreen.qrGeneratedPlaceholder")
+                          t("addScreen.qrGeneratedPlaceholder")
                       }
                       errorMessage={
                         touched.metadata && errors.metadata
@@ -958,34 +960,34 @@ const QRForm: React.FC<QRFormProps> = ({
                 )}
                 {(values.category?.value === "store" ||
                   values.category?.value === "ewallet") && (
-                  <Animated.View
-                    style={{ backgroundColor: sectionsColors }}
-                    entering={FadeIn.duration(300)}
-                    exiting={FadeOut.duration(300)}
-                  >
-                    <ThemedInput
-                      iconName="credit-card-outline"
-                      placeholder={t("addScreen.metadataPlaceholder")}
-                      value={values.metadata}
-                      onChangeText={handleChange("metadata")}
-                      onBlur={createFormFieldBlurHandler("metadata")}
-                      backgroundColor={inputBackgroundColor}
-                      disabled={
-                        (!!codeProvider && !isEditing) ||
-                        isSubmitting ||
-                        isMetadataLoading
-                      }
-                      disableOpacityChange={false}
-                      errorMessage={
-                        touched.metadata && errors.metadata
-                          ? String(errors.metadata)
-                          : undefined
-                      }
-                      isError={touched.metadata && !!errors.metadata}
-                      onDisabledPress={onEmptyInputPress}
-                    />
-                  </Animated.View>
-                )}
+                    <Animated.View
+                      style={{ backgroundColor: sectionsColors }}
+                      entering={FadeIn.duration(300)}
+                      exiting={FadeOut.duration(300)}
+                    >
+                      <ThemedInput
+                        iconName="credit-card-outline"
+                        placeholder={t("addScreen.metadataPlaceholder")}
+                        value={values.metadata}
+                        onChangeText={handleChange("metadata")}
+                        onBlur={createFormFieldBlurHandler("metadata")}
+                        backgroundColor={inputBackgroundColor}
+                        disabled={
+                          (!!codeProvider && !isEditing) ||
+                          isSubmitting ||
+                          isMetadataLoading
+                        }
+                        disableOpacityChange={false}
+                        errorMessage={
+                          touched.metadata && errors.metadata
+                            ? String(errors.metadata)
+                            : undefined
+                        }
+                        isError={touched.metadata && !!errors.metadata}
+                        onDisabledPress={onEmptyInputPress}
+                      />
+                    </Animated.View>
+                  )}
                 <ThemedDisplayInput
                   iconName="qrcode"
                   placeholder={t("addScreen.metadataTypePlaceholder")}

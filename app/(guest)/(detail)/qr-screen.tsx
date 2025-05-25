@@ -46,7 +46,7 @@ export default function CreateQRScreen() {
         metadata={metadata.toString()}
         accountName={item.account_name}
         accountNumber={item.account_number}
-        // amount={amount}
+        amount={amount}
       />
     </ThemedView>
   );

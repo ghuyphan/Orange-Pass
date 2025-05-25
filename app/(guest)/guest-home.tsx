@@ -555,7 +555,7 @@ function GuestHomeScreen() {
       case 0:
         return 0;
       case 1:
-        return height * 0.7;
+        return height * 0.72;
       case 2:
         return height * 0.45;
       case 3:
@@ -666,9 +666,9 @@ function GuestHomeScreen() {
 
   const EmptyItemComponent = React.memo(({ color }: { color: string }) => (
     <View style={styles.emptyItem}>
-      <MaterialIcons color={color} name="qr-code-scanner" size={50} />
+      <MaterialIcons color={color} name="search" size={50} />
       <ThemedText style={{ textAlign: "center", lineHeight: 30 }}>
-        {t("homeScreen.noItemFoundGuest")}
+        {t("homeScreen.noItemFound")}
       </ThemedText>
     </View>
   ));
@@ -727,7 +727,7 @@ function GuestHomeScreen() {
             containerStyle={{ flex: 1 }}
             contentContainerStyle={[
               styles.listContainer,
-              qrData.length > 0 && { paddingBottom: listContainerPadding },
+              filteredData.length > 0 && { paddingBottom: listContainerPadding },
             ]}
             scrollEventThrottle={16}
             showsVerticalScrollIndicator={false}

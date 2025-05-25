@@ -17,7 +17,7 @@ export default function ScanLayout() {
   if (!hasPermission && !showHeader) {
       return (
         <ThemedView style={styles.container}>
-           <Redirect href="/(auth)/(scan)/permission" />
+           <Redirect href="/(guest)/(scan)/permission" />
         </ThemedView>
       )
   }
