@@ -10,7 +10,6 @@ import {
   View,
   Platform,
   ActivityIndicator,
-  InteractionManager,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useSelector } from 'react-redux';
@@ -38,6 +37,7 @@ import * as SecureStore from 'expo-secure-store';
 import { storage } from '@/utils/storage';
 
 import Avatar, { AvatarFullConfig } from '@zamplyy/react-native-nice-avatar';
+import { useIsFocused } from '@react-navigation/native';
 
 interface QuickLoginPreferences {
   [userId: string]: boolean;
@@ -46,9 +46,10 @@ interface QuickLoginPreferences {
 export default function QuickLoginPromptScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [isDeclining, setIsDeclining] = useState(false);
-  const [shouldShowPrompt, setShouldShowPrompt] = useState(true);
+  // Add navigation state
+  const [isNavigating, setIsNavigating] = useState(false);
 
-  // 1) Allow null, since getTemporaryPassword() may return null
+  // Pre-fetched password for quick login
   const [prefetchedPassword, setPrefetchedPassword] = useState<string | null>(
     null
   );
@@ -58,11 +59,13 @@ export default function QuickLoginPromptScreen() {
     (s: RootState) => s.auth.user?.avatar
   ) as AvatarFullConfig;
 
+  // Memoize avatar config to avoid unnecessary re-renders
   const memoizedAvatarConfig = useMemo(
     () => avatarConfig,
     [avatarConfig?.hairColor, avatarConfig?.hatColor, avatarConfig?.faceColor]
   );
 
+  // Track if component is mounted to avoid state updates after unmount
   const mountedRef = useRef(true);
   useEffect(() => {
     return () => {
@@ -73,7 +76,9 @@ export default function QuickLoginPromptScreen() {
   // Pre-fetch the temp password so we don't block on tap
   useEffect(() => {
     getTemporaryPassword().then(pw => {
-      setPrefetchedPassword(pw);
+      if (mountedRef.current) {
+        setPrefetchedPassword(pw);
+      }
     });
   }, []);
 
@@ -83,6 +88,9 @@ export default function QuickLoginPromptScreen() {
       if (!userData?.id) return;
       const hasPref = await hasQuickLoginPreference(userData.id);
       if (hasPref) {
+        if (mountedRef.current) {
+          setIsNavigating(true);
+        }
         await cleanupTemporaryPassword().catch(() => {});
         router.replace('/(auth)/home');
       }
@@ -90,102 +98,123 @@ export default function QuickLoginPromptScreen() {
     checkPref();
   }, [userData?.id]);
 
-  const handleEnableQuickLogin = () => {
+  // Handle enabling quick login
+  const handleEnableQuickLogin = async () => {
     if (!userData?.id) {
       console.warn('No user ID');
       return;
     }
     setIsLoading(true);
 
-    // Let RN render the spinner first
-    requestAnimationFrame(() => {
+    try {
+      // Get password, either prefetched or fetch now
+      const pw = prefetchedPassword ?? (await getTemporaryPassword());
+      if (!pw) throw new Error('Password not available');
+
+      const pwKey = getPasswordKeyForUserID(userData.id);
+
+      // Save user ID and password in secure storage
+      await Promise.all([
+        SecureStore.setItemAsync(SECURE_KEYS.SAVED_USER_ID, userData.id),
+        SecureStore.setItemAsync(pwKey, pw),
+      ]);
+
+      // Update quick login preferences in MMKV
+      storage.set(MMKV_KEYS.QUICK_LOGIN_ENABLED, 'true');
+      const raw =
+        storage.getString(MMKV_KEYS.QUICK_LOGIN_PREFERENCES) ?? '{}';
+      const prefs: QuickLoginPreferences = JSON.parse(raw);
+      prefs[userData.id] = true;
+      storage.set(
+        MMKV_KEYS.QUICK_LOGIN_PREFERENCES,
+        JSON.stringify(prefs)
+      );
+
+      // Clean up temp password
+      await cleanupTemporaryPassword();
+
+      // Set navigating state before navigation
+      if (mountedRef.current) {
+        setIsNavigating(true);
+      }
+
+      // Navigate to home screen after all logic is done
       router.replace('/(auth)/home');
-
-      InteractionManager.runAfterInteractions(async () => {
-        try {
-          // 2) Guard that pw is a non-null string
-          const pw =
-            prefetchedPassword ?? (await getTemporaryPassword());
-          if (!pw) throw new Error('Password not available');
-
-          const pwKey = getPasswordKeyForUserID(userData.id);
-
-          // Parallel writes
-          await Promise.all([
-            SecureStore.setItemAsync(
-              SECURE_KEYS.SAVED_USER_ID,
-              userData.id
-            ),
-            SecureStore.setItemAsync(pwKey, pw),
-          ]);
-
-          storage.set(MMKV_KEYS.QUICK_LOGIN_ENABLED, 'true');
-          const raw =
-            storage.getString(MMKV_KEYS.QUICK_LOGIN_PREFERENCES) ?? '{}';
-          const prefs: QuickLoginPreferences = JSON.parse(raw);
-          prefs[userData.id] = true;
-          storage.set(
-            MMKV_KEYS.QUICK_LOGIN_PREFERENCES,
-            JSON.stringify(prefs)
-          );
-
-          await cleanupTemporaryPassword();
-        } catch (err) {
-          console.warn('QuickLogin setup error', err);
-        } finally {
-          if (mountedRef.current) {
-            setIsLoading(false);
-          }
-        }
-      });
-    });
+    } catch (err) {
+      console.warn('QuickLogin setup error', err);
+      if (mountedRef.current) {
+        setIsLoading(false);
+        setIsNavigating(false); // Reset navigation state on error
+      }
+    }
   };
 
-  const handleDeclineQuickLogin = () => {
+  // Handle declining quick login
+  const handleDeclineQuickLogin = async () => {
     if (!userData?.id) {
       console.warn('No user ID');
       return;
     }
     setIsDeclining(true);
 
-    requestAnimationFrame(() => {
+    try {
+      // Update quick login preferences in MMKV
+      const raw =
+        storage.getString(MMKV_KEYS.QUICK_LOGIN_PREFERENCES) ?? '{}';
+      const prefs: QuickLoginPreferences = JSON.parse(raw);
+      prefs[userData.id] = false;
+      storage.set(
+        MMKV_KEYS.QUICK_LOGIN_PREFERENCES,
+        JSON.stringify(prefs)
+      );
+
+      // Clean up temp password
+      await cleanupTemporaryPassword();
+
+      // Set navigating state before navigation
+      if (mountedRef.current) {
+        setIsNavigating(true);
+      }
+
+      // Navigate to home screen after all logic is done
       router.replace('/(auth)/home');
-
-      InteractionManager.runAfterInteractions(async () => {
-        try {
-          const raw =
-            storage.getString(MMKV_KEYS.QUICK_LOGIN_PREFERENCES) ?? '{}';
-          const prefs: QuickLoginPreferences = JSON.parse(raw);
-          prefs[userData.id] = false;
-          storage.set(
-            MMKV_KEYS.QUICK_LOGIN_PREFERENCES,
-            JSON.stringify(prefs)
-          );
-
-          await cleanupTemporaryPassword();
-        } catch (err) {
-          console.warn('DeclineQuickLogin error', err);
-        } finally {
-          if (mountedRef.current) {
-            setIsDeclining(false);
-          }
-        }
-      });
-    });
+    } catch (err) {
+      console.warn('DeclineQuickLogin error', err);
+      if (mountedRef.current) {
+        setIsDeclining(false);
+        setIsNavigating(false); // Reset navigation state on error
+      }
+    }
   };
-
-  if (!shouldShowPrompt) return null;
 
   const AvatarPlaceholder = () => (
     <View
       style={[
         styles.avatar,
-        { backgroundColor: '#f0f0f0', justifyContent: 'center', alignItems: 'center' },
+        {
+          backgroundColor: '#f0f0f0',
+          justifyContent: 'center',
+          alignItems: 'center',
+        },
       ]}
     >
       <ActivityIndicator color="#a18cd1" />
     </View>
   );
+
+  // Show navigation loading state
+  if (isNavigating) {
+    return (
+      <ThemedView style={styles.container}>
+        <View style={[styles.contentContainer, { justifyContent: 'center' }]}>
+          <ActivityIndicator size="large" color="#a18cd1" />
+          <ThemedText style={styles.navigationText}>
+            {t('quickLoginPrompt.redirecting')}
+          </ThemedText>
+        </View>
+      </ThemedView>
+    );
+  }
 
   return (
     <ThemedView style={styles.container}>
@@ -229,6 +258,7 @@ export default function QuickLoginPromptScreen() {
           loading={isLoading}
           loadingLabel={t('quickLoginPrompt.saving')}
           textStyle={styles.saveButtonText}
+          disabled={isNavigating} // Disable during navigation
         />
 
         <ThemedButton
@@ -239,12 +269,14 @@ export default function QuickLoginPromptScreen() {
           loadingLabel={t('quickLoginPrompt.saving')}
           textStyle={styles.notNowButtonText}
           outline
+          disabled={isNavigating} // Disable during navigation
         />
       </View>
     </ThemedView>
   );
 }
 
+// Styles for the quick login prompt screen
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -309,5 +341,11 @@ const styles = StyleSheet.create({
   },
   notNowButtonText: {
     fontSize: getResponsiveFontSize(16),
+  },
+  navigationText: {
+    marginTop: getResponsiveHeight(2),
+    textAlign: 'center',
+    fontSize: getResponsiveFontSize(16),
+    opacity: 0.8,
   },
 });

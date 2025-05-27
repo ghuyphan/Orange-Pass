@@ -414,7 +414,7 @@ export default function RootLayout() {
         <Stack.Screen name="(guest)" options={{ animation: "ios" }} />
         <Stack.Screen name="(public)" options={{ animation: "ios" }} />
         <Stack.Screen name="(auth)" options={{ animation: "none" }} />
-        <Stack.Screen name="onboard" options={{ animation: "fade" }} />
+        <Stack.Screen name="onboard" options={{ animation: "fade_from_bottom" }} />
         <Stack.Screen name="+not-found" />
       </Stack>
     ),

@@ -157,10 +157,10 @@ export async function checkGuestModeStatus(): Promise<boolean> {
 
 export async function initializeGuestMode(): Promise<boolean> {
   try {
-    await Promise.all([
-      SecureStore.deleteItemAsync("authToken"),
-      SecureStore.deleteItemAsync("userID"),
-    ]);
+    // await Promise.all([
+    //   SecureStore.deleteItemAsync("authToken"),
+    //   SecureStore.deleteItemAsync("userID"),
+    // ]);
 
     storage.set(GUEST_MODE_KEY, true);
 
@@ -175,8 +175,8 @@ export async function initializeGuestMode(): Promise<boolean> {
 
     store.dispatch(setAuthData({ token: "", user: guestUser }));
     // Initialize QR data as empty. loadGuestQrData (via thunk) will populate it.
-    store.dispatch(setQrData([])); // This is fine for initialization
-    store.dispatch(setSyncStatus({ isSyncing: false, lastSynced: undefined }));
+    // store.dispatch(setQrData([])); // This is fine for initialization
+    // store.dispatch(setSyncStatus({ isSyncing: false, lastSynced: undefined }));
 
     console.log(LOG_PREFIX_AUTH, "Guest mode session initialized.");
     return true;
@@ -187,7 +187,7 @@ export async function initializeGuestMode(): Promise<boolean> {
       error
     );
     store.dispatch(clearAuthData());
-    store.dispatch(setQrData([])); // Also fine here
+    store.dispatch(setQrData([]));
     return false;
   }
 }
@@ -567,14 +567,6 @@ export async function syncWithServer(): Promise<boolean> {
       LOG_PREFIX_AUTH,
       `Starting data synchronization for user ${user.id}...`
     );
-    // Placeholder for actual data push/pull logic with server using qrDB's sync functions
-    // For example:
-    // await qrDB.syncQrCodes(user.id);
-    // const serverUpdates = await qrDB.fetchServerData(user.id);
-    // await qrDB.insertOrUpdateQrCodes(serverUpdates);
-
-    // After sync operations, reload all local data for the user to update Redux via thunk
-    // MODIFIED: Dispatch thunk to load QR data
     store.dispatch(loadUserQrDataThunk(user.id));
 
     dataSyncSuccess = true;

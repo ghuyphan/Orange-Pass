@@ -22,7 +22,7 @@ import Animated, {
   withSpring,
   withTiming,
 } from "react-native-reanimated";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router"; // Import useFocusEffect
 import DraggableFlatList, {
   ScaleDecorator,
 } from "react-native-draggable-flatlist";
@@ -32,7 +32,7 @@ import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 
 // Types, constants, services, hooks, and components
 import QRRecord from "@/types/qrType";
-import ServerRecord from "@/types/serverDataTypes"; // Ensure this type is correctly defined
+import ServerRecord from "@/types/serverDataTypes";
 import { height } from "@/constants/Constants";
 import { RootState } from "@/store/rootReducer";
 import { setQrData } from "@/store/reducers/qrSlice";
@@ -40,9 +40,9 @@ import {
   getQrCodesByUserId,
   deleteQrCode,
   syncQrCodes,
-  fetchServerData, // This function's return type is crucial
+  fetchServerData,
   getUnsyncedQrCodes,
-  insertOrUpdateQrCodes, // Expects ServerRecord[]
+  insertOrUpdateQrCodes,
   updateQrIndexes,
   hasLocalData,
 } from "@/services/localDB/qrDB";
@@ -87,7 +87,7 @@ function HomeScreen() {
   const color = useThemeColor({ light: "#3A2E24", dark: "#FFF5E1" }, "text");
 
   // Loading and Syncing
-  const [isLoading, setIsLoading] = useState(true); // Start with loading true
+  const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
   const isEmpty = useMemo(() => qrData.length === 0, [qrData]);
   const [syncStatus, setSyncStatus] = useState<
@@ -96,7 +96,7 @@ function HomeScreen() {
   const [initialAnimationsDone, setInitialAnimationsDone] = useState(false);
 
   // UI State
-  const [isActive, setIsActive] = useState(false);
+  const [isActive, setIsActive] = useState(false); // For DraggableFlatList item
   const [toastMessage, setToastMessage] = useState("");
   const [isToastVisible, setIsToastVisible] = useState(false);
   const [topToastMessage, setTopToastMessage] = useState("");
@@ -132,8 +132,8 @@ function HomeScreen() {
 
   // Shared Values (Reanimated)
   const isEmptyShared = useSharedValue(qrData.length === 0 ? 1 : 0);
-  const emptyCardOffset = useSharedValue(350); // For EmptyListItem slide-in
-  const listOpacity = useSharedValue(0); // For DraggableFlatList fade-in
+  const emptyCardOffset = useSharedValue(350);
+  const listOpacity = useSharedValue(0);
   const scrollY = useSharedValue(0);
 
   // Clear all timeouts on unmount
@@ -159,31 +159,21 @@ function HomeScreen() {
 
       InteractionManager.runAfterInteractions(async () => {
         try {
-          await syncQrCodes(userIdToSync); // Push local changes
-
-          // Fetch data from server. This might return QRRecord-like objects.
+          await syncQrCodes(userIdToSync);
           const rawDataFromServer = await fetchServerData(userIdToSync);
 
           if (rawDataFromServer && rawDataFromServer.length > 0) {
-            // Transform rawDataFromServer to ServerRecord[]
-            // Ensure each item has collectionId and collectionName
             const serverData: ServerRecord[] = rawDataFromServer.map(
               (item: any) => {
-                // Ensure item is treated as a base QRRecord and add missing fields
                 const baseRecord = item as QRRecord;
                 return {
-                  ...baseRecord, // Spread all properties from the fetched item
-                  // !!! REPLACE THESE WITH ACTUAL VALUES OR LOGIC !!!
+                  ...baseRecord,
                   collectionId:
                     (item as any).collectionId ||
                     "YOUR_QR_COLLECTION_ID_PLACEHOLDER",
                   collectionName:
                     (item as any).collectionName ||
                     "YOUR_QR_COLLECTION_NAME_PLACEHOLDER",
-                  // Ensure all other fields required by ServerRecord are present
-                  // and correctly typed. For example, if ServerRecord expects dates as ISO strings:
-                  // created: new Date(baseRecord.created).toISOString(),
-                  // updated: new Date(baseRecord.updated).toISOString(),
                 };
               },
             );
@@ -196,7 +186,8 @@ function HomeScreen() {
           setTopToastMessage(t("homeScreen.syncSuccess"));
           setIsTopToastVisible(true);
 
-          if (timeoutRefs.current.sync) clearTimeout(timeoutRefs.current.sync);
+          if (timeoutRefs.current.sync)
+            clearTimeout(timeoutRefs.current.sync);
           timeoutRefs.current.sync = setTimeout(
             () => setSyncStatus("idle"),
             3000,
@@ -211,92 +202,110 @@ function HomeScreen() {
         }
       });
     },
-    [isOffline, isSyncing, dispatch, t], // Removed userIdToSync from here as it's an arg
+    [isOffline, isSyncing, dispatch, t],
   );
 
-  // Initialize data
-  useEffect(() => {
-    if (!userId) {
-      setIsLoading(false);
-      setSyncStatus("idle");
-      return;
-    }
+  // Load data and perform initial sync when screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      let componentIsActive = true; // Flag to prevent state updates if unmounted/unfocused
 
-    let isMounted = true;
+      const loadDataAndSyncIfNeeded = async () => {
+        if (!componentIsActive) return;
 
-    const initializeData = async () => {
-      setIsLoading(true);
+        // Handle no user ID case
+        if (!userId) {
+          setIsLoading(false);
+          setSyncStatus("idle");
+          setInitialAnimationsDone(true); // Mark animations as complete
+          return;
+        }
 
-      let localLoadSuccess = false;
-      try {
-        const currentLocalData = await getQrCodesByUserId(userId);
-        if (!isMounted) return;
-        dispatch(setQrData(currentLocalData));
-        localLoadSuccess = true;
-      } catch (error) {
-        console.error("Error loading local data:", error);
-        if (isMounted) {
+        setIsLoading(true);
+        // initialAnimationsDone will be set after local data load
+
+        let localDataLoadedSuccessfully = false;
+        try {
+          const currentLocalData = await getQrCodesByUserId(userId);
+          if (!componentIsActive) return;
+          dispatch(setQrData(currentLocalData));
+          localDataLoadedSuccessfully = true;
+        } catch (error) {
+          console.error("Error loading local data:", error);
+          if (!componentIsActive) return;
           setSyncStatus("error");
           setTopToastMessage(t("homeScreen.loadError"));
           setIsTopToastVisible(true);
-        }
-      } finally {
-        if (isMounted) {
+        } finally {
+          if (!componentIsActive) return;
           setIsLoading(false);
           InteractionManager.runAfterInteractions(() => {
-            if (isMounted) {
+            if (componentIsActive) {
               setInitialAnimationsDone(true);
             }
           });
         }
-      }
 
-      if (!localLoadSuccess || !isMounted) return;
+        if (!localDataLoadedSuccessfully || !componentIsActive) return;
 
-      InteractionManager.runAfterInteractions(async () => {
-        if (!isMounted || isOffline) {
-          if (isMounted && syncStatus !== "error") {
+        // Proceed with sync logic if local data loaded and component is active
+        if (isOffline) {
+          if (componentIsActive && syncStatus !== "error") {
             setSyncStatus("idle");
           }
           return;
         }
-        if (syncStatus === "error") return;
+
+        // If online, attempt sync if needed.
+        // The original effect had a `if (syncStatus === "error") return;` here.
+        // This check is maintained to align with that behavior, meaning if a previous
+        // focus resulted in an error, it might require manual sync or next focus without error.
+        if (syncStatus === "error") {
+            return;
+        }
 
         try {
           const unsyncedCodes = await getUnsyncedQrCodes(userId);
           const localDbExists = await hasLocalData(userId);
           const needsSync = !localDbExists || unsyncedCodes.length > 0;
 
-          if (needsSync && isMounted) {
+          if (needsSync && componentIsActive) {
             await syncWithServer(userId);
-          } else if (isMounted) {
+          } else if (componentIsActive) {
             setSyncStatus("synced");
             if (timeoutRefs.current.idle)
               clearTimeout(timeoutRefs.current.idle);
             timeoutRefs.current.idle = setTimeout(() => {
-              if (isMounted && syncStatus === "synced") {
+              if (componentIsActive && syncStatus === "synced") {
                 setSyncStatus("idle");
               }
             }, 3000);
           }
         } catch (error) {
           console.error("Error determining sync necessity:", error);
-          if (isMounted) {
-            setSyncStatus("error");
-            setTopToastMessage(t("homeScreen.syncCheckError"));
-            setIsTopToastVisible(true);
-          }
+          if (!componentIsActive) return;
+          setSyncStatus("error");
+          setTopToastMessage(t("homeScreen.syncCheckError"));
+          setIsTopToastVisible(true);
+        }
+      };
+
+      // Defer the entire load and sync process until after interactions
+      InteractionManager.runAfterInteractions(() => {
+        if (componentIsActive) {
+          loadDataAndSyncIfNeeded();
         }
       });
-    };
 
-    initializeData();
-
-    return () => {
-      isMounted = false;
-      if (timeoutRefs.current.idle) clearTimeout(timeoutRefs.current.idle);
-    };
-  }, [userId]);
+      return () => {
+        componentIsActive = false;
+        if (timeoutRefs.current.idle) {
+          clearTimeout(timeoutRefs.current.idle);
+          timeoutRefs.current.idle = null;
+        }
+      };
+    }, [userId, dispatch, isOffline, syncWithServer, t, syncStatus]), // syncStatus is included as it's read in the effect
+  );
 
   // Network status toasts
   const prevIsOffline = useRef(isOffline);
@@ -308,6 +317,7 @@ function HomeScreen() {
       setIsBottomToastVisible(true);
     } else {
       if (prevIsOffline.current) {
+        // Was offline, now online
         setBottomToastIcon("wifi");
         setBottomToastMessage(t("homeScreen.online"));
         setBottomToastColor("#4caf50");
@@ -320,10 +330,11 @@ function HomeScreen() {
           2000,
         );
       } else {
+        // Was online, still online (or initial load and online)
         setIsBottomToastVisible(false);
       }
     }
-    prevIsOffline.current = isOffline;
+    prevIsOffline.current = isOffline; // Update ref for next run
 
     return () => {
       if (timeoutRefs.current.network)
@@ -341,12 +352,12 @@ function HomeScreen() {
 
     if (initialAnimationsDone) {
       if (isEmpty) {
-        listOpacity.value = 0; // Hide list
-        emptyCardOffset.value = 350; // Reset for slide-in animation
-        animateEmptyCard(); // Slide in EmptyListItem
+        listOpacity.value = 0;
+        emptyCardOffset.value = 350;
+        animateEmptyCard();
       } else {
-        emptyCardOffset.value = 350; // Ensure EmptyListItem is "off-screen"
-        listOpacity.value = withTiming(1, { duration: 300 }); // Fade in list
+        emptyCardOffset.value = 350;
+        listOpacity.value = withTiming(1, { duration: 300 });
       }
     }
   }, [
@@ -384,7 +395,7 @@ function HomeScreen() {
       transform: [{ translateY }],
       zIndex: shouldReduceZIndex ? 0 : 1,
     };
-  }, [isActive, isSheetOpen]);
+  }, [isActive, isSheetOpen]); // isActive is for DraggableFlatList item
 
   const listHeaderStyle = useAnimatedStyle(() => {
     const opacity = withTiming(
@@ -543,13 +554,13 @@ function HomeScreen() {
     (offset: number) => {
       scrollY.value = offset;
     },
-    [scrollY],
+    [scrollY], // scrollY is a shared value, stable ref
   );
 
   // Drag handlers
   const onDragBegin = useCallback(() => {
     triggerHapticFeedback();
-    setIsActive(true);
+    setIsActive(true); // For DraggableFlatList item
   }, []);
 
   // Memoize filtered data
@@ -571,7 +582,7 @@ function HomeScreen() {
     ({
       item,
       drag,
-      isActive: itemIsActive,
+      isActive: itemIsActive, // Renamed from 'isActive' to avoid conflict
     }: {
       item: QRRecord;
       drag: () => void;
@@ -592,16 +603,18 @@ function HomeScreen() {
         />
       </ScaleDecorator>
     ),
-    [onNavigateToDetailScreen, onOpenSheet],
+    [onNavigateToDetailScreen, onOpenSheet], // These are stable callbacks
   );
 
   const onDragEnd = useCallback(
     ({ data: reorderedData }: { data: QRRecord[] }) => {
       triggerHapticFeedback();
-      setIsActive(false);
+      setIsActive(false); // For DraggableFlatList item
 
       if (!userId) return;
 
+      // This logic correctly handles reordering within a filter
+      // or reordering the whole list.
       if (filter === "all") {
         dispatch(setQrData(reorderedData));
         InteractionManager.runAfterInteractions(() => {
@@ -613,13 +626,19 @@ function HomeScreen() {
           updateQrIndexes(updatedData, userId).catch(console.error);
         });
       } else {
+        // Create a map of the reordered items for quick lookup
         const reorderedItemsMap = new Map(
           reorderedData.map((item) => [item.id, item]),
         );
+        // Create a set of IDs for items that were part of the filtered (and reordered) list
         const filteredItemIds = new Set(reorderedData.map((item) => item.id));
+
+        // Reconstruct the full list:
+        // If an item from the full list was in the filtered reordered list, use its new version.
+        // Otherwise, keep the original item.
         const newFullList = qrData.map((item) => {
           if (filteredItemIds.has(item.id)) {
-            return reorderedItemsMap.get(item.id)!;
+            return reorderedItemsMap.get(item.id)!; // Safe due to check
           }
           return item;
         });
@@ -660,35 +679,38 @@ function HomeScreen() {
     setIsModalVisible(false);
 
     try {
-      setIsSyncing(true);
+      setIsSyncing(true); // Indicate syncing process for deletion
       setIsToastVisible(true);
       setToastMessage(t("homeScreen.deleting"));
 
       await deleteQrCode(selectedItemId, userId);
       const updatedData = qrData.filter((item) => item.id !== selectedItemId);
+      // Re-index the remaining items
       const reindexedData = updatedData.map((item, index) => ({
         ...item,
         qr_index: index,
-        updated: new Date().toISOString(),
+        updated: new Date().toISOString(), // Mark as updated for potential sync
       }));
       dispatch(setQrData(reindexedData));
-      await updateQrIndexes(reindexedData, userId);
+      await updateQrIndexes(reindexedData, userId); // Persist new indexes
 
-      setIsModalVisible(false);
-      setIsToastVisible(false);
+      setIsModalVisible(false); // Should already be false
+      setIsToastVisible(false); // Hide "deleting" toast
+      // Optionally, show a success toast for deletion
     } catch (error) {
       setToastMessage(t("homeScreen.deleteError"));
-      setIsToastVisible(true);
+      setIsToastVisible(true); // Show error toast
     } finally {
-      setSelectedItemId(null);
+      setSelectedItemId(null); // Clear selected item
 
       if (timeoutRefs.current.delete)
         clearTimeout(timeoutRefs.current.delete);
+      // Reset isSyncing after a short delay to allow UI to update
       timeoutRefs.current.delete = setTimeout(() => setIsSyncing(false), 400);
     }
   }, [selectedItemId, qrData, dispatch, t, userId]);
 
-  // Padding values
+  // Padding values for FlatList
   const paddingValues = useMemo(() => {
     switch (qrData.length) {
       case 0:
@@ -709,7 +731,7 @@ function HomeScreen() {
     [paddingValues],
   );
 
-  // Sheet content
+  // Sheet content renderer
   const renderSheetContent = () => {
     switch (sheetType) {
       case "wifi":
@@ -740,7 +762,7 @@ function HomeScreen() {
     }
   };
 
-  // Memoize the header component
+  // Memoized components for performance
   const HeaderComponent = React.memo(
     ({
       titleContainerStyle,
@@ -788,7 +810,6 @@ function HomeScreen() {
     ),
   );
 
-  // Memoize the loading component
   const LoadingComponent = React.memo(() => (
     <View style={styles.loadingContainer}>
       <View style={{ marginBottom: 20 }}>
@@ -800,7 +821,6 @@ function HomeScreen() {
     </View>
   ));
 
-  // Memoize the list header component
   const ListHeaderComponent = React.memo(
     ({
       listHeaderStyle,
@@ -822,7 +842,6 @@ function HomeScreen() {
     ),
   );
 
-  // Memoize the empty item component
   const EmptyItemComponent = React.memo(({ color }: { color: string }) => (
     <View style={styles.emptyItem}>
       <MaterialIcons color={color} name="search" size={50} />
@@ -843,11 +862,10 @@ function HomeScreen() {
         onSettings={onNavigateToSettingsScreen}
       />
 
-      {(isLoading || (isSyncing )) ? ( // Or just (isLoading || isSyncing) if you always want it
+      {isLoading || isSyncing ? (
         <LoadingComponent />
       ) : isEmpty ? (
         <EmptyListItem
-
           scrollHandler={scrollHandler}
           emptyCardStyle={emptyCardStyle}
           onNavigateToEmptyScreen={onNavigateToEmptyScreen}
@@ -874,16 +892,16 @@ function HomeScreen() {
             initialNumToRender={10}
             maxToRenderPerBatch={5}
             windowSize={5}
-            data={[...filteredData]}
+            data={[...filteredData]} // Ensure data is a new array for re-renders
             renderItem={renderItem}
             keyExtractor={(item) => `draggable-item-${item.id}`}
             containerStyle={{ flex: 1 }}
             contentContainerStyle={[
               styles.listContainer,
-              // Apply paddingBottom only when there are filtered items to display
-              filteredData.length > 0 && { paddingBottom: listContainerPadding },
+              filteredData.length > 0 && {
+                paddingBottom: listContainerPadding,
+              },
             ]}
-
             scrollEventThrottle={16}
             showsVerticalScrollIndicator={false}
             onDragBegin={onDragBegin}
@@ -924,7 +942,7 @@ function HomeScreen() {
         message={toastMessage}
         onDismiss={() => setIsToastVisible(false)}
         style={styles.toastContainer}
-        isSyncing={isSyncing}
+        isSyncing={isSyncing} // Pass isSyncing for the toast's spinner
       />
       <ThemedTopToast
         message={topToastMessage}
@@ -947,27 +965,27 @@ function HomeScreen() {
           sheetType === "setting"
             ? t("homeScreen.manage")
             : sheetType === "wifi"
-              ? t("homeScreen.wifi")
-              : sheetType === "linking"
-                ? t("homeScreen.linking")
-                : t("homeScreen.settings")
+            ? t("homeScreen.wifi")
+            : sheetType === "linking"
+            ? t("homeScreen.linking")
+            : t("homeScreen.settings") // Fallback title
         }
         onClose={() => {
           if (timeoutRefs.current.sheet)
             clearTimeout(timeoutRefs.current.sheet);
           timeoutRefs.current.sheet = setTimeout(
             () => setIsSheetOpen(false),
-            50,
+            50, // Delay to allow sheet to animate closed before state change
           );
         }}
         snapPoints={
           sheetType === "setting"
             ? ["25%"]
             : sheetType === "wifi"
-              ? ["38%"]
-              : sheetType === "linking"
-                ? ["35%"]
-                : ["35%"]
+            ? ["38%"]
+            : sheetType === "linking"
+            ? ["35%"]
+            : ["35%"] // Default snap points
         }
         styles={{
           customContent: {
@@ -978,7 +996,7 @@ function HomeScreen() {
         customContent={<View>{renderSheetContent()}</View>}
       />
       <ThemedModal
-        primaryActionText={t("homeScreen.move")}
+        primaryActionText={t("homeScreen.move")} // Assuming "move" means delete here
         onPrimaryAction={onDeletePress}
         onDismiss={() => setIsModalVisible(false)}
         dismissable={true}
@@ -1021,10 +1039,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 10,
   },
-  titleButton: {},
+  titleButton: {}, // Style if needed
   listContainer: {
-    paddingTop: getResponsiveHeight(18.1),
-    flexGrow: 1,
+    paddingTop: getResponsiveHeight(18.1), // To clear the absolute positioned header
+    flexGrow: 1, // Important for FlatList scrolling
   },
   emptyItem: {
     flex: 1,
@@ -1032,6 +1050,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 10,
     opacity: 0.7,
+    // Ensure it takes up space if list is otherwise empty
+    // minHeight: getResponsiveHeight(50), // Example, adjust as needed
   },
   toastContainer: {
     position: "absolute",
@@ -1049,11 +1069,13 @@ const styles = StyleSheet.create({
     bottom: getResponsiveHeight(2),
     right: getResponsiveWidth(3.6),
     position: "absolute",
-    zIndex: 3,
+    zIndex: 3, // Ensure FAB is above other elements
   },
   loadingContainer: {
-    paddingTop: getResponsiveHeight(18),
+    paddingTop: getResponsiveHeight(18), // Match listContainer paddingTop
     paddingHorizontal: 15,
     flex: 1,
+    // justifyContent: 'center', // If you want centered loading spinner
+    // alignItems: 'center',
   },
 });

@@ -128,10 +128,6 @@ const OnBoardScreen = () => {
     },
     "buttonBackground"
   );
-  const accentColor = useThemeColor(
-    { light: "#FFC107", dark: "#FFC107" },
-    "text"
-  ); // Not used in the provided snippet, but kept for completeness
   const bottomSheetRef = useRef<BottomSheet>(null);
   const [sheetType, setSheetType] = useState<SheetType>(null);
   const [isLoading, setLoading] = useState(false);
@@ -169,7 +165,6 @@ const OnBoardScreen = () => {
         triggerSuccessHapticFeedback();
 
         // 3. Navigate optimistically.
-        // By this point, the loading state on the button should be visible.
         router.replace("/(guest)/guest-home");
 
         // 4. Perform the full guest initialization in the background.
@@ -184,11 +179,8 @@ const OnBoardScreen = () => {
               "[OnBoardScreen] Background guest mode initialization failed:",
               err
             );
-            // Optionally, handle critical failure here if needed,
-            // though the user has already navigated.
           });
-        // setLoading(false) is not called here on success because the screen
-        // will unmount due to navigation.
+
       } catch (error) {
         console.error(
           "[OnBoardScreen] Error during guest mode setup (inside timeout):",
