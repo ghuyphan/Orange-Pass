@@ -820,7 +820,6 @@ const QRForm: React.FC<QRFormProps> = ({
         dirty,
         isValid, // Added isValid from Formik
       }) => {
-        console.log('metadata', values.metadata);
         // Updated formDisabled logic
         const formDisabled =
           !isValid || // Disable if form is not valid

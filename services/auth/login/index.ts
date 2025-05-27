@@ -1,13 +1,17 @@
+// services/auth/login.ts
 import pb from "@/services/pocketBase";
 import { Keyboard } from "react-native";
 import * as SecureStore from "expo-secure-store";
-import { mapRecordToUserData } from "../refreshAuth";
+import { mapRecordToUserData } from "../refreshAuth"; // Assuming this path is correct
 import { store } from "@/store";
 import { setAuthData } from "@/store/reducers/authSlice";
 import { t } from "@/i18n";
-import { createTable, insertUser } from "@/services/localDB/userDB";
+import {
+  createTable,
+  insertUser,
+  getEmailByUserID,
+} from "@/services/localDB/userDB";
 import { storage } from "@/utils/storage";
-import { getEmailByUserID } from "@/services/localDB/userDB";
 
 const LOGIN_TIMEOUT = 30000; // 30 seconds timeout
 const MAX_RETRIES = 3;
@@ -16,8 +20,8 @@ const MAX_RETRIES = 3;
 export const SECURE_KEYS = {
   AUTH_TOKEN: "authToken",
   USER_ID: "userID",
-  SAVED_USER_ID: "savedUserID", // Changed from SAVED_EMAIL to SAVED_USER_ID
-  PASSWORD_PREFIX: "password_", // Prefix for storing passwords by userID
+  SAVED_USER_ID: "savedUserID",
+  PASSWORD_PREFIX: "password_",
   TEMPORARY_PASSWORD: "temporaryPassword",
 };
 
@@ -28,24 +32,27 @@ export const MMKV_KEYS = {
   QUICK_LOGIN_PREFERENCES: "quickLoginPreferences",
 };
 
-interface LoginError {
+// Interface for the structure of quick login preferences
+interface QuickLoginPreferences {
+  [userId: string]: boolean; // e.g., { "user123": true, "user456": false }
+}
+
+interface LoginError extends Error {
   status?: number;
-  message: string;
   isTimeout?: boolean;
 }
 
-// Helper to get the secure key for a specific email's password
-// Now exported so it can be used in other files
 export const getPasswordKeyForUserID = (userID: string): string => {
   return `${SECURE_KEYS.PASSWORD_PREFIX}${userID}`;
 };
 
-
 const clearStoredAuthData = async () => {
   try {
-    await SecureStore.deleteItemAsync(SECURE_KEYS.AUTH_TOKEN);
-    await SecureStore.deleteItemAsync(SECURE_KEYS.USER_ID);
-    // Don't clear saved credentials here - they're needed for quick login
+    const promises = [
+      SecureStore.deleteItemAsync(SECURE_KEYS.AUTH_TOKEN),
+      SecureStore.deleteItemAsync(SECURE_KEYS.USER_ID),
+    ];
+    await Promise.all(promises);
   } catch (error) {
     console.error("Failed to clear stored auth data:", error);
   }
@@ -55,10 +62,11 @@ const validateInput = (email: string, password: string) => {
   if (!email || !password) {
     throw new Error(t("loginScreen.errors.emptyFields"));
   }
-  if (!email.includes("@")) {
+  if (!/\S+@\S+\.\S+/.test(email)) {
     throw new Error(t("loginScreen.errors.invalidEmail"));
   }
-  if (password.length < 6) {
+  if (password.length < 8) {
+    // PocketBase default min password length
     throw new Error(t("loginScreen.errors.passwordTooShort"));
   }
 };
@@ -66,17 +74,18 @@ const validateInput = (email: string, password: string) => {
 const loginWithTimeout = async (
   email: string,
   password: string,
-  attempt = 1
+  attempt = 1,
 ): Promise<any> => {
   const loginPromise = pb.collection("users").authWithPassword(email, password);
   const timeoutPromise = new Promise((_, reject) => {
-    setTimeout(() => {
-      const timeoutError: LoginError = new Error(
-        t("loginScreen.errors.timeout")
+    const timer = setTimeout(() => {
+      const timeoutError = new Error(
+        t("loginScreen.errors.timeout"),
       ) as LoginError;
       timeoutError.isTimeout = true;
       reject(timeoutError);
     }, LOGIN_TIMEOUT);
+    loginPromise.finally(() => clearTimeout(timer));
   });
 
   try {
@@ -85,6 +94,7 @@ const loginWithTimeout = async (
   } catch (error) {
     const loginError = error as LoginError;
     if (attempt < MAX_RETRIES && loginError.isTimeout) {
+      console.log(`Login attempt ${attempt} timed out, retrying...`);
       return loginWithTimeout(email, password, attempt + 1);
     }
     throw error;
@@ -95,7 +105,7 @@ export const login = async (
   email: string,
   password: string,
   rememberMe = false,
-  enableQuickLogin = false
+  setupQuickLoginCredentials = false,
 ) => {
   Keyboard.dismiss();
 
@@ -114,37 +124,45 @@ export const login = async (
       throw new Error(t("loginScreen.errors.invalidResponse"));
     }
 
-    // Store auth data in SecureStore
-    await SecureStore.setItemAsync(SECURE_KEYS.AUTH_TOKEN, authData.token);
-    await SecureStore.setItemAsync(SECURE_KEYS.USER_ID, authData.record.id);
-    
-    // Store the password temporarily for the quick login prompt
-    await SecureStore.setItemAsync(SECURE_KEYS.TEMPORARY_PASSWORD, password);
+    const userId = authData.record.id;
+    const secureWritePromises: Promise<void>[] = [
+      SecureStore.setItemAsync(SECURE_KEYS.AUTH_TOKEN, authData.token),
+      SecureStore.setItemAsync(SECURE_KEYS.USER_ID, userId),
+      SecureStore.setItemAsync(SECURE_KEYS.TEMPORARY_PASSWORD, password),
+    ];
 
-    // Handle remember me preference
     if (rememberMe) {
-      await SecureStore.setItemAsync(SECURE_KEYS.SAVED_USER_ID, authData.record.id);
-      storage.set(MMKV_KEYS.REMEMBER_ME, "true");
-    } else {
-      storage.set(MMKV_KEYS.REMEMBER_ME, "false");
+      secureWritePromises.push(
+        SecureStore.setItemAsync(SECURE_KEYS.SAVED_USER_ID, userId),
+      );
     }
-    
-    // Only set up quick login if explicitly enabled
-    if (enableQuickLogin) {
-      await SecureStore.setItemAsync(SECURE_KEYS.SAVED_USER_ID, authData.record.id);
-      // Store password for this specific userID
-      await SecureStore.setItemAsync(getPasswordKeyForUserID(authData.record.id), password);
+
+    if (setupQuickLoginCredentials) {
+      if (!rememberMe) {
+        secureWritePromises.push(
+          SecureStore.setItemAsync(SECURE_KEYS.SAVED_USER_ID, userId),
+        );
+      }
+      secureWritePromises.push(
+        SecureStore.setItemAsync(getPasswordKeyForUserID(userId), password),
+      );
+    }
+
+    await Promise.all(secureWritePromises);
+
+    storage.set(MMKV_KEYS.REMEMBER_ME, rememberMe ? "true" : "false");
+
+    if (setupQuickLoginCredentials) {
       storage.set(MMKV_KEYS.QUICK_LOGIN_ENABLED, "true");
-      
-      // Update quick login preferences for this userID
-      const prefsString = storage.getString(MMKV_KEYS.QUICK_LOGIN_PREFERENCES) || "{}";
+      const prefsString =
+        storage.getString(MMKV_KEYS.QUICK_LOGIN_PREFERENCES) || "{}";
       try {
-        const prefs = JSON.parse(prefsString);
-        prefs[authData.record.id] = true;
+        const prefs: QuickLoginPreferences = JSON.parse(prefsString);
+        prefs[userId] = true;
         storage.set(MMKV_KEYS.QUICK_LOGIN_PREFERENCES, JSON.stringify(prefs));
       } catch (e) {
-        // If parsing fails, create a new preferences object
-        const newPrefs = { [authData.record.id]: true };
+        console.error("Failed to parse QUICK_LOGIN_PREFERENCES, resetting.", e);
+        const newPrefs: QuickLoginPreferences = { [userId]: true };
         storage.set(MMKV_KEYS.QUICK_LOGIN_PREFERENCES, JSON.stringify(newPrefs));
       }
     }
@@ -159,36 +177,39 @@ export const login = async (
   } catch (error) {
     console.error("Login error:", error);
     const errorData = error as LoginError;
+    let errorMessage = t("loginScreen.errors.unknown");
+    if (error instanceof Error) errorMessage = error.message;
 
     switch (errorData.status) {
       case 400:
-        throw new Error(t("loginScreen.errors.400"));
-      case 401:
-        throw new Error(t("loginScreen.errors.invalidCredentials"));
+        errorMessage = t("loginScreen.errors.invalidCredentials");
+        break;
       case 429:
-        throw new Error(t("loginScreen.errors.tooManyAttempts"));
+        errorMessage = t("loginScreen.errors.tooManyAttempts");
+        break;
       case 500:
-        throw new Error(t("loginScreen.errors.500"));
+        errorMessage = t("loginScreen.errors.500");
+        break;
       default:
         if (errorData.isTimeout) {
-          throw new Error(t("loginScreen.errors.timeout"));
+          errorMessage = t("loginScreen.errors.timeout");
+        } else if (error instanceof Error) {
+          errorMessage = error.message;
         }
-        throw error;
+        break;
     }
+    throw new Error(errorMessage);
   }
 };
 
-// Helper function to get remember me status
 export const getRememberMeStatus = (): boolean => {
-  return storage.getBoolean(MMKV_KEYS.REMEMBER_ME) ?? false;
+  return storage.getString(MMKV_KEYS.REMEMBER_ME) === "true";
 };
 
-// Helper function to check if quick login is enabled
 export const getQuickLoginStatus = (): boolean => {
-  return storage.getBoolean(MMKV_KEYS.QUICK_LOGIN_ENABLED) ?? false;
+  return storage.getString(MMKV_KEYS.QUICK_LOGIN_ENABLED) === "true";
 };
 
-// Helper function to get saved email (now from SecureStore)
 export const getSavedUserID = async (): Promise<string | null> => {
   try {
     return await SecureStore.getItemAsync(SECURE_KEYS.SAVED_USER_ID);
@@ -198,9 +219,10 @@ export const getSavedUserID = async (): Promise<string | null> => {
   }
 };
 
-
-// Helper function to get saved password for a specific email
-export const getSavedPasswordForUserID = async (userID: string): Promise<string | null> => {
+export const getSavedPasswordForUserID = async (
+  userID: string,
+): Promise<string | null> => {
+  if (!userID) return null;
   try {
     return await SecureStore.getItemAsync(getPasswordKeyForUserID(userID));
   } catch (error) {
@@ -209,7 +231,6 @@ export const getSavedPasswordForUserID = async (userID: string): Promise<string 
   }
 };
 
-// Helper function to get temporary password
 export const getTemporaryPassword = async (): Promise<string | null> => {
   try {
     return await SecureStore.getItemAsync(SECURE_KEYS.TEMPORARY_PASSWORD);
@@ -219,7 +240,6 @@ export const getTemporaryPassword = async (): Promise<string | null> => {
   }
 };
 
-// Check if a user is currently authenticated
 export const isAuthenticated = async (): Promise<boolean> => {
   try {
     const token = await SecureStore.getItemAsync(SECURE_KEYS.AUTH_TOKEN);
@@ -230,31 +250,35 @@ export const isAuthenticated = async (): Promise<boolean> => {
   }
 };
 
-// Attempt auto login with saved credentials
 export const attemptAutoLogin = async (): Promise<boolean> => {
   try {
     const userID = await getSavedUserID();
     if (!userID) return false;
-    
-    const password = await getSavedPasswordForUserID(userID);
-    const quickLoginEnabled = getQuickLoginStatus();
-    const rememberMe = getRememberMeStatus();
 
-    if (userID && password && quickLoginEnabled) {
-      // Retrieve the email associated with the userID
-      const email = await getEmailByUserID(userID);
-      if (!email) {
-        throw new Error("Email not found for userID");
+    const prefsString =
+      storage.getString(MMKV_KEYS.QUICK_LOGIN_PREFERENCES) || "{}";
+    const prefs: QuickLoginPreferences = JSON.parse(prefsString);
+
+    if (prefs[userID] === true) {
+      const password = await getSavedPasswordForUserID(userID);
+      if (password) {
+        const email = await getEmailByUserID(userID);
+        if (!email) {
+          console.error(
+            `Auto-login: Email not found for userID ${userID}. Clearing saved credentials.`,
+          );
+          await disableQuickLogin(userID);
+          return false;
+        }
+        await login(email, password, true, true);
+        return true;
+      } else {
+        console.warn(
+          `Auto-login: Password not found for userID ${userID} with quick login pref. Disabling.`,
+        );
+        await disableQuickLogin(userID);
       }
-
-      // Use quick login (with email and password)
-      await login(email, password, rememberMe, quickLoginEnabled);
-      return true;
-    } else if (userID && rememberMe) {
-      // We have userID but no password - can't auto login but can prefill userID
-      return false;
     }
-
     return false;
   } catch (error) {
     console.error("Auto-login failed:", error);
@@ -262,32 +286,34 @@ export const attemptAutoLogin = async (): Promise<boolean> => {
   }
 };
 
-
-
-// Quick login with a specific email
 export const quickLogin = async (userID: string): Promise<boolean> => {
   try {
-    // Check if quick login is enabled for this userID
-    const prefsString = storage.getString(MMKV_KEYS.QUICK_LOGIN_PREFERENCES) || "{}";
-    const prefs = JSON.parse(prefsString);
-    
-    if (!prefs[userID]) {
-      throw new Error("Quick login not enabled for this userID");
-    }
-    
-    // Get the saved password for this specific userID
-    const password = await getSavedPasswordForUserID(userID);
-    if (!password) {
-      throw new Error("Password not available for quick login");
+    const prefsString =
+      storage.getString(MMKV_KEYS.QUICK_LOGIN_PREFERENCES) || "{}";
+    const prefs: QuickLoginPreferences = JSON.parse(prefsString);
+
+    if (prefs[userID] !== true) {
+      return false;
     }
 
-    // Retrieve the email associated with the userID
+    const password = await getSavedPasswordForUserID(userID);
+    if (!password) {
+      console.warn(
+        `Password not found for quick login userID: ${userID}. Disabling.`,
+      );
+      await disableQuickLogin(userID);
+      return false;
+    }
+
     const email = await getEmailByUserID(userID);
     if (!email) {
-      throw new Error("Email not found for userID");
+      console.error(
+        `Email not found for quick login userID: ${userID}. Disabling.`,
+      );
+      await disableQuickLogin(userID);
+      return false;
     }
-    
-    // Perform login
+
     await login(email, password, true, true);
     return true;
   } catch (error) {
@@ -296,84 +322,75 @@ export const quickLogin = async (userID: string): Promise<boolean> => {
   }
 };
 
-// Get all accounts with quick login enabled
 export const getQuickLoginAccounts = async (): Promise<string[]> => {
   try {
-    const prefsString = storage.getString(MMKV_KEYS.QUICK_LOGIN_PREFERENCES) || "{}";
-    const prefs = JSON.parse(prefsString);
-    
-    // Filter userIDs that have quick login enabled
+    const prefsString =
+      storage.getString(MMKV_KEYS.QUICK_LOGIN_PREFERENCES) || "{}";
+    const prefs: QuickLoginPreferences = JSON.parse(prefsString);
     return Object.entries(prefs)
       .filter(([_, enabled]) => enabled === true)
-      .map(([userID]) => userID);
+      .map(([userID_key]) => userID_key); // Renamed to avoid conflict
   } catch (error) {
     console.error("Failed to get quick login accounts:", error);
     return [];
   }
 };
 
-
-// Check if user has already made a decision about quick login
-export const hasQuickLoginPreference = async (email: string): Promise<boolean> => {
+export const hasQuickLoginPreference = async (
+  userID: string,
+): Promise<boolean> => {
+  if (!userID) return false;
   try {
     const prefsString = storage.getString(MMKV_KEYS.QUICK_LOGIN_PREFERENCES);
-    if (!prefsString) {
-      return false;
-    }
-
-    const prefs = JSON.parse(prefsString);
-    return prefs[email] !== undefined;
+    if (!prefsString) return false;
+    const prefs: QuickLoginPreferences = JSON.parse(prefsString);
+    return prefs[userID] !== undefined;
   } catch (error) {
     console.error("Failed to check quick login preference:", error);
     return false;
   }
 };
 
-// Disable quick login for a specific email or all emails
 export const disableQuickLogin = async (userID?: string): Promise<void> => {
   try {
+    const prefsString =
+      storage.getString(MMKV_KEYS.QUICK_LOGIN_PREFERENCES) || "{}";
+    let prefs: QuickLoginPreferences = {};
+    try {
+      prefs = JSON.parse(prefsString);
+    } catch (e) {
+      console.error(
+        "Failed to parse QUICK_LOGIN_PREFERENCES during disable, resetting.",
+        e,
+      );
+      // prefs remains {} which is a valid QuickLoginPreferences
+    }
+
     if (userID) {
-      // Disable for specific userID
-      const prefsString = storage.getString(MMKV_KEYS.QUICK_LOGIN_PREFERENCES) || "{}";
-      try {
-        const prefs = JSON.parse(prefsString);
-        if (prefs[userID]) {
-          prefs[userID] = false;
-          storage.set(MMKV_KEYS.QUICK_LOGIN_PREFERENCES, JSON.stringify(prefs));
-        }
-      } catch (e) {
-        console.error("Failed to update quick login preferences:", e);
+      if (prefs[userID] !== undefined) { // Check if property exists before setting
+        prefs[userID] = false;
       }
-      
-      // Delete the password for this specific userID
       await SecureStore.deleteItemAsync(getPasswordKeyForUserID(userID));
-      
-      // If this is the currently saved userID, update quick login enabled status
-      const savedUserID = await getSavedUserID();
-      if (savedUserID === userID) {
-        storage.delete(MMKV_KEYS.QUICK_LOGIN_ENABLED);
-      }
     } else {
-      // Disable for all userIDs
-      const accounts = await getQuickLoginAccounts();
-      
-      // Delete passwords for all accounts
-      for (const userID of accounts) {
-        await SecureStore.deleteItemAsync(getPasswordKeyForUserID(userID));
+      // Disable for all users
+      const allUserIDs = Object.keys(prefs);
+      for (const id of allUserIDs) {
+        prefs[id] = false;
+        await SecureStore.deleteItemAsync(getPasswordKeyForUserID(id));
       }
-      
-      storage.delete(MMKV_KEYS.QUICK_LOGIN_PREFERENCES);
+    }
+    storage.set(MMKV_KEYS.QUICK_LOGIN_PREFERENCES, JSON.stringify(prefs));
+
+    // Check if any user still has quick login enabled to update the global flag
+    const anyStillEnabled = Object.values(prefs).some((val) => val === true);
+    if (!anyStillEnabled) {
       storage.delete(MMKV_KEYS.QUICK_LOGIN_ENABLED);
     }
-    
-    // Always clean up temporary password
-    await SecureStore.deleteItemAsync(SECURE_KEYS.TEMPORARY_PASSWORD);
   } catch (error) {
     console.error("Failed to disable quick login:", error);
   }
 };
 
-// Clean up temporary password
 export const cleanupTemporaryPassword = async (): Promise<void> => {
   try {
     await SecureStore.deleteItemAsync(SECURE_KEYS.TEMPORARY_PASSWORD);
