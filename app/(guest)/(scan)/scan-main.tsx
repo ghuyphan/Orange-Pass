@@ -229,7 +229,7 @@ export default function GuestScanScreen() {
       (codeFormat, codeValue, bin, codeType, codeProvider) => {
         if (isMounted.current) {
           router.push({
-            pathname: `/(auth)/(add)/add-new`,
+            pathname: `/(guest)/add-guest`,
             params: {
               codeFormat,
               codeValue,
@@ -397,7 +397,7 @@ export default function GuestScanScreen() {
   if (allPermissionsGranted === false) {
     return (
       <ThemedView style={{ flex: 1 }}>
-        <Redirect href="/(auth)/(scan)/permission" />
+        <Redirect href="/(guest)/(scan)/permission" />
       </ThemedView>
     );
   }

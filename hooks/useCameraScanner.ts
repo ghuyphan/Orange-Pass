@@ -8,10 +8,10 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { t } from '@/i18n';
 
 interface CameraHighlight {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 }
 
 export const useCameraScanner = () => {
@@ -19,28 +19,38 @@ export const useCameraScanner = () => {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Scanner-related states
-  const [scanFrame, setScanFrame] = useState<CodeScannerFrame>({ height: 1, width: 1 });
-  const [codeScannerHighlights, setCodeScannerHighlights] = useState<CameraHighlight[]>([]);
+  const [scanFrame, setScanFrame] = useState<CodeScannerFrame>({
+    height: 1,
+    width: 1,
+  });
+  const [codeScannerHighlights, setCodeScannerHighlights] = useState<
+    CameraHighlight[]
+  >([]);
   const [codeMetadata, setCodeMetadata] = useState('');
   const [codeValue, setCodeValue] = useState('');
   const [codeType, setCodeType] = useState('');
-  const [iconName, setIconName] = useState<keyof typeof MaterialIcons.glyphMap>('explore');
+  const [iconName, setIconName] =
+    useState<keyof typeof MaterialIcons.glyphMap>('explore');
   const [isConnecting, setIsConnecting] = useState(false);
 
   // Settings states
-  const [quickScan, setQuickScan] = useState(false);
   const [showIndicator, setShowIndicator] = useState(true);
+  
 
-  const [quickScanMMKV, setQuickScanMMKV] = useMMKVBoolean('quickScan', storage);
-  const [showIndicatorMMKV, setShowIndicatorMMKV] = useMMKVBoolean('showIndicator', storage);
+  const [showIndicatorMMKV, setShowIndicatorMMKV] = useMMKVBoolean(
+    'showIndicator',
+    storage,
+  );
 
   const handleCodeScanned = useHandleCodeScanned();
 
-  useEffect(() => {
-    if (quickScanMMKV !== undefined) {
-      setQuickScan(quickScanMMKV);
-    }
-  }, [quickScanMMKV]);
+    const resetCodeState = useCallback(() => {
+    setIsConnecting(false);
+    setCodeType('');
+    setCodeValue('');
+    setCodeScannerHighlights([]);
+    setCodeMetadata('');
+  }, []);
 
   useEffect(() => {
     if (showIndicatorMMKV !== undefined) {
@@ -48,67 +58,61 @@ export const useCameraScanner = () => {
     }
   }, [showIndicatorMMKV]);
 
-
-  const toggleQuickScan = useCallback(() => {
-    setQuickScan(prev => !!!prev);
-    triggerLightHapticFeedback();
-  }, [setQuickScan]);
-
   const toggleShowIndicator = useCallback(() => {
-    setShowIndicator(prev => !!!prev);
+    setShowIndicator((prev) => {
+      const newValue = !prev;
+      setShowIndicatorMMKV(newValue); // Persist to MMKV
+      return newValue;
+    });
     triggerLightHapticFeedback();
-  }, [setShowIndicator]);
+  }, [setShowIndicator, setShowIndicatorMMKV]); // Dependencies are the stable setters
 
-  const createCodeScannerCallback = useCallback((codes: Code[], frame: CodeScannerFrame) => {
-    if (isConnecting || frameCounterRef.current++ % 4 !== 0) return;
+  const createCodeScannerCallback = useCallback(
+    (codes: Code[], frame: CodeScannerFrame) => {
+      if (isConnecting || frameCounterRef.current++ % 4 !== 0) return;
 
-    setScanFrame(frame);
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-
-    if (codes.length > 0) {
-      const firstCode = codes[0];
-      const { value, frame: codeFrame } = firstCode;
-
-
-      setCodeMetadata(value ?? '');
-
-      if (showIndicator) {
-        setCodeScannerHighlights([{
-          height: codeFrame?.height ?? 0,
-          width: codeFrame?.width ?? 0,
-          x: codeFrame?.x ?? 0,
-          y: codeFrame?.y ?? 0,
-        }]);
-
-        timeoutRef.current = setTimeout(() => {
-          setCodeScannerHighlights([]);
-        }, 2000);
-      } else {
-        setCodeScannerHighlights([]);
+      setScanFrame(frame);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
       }
 
-      const result = handleCodeScanned(value ?? '', {
-        // quickScan,
-        t,
-        setIsConnecting,
-      });
-      setCodeType(result.codeType);
-      setIconName(result.iconName);
-      setCodeValue(result.rawCodeValue);
-    } else {
-      resetCodeState();
-    }
-  }, [quickScan, showIndicator, handleCodeScanned]);
+      if (codes.length > 0) {
+        const firstCode = codes[0];
+        const { value, frame: codeFrame } = firstCode;
 
-  const resetCodeState = useCallback(() => {
-    setIsConnecting(false);
-    setCodeType('');
-    setCodeValue('');
-    setCodeScannerHighlights([]);
-    setCodeMetadata('');
-  }, []);
+        setCodeMetadata(value ?? '');
+
+        if (showIndicator) {
+          setCodeScannerHighlights([
+            {
+              height: codeFrame?.height ?? 0,
+              width: codeFrame?.width ?? 0,
+              x: codeFrame?.x ?? 0,
+              y: codeFrame?.y ?? 0,
+            },
+          ]);
+
+          timeoutRef.current = setTimeout(() => {
+            setCodeScannerHighlights([]);
+          }, 2000);
+        } else {
+          setCodeScannerHighlights([]);
+        }
+
+        const result = handleCodeScanned(value ?? '', {
+          // quickScan,
+          t,
+          setIsConnecting,
+        });
+        setCodeType(result.codeType);
+        setIconName(result.iconName);
+        setCodeValue(result.rawCodeValue);
+      } else {
+        resetCodeState();
+      }
+    },
+    [showIndicator, handleCodeScanned, isConnecting, resetCodeState], // Added isConnecting and resetCodeState
+  );
 
   return {
     scanFrame,
@@ -117,9 +121,7 @@ export const useCameraScanner = () => {
     codeValue,
     codeType,
     iconName,
-    quickScan,
     showIndicator,
-    toggleQuickScan,
     toggleShowIndicator,
     createCodeScannerCallback,
     resetCodeState,

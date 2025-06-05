@@ -1,67 +1,33 @@
 import { ThemedButton } from '@/components/buttons/ThemedButton';
-import { Stack, useSegments } from 'expo-router';
+import { Stack, useRouter } from 'expo-router'; // Removed useSegments as it's no longer needed here
 import 'react-native-reanimated';
 import { View, StyleSheet } from 'react-native';
-import { useRouter } from 'expo-router';
-import { useMemo, useEffect, useState } from 'react';
+import { useMemo } from 'react'; // Removed useEffect and useState as they are no longer needed
 import { ThemedView } from '@/components/ThemedView';
 import { getResponsiveHeight, getResponsiveWidth } from '@/utils/responsive';
-import { storage } from '@/utils/storage';
-import { MMKV_KEYS } from '@/services/auth/login';
-import { useSelector } from "react-redux";
-import { RootState } from "@/store/rootReducer";
+// storage and MMKV_KEYS are removed as hasQuickLoginAccounts logic is removed from this component
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store/rootReducer';
 
 export default function AuthLayout() {
-  const segments = useSegments() as string[];
-  const router = useRouter();
-  const [hasQuickLoginAccounts, setHasQuickLoginAccounts] = useState(false);
+  const router = useRouter(); // Router hook to access navigation functions
 
   // Redux: is login in progress?
   const isLoginInProgress = useSelector(
     (state: RootState) => state.authStatus.isLoginInProgress
   );
 
-  // Check if any accounts have quick login enabled
-  useEffect(() => {
-    const checkQuickLoginAccounts = () => {
-      try {
-        const prefsString = storage.getString(MMKV_KEYS.QUICK_LOGIN_PREFERENCES);
-        if (!prefsString) {
-          setHasQuickLoginAccounts(false);
-          return;
-        }
-
-        const prefs = JSON.parse(prefsString);
-        const hasEnabledAccounts = Object.values(prefs).some(
-          value => value === true
-        );
-        setHasQuickLoginAccounts(hasEnabledAccounts);
-      } catch (error) {
-        console.error('Error checking quick login accounts:', error);
-        setHasQuickLoginAccounts(false);
-      }
-    };
-
-    checkQuickLoginAccounts();
-  }, []);
-
-  // Determine if the current screen is 'register', 'forgot-password', or 'login' with quick login accounts
-  const showHeader = useMemo(() => {
-    return (
-      segments.includes('register') ||
-      segments.includes('forgot-password') ||
-      (segments.includes('login') && hasQuickLoginAccounts)
-    );
-  }, [segments, hasQuickLoginAccounts]);
-
-  // Disable back button if logging in, or on login screen with no quick login accounts
+  // The back button should only be disabled if a login is actively in progress.
+  // Its rendering is handled separately by router.canGoBack().
   const disableBackButton = useMemo(() => {
-    return isLoginInProgress || (segments.includes('login') && !hasQuickLoginAccounts);
-  }, [isLoginInProgress, segments, hasQuickLoginAccounts]);
+    return isLoginInProgress;
+  }, [isLoginInProgress]);
 
-  // Determine where the back button should navigate
+  // Navigate back if possible
   const handleBackPress = () => {
-    router.back();
+    if (router.canGoBack()) {
+      router.back();
+    }
   };
 
   return (
@@ -70,7 +36,7 @@ export default function AuthLayout() {
         <Stack
           screenOptions={{
             headerShown: false,
-            animation: 'ios',
+            animation: 'ios', // Standard iOS animation for stack screens
           }}
         >
           <Stack.Screen name="login" />
@@ -79,12 +45,13 @@ export default function AuthLayout() {
           <Stack.Screen name="quick-login" />
         </Stack>
       </View>
-      {showHeader && (
+      {/* Conditionally render the back button container if router.canGoBack() is true */}
+      {router.canGoBack() && (
         <View style={styles.headerContainer}>
           <ThemedButton
             onPress={handleBackPress}
             iconName="chevron-left"
-            disabled={disableBackButton}
+            disabled={disableBackButton} // Disable button if login is in progress
           />
         </View>
       )}
@@ -94,15 +61,15 @@ export default function AuthLayout() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flex: 1, // Ensure the layout takes up the full screen
   },
   screenContainer: {
-    flex: 1,
+    flex: 1, // The area where the current screen (login, register, etc.) is displayed
   },
   headerContainer: {
-    position: 'absolute',
-    top: getResponsiveHeight(10),
-    left: getResponsiveWidth(3.6),
-    // zIndex: 10,
+    position: 'absolute', // Position the header independently of the screen content
+    top: getResponsiveHeight(10), // Position from the top
+    left: getResponsiveWidth(3.6), // Position from the left
+    // zIndex: 10, // Uncomment if you face issues with the button being behind other elements
   },
 });
