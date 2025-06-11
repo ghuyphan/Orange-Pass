@@ -10,7 +10,7 @@
   <a href="https://github.com/ghuyphan/Orange2/stargazers"><img src="https://img.shields.io/github/stars/ghuyphan/Orange2" alt="Stars"></a>
 </p>
 
-**Orange⁺** helps you effortlessly manage all your important QR codes—from bank cards 💳 and e-wallets 📱 to loyalty programs 🛍️ and event tickets. It features a blazing-fast scanner that works offline by storing data locally, then seamlessly syncs across your devices when you're connected.
+**Orange Pass** helps you effortlessly manage all your important QR codes—from bank cards 💳 and e-wallets 📱 to loyalty programs 🛍️ and event tickets. It features a blazing-fast scanner that works offline by storing data locally, then seamlessly syncs across your devices when you're connected.
 
 ## ✨ Features
 
@@ -21,8 +21,6 @@
 *   **🧭 Intuitive Navigation:** Built with Expo's file-based routing for a smooth and predictable user experience.
 
 ## 📸 Screenshots
-
-*(Add your screenshots here!)*
 
 | Light Mode                               | Dark Mode                                |
 | ---------------------------------------- | ---------------------------------------- |
@@ -90,7 +88,7 @@ The project is structured using a feature-based approach with a clear separation
 ├── hooks/              # Custom React hooks for reusable logic
 ├── locales/            # Internationalization (i18n) files
 ├── services/           # Modules for external APIs or services
-├── store/              # Global state management (e.g., Zustand, Redux)
+├── store/              # Global state management (Redux)
 ├── types/              # TypeScript type definitions
 └── utils/              # Utility helper functions
 ```
