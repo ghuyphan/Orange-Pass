@@ -2,7 +2,7 @@
   "expo": {
     "name": "Orange⁺",
     "slug": "orange2",
-    "version": "1.0.2",
+    "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",

@@ -5,9 +5,9 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/ghuyphan/Orange2/blob/main/LICENSE"><img src="https://img.shields.io/github/license/ghuyphan/Orange2" alt="License"></a>
-  <a href="https://github.com/ghuyphan/Orange2/issues"><img src="https://img.shields.io/github/issues/ghuyphan/Orange2" alt="Issues"></a>
-  <a href="https://github.com/ghuyphan/Orange2/stargazers"><img src="https://img.shields.io/github/stars/ghuyphan/Orange2" alt="Stars"></a>
+  <a href="https://github.com/ghuyphan/orange-pass/blob/main/LICENSE"><img src="https://img.shields.io/github/license/ghuyphan/orange-pass" alt="License"></a>
+  <a href="https://github.com/ghuyphan/orange-pass/issues"><img src="https://img.shields.io/github/issues/ghuyphan/orange-pass" alt="Issues"></a>
+  <a href="https://github.com/ghuyphan/orange-pass/stargazers"><img src="https://img.shields.io/github/stars/ghuyphan/orange-pass" alt="Stars"></a>
 </p>
 
 **Orange Pass** helps you effortlessly manage all your important QR codes—from bank cards 💳 and e-wallets 📱 to loyalty programs 🛍️ and event tickets. It features a blazing-fast scanner that works offline by storing data locally, then seamlessly syncs across your devices when you're connected.
@@ -17,14 +17,15 @@
 *   **⚡️ Blazing-Fast QR Scanning:** Capture QR code data in an instant.
 *   **📴 Offline-First Access:** Your codes are always available, with or without an internet connection.
 *   **☁️ Secure Cloud Sync:** Automatically back up and synchronize your data across devices.
-*   **🗂️ Versatile & Organized:** A clean interface to manage codes from banks, e-wallets, loyalty cards, and more.
-*   **🧭 Intuitive Navigation:** Built with Expo's file-based routing for a smooth and predictable user experience.
+*   **🎨 Light & Dark Modes:** A beautiful interface that adapts to your system's theme.
+*   **🌍 Multi-Language Support:** Fully localized in English, Vietnamese, and Russian.
+*   **🗂️ Versatile & Organized:** Cleanly manage codes from banks, e-wallets, loyalty cards, and more.
 
 ## 📸 Screenshots
 
 | Light Mode                               | Dark Mode                                |
 | ---------------------------------------- | ---------------------------------------- |
-| <img src="" width="250" alt="App Light"> | <img src="" width="250" alt="App Dark">   |
+| <img src=".github/assets/screenshot-light.png" width="250" alt="App Light Mode"> | <img src=".github/assets/screenshot-dark.png" width="250" alt="App Dark Mode">   |
 
 ## 🛠️ Tech Stack
 
@@ -32,6 +33,8 @@
 *   **Language:** TypeScript
 *   **Navigation:** Expo Router (File-based)
 *   **QR Scanning:** `react-native-ml-kit`
+*   **Local Storage:** `react-native-mmkv` *(<- Example, update with your library)*
+*   **State Management:** Redux Toolkit *(<- Example, update with your library)*
 *   **Package Manager:** Yarn
 
 ## 🚀 Getting Started
@@ -49,8 +52,8 @@ Follow these instructions to get the project up and running on your local machin
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/ghuyphan/Orange2.git
-    cd Orange2
+    git clone https://github.com/ghuyphan/orange-pass.git
+    cd orange-pass
     ```
 
 2.  **Install dependencies:**
@@ -88,7 +91,7 @@ The project is structured using a feature-based approach with a clear separation
 ├── hooks/              # Custom React hooks for reusable logic
 ├── locales/            # Internationalization (i18n) files
 ├── services/           # Modules for external APIs or services
-├── store/              # Global state management (Redux)
+├── store/              # Global state management (e.g., Redux, Zustand)
 ├── types/              # TypeScript type definitions
 └── utils/              # Utility helper functions
 ```
@@ -111,14 +114,6 @@ The project is structured using a feature-based approach with a clear separation
 *   **`services/`**: Handles all external communication, such as making API requests to a backend server or interacting with third-party services like Firebase.
 
 *   **`types/`**: Centralizes all TypeScript type and interface definitions, ensuring type safety across the entire project.
-
-### Resetting the Project
-
-This repository is set up as a starter template. If you want to start over from a clean slate, you can run the reset script. This will restore the original example code.
-
-```bash
-yarn reset-project
-```
 
 ## 🤝 Contributing
 
