@@ -130,7 +130,7 @@ export function ThemedEmptyCard({
   // --- Glassmorphism Gradients ---
   const backgroundGradient = useMemo(() => {
     if (!enableGlassmorphism) return null;
-    return [DEFAULT_GRADIENT_START, DEFAULT_GRADIENT_END];
+    return [Colors.light.cardBackground, Colors.light.cardFooter];
   }, [enableGlassmorphism]);
 
   const glassGradientColors = useMemo(() => {

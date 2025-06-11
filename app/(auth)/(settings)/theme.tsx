@@ -1,5 +1,5 @@
-import React, { useCallback, useMemo } from 'react';
-import { StyleSheet, View, Pressable } from 'react-native';
+import React, { useCallback, useMemo } from "react";
+import { StyleSheet, View, Pressable } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -8,28 +8,38 @@ import Animated, {
   interpolate,
   Extrapolation,
   useAnimatedScrollHandler,
-} from 'react-native-reanimated';
-import { router } from 'expo-router';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import { ThemedButton } from '@/components/buttons/ThemedButton';
-import { t } from '@/i18n';
-import { Colors } from '@/constants/Colors';
-import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
-import { useTheme } from '@/context/ThemeContext';
-import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
-import DARK from '@/assets/svgs/dark.svg';
-import LIGHT from '@/assets/svgs/light.svg';
-import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
+} from "react-native-reanimated";
+import { router } from "expo-router";
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
+import { ThemedButton } from "@/components/buttons/ThemedButton";
+import { t } from "@/i18n";
+import { Colors } from "@/constants/Colors";
+import { STATUSBAR_HEIGHT } from "@/constants/Statusbar";
+import { useTheme } from "@/context/ThemeContext";
+import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
+import DARK from "@/assets/svgs/dark.svg";
+import LIGHT from "@/assets/svgs/light.svg";
+import {
+  getResponsiveFontSize,
+  getResponsiveWidth,
+  getResponsiveHeight,
+} from "@/utils/responsive";
+import { useGlassStyle } from "@/hooks/useGlassStyle"; // Import the new hook
 
 const ThemeScreen = () => {
   const { currentTheme, setDarkMode, useSystemTheme, isDarkMode } = useTheme();
+  const { overlayColor, borderColor } = useGlassStyle(); // Use the hook
+
   const colors = useMemo(
-    () => (currentTheme === 'light' ? Colors.light.icon : Colors.dark.icon),
+    () => (currentTheme === "light" ? Colors.light.icon : Colors.dark.icon),
     [currentTheme]
   );
   const sectionsColors = useMemo(
-    () => (currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground),
+    () =>
+      currentTheme === "light"
+        ? Colors.light.cardBackground
+        : Colors.dark.cardBackground,
     [currentTheme]
   );
 
@@ -41,7 +51,6 @@ const ThemeScreen = () => {
     },
   });
 
-  // Calculate these outside of the animated style
   const scrollThreshold = getResponsiveHeight(7);
   const translateYValue = -getResponsiveHeight(3.5);
 
@@ -76,7 +85,7 @@ const ThemeScreen = () => {
   }, [setDarkMode]);
 
   const handleSystemTheme = useCallback(() => {
-    useSystemTheme(); // Directly call the function
+    useSystemTheme();
   }, [useSystemTheme]);
 
   const renderThemeOption = useCallback(
@@ -84,13 +93,13 @@ const ThemeScreen = () => {
       <Pressable
         onPress={() => {
           switch (themeName) {
-            case 'light':
+            case "light":
               handleLightTheme();
               break;
-            case 'dark':
+            case "dark":
               handleDarkTheme();
               break;
-            case 'system':
+            case "system":
               handleSystemTheme();
               break;
           }
@@ -137,7 +146,10 @@ const ThemeScreen = () => {
     <ThemedView style={styles.container}>
       <ThemedView style={styles.blurContainer} />
 
-      <Animated.View style={[styles.titleContainer, titleContainerStyle]} pointerEvents="auto">
+      <Animated.View
+        style={[styles.titleContainer, titleContainerStyle]}
+        pointerEvents="auto"
+      >
         <View style={styles.headerContainer}>
           <ThemedButton
             iconName="chevron-left"
@@ -145,7 +157,7 @@ const ThemeScreen = () => {
             onPress={onNavigateBack}
           />
           <ThemedText type="title" style={styles.title}>
-            {t('themeScreen.title')}
+            {t("themeScreen.title")}
           </ThemedText>
         </View>
       </Animated.View>
@@ -155,21 +167,39 @@ const ThemeScreen = () => {
         onScroll={scrollHandler}
         scrollEventThrottle={16}
       >
-        <View style={[styles.descriptionContainer, { backgroundColor: sectionsColors }]}>
+        <View
+          style={[
+            styles.descriptionContainer,
+            { backgroundColor: sectionsColors, borderColor: borderColor },
+          ]}
+        >
+          <View style={[styles.defaultOverlay, { backgroundColor: overlayColor }]} />
           <View style={styles.descriptionItem}>
-            <LIGHT width={getResponsiveWidth(28)} height={getResponsiveHeight(14)} />
-            <ThemedText>{t('themeScreen.light')}</ThemedText>
+            <LIGHT
+              width={getResponsiveWidth(28)}
+              height={getResponsiveHeight(14)}
+            />
+            <ThemedText>{t("themeScreen.light")}</ThemedText>
           </View>
           <View style={styles.descriptionItem}>
-            <DARK width={getResponsiveWidth(28)} height={getResponsiveHeight(14)} />
-            <ThemedText>{t('themeScreen.dark')}</ThemedText>
+            <DARK
+              width={getResponsiveWidth(28)}
+              height={getResponsiveHeight(14)}
+            />
+            <ThemedText>{t("themeScreen.dark")}</ThemedText>
           </View>
         </View>
 
-        <ThemedView style={[styles.sectionContainer, { backgroundColor: sectionsColors }]}>
-          {renderThemeOption('light', 'weather-sunny', isDarkMode === false)}
-          {renderThemeOption('dark', 'weather-night', isDarkMode === true)}
-          {renderThemeOption('system', 'cog-outline', isDarkMode === undefined)}
+        <ThemedView
+          style={[
+            styles.sectionContainer,
+            { backgroundColor: sectionsColors, borderColor: borderColor },
+          ]}
+        >
+          <View style={[styles.defaultOverlay, { backgroundColor: overlayColor }]} />
+          {renderThemeOption("light", "weather-sunny", isDarkMode === false)}
+          {renderThemeOption("dark", "weather-night", isDarkMode === true)}
+          {renderThemeOption("system", "cog-outline", isDarkMode === undefined)}
         </ThemedView>
       </Animated.ScrollView>
     </ThemedView>
@@ -183,20 +213,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   titleContainer: {
-    position: 'absolute',
+    position: "absolute",
     top: getResponsiveHeight(10),
     left: 0,
     right: 0,
   },
   headerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: getResponsiveWidth(3.6),
-    gap: getResponsiveWidth(3.6),
-  },
-  titleButtonContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
     gap: getResponsiveWidth(3.6),
   },
   title: {
@@ -206,7 +231,7 @@ const styles = StyleSheet.create({
     zIndex: 11,
   },
   blurContainer: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
@@ -219,46 +244,51 @@ const styles = StyleSheet.create({
     paddingTop: getResponsiveHeight(18),
   },
   descriptionContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     borderRadius: getResponsiveWidth(4),
     paddingVertical: getResponsiveHeight(1.8),
     paddingHorizontal: getResponsiveWidth(4.8),
-    overflow: 'hidden',
-    justifyContent: 'space-around',
-    alignItems: 'center',
+    overflow: "hidden",
+    justifyContent: "space-around",
+    alignItems: "center",
     marginBottom: getResponsiveHeight(2),
+    borderWidth: 1, // Added for glass effect
   },
   descriptionItem: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     gap: getResponsiveHeight(1.2),
-    flexDirection: 'column',
-  },
-  descriptionText: {
-    fontSize: getResponsiveFontSize(14),
+    flexDirection: "column",
+    zIndex: 1, // Ensure content is above overlay
   },
   sectionContainer: {
     borderRadius: getResponsiveWidth(4),
-    overflow: 'hidden',
+    overflow: "hidden",
+    borderWidth: 1, // Added for glass effect
+  },
+  defaultOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 0, // Ensure overlay is behind content
   },
   section: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: getResponsiveWidth(3.6),
     paddingVertical: getResponsiveHeight(1.8),
+    zIndex: 1, // Ensure content is above overlay
   },
   leftSectionContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: getResponsiveWidth(2.4),
   },
   iconStack: {
-    position: 'relative',
-    justifyContent: 'center',
-    alignItems: 'center',
+    position: "relative",
+    justifyContent: "center",
+    alignItems: "center",
   },
   checkIcon: {
-    position: 'absolute',
+    position: "absolute",
   },
 });

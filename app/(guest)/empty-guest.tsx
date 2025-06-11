@@ -42,7 +42,7 @@ const onNavigateToAddScreen = () => {
           footButtonLabel={('homeScreen.emptyCard.footerButton')}
           cardOnPress={() => { }}
           buttonOnPress={onNavigateToScanScreen}
-          style={{ paddingTop: getResponsiveHeight(8.3) }}
+          style={{ paddingTop: getResponsiveHeight(13) }}
           footerStyle={{ borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }}
           paddingTop={getResponsiveHeight(3)}
           dropdownOptions={dropdownOptions}

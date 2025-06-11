@@ -12,7 +12,6 @@ import {
   Keyboard,
   Platform,
   ActivityIndicator,
-  InteractionManager, // Keep for potential specific non-critical uses
 } from "react-native";
 import { Formik, FormikHelpers, FormikProps } from "formik";
 import Animated, {
@@ -49,13 +48,13 @@ import {
 } from "@/utils/responsive";
 import DataType from "@/types/dataType";
 import { ThemedTopToast } from "@/components/toast/ThemedTopToast";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import ModalManager from "../modals/ModalManager";
 
 const AnimatedKeyboardAwareScrollView =
   Animated.createAnimatedComponent(KeyboardAwareScrollView);
 
-// Type definitions
+// --- Type definitions (unchanged) ---
 export interface CategoryItem {
   display: string;
   value: "bank" | "ewallet" | "store";
@@ -102,6 +101,7 @@ interface QRFormProps {
 const DEBOUNCE_DELAY = 750;
 const BRAND_PAGE_SIZE = 10;
 
+// --- BankMetadataFetcher (unchanged) ---
 const BankMetadataFetcher: React.FC<{
   values: FormParams;
   isParentLoading: boolean;
@@ -230,6 +230,7 @@ const QRForm: React.FC<QRFormProps> = ({
   formikRef,
   onAttemptBankMetadataFetch,
 }) => {
+  // --- Hooks and State (mostly unchanged) ---
   const { currentTheme } = useTheme();
   const { locale: currentLocale } = useLocale();
   const locale = currentLocale ?? "en";
@@ -291,6 +292,7 @@ const QRForm: React.FC<QRFormProps> = ({
   const translateYValue = -getResponsiveHeight(3);
   const scaleValue = 0.8;
 
+  // --- Data and Callbacks (mostly unchanged) ---
   const categoryData: CategoryItem[] = useMemo(
     () => [
       { display: t("addScreen.bankCategory"), value: "bank" },
@@ -388,7 +390,6 @@ const QRForm: React.FC<QRFormProps> = ({
         currentOffset + BRAND_PAGE_SIZE,
       );
 
-      // Removed InteractionManager for faster UI update
       if (isInitialLoad) {
         setDisplayedBrandItems(newItems);
       } else {
@@ -434,7 +435,6 @@ const QRForm: React.FC<QRFormProps> = ({
       field: "category" | "brand" | "metadataType",
       setFieldValue: FormikProps<FormParams>["setFieldValue"],
     ) => {
-      // Removed InteractionManager for faster UI update
       switch (field) {
         case "category":
           setFieldValue("category", null);
@@ -445,8 +445,6 @@ const QRForm: React.FC<QRFormProps> = ({
           setCardAccountName("");
           setFieldValue("accountNumber", "");
           setCardAccountNumber("");
-          // setFieldValue("metadata", "");
-          // setCardMetadata("");
           setDisplayedBrandItems([]);
           setBrandItemsOffset(0);
           setHasMoreBrandItems(true);
@@ -456,20 +454,14 @@ const QRForm: React.FC<QRFormProps> = ({
         case "brand":
           setFieldValue("brand", null);
           setCardBrand(null);
-          // setFieldValue("metadata", ""); // Clear metadata if brand is cleared, esp. for banks
-          // setCardMetadata("");
           break;
         case "metadataType":
-          // Assuming metadataTypeData[0] is the default/desired clear state
           setFieldValue("metadataType", metadataTypeData[0]);
           setCardMetadataType(metadataTypeData[0]);
           break;
       }
     },
-    [
-      metadataTypeData,
-      // setCardCategory, setCardBrand, etc. are not dependencies as they are stable setters
-    ],
+    [metadataTypeData],
   );
 
   const onEmptyInputPress = useCallback(() => {
@@ -493,9 +485,9 @@ const QRForm: React.FC<QRFormProps> = ({
         if (
           lastLoadedBrandCategoryValueRef.current !==
           currentCategoryFromForm.value ||
-          displayedBrandItems.length === 0 // Load if empty even if category seems same
+          displayedBrandItems.length === 0
         ) {
-          setDisplayedBrandItems([]); // Clear before loading new set
+          setDisplayedBrandItems([]);
           setBrandItemsOffset(0);
           setHasMoreBrandItems(true);
           loadBrandItems(
@@ -509,21 +501,15 @@ const QRForm: React.FC<QRFormProps> = ({
       if (openSheetTimeoutRef.current) {
         clearTimeout(openSheetTimeoutRef.current);
       }
-      // Using requestAnimationFrame + setTimeout for smoother sheet opening animation
       requestAnimationFrame(() => {
         setIsSheetOpen(true);
         openSheetTimeoutRef.current = setTimeout(
           () => bottomSheetRef.current?.snapToIndex(0),
-          Platform.OS === "ios" ? 50 : 50, // Small delay for UI thread
+          Platform.OS === "ios" ? 50 : 50,
         );
       });
     },
-    [
-      isMetadataLoading,
-      showToast,
-      loadBrandItems,
-      displayedBrandItems.length, // Dependency to re-evaluate if items are empty
-    ],
+    [isMetadataLoading, showToast, loadBrandItems, displayedBrandItems.length],
   );
 
   const handleSheetItemSelect = useCallback(
@@ -531,10 +517,9 @@ const QRForm: React.FC<QRFormProps> = ({
       item: SheetItem,
       type: SheetType,
       setFieldValue: FormikProps<FormParams>["setFieldValue"],
-      currentCategoryInForm: CategoryItem | null, // This is values.category from Formik
+      currentCategoryInForm: CategoryItem | null,
     ) => {
       bottomSheetRef.current?.close();
-      // Removed InteractionManager for faster UI update
       switch (type) {
         case "category":
           const newCategory = item as CategoryItem;
@@ -542,26 +527,21 @@ const QRForm: React.FC<QRFormProps> = ({
 
           setFieldValue("category", newCategory);
           setCardCategory(newCategory);
-          setFieldValue("brand", null); // Clear brand when category changes
+          setFieldValue("brand", null);
           setCardBrand(null);
-          // setFieldValue("metadata", ""); // Clear metadata
-          // setCardMetadata("");
 
           if (newCategory.value === "store") {
             setFieldValue("accountName", "");
             setCardAccountName("");
             setFieldValue("accountNumber", "");
             setCardAccountNumber("");
-          } else if (newCategory.value === "bank") {
-            // For banks, account name/number might still be relevant
-            // but metadata will be auto-fetched or empty initially.
           }
 
           if (newCategory.value !== oldCategoryValue) {
             setDisplayedBrandItems([]);
             setBrandItemsOffset(0);
             setHasMoreBrandItems(true);
-            lastLoadedBrandCategoryValueRef.current = null; // Signal brand list needs refresh
+            lastLoadedBrandCategoryValueRef.current = null;
             allBrandsForCurrentCategoryRef.current = [];
           }
           break;
@@ -569,12 +549,6 @@ const QRForm: React.FC<QRFormProps> = ({
           const newBrand = item as BrandItem;
           setFieldValue("brand", newBrand);
           setCardBrand(newBrand);
-          if (newBrand.type === "bank") {
-            // If a bank brand is selected, clear existing metadata
-            // to allow BankMetadataFetcher to attempt a new fetch.
-            // setFieldValue("metadata", "");
-            // setCardMetadata("");
-          }
           break;
         case "metadataType":
           const newMetaType = item as MetadataTypeItem;
@@ -583,9 +557,7 @@ const QRForm: React.FC<QRFormProps> = ({
           break;
       }
     },
-    [
-      /* setCard setters are stable, no need to list them */
-    ],
+    [],
   );
 
   const handleSheetChange = useCallback((index: number) => {
@@ -676,8 +648,9 @@ const QRForm: React.FC<QRFormProps> = ({
     [colorPalette, iconColors, handleSheetItemSelect, sheetType],
   );
 
+  // --- *** CHANGE #1: renderCardItemDisplay no longer needs cardStyle *** ---
   const renderCardItemDisplay = useCallback(
-    (cardStyle: any) => (
+    () => (
       <ThemedCardItem
         accountName={cardAccountName}
         accountNumber={cardAccountNumber}
@@ -685,7 +658,7 @@ const QRForm: React.FC<QRFormProps> = ({
         type={cardCategory?.value || "store"}
         metadata={cardMetadata}
         metadata_type={cardMetadataType?.value}
-        animatedStyle={cardStyle}
+        // animatedStyle is removed from here
         cardHolderStyle={{
           maxWidth: getResponsiveWidth(40),
           fontSize: getResponsiveFontSize(12),
@@ -709,7 +682,6 @@ const QRForm: React.FC<QRFormProps> = ({
       formikHelpers: FormikHelpers<FormParams>,
     ) => {
       Keyboard.dismiss();
-      // Card state is already updated via onBlur or sheet select for relevant fields
       await onSubmit(values, formikHelpers);
     },
     [onSubmit],
@@ -717,7 +689,6 @@ const QRForm: React.FC<QRFormProps> = ({
 
   const updateCardStateOnBlur = useCallback(
     (fieldName: keyof FormParams, fieldValue: string) => {
-      // Removed InteractionManager for faster UI update
       switch (fieldName) {
         case "metadata":
           setCardMetadata(fieldValue);
@@ -732,9 +703,10 @@ const QRForm: React.FC<QRFormProps> = ({
           break;
       }
     },
-    [/* setCard setters are stable */],
+    [],
   );
 
+  // --- Animated Styles (unchanged) ---
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => (scrollY.value = event.contentOffset.y),
   });
@@ -776,9 +748,9 @@ const QRForm: React.FC<QRFormProps> = ({
     [scrollThreshold, scaleValue],
   );
 
+  // --- useEffects (unchanged) ---
   useEffect(() => {
     if (initialValues.category?.value) {
-      // Prepare brands for the initial category if present
       if (
         lastLoadedBrandCategoryValueRef.current !==
         initialValues.category.value ||
@@ -818,21 +790,19 @@ const QRForm: React.FC<QRFormProps> = ({
         setFieldValue,
         setFieldError,
         dirty,
-        isValid, // Added isValid from Formik
+        isValid,
       }) => {
-        // Updated formDisabled logic
         const formDisabled =
-          !isValid || // Disable if form is not valid
-          (isEditing && !dirty) || // Disable if editing and no changes made
+          !isValid ||
+          (isEditing && !dirty) ||
           isSubmitting ||
           isMetadataLoading;
-
 
         const createFormFieldBlurHandler = (
           fieldName: keyof FormParams,
         ) => {
           return (e: any) => {
-            handleBlur(fieldName)(e); // Call Formik's blur handler
+            handleBlur(fieldName)(e);
             const fieldValue = values[fieldName];
             if (
               fieldName === "metadata" ||
@@ -853,7 +823,7 @@ const QRForm: React.FC<QRFormProps> = ({
               setFieldValue={setFieldValue}
               setFieldError={setFieldError}
               showToast={showToast}
-              setCardMetadata={setCardMetadata} // Pass down for direct update from fetcher
+              setCardMetadata={setCardMetadata}
             />
             <ThemedTopToast
               key={toastKey}
@@ -870,7 +840,7 @@ const QRForm: React.FC<QRFormProps> = ({
                   <ThemedButton
                     iconName="chevron-left"
                     style={styles.titleButton}
-                    disabled={isSubmitting || isMetadataLoading} // Only disable for async ops
+                    disabled={isSubmitting || isMetadataLoading}
                     onPress={() => {
                       if (dirty && !isSubmitting && !isMetadataLoading) {
                         modalManagerRef.current?.showModal();
@@ -886,20 +856,23 @@ const QRForm: React.FC<QRFormProps> = ({
               </View>
             </Animated.View>
             <AnimatedKeyboardAwareScrollView
-              contentContainerStyle={styles.scrollViewContent}
-              enableOnAndroid={true}
-              showsVerticalScrollIndicator={false}
-              keyboardShouldPersistTaps="handled"
+              // Use the new content container style
               onScroll={scrollHandler}
-              scrollEnabled={!isSheetOpen && !isSubmitting && !isMetadataLoading} // Adjusted scrollEnabled
+              contentContainerStyle={styles.scrollViewContent}
+              // `bottomOffset` adds padding between the focused input and the keyboard
+              bottomOffset={25}
+              // `keyboardShouldPersistTaps` is a standard ScrollView prop.
+              // "handled" is best for forms, as it prevents the keyboard from
+              // closing when you tap a button.
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
             >
-              {renderCardItemDisplay(cardStyle)}
-              <ThemedView
-                style={[
-                  styles.formContainer,
-                  { backgroundColor: sectionsColors },
-                ]}
-              >
+              {/* --- *** CHANGE #2: Wrap the component in an Animated.View *** --- */}
+              <Animated.View style={cardStyle}>
+                {renderCardItemDisplay()}
+              </Animated.View>
+
+              <ThemedView style={[styles.formContainer]}>
                 <ThemedDisplayInput
                   iconName="format-list-bulleted-type"
                   placeholder={t("addScreen.categoryPlaceholder")}
@@ -940,8 +913,8 @@ const QRForm: React.FC<QRFormProps> = ({
                       label={t("addScreen.qrCodeDataLabel")}
                       value={values.metadata}
                       isLoading={isMetadataLoading}
-                      showClearButton={false} // Typically auto-generated, so no clear
-                      disabled={true} // Always disabled as it's auto-filled
+                      showClearButton={false}
+                      disabled={true}
                       placeholder={
                         isMetadataLoading
                           ? t("addScreen.qrLoadingPlaceholder")
@@ -960,7 +933,6 @@ const QRForm: React.FC<QRFormProps> = ({
                 {(values.category?.value === "store" ||
                   values.category?.value === "ewallet") && (
                     <Animated.View
-                      style={{ backgroundColor: sectionsColors }}
                       entering={FadeIn.duration(300)}
                       exiting={FadeOut.duration(300)}
                     >
@@ -970,7 +942,6 @@ const QRForm: React.FC<QRFormProps> = ({
                         value={values.metadata}
                         onChangeText={handleChange("metadata")}
                         onBlur={createFormFieldBlurHandler("metadata")}
-                        backgroundColor={inputBackgroundColor}
                         disabled={
                           (!!codeProvider && !isEditing) ||
                           isSubmitting ||
@@ -997,16 +968,13 @@ const QRForm: React.FC<QRFormProps> = ({
                   onClear={() =>
                     handleFieldClear("metadataType", setFieldValue)
                   }
-                  showClearButton={false} // Usually no need to clear this, just select another
+                  showClearButton={false}
                   disabled={isSubmitting || isMetadataLoading}
                 />
               </ThemedView>
               {shouldShowAccountSection(values.category) && (
                 <Animated.View
-                  style={[
-                    styles.formContainer,
-                    { backgroundColor: sectionsColors },
-                  ]}
+                  style={[styles.formContainer]}
                   entering={FadeIn.duration(300)}
                   exiting={FadeOut.duration(300)}
                 >
@@ -1016,7 +984,6 @@ const QRForm: React.FC<QRFormProps> = ({
                     value={values.accountName}
                     onChangeText={handleChange("accountName")}
                     onBlur={createFormFieldBlurHandler("accountName")}
-                    backgroundColor={inputBackgroundColor}
                     disableOpacityChange={false}
                     errorMessage={
                       touched.accountName && errors.accountName
@@ -1033,7 +1000,6 @@ const QRForm: React.FC<QRFormProps> = ({
                     value={values.accountNumber}
                     onChangeText={handleChange("accountNumber")}
                     onBlur={createFormFieldBlurHandler("accountNumber")}
-                    backgroundColor={inputBackgroundColor}
                     keyboardType="numeric"
                     disableOpacityChange={false}
                     errorMessage={
@@ -1055,7 +1021,7 @@ const QRForm: React.FC<QRFormProps> = ({
                 }
                 onPress={() => handleSubmit()}
                 style={styles.saveButton}
-                disabled={formDisabled} // Use the updated formDisabled
+                disabled={formDisabled}
                 loading={isSubmitting}
                 loadingLabel={
                   isEditing ? t("editScreen.saving") : t("addScreen.saving")
@@ -1099,7 +1065,6 @@ const QRForm: React.FC<QRFormProps> = ({
                     keyExtractor: keyExtractor,
                     style: {
                       ...styles.flatListStyle,
-                      backgroundColor: sectionsColors,
                     },
                     onEndReached:
                       sheetType === "brand" ? handleLoadMoreBrands : undefined,
@@ -1111,9 +1076,9 @@ const QRForm: React.FC<QRFormProps> = ({
                           style={{ marginVertical: 20 }}
                         />
                       ) : null,
-                    initialNumToRender: BRAND_PAGE_SIZE, // Match page size
-                    maxToRenderPerBatch: BRAND_PAGE_SIZE, // Match page size
-                    windowSize: 10, // Or 21 for larger coverage
+                    initialNumToRender: BRAND_PAGE_SIZE,
+                    maxToRenderPerBatch: BRAND_PAGE_SIZE,
+                    windowSize: 10,
                   },
                 }}
               />
@@ -1122,7 +1087,7 @@ const QRForm: React.FC<QRFormProps> = ({
               ref={modalManagerRef}
               onNavigateBack={onNavigateBack}
               dirty={dirty}
-              isSheetVisible={isSheetVisible} // Pass the boolean value
+              isSheetVisible={isSheetVisible}
               bottomSheetRef={bottomSheetRef}
             />
           </ThemedView>
@@ -1132,6 +1097,7 @@ const QRForm: React.FC<QRFormProps> = ({
   );
 };
 
+// --- Styles (unchanged) ---
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scrollViewContent: {
@@ -1142,10 +1108,10 @@ const styles = StyleSheet.create({
   },
   titleContainer: {
     position: "absolute",
-    top: getResponsiveHeight(Platform.OS === "ios" ? 9 : 9), // Adjusted for potential notch
+    top: getResponsiveHeight(Platform.OS === "ios" ? 9 : 9),
     left: 0,
     right: 0,
-    zIndex: 10, // Ensure title is above scroll content but below sheet
+    zIndex: 10,
   },
   headerContainer: {
     flexDirection: "row",
@@ -1167,6 +1133,7 @@ const styles = StyleSheet.create({
     marginTop: getResponsiveHeight(1.2),
     marginBottom: getResponsiveHeight(2.4),
     padding: getResponsiveWidth(1),
+    gap: getResponsiveHeight(1.2),
   },
   saveButton: {
     marginTop: getResponsiveHeight(2.4),
@@ -1180,4 +1147,3 @@ const styles = StyleSheet.create({
 });
 
 export default React.memo(QRForm);
-

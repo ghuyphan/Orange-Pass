@@ -12,7 +12,7 @@ import {
   Pressable,
   Platform,
 } from "react-native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { Formik } from "formik";
 import { router } from "expo-router";
 import { useSelector, useDispatch } from "react-redux";
@@ -82,12 +82,16 @@ const createLanguageOptions = () => {
 // Create styles
 const createStyles = () => {
   return StyleSheet.create({
-    container: {
+    // The main container for the scroll view's content.
+    // `flexGrow: 1` ensures it can scroll even if content is short.
+    // We removed `justifyContent: 'space-between'` for more predictable scrolling.
+    scrollContentContainer: {
       flexGrow: 1,
       paddingHorizontal: getResponsiveWidth(3.6),
-      justifyContent: "space-between",
+
     },
-    contentContainer: {
+    // This wrapper takes up all available space, pushing the footer down.
+    mainContent: {
       flex: 1,
     },
     languageSelectorContainer: {
@@ -112,20 +116,20 @@ const createStyles = () => {
       marginBottom: getResponsiveHeight(4),
       marginTop: getResponsiveHeight(2),
     },
+    // This container holds the elements at the bottom of the screen.
+    footerContainer: {
+      alignItems: "center",
+      paddingBottom:
+        Platform.OS === "ios"
+          ? getResponsiveHeight(4)
+          : getResponsiveHeight(3),
+    },
     createAccountButton: {
       borderRadius: getResponsiveWidth(8),
       width: "100%",
       marginBottom: getResponsiveHeight(2),
     },
     createAccountButtonText: {},
-    appNameContainer: {
-      alignItems: "center",
-      marginBottom:
-        Platform.OS === "ios"
-          ? getResponsiveHeight(4)
-          : getResponsiveHeight(3),
-      paddingBottom: Platform.OS === "android" ? getResponsiveHeight(1) : 0,
-    },
     metaText: {
       opacity: 0.7,
     },
@@ -171,8 +175,8 @@ const createStyles = () => {
       position: "relative",
       justifyContent: "center",
       alignItems: "center",
-      width: getResponsiveFontSize(18), // Ensure stack has a defined size
-      height: getResponsiveFontSize(18), // Ensure stack has a defined size
+      width: getResponsiveFontSize(18),
+      height: getResponsiveFontSize(18),
     },
     checkIcon: {
       position: "absolute",
@@ -194,11 +198,9 @@ export default function LoginScreen() {
   );
 
   const [isToastVisible, setIsToastVisible] = useState(false);
-  const [isKeyboardVisible, setKeyboardVisible] = useState(false); // Kept for potential future use
   const [errorMessage, setErrorMessage] = useState("");
 
   const bottomSheetRef = useRef(null);
-  const scrollViewRef = useRef(null); // Kept for potential future use
 
   const themeColors = useMemo(() => {
     const isLight = currentTheme === "light";
@@ -213,22 +215,6 @@ export default function LoginScreen() {
       textColor: isLight ? Colors.light.text : Colors.dark.text,
     };
   }, [currentTheme]);
-
-  useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener(
-      "keyboardDidShow",
-      () => setKeyboardVisible(true)
-    );
-    const keyboardDidHideListener = Keyboard.addListener(
-      "keyboardDidHide",
-      () => setKeyboardVisible(false)
-    );
-
-    return () => {
-      keyboardDidHideListener.remove();
-      keyboardDidShowListener.remove();
-    };
-  }, []);
 
   useEffect(() => {
     if (authRefreshError !== null) {
@@ -282,30 +268,15 @@ export default function LoginScreen() {
 
         const wasGuest = await checkGuestModeStatus();
         if (wasGuest) {
-           (
-            "[LoginScreen] User was guest, attempting to transfer data..."
-          );
           try {
             await transferGuestDataToUser(newUserId);
-             (
-              "[LoginScreen] Guest data transfer successful."
-            );
           } catch (transferError) {
             console.error(
               "[LoginScreen] Error during guest data transfer:",
               transferError
             );
           }
-          const exitedSuccessfully = await exitGuestMode();
-          if (exitedSuccessfully) {
-             (
-              "[LoginScreen] Successfully exited guest mode after login attempt."
-            );
-          } else {
-            console.warn(
-              "[LoginScreen] Failed to cleanly exit guest mode state. The GUEST_MODE_KEY might be stale."
-            );
-          }
+          await exitGuestMode();
         }
 
         const hasPreference = await hasQuickLoginPreference(newUserId);
@@ -436,20 +407,18 @@ export default function LoginScreen() {
         isSubmitting,
       }) => (
         <KeyboardAwareScrollView
-          ref={scrollViewRef}
+          // Use the new content container style
+          contentContainerStyle={[styles.scrollContentContainer, {backgroundColor: themeColors.backgroundColor}]}
+          // `bottomOffset` adds padding between the focused input and the keyboard
+          bottomOffset={50}
+          // `keyboardShouldPersistTaps` is a standard ScrollView prop.
+          // "handled" is best for forms, as it prevents the keyboard from
+          // closing when you tap a button.
           keyboardShouldPersistTaps="handled"
-          style={{ backgroundColor: themeColors.backgroundColor }}
-          contentContainerStyle={styles.container}
-          extraScrollHeight={
-            Platform.OS === "ios" ? getResponsiveHeight(4) : 0
-          }
-          enableOnAndroid={true}
-          enableResetScrollToCoords={false}
           showsVerticalScrollIndicator={false}
-          scrollEnabled={true}
-          keyboardOpeningTime={0}
         >
-          <View style={styles.contentContainer}>
+          {/* Main content wrapper. `flex: 1` makes it expand to push the footer down. */}
+          <View style={styles.mainContent}>
             <View style={styles.languageSelectorContainer}>
               <ThemedTextButton
                 onPress={toggleLanguageDropdown}
@@ -518,7 +487,8 @@ export default function LoginScreen() {
             </View>
           </View>
 
-          <View style={styles.appNameContainer}>
+          {/* Footer content is now in its own container */}
+          <View style={styles.footerContainer}>
             <ThemedButton
               label={t("loginScreen.registerNow")}
               onPress={onNavigateToRegister}
@@ -532,6 +502,7 @@ export default function LoginScreen() {
             </ThemedText>
           </View>
 
+          {/* Absolutely positioned elements can remain here */}
           <ThemedToast
             duration={5000}
             message={errorMessage}
@@ -545,7 +516,7 @@ export default function LoginScreen() {
           <ThemedReuseableSheet
             ref={bottomSheetRef}
             title={t("loginScreen.selectLanguage")}
-            snapPoints={["40%"]} // Consider making this dynamic if content changes significantly
+            snapPoints={["40%"]}
             showCloseButton={true}
             contentType="custom"
             customContent={languageOptionsContent}

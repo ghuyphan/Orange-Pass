@@ -687,7 +687,6 @@ function HomeScreen() {
       }
       setIsToastVisible(true);
       setToastMessage(t("homeScreen.deleting"));
-       ("HomeScreen: Deleting QR code:", selectedItemId);
 
       await deleteQrCode(selectedItemId, userId);
       const updatedData = qrData.filter((item) => item.id !== selectedItemId);
@@ -702,7 +701,6 @@ function HomeScreen() {
       setIsToastVisible(false);
       setTopToastMessage(t("homeScreen.deleteSuccess"));
       setIsTopToastVisible(true);
-       ("HomeScreen: QR code deleted successfully.");
     } catch (error) {
       console.error("Error deleting QR code:", error);
       setToastMessage(t("homeScreen.deleteError"));

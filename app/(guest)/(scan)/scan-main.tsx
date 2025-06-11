@@ -390,9 +390,9 @@ export default function GuestScanScreen() {
       return (
         cameraStatus === "granted" &&
         locationStatus["android.permission.ACCESS_FINE_LOCATION"] ===
-          "granted" &&
+        "granted" &&
         locationStatus["android.permission.ACCESS_COARSE_LOCATION"] ===
-          "granted"
+        "granted"
       );
     } catch (error) {
       console.error("Error requesting permissions:", error);
@@ -485,24 +485,6 @@ export default function GuestScanScreen() {
                     />
                   )}
                 </View>
-                <View
-                  style={{
-                    position: "absolute",
-                    bottom: 60,
-                    left: 0,
-                    right: 0,
-                  }}
-                >
-                  {codeMetadata.length > 0 && (
-                    <QRResult
-                      codeValue={codeValue}
-                      // codeType={codeType}
-                      // iconName={iconName}
-                      animatedStyle={animatedStyle}
-                      onNavigateToAdd={onNavigateToAddScreen}
-                    />
-                  )}
-                </View>
               </>
             ) : (
               <View style={styles.cameraFallback}>
@@ -514,6 +496,24 @@ export default function GuestScanScreen() {
             )}
           </Reanimated.View>
         </GestureDetector>
+        <View
+          style={{
+            position: "absolute",
+            bottom: 60,
+            left: 0,
+            right: 0,
+          }}
+        >
+          {codeMetadata.length > 0 && (
+            <QRResult
+              codeValue={codeValue}
+              // codeType={codeType}
+              // iconName={iconName}
+              animatedStyle={animatedStyle}
+              onNavigateToAdd={onNavigateToAddScreen}
+            />
+          )}
+        </View>
         {device && (
           <View style={styles.zoomControlContainer}>
             <ZoomControl

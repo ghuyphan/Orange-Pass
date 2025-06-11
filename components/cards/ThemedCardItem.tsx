@@ -41,7 +41,7 @@ const defaultItemData = {
   name: "...",
   color: { light: DEFAULT_GRADIENT_START, dark: DEFAULT_GRADIENT_END },
   accent_color: { light: DEFAULT_GRADIENT_END, dark: DEFAULT_GRADIENT_START },
-  type: "store",
+  type: "store"
 };
 
 const defaultIconPath = null;
@@ -154,19 +154,10 @@ const ThemedCardItem = memo(function ThemedCardItem({
 
   const metadataContent = useMemo(() => {
     if (!displayMetadata) {
-      return (
-        <Animated.View
-          style={[styles.qrPlaceholder, animatedPlaceholderStyle]}
-        />
-      );
+      return null;
     }
     if (metadata_type === "qr") {
-      return (
-        <QRCode
-          value={displayMetadata}
-          size={QR_SIZE}
-        />
-      );
+      return <QRCode value={displayMetadata} size={QR_SIZE} />;
     }
     return (
       <Barcode
@@ -176,7 +167,7 @@ const ThemedCardItem = memo(function ThemedCardItem({
         format="CODE128"
       />
     );
-  }, [displayMetadata, metadata_type, animatedPlaceholderStyle]);
+  }, [displayMetadata, metadata_type]);
 
   const gradientColors = useMemo(
     () =>
@@ -191,23 +182,26 @@ const ThemedCardItem = memo(function ThemedCardItem({
   // Glassmorphism gradient colors (more transparent)
   const glassGradientColors = useMemo(() => {
     if (!enableGlassmorphism) return gradientColors;
-    
+
     // Create glassmorphism colors with transparency
     return [
-      'rgba(255, 255, 255, 0.25)',
-      'rgba(255, 255, 255, 0.15)',
-      'rgba(255, 255, 255, 0.1)',
-      'rgba(255, 255, 255, 0.08)'
+      "rgba(255, 255, 255, 0.25)",
+      "rgba(255, 255, 255, 0.15)",
+      "rgba(255, 255, 255, 0.1)",
+      "rgba(255, 255, 255, 0.08)"
     ];
   }, [enableGlassmorphism, gradientColors]);
 
   // Background gradient for glassmorphism effect
   const backgroundGradient = useMemo(() => {
     if (!enableGlassmorphism) return null;
-    
+
     return gradientColors;
   }, [enableGlassmorphism, gradientColors]);
 
+  // --- CORRECTED PART ---
+  // The wrapping Animated.View is removed. The animatedStyle is applied
+  // directly to the ReanimatedLinearGradient.
   const cardContent = (
     <View style={styles.cardWrapper}>
       {/* Background gradient for glassmorphism */}
@@ -219,7 +213,7 @@ const ThemedCardItem = memo(function ThemedCardItem({
           style={styles.backgroundGradient}
         />
       )}
-      
+
       {/* Glassmorphism overlay layers */}
       {enableGlassmorphism && (
         <>
@@ -236,16 +230,18 @@ const ThemedCardItem = memo(function ThemedCardItem({
           styles.cardContainer,
           enableGlassmorphism && styles.glassCard,
           style,
-          animatedStyle
+          animatedStyle // This is the correct and only place it should be
         ]}
       >
         {/* Card Header */}
         <View style={styles.cardHeader}>
           <View style={styles.leftHeaderContainer}>
-            <View style={[
-              styles.logoContainer,
-              enableGlassmorphism && styles.glassLogoContainer
-            ]}>
+            <View
+              style={[
+                styles.logoContainer,
+                enableGlassmorphism && styles.glassLogoContainer
+              ]}
+            >
               {iconPath ? (
                 <Image
                   source={iconPath}
@@ -282,7 +278,9 @@ const ThemedCardItem = memo(function ThemedCardItem({
               <MaterialCommunityIcons
                 name="dots-vertical"
                 size={getResponsiveFontSize(20)}
-                color={enableGlassmorphism ? "rgba(255,255,255,0.9)" : "white"}
+                color={
+                  enableGlassmorphism ? "rgba(255,255,255,0.9)" : "white"
+                }
               />
             </Pressable>
           )}
@@ -317,10 +315,12 @@ const ThemedCardItem = memo(function ThemedCardItem({
             )}
           </View>
 
-          <View style={[
-            styles.qrContainer,
-            enableGlassmorphism && styles.glassQrContainer
-          ]}>
+          <View
+            style={[
+              styles.qrContainer,
+              enableGlassmorphism && styles.glassQrContainer
+            ]}
+          >
             {metadataContent}
           </View>
         </View>
@@ -338,12 +338,15 @@ const ThemedCardItem = memo(function ThemedCardItem({
       </ReanimatedLinearGradient>
     </View>
   );
+  // --- END OF CORRECTION ---
 
   return (
-    <View style={[
-      styles.outerContainer,
-      enableGlassmorphism && styles.glassOuterContainer
-    ]}>
+    <View
+      style={[
+        styles.outerContainer,
+        enableGlassmorphism && styles.glassOuterContainer
+      ]}
+    >
       {onItemPress ? (
         <Pressable
           disabled={isActive}
@@ -351,7 +354,9 @@ const ThemedCardItem = memo(function ThemedCardItem({
           onLongPress={onDrag}
           delayLongPress={250}
           android_ripple={{
-            color: enableGlassmorphism ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.2)",
+            color: enableGlassmorphism
+              ? "rgba(255, 255, 255, 0.1)"
+              : "rgba(0, 0, 0, 0.2)",
             foreground: true,
             borderless: false
           }}
@@ -366,6 +371,7 @@ const ThemedCardItem = memo(function ThemedCardItem({
   );
 });
 
+// Styles remain the same
 const styles = StyleSheet.create({
   outerContainer: {
     marginHorizontal: getResponsiveWidth(3.6),
@@ -381,37 +387,37 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.15,
     shadowRadius: 12,
-    elevation: 8,
+    elevation: 8
   },
   cardWrapper: {
-    position: 'relative',
+    position: "relative",
     borderRadius: getResponsiveWidth(4),
-    overflow: 'hidden',
+    overflow: "hidden"
   },
   backgroundGradient: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    opacity: 0.8,
+    opacity: 0.8
   },
   glassLayer1: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: "rgba(255, 255, 255, 0.05)"
   },
   glassLayer2: {
-    position: 'absolute',
+    position: "absolute",
     top: 1,
     left: 1,
     right: 1,
     bottom: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.02)',
-    borderRadius: getResponsiveWidth(3.5),
+    backgroundColor: "rgba(255, 255, 255, 0.02)",
+    borderRadius: getResponsiveWidth(3.5)
   },
   cardContainer: {
     borderRadius: getResponsiveWidth(4),
@@ -419,17 +425,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: getResponsiveWidth(4.8),
     aspectRatio: 1.65,
     justifyContent: "space-between",
-    position: 'relative',
-    zIndex: 1,
+    position: "relative",
+    zIndex: 1
   },
   glassCard: {
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: "rgba(255, 255, 255, 0.2)",
     // Enhanced border highlight for glassmorphism
     borderTopWidth: 1.5,
     borderLeftWidth: 1.5,
-    borderTopColor: 'rgba(255, 255, 255, 0.3)',
-    borderLeftColor: 'rgba(255, 255, 255, 0.3)',
+    borderTopColor: "rgba(255, 255, 255, 0.3)",
+    borderLeftColor: "rgba(255, 255, 255, 0.3)"
   },
   cardHeader: {
     flexDirection: "row",
@@ -449,9 +455,9 @@ const styles = StyleSheet.create({
   },
   glassText: {
     color: "rgba(255, 255, 255, 0.95)",
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowColor: "rgba(0, 0, 0, 0.3)",
     textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    textShadowRadius: 2
   },
   logoContainer: {
     width: getResponsiveWidth(9.6),
@@ -465,7 +471,7 @@ const styles = StyleSheet.create({
   glassLogoContainer: {
     backgroundColor: "rgba(255, 255, 255, 0.9)",
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderColor: "rgba(255, 255, 255, 0.3)"
   },
   logo: {
     width: "60%",
@@ -501,9 +507,9 @@ const styles = StyleSheet.create({
   },
   glassSubText: {
     color: "rgba(255,255,255,0.8)",
-    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowColor: "rgba(0, 0, 0, 0.2)",
     textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 1,
+    textShadowRadius: 1
   },
   qrContainer: {
     backgroundColor: "white",
@@ -514,12 +520,12 @@ const styles = StyleSheet.create({
   glassQrContainer: {
     backgroundColor: "rgba(255, 255, 255, 0.95)",
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderColor: "rgba(255, 255, 255, 0.3)",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: Platform.OS === 'android' ? 3 : 0,
+    elevation: Platform.OS === "android" ? 3 : 0
   },
   qrPlaceholder: {
     borderRadius: getResponsiveWidth(1.5)

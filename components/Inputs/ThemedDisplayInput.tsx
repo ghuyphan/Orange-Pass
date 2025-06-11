@@ -24,6 +24,7 @@ import {
   getResponsiveWidth,
   getResponsiveHeight,
 } from "@/utils/responsive";
+import { useGlassStyle } from "@/hooks/useGlassStyle"; // Import the new hook
 
 import Animated, {
   useSharedValue,
@@ -79,6 +80,7 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
     ref
   ) => {
     const { currentTheme } = useTheme();
+    const { overlayColor, borderColor: glassBorderColor } = useGlassStyle(); // Use the hook
     const [displayValue, setDisplayValue] = useState(value);
     const [inputRowWidth, setInputRowWidth] = useState(0);
 
@@ -103,9 +105,10 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
         styles.inputContainer,
         {
           backgroundColor: themedInputBackgroundColor,
+          borderColor: glassBorderColor, // Use border color from hook
         },
       ],
-      [currentTheme, themedInputBackgroundColor]
+      [currentTheme, themedInputBackgroundColor, glassBorderColor]
     );
 
     const animatedBorderWidth = useSharedValue(
@@ -138,7 +141,7 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
       const tint =
         currentTheme === "light" ? Colors.light.tint : Colors.dark.tint;
 
-      const transparentVersion = (hex: string, alpha: number = 0) => {
+      const transparentVersion = (hex: string) => {
         let r = 0,
           g = 0,
           b = 0;
@@ -151,10 +154,10 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
           g = parseInt(hex[3] + hex[4], 16);
           b = parseInt(hex[5] + hex[6], 16);
         }
-        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        return `rgba(${r}, ${g}, ${b}, 0.1)`;
       };
 
-      const shimmerBase = transparentVersion(baseBg, 0.1);
+      const shimmerBase = transparentVersion(baseBg);
       const shimmerHighlight = tint;
 
       return [shimmerBase, shimmerHighlight, shimmerBase];
@@ -162,12 +165,9 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
 
     const animatedLeftShimmerStyle = useAnimatedStyle(() => {
       if (inputRowWidth === 0) return { transform: [{ translateX: -10000 }] };
-      // Start with strip's center at inputRowWidth / 2
       const startX = inputRowWidth / 2 - SHIMMER_STRIP_WIDTH / 2;
-      // End with strip's left edge at -SHIMMER_STRIP_WIDTH (fully off-screen left)
       const endX = -SHIMMER_STRIP_WIDTH;
-      const currentX =
-        startX + shimmerProgress.value * (endX - startX);
+      const currentX = startX + shimmerProgress.value * (endX - startX);
       return {
         transform: [{ translateX: currentX }],
       };
@@ -175,12 +175,9 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
 
     const animatedRightShimmerStyle = useAnimatedStyle(() => {
       if (inputRowWidth === 0) return { transform: [{ translateX: 10000 }] };
-      // Start with strip's center at inputRowWidth / 2
       const startX = inputRowWidth / 2 - SHIMMER_STRIP_WIDTH / 2;
-      // End with strip's left edge at inputRowWidth (fully off-screen right)
       const endX = inputRowWidth;
-      const currentX =
-        startX + shimmerProgress.value * (endX - startX);
+      const currentX = startX + shimmerProgress.value * (endX - startX);
       return {
         transform: [{ translateX: currentX }],
       };
@@ -225,14 +222,7 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
         errorTextHeight.value = withTiming(0, { duration: 150 });
         errorTextOpacity.value = withTiming(0, { duration: 100 });
       }
-    }, [
-      isError,
-      errorMessage,
-      animatedBorderWidth,
-      errorTextHeight,
-      errorTextOpacity,
-      errorShakeValue,
-    ]);
+    }, [isError, errorMessage]);
 
     useEffect(() => {
       setDisplayValue(value);
@@ -246,6 +236,9 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
     return (
       <View style={[styles.container, style]}>
         <ThemedView style={inputContainerStyle}>
+          <View
+            style={[styles.defaultOverlay, { backgroundColor: overlayColor }]}
+          />
           {!iconName && !logoCode && !isLoading && (
             <ThemedText style={[styles.label, { color }]} type="defaultSemiBold">
               {label}
@@ -263,9 +256,7 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
               }}
               style={[
                 styles.inputRow,
-                {
-                  borderBottomColor: errorColor,
-                },
+                { borderBottomColor: errorColor },
                 animatedBorderStyle,
               ]}
             >
@@ -276,14 +267,14 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
                     colors={shimmerGradientColors}
                     start={{ x: 0, y: 0.5 }}
                     end={{ x: 1, y: 0.5 }}
-                    locations={[0.2, 0.5, 0.8]} // Highlight is in the middle of the strip
+                    locations={[0.2, 0.5, 0.8]}
                   />
                   <AnimatedLinearGradient
                     style={[styles.shimmerStrip, animatedRightShimmerStyle]}
                     colors={shimmerGradientColors}
                     start={{ x: 0, y: 0.5 }}
                     end={{ x: 1, y: 0.5 }}
-                    locations={[0.2, 0.5, 0.8]} // Highlight is in the middle of the strip
+                    locations={[0.2, 0.5, 0.8]}
                   />
                 </>
               )}
@@ -402,6 +393,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: getResponsiveWidth(4.8),
     borderRadius: getResponsiveWidth(4),
     flexDirection: "column",
+    borderWidth: 1, // Default border for the glass effect
+    overflow: "hidden", // Important for overlay's border radius
+  },
+  defaultOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 0, // Ensure it's behind the content
   },
   pressableContainer: {
     width: "100%",
@@ -409,6 +406,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: getResponsiveFontSize(13),
     marginBottom: getResponsiveHeight(0.5),
+    zIndex: 1, // Ensure label is on top of the overlay
   },
   logoContainer: {
     width: getResponsiveWidth(6),
