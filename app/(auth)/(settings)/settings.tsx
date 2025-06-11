@@ -2,54 +2,59 @@ import React, {
   useCallback,
   useMemo,
   useState,
-  useEffect, // Keep useEffect for this pattern
-} from 'react';
+  useEffect,
+} from "react";
 import {
   StyleSheet,
   View,
   ActivityIndicator,
   Pressable,
-  InteractionManager, // Import InteractionManager
-} from 'react-native';
-import { useSelector, useDispatch } from 'react-redux';
-import * as SecureStore from 'expo-secure-store';
-import { LinearGradient } from 'expo-linear-gradient';
+  InteractionManager,
+} from "react-native";
+import { useSelector, useDispatch } from "react-redux";
+import * as SecureStore from "expo-secure-store";
+import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   interpolate,
   Extrapolation,
   useAnimatedScrollHandler,
-} from 'react-native-reanimated';
-import { router } from 'expo-router';
-import { RootState } from '@/store/rootReducer';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import { ThemedButton } from '@/components/buttons';
-import { ThemedSettingsCardItem } from '@/components/cards/ThemedSettingsCard';
-import { ThemedModal } from '@/components/modals/ThemedIconModal';
-import Avatar from '@zamplyy/react-native-nice-avatar';
-import { t } from '@/i18n';
-import { storage } from '@/utils/storage';
-import { Colors } from '@/constants/Colors';
-import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
-import { clearAuthData } from '@/store/reducers/authSlice';
-import { removeAllQrData } from '@/store/reducers/qrSlice';
-import { clearErrorMessage } from '@/store/reducers/errorSlice';
-import pb from '@/services/pocketBase';
-import { useMMKVString } from 'react-native-mmkv';
-import { useLocale } from '@/context/LocaleContext';
-import { useTheme } from '@/context/ThemeContext';
-import { MaterialIcons } from '@expo/vector-icons';
+} from "react-native-reanimated";
+import { router } from "expo-router";
+import { RootState } from "@/store/rootReducer";
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
+import { ThemedButton } from "@/components/buttons";
+import { ThemedSettingsCardItem } from "@/components/cards/ThemedSettingsCard";
+import { ThemedModal } from "@/components/modals/ThemedIconModal";
+import Avatar from "@zamplyy/react-native-nice-avatar";
+import { t } from "@/i18n";
+import { storage } from "@/utils/storage";
+import { Colors } from "@/constants/Colors";
+import { STATUSBAR_HEIGHT } from "@/constants/Statusbar";
+import { clearAuthData } from "@/store/reducers/authSlice";
+import { removeAllQrData } from "@/store/reducers/qrSlice";
+import { clearErrorMessage } from "@/store/reducers/errorSlice";
+import pb from "@/services/pocketBase";
+import { useMMKVString } from "react-native-mmkv";
+import { useLocale } from "@/context/LocaleContext";
+import { useTheme } from "@/context/ThemeContext";
+import { MaterialIcons } from "@expo/vector-icons";
 import {
   getResponsiveFontSize,
   getResponsiveWidth,
   getResponsiveHeight,
-} from '@/utils/responsive';
-import * as Application from 'expo-application';
-import { MMKV_KEYS, SECURE_KEYS } from '@/services/auth';
+} from "@/utils/responsive";
+import * as Application from "expo-application";
+import { MMKV_KEYS, SECURE_KEYS } from "@/services/auth";
 
-// Define the type for your settings card items
+// --- Style Configurations ---
+const DEFAULT_OVERLAY_CONFIG = {
+   overlayColor: "rgba(255, 255, 255, 0.05)",
+  borderColor: "rgba(255, 255, 255, 0.2)",
+};
+
 interface SettingsCardItem {
   leftIcon: keyof typeof MaterialIcons.glyphMap;
   settingsTitle: string;
@@ -58,60 +63,46 @@ interface SettingsCardItem {
 
 function SettingsScreen() {
   const { updateLocale } = useLocale();
-  const [locale, setLocale] = useMMKVString('locale', storage);
+  const [locale, setLocale] = useMMKVString("locale", storage);
   const avatarConfig = useSelector(
     (state: RootState) => state.auth.avatarConfig
   );
   const { currentTheme } = useTheme();
   const [isLoading, setIsLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [isAvatarReady, setIsAvatarReady] = useState(false); // State to manage avatar rendering
+  const [isAvatarReady, setIsAvatarReady] = useState(false);
   const dispatch = useDispatch();
   const scrollY = useSharedValue(0);
-  // const email = useSelector(
-  //   (state: RootState) => state.auth.user?.email ?? '-'
-  // );
-  const name = useSelector((state: RootState) => state.auth.user?.name ?? '-');
+  const name = useSelector((state: RootState) => state.auth.user?.name ?? "-");
   const appVersion = Application.nativeApplicationVersion;
 
   const sectionsColors = useMemo(
     () =>
-      currentTheme === 'light'
+      currentTheme === "light"
         ? Colors.light.cardBackground
         : Colors.dark.cardBackground,
     [currentTheme]
   );
 
   const iconColor = useMemo(
-    () => (currentTheme === 'light' ? Colors.light.text : Colors.dark.text),
+    () => (currentTheme === "light" ? Colors.light.text : Colors.dark.text),
     [currentTheme]
   );
 
-  // Effect to defer avatar rendering until after interactions
   useEffect(() => {
-    let timerId: NodeJS.Timeout | undefined; // Or 'number' for React Native
-  
+    let timerId: NodeJS.Timeout | undefined;
     const interactionPromise = InteractionManager.runAfterInteractions(() => {
-      console.log('InteractionManager fired. Waiting to render Avatar...');
-      // Assign to the outer scope timerId
       timerId = setTimeout(() => {
-        console.log('Setting isAvatarReady to true.');
-        setIsAvatarReady(true); // Make sure setIsAvatarReady is the correct state setter
+        setIsAvatarReady(true);
       }, 180);
     });
-  
     return () => {
-      console.log(
-        "SettingsScreen unmounting or effect re-running. Cancelling interaction and timeout."
-      );
-      interactionPromise.cancel(); // Good for the InteractionManager task
+      interactionPromise.cancel();
       if (timerId) {
-        clearTimeout(timerId); // Essential for the setTimeout
+        clearTimeout(timerId);
       }
     };
-  }, []); // Add dependencies if `setIsAvatarReady` or other external variables are used and might change
-  
-  
+  }, []);
 
   const scrollHandler = useAnimatedScrollHandler((event) => {
     scrollY.value = event.contentOffset.y;
@@ -130,7 +121,6 @@ function SettingsScreen() {
       [0, -35],
       Extrapolation.CLAMP
     );
-
     return {
       opacity,
       transform: [{ translateY }],
@@ -143,36 +133,32 @@ function SettingsScreen() {
   }, []);
 
   const onNavigateToEditScreen = useCallback(() => {
-    router.push('/(auth)/(settings)/edit');
+    router.push("/(auth)/(settings)/edit");
   }, []);
 
   const onNavigateToEditPasswordScreen = useCallback(() => {
-    router.push('/(auth)/(settings)/edit-pass');
+    router.push("/(auth)/(settings)/edit-pass");
   }, []);
 
   const logout = useCallback(async () => {
     try {
       setIsModalVisible(false);
       setIsLoading(true);
-
       await SecureStore.deleteItemAsync(SECURE_KEYS.AUTH_TOKEN);
       await SecureStore.deleteItemAsync(SECURE_KEYS.USER_ID);
       pb.authStore.clear();
-
       dispatch(clearErrorMessage());
       dispatch(removeAllQrData());
       dispatch(clearAuthData());
-
       const quickLoginEnabled =
         storage.getBoolean(MMKV_KEYS.QUICK_LOGIN_ENABLED) ?? false;
-
       if (quickLoginEnabled) {
-        router.replace('/quick-login');
+        router.replace("/quick-login");
       } else {
-        router.replace('/login');
+        router.replace("/login");
       }
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
     } finally {
       setIsLoading(false);
     }
@@ -185,26 +171,24 @@ function SettingsScreen() {
   const settingsData: SettingsCardItem[][] = [
     [
       {
-        leftIcon: 'person-outline',
-        settingsTitle: t('settingsScreen.editProfile'),
+        leftIcon: "person-outline",
+        settingsTitle: t("settingsScreen.editProfile"),
         onPress: () => onNavigateToEditScreen(),
       },
       {
-        leftIcon: 'lock-outline',
-        settingsTitle: t('settingsScreen.changePassword'),
+        leftIcon: "lock-outline",
+        settingsTitle: t("settingsScreen.changePassword"),
         onPress: () => onNavigateToEditPasswordScreen(),
       },
-    ],
-    [
       {
-        leftIcon: 'translate',
-        settingsTitle: t('settingsScreen.language'),
-        onPress: () => router.push('/language'),
+        leftIcon: "translate",
+        settingsTitle: t("settingsScreen.language"),
+        onPress: () => router.push("/language"),
       },
       {
-        leftIcon: 'contrast',
-        settingsTitle: t('settingsScreen.appTheme'),
-        onPress: () => router.push('/theme'),
+        leftIcon: "contrast",
+        settingsTitle: t("settingsScreen.appTheme"),
+        onPress: () => router.push("/theme"),
       },
     ],
   ];
@@ -215,6 +199,7 @@ function SettingsScreen() {
         key={index}
         style={[styles.sectionContainer, { backgroundColor: sectionsColors }]}
       >
+        <View style={styles.defaultOverlay} />
         {item.map((subItem) => (
           <ThemedSettingsCardItem key={subItem.settingsTitle} {...subItem} />
         ))}
@@ -240,7 +225,7 @@ function SettingsScreen() {
             />
           </View>
           <ThemedText style={styles.title} type="title">
-            {t('settingsScreen.title')}
+            {t("settingsScreen.title")}
           </ThemedText>
         </View>
       </Animated.View>
@@ -257,22 +242,22 @@ function SettingsScreen() {
               styles.avatarContainer,
               { backgroundColor: sectionsColors },
             ]}
-            onPress={() => router.push('/(auth)/(settings)/edit-avatar')}
+            onPress={() => router.push("/(auth)/(settings)/edit-avatar")}
           >
+            <View style={styles.defaultOverlay} />
             <View style={styles.avatarWrapper}>
               <LinearGradient
                 colors={[
-                  '#ff9a9e',
-                  '#fad0c4',
-                  '#fad0c4',
-                  '#fbc2eb',
-                  '#a18cd1',
+                  "#ff9a9e",
+                  "#fad0c4",
+                  "#fad0c4",
+                  "#fbc2eb",
+                  "#a18cd1",
                 ]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.gradient}
               >
-                {/* Conditionally render Avatar based on config and readiness state */}
                 {avatarConfig && isAvatarReady ? (
                   <Avatar size={getResponsiveWidth(11)} {...avatarConfig} />
                 ) : (
@@ -298,6 +283,7 @@ function SettingsScreen() {
               name="chevron-right"
               size={getResponsiveFontSize(16)}
               color={iconColor}
+              style={{ zIndex: 1 }}
             />
           </Pressable>
         }
@@ -305,13 +291,13 @@ function SettingsScreen() {
           <>
             <ThemedButton
               iconName="logout"
-              label={t('settingsScreen.logout')}
-              loadingLabel={t('settingsScreen.logingOut')}
+              label={t("settingsScreen.logout")}
+              loadingLabel={t("settingsScreen.logingOut")}
               loading={isLoading}
               onPress={onLogout}
             />
             <ThemedText style={styles.versionText}>
-              {t('settingsScreen.appVersion') + ' ' + appVersion}
+              {t("settingsScreen.appVersion") + " " + appVersion}
             </ThemedText>
           </>
         }
@@ -321,12 +307,12 @@ function SettingsScreen() {
       <ThemedModal
         onDismiss={() => setIsModalVisible(false)}
         dismissable={true}
-        primaryActionText={t('settingsScreen.logout')}
+        primaryActionText={t("settingsScreen.logout")}
         onPrimaryAction={logout}
         onSecondaryAction={() => setIsModalVisible(false)}
-        secondaryActionText={t('settingsScreen.cancel')}
-        title={t('settingsScreen.confirmLogoutTitle')}
-        message={t('settingsScreen.confirmLogoutMessage')}
+        secondaryActionText={t("settingsScreen.cancel")}
+        title={t("settingsScreen.confirmLogoutTitle")}
+        message={t("settingsScreen.confirmLogoutMessage")}
         isVisible={isModalVisible}
         iconName="logout"
       />
@@ -341,20 +327,20 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   titleContainer: {
-    position: 'absolute',
+    position: "absolute",
     top: getResponsiveHeight(10),
     left: 0,
     right: 0,
   },
   headerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: getResponsiveWidth(3.6),
     gap: getResponsiveWidth(3.6),
   },
   titleButtonContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: getResponsiveWidth(3.6),
   },
   titleButton: {
@@ -364,7 +350,7 @@ const styles = StyleSheet.create({
     fontSize: getResponsiveFontSize(28),
   },
   blurContainer: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
@@ -378,53 +364,63 @@ const styles = StyleSheet.create({
   },
   gradient: {
     borderRadius: getResponsiveWidth(12),
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: getResponsiveWidth(1.2),
   },
   avatarContainer: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
     paddingVertical: getResponsiveHeight(1.8),
     paddingHorizontal: getResponsiveWidth(4.8),
     marginBottom: getResponsiveHeight(2),
     borderRadius: getResponsiveWidth(4),
-    gap: 0,
+    borderWidth: 1,
+    borderColor: DEFAULT_OVERLAY_CONFIG.borderColor,
+    overflow: "hidden",
   },
   avatarWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    zIndex: 1,
   },
   avatarLoadContainer: {
     width: getResponsiveWidth(11),
     aspectRatio: 1,
-    borderRadius: getResponsiveWidth(12), // Match Avatar's effective border radius if needed
-    justifyContent: 'center',
-    alignItems: 'center',
-    // Ensure background is transparent or matches gradient if desired during load
+    borderRadius: getResponsiveWidth(12),
+    justifyContent: "center",
+    alignItems: "center",
   },
   userContainer: {
-    justifyContent: 'center',
-    flexDirection: 'column',
+    justifyContent: "center",
+    flexDirection: "column",
     paddingHorizontal: getResponsiveWidth(3.6),
     borderRadius: getResponsiveWidth(4),
-    maxWidth: '80%',
-    overflow: 'hidden',
+    maxWidth: "80%",
+    overflow: "hidden",
   },
   userName: {
     fontSize: getResponsiveFontSize(16),
-    width: '100%',
+    width: "100%",
   },
   sectionContainer: {
     borderRadius: getResponsiveWidth(4),
     marginBottom: getResponsiveHeight(2),
-    overflow: 'hidden',
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: DEFAULT_OVERLAY_CONFIG.borderColor,
+  },
+  defaultOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: DEFAULT_OVERLAY_CONFIG.overlayColor,
+    zIndex: 0,
   },
   versionText: {
     marginTop: getResponsiveHeight(2),
+    marginBottom: getResponsiveHeight(2),
     fontSize: getResponsiveFontSize(12),
     opacity: 0.6,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });

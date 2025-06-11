@@ -18,10 +18,10 @@ export const loadUserQrDataThunk =
   (userId: string): AppThunk =>
   async (dispatch) => {
     try {
-      console.log(`[qrThunk] Loading QR data for user: ${userId}`);
+       (`[qrThunk] Loading QR data for user: ${userId}`);
       const qrData = await getQrCodesByUserId(userId);
       dispatch(setQrData(qrData));
-      console.log(
+       (
         `[qrThunk] Loaded ${qrData.length} QR codes for user ${userId}.`
       );
     } catch (error) {
@@ -36,10 +36,10 @@ export const loadUserQrDataThunk =
 export const loadGuestQrDataThunk =
   (): AppThunk => async (dispatch) => {
     try {
-      console.log("[qrThunk] Loading QR data for GUEST user.");
+       ("[qrThunk] Loading QR data for GUEST user.");
       const qrData = await getQrCodesByUserId(GUEST_USER_ID);
       dispatch(setQrData(qrData));
-      console.log(`[qrThunk] Loaded ${qrData.length} QR codes for GUEST.`);
+       (`[qrThunk] Loaded ${qrData.length} QR codes for GUEST.`);
     } catch (error) {
       console.error("[qrThunk] Failed to load GUEST QR data:", error);
       // dispatch(setQrData([])); // Optionally clear or set error state

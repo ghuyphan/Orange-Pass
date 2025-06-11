@@ -33,7 +33,7 @@ import BottomSheet from "@gorhom/bottom-sheet";
 import { t } from "@/i18n";
 import { STATUSBAR_HEIGHT } from "@/constants/Statusbar";
 import { MAX_ZOOM_FACTOR, width } from "@/constants/Constants";
-import { storage } from "@/utils/storage";
+// import { storage } from "@/utils/storage";
 import { triggerLightHapticFeedback } from "@/utils/haptic";
 import SheetType from "@/types/sheetType";
 
@@ -51,7 +51,7 @@ import LinkingSheetContent from "@/components/bottomsheet/LinkingSheetContent";
 import ScanSettingsSheetContent from "@/components/bottomsheet/ScanSettingsSheetContent";
 
 // Hooks
-import { useMMKVBoolean } from "react-native-mmkv";
+// import { useMMKVBoolean } from "react-native-mmkv";
 import { useLocale } from "@/context/LocaleContext";
 import { useCameraScanner } from "@/hooks/useCameraScanner";
 import { useCameraSetup } from "@/hooks/useCameraSetup";
@@ -179,9 +179,9 @@ export default function ScanScreen() {
     }
   }, [codeValue]);
 
-  const handleExpandPress = useCallback(() => {
-    bottomSheetRef.current?.snapToIndex(0);
-  }, []);
+  // const handleExpandPress = useCallback(() => {
+  //   bottomSheetRef.current?.snapToIndex(0);
+  // }, []);
 
   // Layout handler
   const onLayout = useCallback((event: LayoutChangeEvent) => {
@@ -396,9 +396,9 @@ export default function ScanScreen() {
       return (
         cameraStatus === "granted" &&
         locationStatus["android.permission.ACCESS_FINE_LOCATION"] ===
-          "granted" &&
+        "granted" &&
         locationStatus["android.permission.ACCESS_COARSE_LOCATION"] ===
-          "granted"
+        "granted"
       );
     } catch (error) {
       console.error("Error requesting permissions:", error);
@@ -452,10 +452,10 @@ export default function ScanScreen() {
     sheetType === "setting"
       ? t("scanScreen.settings")
       : sheetType === "wifi"
-      ? t("scanScreen.wifi")
-      : sheetType === "linking"
-      ? t("scanScreen.linking")
-      : t("scanScreen.settings");
+        ? t("scanScreen.wifi")
+        : sheetType === "linking"
+          ? t("scanScreen.linking")
+          : t("scanScreen.settings");
 
   return (
     <View style={styles.container}>
@@ -494,7 +494,7 @@ export default function ScanScreen() {
                 <View
                   style={{
                     position: "absolute",
-                    bottom: 20,
+                    bottom: 60,
                     left: 0,
                     right: 0,
                   }}
@@ -520,27 +520,18 @@ export default function ScanScreen() {
             )}
           </Reanimated.View>
         </GestureDetector>
+        {device && (
+          <View style={styles.zoomControlContainer}>
+            <ZoomControl
+              zoom={zoom}
+              minZoom={Number(minZoom.toFixed(2))}
+              maxZoom={maxZoom}
+            />
+          </View>
+        )}
       </SafeAreaView>
 
       <View style={styles.bottomContainer}>
-        <View
-          style={{
-            flexDirection: "column",
-            alignItems: "center",
-            paddingTop: 20,
-          }}
-        >
-          {device && (
-            <View style={styles.zoomControlContainer}>
-              <ZoomControl
-                zoom={zoom}
-                minZoom={Number(minZoom.toFixed(2))}
-                maxZoom={maxZoom}
-              />
-            </View>
-          )}
-        </View>
-
         <View style={styles.bottomButtonsContainer}>
           <ThemedButton
             iconName="image"
@@ -567,6 +558,7 @@ export default function ScanScreen() {
           style={styles.headerButton}
           onPress={() => router.back()}
           iconName="chevron-left"
+          variant="glass"
         />
         <ThemedButton
           underlayColor="#fff"
@@ -574,6 +566,7 @@ export default function ScanScreen() {
           style={styles.headerButton}
           onPress={toggleFlash}
           iconName={torch === "on" ? "flash" : "flash-off"}
+          variant="glass"
         />
       </View>
 
@@ -597,16 +590,16 @@ export default function ScanScreen() {
               sheetType === "setting"
                 ? ["35%"]
                 : sheetType === "wifi"
-                ? wifiPassword
-                  ? ["45%"]
-                  : ["38%"]
-                : sheetType === "linking"
-                ? ["35%"]
-                : ["35%"]
+                  ? wifiPassword
+                    ? ["45%"]
+                    : ["38%"]
+                  : sheetType === "linking"
+                    ? ["35%"]
+                    : ["35%"]
             }
             styles={{
               customContent: {
-                borderRadius: getResponsiveWidth(4),
+                // borderRadius: getResponsiveWidth(4),
                 marginHorizontal: getResponsiveWidth(3.6),
               },
             }}
@@ -631,7 +624,7 @@ const styles = StyleSheet.create({
     marginTop: STATUSBAR_HEIGHT,
     flex: getResponsiveHeight(0.25),
     backgroundColor: "black",
-    borderRadius: getResponsiveWidth(8),
+    borderRadius: getResponsiveWidth(4),
     overflow: "hidden",
   },
   loader: {
@@ -660,11 +653,12 @@ const styles = StyleSheet.create({
     width: "100%",
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingHorizontal: getResponsiveWidth(3.6),
+    // paddingHorizontal: getResponsiveWidth(3.6),
     zIndex: 10,
   },
   headerButton: {
-    backgroundColor: "rgba(0, 0, 0, 0.3)",
+    // backgroundColor: "rgba(0, 0, 0, 0.3)",
+    marginHorizontal: 10,
   },
   bottomContainer: {
     flex: 1,
@@ -673,13 +667,17 @@ const styles = StyleSheet.create({
   },
   zoomControlContainer: {
     alignItems: "center",
+    position: "absolute",
+    bottom: 10,
+    right: 0,
+    left: 0,
   },
   bottomButtonsContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    width: width * 0.8,
-    flexGrow: 0.8,
+    width: width * 0.7,
+    flexGrow: 1,
   },
   bottomButton: {
     backgroundColor: "rgba(255, 255, 255, 0.2)",

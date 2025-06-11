@@ -112,7 +112,7 @@ export async function getAllUsers() {
         const users = await db.getAllAsync<UserRecord>('SELECT * FROM users');
         // Correctly type the `user` parameter in the forEach loop
         users.forEach((user: UserRecord) => {
-            console.log(`User: ${user.username}, Email: ${user.email}`);
+             (`User: ${user.username}, Email: ${user.email}`);
         });
 
         return users; // Return users if needed elsewhere
@@ -132,7 +132,7 @@ export async function updateUserInTransaction(userId: string, newUsername: strin
         await db.withTransactionAsync(async () => {
             await db.runAsync('UPDATE users SET username = ? WHERE id = ?', [newUsername, userId]);
             const updatedUser = await db.getFirstAsync('SELECT * FROM users WHERE id = ?', [userId]);
-            console.log('Updated user:', updatedUser);
+             ('Updated user:', updatedUser);
         });
     } catch (error) {
         console.error('Error updating user in transaction:', error);

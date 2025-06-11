@@ -383,7 +383,7 @@ const EditAvatarScreen = () => {
       dispatch(updateAvatarConfig(avatarConfig));
       if (currentUser?.id) {
         await updateUserAvatarCombined(currentUser.id, avatarConfig);
-        console.log("Avatar updated successfully in Redux and local DB.");
+         ("Avatar updated successfully in Redux and local DB.");
       }
       router.back();
     } catch (error) {

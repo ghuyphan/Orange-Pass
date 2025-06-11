@@ -30,8 +30,8 @@ const onNavigateToAddScreen = () => {
       style={[
         {
           flex: 1,
-          backgroundColor:
-            colorScheme === 'light' ? Colors.light.background : Colors.dark.background,
+          // backgroundColor:
+          //   colorScheme === 'light' ? Colors.light.background : Colors.dark.background,
         },
       ]}
     >

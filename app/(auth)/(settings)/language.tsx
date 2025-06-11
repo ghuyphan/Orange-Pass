@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useState, useMemo } from 'react';
-import { StyleSheet, View, Pressable } from 'react-native';
+import React, { useCallback, useMemo } from "react";
+import { StyleSheet, View, Pressable } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -8,36 +8,46 @@ import Animated, {
   interpolate,
   Extrapolation,
   useAnimatedScrollHandler,
-} from 'react-native-reanimated';
-import { router } from 'expo-router';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import { ThemedButton } from '@/components/buttons/ThemedButton';
-import { t } from '@/i18n';
-import { Colors } from '@/constants/Colors';
-import { STATUSBAR_HEIGHT } from '@/constants/Statusbar';
-import GB from '@/assets/svgs/GB.svg';
-import VN from '@/assets/svgs/VN.svg';
-import RU from '@/assets/svgs/RU.svg';
-import { useLocale } from '@/context/LocaleContext';
-import { MaterialIcons } from '@expo/vector-icons';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useMMKVString } from 'react-native-mmkv';
-import { useTheme } from '@/context/ThemeContext';
-import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
+} from "react-native-reanimated";
+import { router } from "expo-router";
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
+import { ThemedButton } from "@/components/buttons/ThemedButton";
+import { t } from "@/i18n";
+import { Colors } from "@/constants/Colors";
+import { STATUSBAR_HEIGHT } from "@/constants/Statusbar";
+import GB from "@/assets/svgs/GB.svg";
+import VN from "@/assets/svgs/VN.svg";
+import RU from "@/assets/svgs/RU.svg";
+import { useLocale } from "@/context/LocaleContext";
+import { MaterialIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useMMKVString } from "react-native-mmkv";
+import { useTheme } from "@/context/ThemeContext";
+import {
+  getResponsiveFontSize,
+  getResponsiveWidth,
+  getResponsiveHeight,
+} from "@/utils/responsive";
+import { useGlassStyle } from "@/hooks/useGlassStyle";
 
 const LanguageScreen = () => {
   const { updateLocale } = useLocale();
-  const [locale] = useMMKVString('locale');
+  const [locale] = useMMKVString("locale");
   const scrollY = useSharedValue(0);
+
+  const { overlayColor, borderColor } = useGlassStyle();
 
   const { currentTheme: theme } = useTheme();
   const colors = useMemo(
-    () => (theme === 'light' ? Colors.light.icon : Colors.dark.icon),
+    () => (theme === "light" ? Colors.light.icon : Colors.dark.icon),
     [theme]
   );
   const sectionsColors = useMemo(
-    () => (theme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground),
+    () =>
+      theme === "light"
+        ? Colors.light.cardBackground
+        : Colors.dark.cardBackground,
     [theme]
   );
 
@@ -47,7 +57,6 @@ const LanguageScreen = () => {
     },
   });
 
-  // Calculate these outside of the animated style
   const scrollThreshold = getResponsiveHeight(7);
   const translateYValue = -getResponsiveHeight(3.5);
 
@@ -84,29 +93,51 @@ const LanguageScreen = () => {
     updateLocale(undefined);
   }, [updateLocale]);
 
-  const renderLanguageOption = useCallback((language: string, flag: React.ReactNode, localeCode: string) => (
-    <Pressable onPress={() => handleLanguageChange(localeCode)} key={localeCode}>
-      <View style={styles.section}>
-        <View style={styles.leftSectionContainer}>
-          <View style={styles.flagIconContainer}>{flag}</View>
-          <ThemedText>{t(`languageScreen.${language}`)}</ThemedText>
-        </View>
-        {locale === localeCode ? (
-          <View style={styles.iconStack}>
-            <MaterialCommunityIcons name="circle-outline" size={getResponsiveFontSize(18)} color={colors} />
-            <MaterialIcons name="circle" size={getResponsiveFontSize(10)} color={colors} style={styles.checkIcon} />
+  const renderLanguageOption = useCallback(
+    (language: string, flag: React.ReactNode, localeCode: string) => (
+      <Pressable
+        onPress={() => handleLanguageChange(localeCode)}
+        key={localeCode}
+      >
+        <View style={styles.section}>
+          <View style={styles.leftSectionContainer}>
+            <View style={styles.flagIconContainer}>{flag}</View>
+            <ThemedText>{t(`languageScreen.${language}`)}</ThemedText>
           </View>
-        ) : (
-          <MaterialCommunityIcons name="circle-outline" size={getResponsiveFontSize(18)} color={colors} />
-        )}
-      </View>
-    </Pressable>
-  ), [locale, colors, handleLanguageChange]);
+          {locale === localeCode ? (
+            <View style={styles.iconStack}>
+              <MaterialCommunityIcons
+                name="circle-outline"
+                size={getResponsiveFontSize(18)}
+                color={colors}
+              />
+              <MaterialIcons
+                name="circle"
+                size={getResponsiveFontSize(10)}
+                color={colors}
+                style={styles.checkIcon}
+              />
+            </View>
+          ) : (
+            <MaterialCommunityIcons
+              name="circle-outline"
+              size={getResponsiveFontSize(18)}
+              color={colors}
+            />
+          )}
+        </View>
+      </Pressable>
+    ),
+    [locale, colors, handleLanguageChange]
+  );
 
   return (
     <ThemedView style={styles.container}>
       <ThemedView style={styles.blurContainer} />
-      <Animated.View style={[styles.titleContainer, titleContainerStyle]} pointerEvents="auto">
+      <Animated.View
+        style={[styles.titleContainer, titleContainerStyle]}
+        pointerEvents="auto"
+      >
         <View style={styles.headerContainer}>
           <View style={styles.titleButtonContainer}>
             <ThemedButton
@@ -116,7 +147,7 @@ const LanguageScreen = () => {
             />
           </View>
           <ThemedText style={styles.title} type="title">
-            {t('languageScreen.title')}
+            {t("languageScreen.title")}
           </ThemedText>
         </View>
       </Animated.View>
@@ -125,10 +156,34 @@ const LanguageScreen = () => {
         onScroll={scrollHandler}
         scrollEventThrottle={16}
       >
-        <View style={[styles.sectionContainer, { backgroundColor: sectionsColors }]}>
-          {renderLanguageOption('vietnamese', <VN width={getResponsiveWidth(7.2)} height={getResponsiveHeight(3)} />, 'vi')}
-          {renderLanguageOption('russian', <RU width={getResponsiveWidth(7.2)} height={getResponsiveHeight(3)} />, 'ru')}
-          {renderLanguageOption('english', <GB width={getResponsiveWidth(7.2)} height={getResponsiveHeight(3)} />, 'en')}
+        <View
+          style={[styles.sectionContainer, { backgroundColor: sectionsColors, borderColor: borderColor }]}
+        >
+          <View style={[styles.defaultOverlay]} />
+          {renderLanguageOption(
+            "vietnamese",
+            <VN
+              width={getResponsiveWidth(7.2)}
+              height={getResponsiveHeight(3)}
+            />,
+            "vi"
+          )}
+          {renderLanguageOption(
+            "russian",
+            <RU
+              width={getResponsiveWidth(7.2)}
+              height={getResponsiveHeight(3)}
+            />,
+            "ru"
+          )}
+          {renderLanguageOption(
+            "english",
+            <GB
+              width={getResponsiveWidth(7.2)}
+              height={getResponsiveHeight(3)}
+            />,
+            "en"
+          )}
 
           <Pressable onPress={handleSystemLocale}>
             <View style={styles.section}>
@@ -140,15 +195,28 @@ const LanguageScreen = () => {
                     color={colors}
                   />
                 </View>
-                <ThemedText>{t('languageScreen.system')}</ThemedText>
+                <ThemedText>{t("languageScreen.system")}</ThemedText>
               </View>
               {locale === undefined ? (
                 <View style={styles.iconStack}>
-                  <MaterialCommunityIcons name="circle-outline" size={getResponsiveFontSize(18)} color={colors} />
-                  <MaterialIcons name="circle" size={getResponsiveFontSize(10)} color={colors} style={styles.checkIcon} />
+                  <MaterialCommunityIcons
+                    name="circle-outline"
+                    size={getResponsiveFontSize(18)}
+                    color={colors}
+                  />
+                  <MaterialIcons
+                    name="circle"
+                    size={getResponsiveFontSize(10)}
+                    color={colors}
+                    style={styles.checkIcon}
+                  />
                 </View>
               ) : (
-                <MaterialCommunityIcons name="circle-outline" size={getResponsiveFontSize(18)} color={colors} />
+                <MaterialCommunityIcons
+                  name="circle-outline"
+                  size={getResponsiveFontSize(18)}
+                  color={colors}
+                />
               )}
             </View>
           </Pressable>
@@ -165,21 +233,20 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   titleContainer: {
-    position: 'absolute',
+    position: "absolute",
     top: getResponsiveHeight(10),
-    // marginTop: getResponsiveHeight(10),
     left: 0,
     right: 0,
   },
   headerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: getResponsiveWidth(3.6),
     gap: getResponsiveWidth(3.6),
   },
   titleButtonContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: getResponsiveWidth(3.6),
   },
   title: {
@@ -189,7 +256,7 @@ const styles = StyleSheet.create({
     zIndex: 11,
   },
   blurContainer: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
@@ -203,45 +270,50 @@ const styles = StyleSheet.create({
   },
   sectionContainer: {
     borderRadius: getResponsiveWidth(4),
-    overflow: 'hidden',
+    overflow: "hidden",
+    borderWidth: 1,
+    // borderColor: DEFAULT_OVERLAY_CONFIG.borderColor,
+  },
+  defaultOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    // backgroundColor: DEFAULT_OVERLAY_CONFIG.overlayColor,
+    zIndex: 0,
   },
   section: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingVertical: getResponsiveHeight(1.8),
     paddingHorizontal: getResponsiveWidth(4.8),
+    zIndex: 1,
   },
   leftSectionContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: getResponsiveWidth(2.4),
   },
   flagIconContainer: {
     width: getResponsiveWidth(4.8),
     aspectRatio: 1,
     borderRadius: getResponsiveWidth(12),
-    justifyContent: 'center',
-    alignItems: 'center',
-    overflow: 'hidden',
+    justifyContent: "center",
+    alignItems: "center",
+    overflow: "hidden",
   },
   iconContainer: {
     width: getResponsiveWidth(4.8),
     aspectRatio: 1,
     borderRadius: getResponsiveWidth(12),
-    overflow: 'hidden',
-    justifyContent: 'center',
-    alignItems: 'center',
+    overflow: "hidden",
+    justifyContent: "center",
+    alignItems: "center",
   },
   iconStack: {
-    position: 'relative',
-    justifyContent: 'center',
-    alignItems: 'center',
+    position: "relative",
+    justifyContent: "center",
+    alignItems: "center",
   },
   checkIcon: {
-    position: 'absolute',
-    // top: '50%',
-    // left: '50%',
-    // transform: [{ translateX: -6 }, { translateY: -6 }], // Adjust to center the checkmark
+    position: "absolute",
   },
 });

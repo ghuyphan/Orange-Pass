@@ -350,7 +350,9 @@
     "copied": "Đã sao chép",
     "settings": "Cài đặt",
     "wifi": "Mạng Wifi",
-    "linking": "Liên kết"
+    "linking": "Liên kết",
+    "showIndicator": "Hiển thị chỉ báo vùng quét",
+    "appSettings": "Cài đặt ứng dụng"
   },
   "permissionScreen": {
     "cameraTitle": "Cho phép truy cập máy ảnh",

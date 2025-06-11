@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState, useMemo } from 'react';
+import React, { useCallback, useEffect, useState, useMemo } from "react";
 import {
   FlatList,
   StyleProp,
@@ -7,17 +7,18 @@ import {
   View,
   Pressable,
   Dimensions,
-} from 'react-native';
-import { t } from '@/i18n';
-import { useLocale } from '@/context/LocaleContext';
-import { useTheme } from '@/context/ThemeContext';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Colors } from '@/constants/Colors';
+} from "react-native";
+import { t } from "@/i18n";
+import { useLocale } from "@/context/LocaleContext";
+import { useTheme } from "@/context/ThemeContext";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Colors } from "@/constants/Colors";
 import {
   getResponsiveFontSize,
   getResponsiveWidth,
   getResponsiveHeight,
-} from '@/utils/responsive';
+} from "@/utils/responsive";
+import { useGlassStyle } from "@/hooks/useGlassStyle";
 
 type ThemedFilterProps = {
   selectedFilter: string;
@@ -28,7 +29,7 @@ type ThemedFilterProps = {
 interface FilterItemType {
   key: string;
   label: string;
-  iconName: string;
+  iconName: keyof typeof MaterialCommunityIcons.glyphMap;
 }
 
 const FilterItem = React.memo(
@@ -43,33 +44,48 @@ const FilterItem = React.memo(
     isDarkMode: boolean;
     handlePress: (filterKey: string) => void;
   }) => {
-    const buttonWidth = getResponsiveWidth(20); // Fixed width for buttons
-    const iconSize = getResponsiveFontSize(20); // Fixed icon size
+    const { overlayColor, borderColor } = useGlassStyle(); // Use the hook
+    const buttonWidth = getResponsiveWidth(20);
+    const iconSize = getResponsiveFontSize(20);
+
+    const iconColor = useMemo(() => {
+      if (isSelected) {
+        // Selected: High contrast icon color against the solid background
+        return isDarkMode
+          ? Colors.dark.buttonBackground // Dark icon on white background
+          : Colors.light.buttonBackground; // White icon on dark background
+      }
+      // Unselected: Standard theme icon color
+      return isDarkMode ? Colors.dark.icon : Colors.light.icon;
+    }, [isSelected, isDarkMode]);
 
     return (
       <Pressable
         onPress={() => handlePress(item.key)}
-        style={({ pressed }) => [
+        style={[
           styles.filterButton,
           { width: buttonWidth },
-          isDarkMode ? styles.darkModeButton : styles.lightModeButton,
-          isSelected &&
-            (isDarkMode ? styles.selectedFilterDarkMode : styles.selectedFilterLightMode),
+          // Apply background color first
+          isSelected
+            ? isDarkMode
+              ? styles.selectedButtonDarkMode
+              : styles.selectedButtonLightMode
+            : isDarkMode
+            ? styles.buttonBackgroundDarkMode
+            : styles.buttonBackgroundLightMode,
+          // Apply the glass-like border ONLY if unselected
+          !isSelected && [styles.unselectedButton, { borderColor: borderColor }],
         ]}
       >
+        {/* The glass-like overlay is added only when the button is NOT selected */}
+        {!isSelected && <View style={[styles.defaultOverlay, {backgroundColor: overlayColor}]} />}
+
         <View style={styles.iconView}>
           <MaterialCommunityIcons
-            name={isSelected ? item.iconName : `${item.iconName}-outline`}
+            name={item.iconName}
             size={iconSize}
-            color={
-              isSelected
-                ? isDarkMode
-                  ? Colors.light.icon
-                  : Colors.dark.icon
-                : isDarkMode
-                ? Colors.dark.icon
-                : Colors.light.icon
-            }
+            color={iconColor}
+            style={{ opacity: isSelected ? 1 : 0.8 }} // Slightly fade unselected icons
           />
         </View>
       </Pressable>
@@ -81,13 +97,17 @@ const FilterItem = React.memo(
     prevProps.isDarkMode === nextProps.isDarkMode
 );
 
-FilterItem.displayName = 'FilterItem';
+FilterItem.displayName = "FilterItem";
 
-const ThemedFilter = ({ selectedFilter, onFilterChange, style }: ThemedFilterProps) => {
+const ThemedFilter = ({
+  selectedFilter,
+  onFilterChange,
+  style,
+}: ThemedFilterProps) => {
   const { locale } = useLocale();
   const { currentTheme } = useTheme();
-  const isDarkMode = currentTheme === 'dark';
-  const screenWidth = Dimensions.get('window').width;
+  const isDarkMode = currentTheme === "dark";
+  const screenWidth = Dimensions.get("window").width;
 
   const [filterKey, setFilterKey] = useState(0);
 
@@ -97,10 +117,18 @@ const ThemedFilter = ({ selectedFilter, onFilterChange, style }: ThemedFilterPro
 
   const filters: FilterItemType[] = useMemo(
     () => [
-      { key: 'all', label: t('homeScreen.filters.all'), iconName: 'view-grid' },
-      { key: 'bank', label: t('homeScreen.filters.bank'), iconName: 'bank' },
-      { key: 'ewallet', label: t('homeScreen.filters.ewallet'), iconName: 'wallet' },
-      { key: 'store', label: t('homeScreen.filters.store'), iconName: 'ticket-percent' },
+      { key: "all", label: t("homeScreen.filters.all"), iconName: "grid" },
+      { key: "bank", label: t("homeScreen.filters.bank"), iconName: "bank" },
+      {
+        key: "ewallet",
+        label: t("homeScreen.filters.ewallet"),
+        iconName: "wallet",
+      },
+      {
+        key: "store",
+        label: t("homeScreen.filters.store"),
+        iconName: "ticket-percent",
+      },
     ],
     [locale]
   );
@@ -113,15 +141,14 @@ const ThemedFilter = ({ selectedFilter, onFilterChange, style }: ThemedFilterPro
   );
 
   const gap = useMemo(() => {
-    const baseGap = 2; // Minimum gap
     const numItems = filters.length;
-    const buttonWidth = getResponsiveWidth(20); // Fixed button width
+    const buttonWidth = getResponsiveWidth(20);
     const totalButtonWidth = buttonWidth * numItems;
-    const padding = getResponsiveWidth(3.6) * 2; // Total horizontal padding
+    const padding = getResponsiveWidth(3.6) * 2;
     const availableSpace = screenWidth - totalButtonWidth - padding;
-    const maxGap = availableSpace / (numItems - 1);
+    const calculatedGap = availableSpace / (numItems > 1 ? numItems - 1 : 1);
 
-    return Math.min(maxGap, getResponsiveWidth(8)); // Limit gap for wide screens
+    return Math.min(Math.max(calculatedGap, 8), getResponsiveWidth(8));
   }, [screenWidth, filters.length]);
 
   return (
@@ -140,7 +167,6 @@ const ThemedFilter = ({ selectedFilter, onFilterChange, style }: ThemedFilterPro
       )}
       contentContainerStyle={[styles.filterContainer, { gap }, style]}
       showsHorizontalScrollIndicator={false}
-      scrollEnabled={true}
     />
   );
 };
@@ -148,33 +174,47 @@ const ThemedFilter = ({ selectedFilter, onFilterChange, style }: ThemedFilterPro
 const styles = StyleSheet.create({
   filterContainer: {
     paddingHorizontal: getResponsiveWidth(3.6),
-    alignItems: 'center',
+    alignItems: "center",
   },
   filterButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: getResponsiveHeight(1.5),
     borderRadius: getResponsiveWidth(4),
-    overflow: 'hidden',
+    overflow: "hidden", // Important for the overlay's rounded corners
   },
-  selectedFilterLightMode: {
-    backgroundColor: Colors.light.icon,
+  // --- Button State Styles ---
+  selectedButtonLightMode: {
+    backgroundColor: Colors.light.icon, // Solid dark color
   },
-  selectedFilterDarkMode: {
-    backgroundColor: Colors.dark.icon,
+  selectedButtonDarkMode: {
+    backgroundColor: Colors.dark.icon, // Solid light color
   },
-  darkModeButton: {
+  buttonBackgroundDarkMode: {
     backgroundColor: Colors.dark.buttonBackground,
   },
-  lightModeButton: {
+  buttonBackgroundLightMode: {
     backgroundColor: Colors.light.buttonBackground,
   },
+  unselectedButton: {
+    // This adds the border for the glass-like effect
+    borderWidth: 1,
+    // borderColor: DEFAULT_OVERLAY_CONFIG.borderColor,
+  },
+  // --- Overlay for the glass-like effect on unselected buttons ---
+  defaultOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    // backgroundColor: DEFAULT_OVERLAY_CONFIG.overlayColor,
+    borderRadius: getResponsiveWidth(4),
+  },
   iconView: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingHorizontal: getResponsiveWidth(3.6),
+    // zIndex ensures the icon is rendered on top of the overlay
+    zIndex: 1,
   },
 });
 

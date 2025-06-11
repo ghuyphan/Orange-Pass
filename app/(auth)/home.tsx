@@ -37,7 +37,6 @@ import {
   deleteQrCode,
   syncQrCodes,
   fetchServerData,
-  getUnsyncedQrCodes,
   insertOrUpdateQrCodes,
   updateQrIndexes,
   hasLocalData,
@@ -72,7 +71,8 @@ import {
 } from "@/utils/responsive";
 import { t } from "@/i18n";
 
-const SYNC_CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes for sync check throttling
+// REMOVED: No longer needed for periodic sync
+// const SYNC_CHECK_INTERVAL = 5 * 60 * 1000;
 
 function HomeScreen() {
   const isFocused = useIsFocused();
@@ -84,8 +84,8 @@ function HomeScreen() {
   const color = useThemeColor({ light: "#3A2E24", dark: "#FFF5E1" }, "text");
 
   // --- Core States ---
-  const [isLoading, setIsLoading] = useState(true); // True when actively fetching initial data for a user
-  const [isSyncing, setIsSyncing] = useState(false); // True during a full syncWithServer operation or other data-mutating ops
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [initialAnimationsDone, setInitialAnimationsDone] = useState(false);
   const [syncStatus, setSyncStatus] = useState<
     "idle" | "syncing" | "synced" | "error"
@@ -94,11 +94,12 @@ function HomeScreen() {
   // --- Efficiency States ---
   const [initialLoadAttemptedForUser, setInitialLoadAttemptedForUser] =
     useState<string | null>(null);
-  const lastSyncCheckTimestampRef = useRef<number>(0);
+  // REMOVED: No longer needed for periodic sync
+  // const lastSyncCheckTimestampRef = useRef<number>(0);
 
   // --- UI States ---
   const isEmpty = useMemo(() => qrData.length === 0, [qrData]);
-  const [isActive, setIsActive] = useState(false); // For drag
+  const [isActive, setIsActive] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [isToastVisible, setIsToastVisible] = useState(false);
   const [topToastMessage, setTopToastMessage] = useState("");
@@ -131,8 +132,8 @@ function HomeScreen() {
     toast: null,
     network: null,
   });
-  const syncStatusRef = useRef(syncStatus); // For checking syncStatus in timeouts
-  const prevIsOffline = useRef(isOffline); // For network toast logic
+  const syncStatusRef = useRef(syncStatus);
+  const prevIsOffline = useRef(isOffline);
 
   // --- Shared Values (Reanimated) ---
   const isEmptyShared = useSharedValue(qrData.length === 0 ? 1 : 0);
@@ -140,12 +141,10 @@ function HomeScreen() {
   const listOpacity = useSharedValue(0);
   const scrollY = useSharedValue(0);
 
-  // Update syncStatusRef whenever syncStatus changes
   useEffect(() => {
     syncStatusRef.current = syncStatus;
   }, [syncStatus]);
 
-  // Clear all timeouts on unmount
   useEffect(() => {
     return () => {
       Object.values(timeoutRefs.current).forEach((timer) => {
@@ -159,7 +158,7 @@ function HomeScreen() {
     async (userIdToSync: string) => {
       if (isOffline || isSyncing) return;
 
-      console.log(
+       (
         `HomeScreen: Initiating syncWithServer for user ${userIdToSync}`
       );
       setIsSyncing(true);
@@ -167,48 +166,46 @@ function HomeScreen() {
       setTopToastMessage(t("homeScreen.syncStarted"));
       setIsTopToastVisible(true);
 
-      InteractionManager.runAfterInteractions(async () => {
-        try {
-          await syncQrCodes(userIdToSync);
-          const rawDataFromServer = await fetchServerData(userIdToSync);
-          if (rawDataFromServer && rawDataFromServer.length > 0) {
-            const serverData: ServerRecord[] = rawDataFromServer.map(
-              (item: any) => ({
-                ...item,
-                // Ensure collectionId and collectionName have fallbacks
-                collectionId:
-                  item.collectionId || "YOUR_QR_COLLECTION_ID_PLACEHOLDER",
-                collectionName:
-                  item.collectionName || "YOUR_QR_COLLECTION_NAME_PLACEHOLDER",
-              })
-            );
-            await insertOrUpdateQrCodes(serverData);
-          }
-          const finalLocalData = await getQrCodesByUserId(userIdToSync);
-          dispatch(setQrData(finalLocalData));
-          setSyncStatus("synced");
-          setTopToastMessage(t("homeScreen.syncSuccess"));
-          setIsTopToastVisible(true);
-          lastSyncCheckTimestampRef.current = Date.now(); // Update timestamp
-
-          if (timeoutRefs.current.sync) clearTimeout(timeoutRefs.current.sync);
-          timeoutRefs.current.sync = setTimeout(() => {
-            if (syncStatusRef.current === "synced") setSyncStatus("idle");
-          }, 3000);
-        } catch (error) {
-          console.error("Error during sync process:", error);
-          setSyncStatus("error");
-          setTopToastMessage(t("homeScreen.syncError"));
-          setIsTopToastVisible(true);
-        } finally {
-          setIsSyncing(false); // Ensure this is always called
+      try {
+        await syncQrCodes(userIdToSync);
+        const rawDataFromServer = await fetchServerData(userIdToSync);
+        if (rawDataFromServer && rawDataFromServer.length > 0) {
+          const serverData: ServerRecord[] = rawDataFromServer.map(
+            (item: any) => ({
+              ...item,
+              collectionId:
+                item.collectionId || "YOUR_QR_COLLECTION_ID_PLACEHOLDER",
+              collectionName:
+                item.collectionName || "YOUR_QR_COLLECTION_NAME_PLACEHOLDER",
+            })
+          );
+          await insertOrUpdateQrCodes(serverData);
         }
-      });
+        const finalLocalData = await getQrCodesByUserId(userIdToSync);
+        dispatch(setQrData(finalLocalData));
+        setSyncStatus("synced");
+        setTopToastMessage(t("homeScreen.syncSuccess"));
+        setIsTopToastVisible(true);
+
+        if (timeoutRefs.current.sync) clearTimeout(timeoutRefs.current.sync);
+        timeoutRefs.current.sync = setTimeout(() => {
+          if (syncStatusRef.current === "synced") setSyncStatus("idle");
+        }, 3000);
+      } catch (error) {
+        console.error("Error during sync process:", error);
+        setSyncStatus("error");
+        setTopToastMessage(t("homeScreen.syncError"));
+        setIsTopToastVisible(true);
+      } finally {
+        setIsSyncing(false);
+      }
     },
     [dispatch, isOffline, isSyncing, t]
   );
 
-  // --- EFFECT 1: Initial Data Load ---
+  // --- EFFECT 1: Initial Data Load & First-Time Sync ---
+  // This effect now handles both loading local data and triggering a sync
+  // ONLY if no local data exists for the user.
   useEffect(() => {
     if (!isFocused) {
       if (userId && initialLoadAttemptedForUser !== userId && isLoading) {
@@ -223,8 +220,7 @@ function HomeScreen() {
       dispatch(setQrData([]));
       setSyncStatus("idle");
       setInitialLoadAttemptedForUser(null);
-      lastSyncCheckTimestampRef.current = 0;
-      console.log("HomeScreen: No userId, cleared data and reset states.");
+       ("HomeScreen: No userId, cleared data and reset states.");
       return;
     }
 
@@ -236,119 +232,69 @@ function HomeScreen() {
 
     let isMounted = true;
     setIsLoading(true);
-    console.log(`HomeScreen: Starting initial data load for user: ${userId}`);
+     (`HomeScreen: Starting initial data load for user: ${userId}`);
 
-    InteractionManager.runAfterInteractions(() => {
-      (async () => {
-        try {
-          const currentLocalData = await getQrCodesByUserId(userId);
-          if (!isMounted) return;
-          dispatch(setQrData(currentLocalData));
-          setInitialLoadAttemptedForUser(userId);
-          console.log(
-            `HomeScreen: Initial data loaded successfully for user: ${userId}`
+    const loadAndSyncOnce = async () => {
+      try {
+        const localDbExists = await hasLocalData(userId);
+        if (!isMounted) return;
+
+        if (localDbExists) {
+          // If local data exists, just load it from DB
+           (
+            `HomeScreen: Local data found for user ${userId}. Loading from DB.`
           );
-        } catch (error) {
+          const currentLocalData = await getQrCodesByUserId(userId);
           if (isMounted) {
-            console.error("Error loading local QR codes:", error);
-            setSyncStatus("error");
-            setTopToastMessage(t("homeScreen.loadError"));
-            setIsTopToastVisible(true);
+            dispatch(setQrData(currentLocalData));
           }
-        } finally {
-          if (isMounted) {
-            setIsLoading(false);
-            setInitialAnimationsDone(true);
-          }
+        } else if (!isOffline) {
+          // If NO local data and we are ONLINE, perform the first-time sync
+           (
+            `HomeScreen: No local data for user ${userId}. Triggering first-time sync.`
+          );
+          // syncWithServer will fetch and dispatch the data
+          await syncWithServer(userId);
+        } else {
+          // No local data and offline, so we have an empty state
+           (
+            `HomeScreen: No local data and offline for user ${userId}.`
+          );
+          dispatch(setQrData([]));
         }
-      })();
-    });
-
-    return () => {
-      isMounted = false;
+      } catch (error) {
+        if (!isMounted) return;
+        console.error("Error during initial data load/sync:", error);
+        setSyncStatus("error");
+        setTopToastMessage(t("homeScreen.loadError"));
+        setIsTopToastVisible(true);
+        dispatch(setQrData([])); // Clear data on error
+      } finally {
+        if (isMounted) {
+          setInitialLoadAttemptedForUser(userId);
+          setIsLoading(false);
+          setInitialAnimationsDone(true);
+        }
+      }
     };
-  }, [isFocused, userId, initialLoadAttemptedForUser, dispatch, t]);
 
-  // --- EFFECT 2: Sync Trigger (Checks for unsynced data) ---
-  useEffect(() => {
-    if (
-      !isFocused ||
-      !initialAnimationsDone ||
-      !userId ||
-      isLoading ||
-      isOffline ||
-      isSyncing ||
-      syncStatus === "error"
-    ) {
-      return;
-    }
-
-    const now = Date.now();
-    const canCheck =
-      syncStatus === "idle" ||
-      now - lastSyncCheckTimestampRef.current >= SYNC_CHECK_INTERVAL;
-
-    if (!canCheck) {
-      return;
-    }
-
-    let isMounted = true;
-    console.log(`HomeScreen: Checking for unsynced data for user: ${userId}`);
-
-    InteractionManager.runAfterInteractions(() => {
-      (async () => {
-        try {
-          const unsyncedCodes = await getUnsyncedQrCodes(userId);
-          const localDbExists = await hasLocalData(userId);
-          const needsFullSync = !localDbExists || unsyncedCodes.length > 0;
-
-          lastSyncCheckTimestampRef.current = now; // Update timestamp after check
-
-          if (needsFullSync && isMounted) {
-            console.log(
-              "HomeScreen: Unsynced data found or local DB empty, initiating full sync."
-            );
-            await syncWithServer(userId);
-          } else if (
-            isMounted &&
-            syncStatus !== "synced" &&
-            syncStatus !== "syncing"
-          ) {
-            console.log(
-              "HomeScreen: No sync needed, setting status to synced then idle."
-            );
-            setSyncStatus("synced");
-            if (timeoutRefs.current.idle)
-              clearTimeout(timeoutRefs.current.idle);
-            timeoutRefs.current.idle = setTimeout(() => {
-              if (isMounted && syncStatusRef.current === "synced") {
-                setSyncStatus("idle");
-              }
-            }, 3000);
-          }
-        } catch (error) {
-          if (isMounted) {
-            console.error("Error checking for unsynced data:", error);
-            setSyncStatus("error");
-            setTopToastMessage(t("homeScreen.syncCheckError"));
-            setIsTopToastVisible(true);
-          }
-        }
-      })();
-    });
+    InteractionManager.runAfterInteractions(loadAndSyncOnce);
 
     return () => {
       isMounted = false;
-      if (timeoutRefs.current.idle) clearTimeout(timeoutRefs.current.idle);
     };
   }, [
-    isEmpty,
-    initialAnimationsDone,
     isFocused,
-    listOpacity,
-    emptyCardOffset,
-    isEmptyShared,
+    userId,
+    initialLoadAttemptedForUser,
+    dispatch,
+    t,
+    isOffline,
+    syncWithServer,
   ]);
+
+  // REMOVED: EFFECT 2 (Smart Sync Trigger) is no longer needed.
+  // Its "first-time sync" logic is now part of EFFECT 1.
 
   // --- EFFECT 3: Network Status Toasts ---
   useEffect(() => {
@@ -393,7 +339,7 @@ function HomeScreen() {
   useEffect(() => {
     if (!isFocused || !initialAnimationsDone) {
       if (!isFocused) {
-        listOpacity.value = 0; // Reset list opacity if screen loses focus
+        listOpacity.value = 0;
       }
       return;
     }
@@ -402,11 +348,11 @@ function HomeScreen() {
 
     if (isEmpty) {
       listOpacity.value = 0;
-      emptyCardOffset.value = 350; // Reset for animation
+      emptyCardOffset.value = 350;
       animateEmptyCard();
     } else {
-      emptyCardOffset.value = 350; // Ensure empty card is off-screen
-      listOpacity.value = withTiming(1, { duration: 300 }); // Fade in list
+      emptyCardOffset.value = 350;
+      listOpacity.value = withTiming(1, { duration: 300 });
     }
   }, [
     isEmpty,
@@ -607,9 +553,9 @@ function HomeScreen() {
 
   const handleSync = useCallback(() => {
     if (userId && !isOffline && !isSyncing) {
-      console.log("HomeScreen: Manual sync initiated by user.");
-      lastSyncCheckTimestampRef.current = 0; // Reset throttle timer
-      setSyncStatus("idle"); // Allow sync effect to run
+       ("HomeScreen: Manual sync initiated by user.");
+      // No longer need to manage timestamps, just call the function
+      syncWithServer(userId);
     } else if (isOffline) {
       setTopToastMessage(t("homeScreen.offlineNoSync"));
       setIsTopToastVisible(true);
@@ -617,7 +563,7 @@ function HomeScreen() {
       setTopToastMessage(t("homeScreen.syncInProgress"));
       setIsTopToastVisible(true);
     }
-  }, [userId, isOffline, isSyncing, t]);
+  }, [userId, isOffline, isSyncing, t, syncWithServer]);
 
   const handleFilterChange = useCallback(
     (newFilter: string) => setFilter(newFilter),
@@ -646,6 +592,7 @@ function HomeScreen() {
           accountName={item.account_name}
           accountNumber={item.account_number}
           onDrag={drag}
+          enableGlassmorphism
         />
       </ScaleDecorator>
     ),
@@ -657,58 +604,43 @@ function HomeScreen() {
       triggerHapticFeedback();
       setIsActive(false);
       if (!userId) return;
-      console.log("HomeScreen: Drag ended, reordering items.");
+       ("HomeScreen: Drag ended, reordering items.");
 
       InteractionManager.runAfterInteractions(() => {
         let finalDataToDispatch: QRRecord[];
 
         if (filter === "all") {
-          // If filter is 'all', reorderedData is the full list in its new order
           finalDataToDispatch = reorderedData.map((item, index) => ({
             ...item,
             qr_index: index,
             updated: new Date().toISOString(),
           }));
         } else {
-          // If a filter is active, reorderedData contains only the filtered items in their new order.
-          // We need to reconstruct the full list, placing the reordered filtered items
-          // correctly among the non-filtered items, then re-index everything.
           const newOrderedFullList: QRRecord[] = [];
-          let reorderedDataIndex = 0; // Pointer for the reorderedData (filtered items)
+          let reorderedDataIndex = 0;
 
-          // Iterate through the original full list (qrData from Redux)
           qrData.forEach((originalItem) => {
             if (originalItem.type === filter) {
-              // This item was part of the filtered set.
-              // Place the corresponding item from the reordered (filtered) list.
               if (reorderedData[reorderedDataIndex]) {
                 newOrderedFullList.push(reorderedData[reorderedDataIndex]);
                 reorderedDataIndex++;
               } else {
-                // This case should ideally not be reached if reorderedData
-                // correctly represents all original filtered items.
-                // Log a warning and push the original item as a fallback.
                 console.warn(
                   "Mismatch in reorderedData length during filtered drag. Using original item."
                 );
                 newOrderedFullList.push(originalItem);
               }
             } else {
-              // This item was not part of the filter, keep it in its relative place.
               newOrderedFullList.push(originalItem);
             }
           });
 
-          // Ensure all items from reorderedData were used (sanity check)
           if (reorderedDataIndex < reorderedData.length) {
             console.warn(
               "Not all items from reorderedData were placed. This might indicate an issue."
             );
-            // Potentially append remaining items, though this signals a logic flaw earlier.
-            // For now, we assume the loop above correctly places them.
           }
 
-          // Re-index the entire newly constructed list
           finalDataToDispatch = newOrderedFullList.map((item, index) => ({
             ...item,
             qr_index: index,
@@ -719,7 +651,7 @@ function HomeScreen() {
         dispatch(setQrData(finalDataToDispatch));
         updateQrIndexes(finalDataToDispatch, userId)
           .then(() =>
-            console.log(
+             (
               "HomeScreen: QR indexes updated successfully after drag."
             )
           )
@@ -755,7 +687,7 @@ function HomeScreen() {
       }
       setIsToastVisible(true);
       setToastMessage(t("homeScreen.deleting"));
-      console.log("HomeScreen: Deleting QR code:", selectedItemId);
+       ("HomeScreen: Deleting QR code:", selectedItemId);
 
       await deleteQrCode(selectedItemId, userId);
       const updatedData = qrData.filter((item) => item.id !== selectedItemId);
@@ -765,16 +697,16 @@ function HomeScreen() {
         updated: new Date().toISOString(),
       }));
       dispatch(setQrData(reindexedData));
-      await updateQrIndexes(reindexedData, userId); // Update indexes
+      await updateQrIndexes(reindexedData, userId);
 
       setIsToastVisible(false);
       setTopToastMessage(t("homeScreen.deleteSuccess"));
       setIsTopToastVisible(true);
-      console.log("HomeScreen: QR code deleted successfully.");
+       ("HomeScreen: QR code deleted successfully.");
     } catch (error) {
       console.error("Error deleting QR code:", error);
       setToastMessage(t("homeScreen.deleteError"));
-      setIsToastVisible(true); // Keep error toast
+      setIsToastVisible(true);
     } finally {
       setSelectedItemId(null);
       if (operationCausedSyncing) {
@@ -786,7 +718,6 @@ function HomeScreen() {
   }, [selectedItemId, qrData, dispatch, t, userId, isSyncing]);
 
   const listContainerPadding = useMemo(() => {
-    // Determine padding based on the number of items to ensure last item is scrollable
     switch (qrData.length) {
       case 0:
         return 0;
@@ -797,7 +728,7 @@ function HomeScreen() {
       case 3:
         return height * 0.2;
       default:
-        return 100; // Default padding for 4+ items
+        return 100;
     }
   }, [qrData.length]);
 
@@ -970,7 +901,7 @@ function HomeScreen() {
             initialNumToRender={10}
             maxToRenderPerBatch={5}
             windowSize={5}
-            data={[...filteredData]} // Ensure a new array reference if filteredData identity might not change
+            data={[...filteredData]}
             renderItem={renderItem}
             keyExtractor={(item) => `draggable-item-${item.id}`}
             containerStyle={{ flex: 1 }}
@@ -1043,10 +974,10 @@ function HomeScreen() {
           sheetType === "setting"
             ? t("homeScreen.manage")
             : sheetType === "wifi"
-            ? t("homeScreen.wifi")
-            : sheetType === "linking"
-            ? t("homeScreen.linking")
-            : t("homeScreen.settings")
+              ? t("homeScreen.wifi")
+              : sheetType === "linking"
+                ? t("homeScreen.linking")
+                : t("homeScreen.settings")
         }
         onClose={() => {
           if (timeoutRefs.current.sheet)
@@ -1060,10 +991,10 @@ function HomeScreen() {
           sheetType === "setting"
             ? ["25%"]
             : sheetType === "wifi"
-            ? ["38%"]
-            : sheetType === "linking"
-            ? ["35%"]
-            : ["35%"]
+              ? ["38%"]
+              : sheetType === "linking"
+                ? ["35%"]
+                : ["35%"]
         }
         styles={{
           customContent: {
@@ -1116,8 +1047,8 @@ const styles = StyleSheet.create({
   },
   titleButton: {},
   listContainer: {
-    paddingTop: getResponsiveHeight(18.1), // Initial top padding for header
-    flexGrow: 1, // Important for FlatList to fill space and scroll
+    paddingTop: getResponsiveHeight(18.1),
+    flexGrow: 1,
   },
   emptyItem: {
     flex: 1,
@@ -1126,7 +1057,7 @@ const styles = StyleSheet.create({
     gap: getResponsiveHeight(1.5),
     opacity: 0.7,
     paddingHorizontal: getResponsiveWidth(5),
-    minHeight: getResponsiveHeight(30), // Ensure it takes some space
+    minHeight: getResponsiveHeight(30),
   },
   toastContainer: {
     position: "absolute",
@@ -1146,10 +1077,10 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: getResponsiveHeight(2),
     right: getResponsiveWidth(3.6),
-    zIndex: 3, // Ensure FAB is above list but below toasts/modals
+    zIndex: 3,
   },
   loadingContainer: {
-    paddingTop: getResponsiveHeight(18), // Match list's top padding
+    paddingTop: getResponsiveHeight(18),
     paddingHorizontal: getResponsiveWidth(3.6),
     flex: 1,
     justifyContent: "flex-start",

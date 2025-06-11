@@ -839,12 +839,13 @@ const styles = StyleSheet.create({
     marginBottom: getResponsiveHeight(3.6),
   },
   pinnedCardWrapper: {
-    marginBottom: getResponsiveHeight(3.6),
+    // marginBottom: getResponsiveHeight(3.6),
   },
   infoWrapper: {
     borderRadius: getResponsiveWidth(4),
     overflow: "hidden",
     marginBottom: getResponsiveHeight(3.6),
+    marginTop: getResponsiveHeight(3.6),
   },
   actionButton: {
     flexDirection: "row",

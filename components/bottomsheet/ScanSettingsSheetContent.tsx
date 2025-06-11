@@ -22,7 +22,7 @@ export default function ScanSettingsSheetContent({
     <ThemedView style={styles.container}>
       <View style={styles.settingRow}>
         <ThemedText style={styles.settingText}>
-          {t('scanSettings.showIndicator')}
+          {t('scanScreen.showIndicator')}
         </ThemedText>
         <Switch value={showIndicator} onValueChange={onToggleShowIndicator} />
       </View>
@@ -30,7 +30,7 @@ export default function ScanSettingsSheetContent({
       {/* Removed Auto Brightness and Quick Scan settings */}
 
       <ThemedButton
-        label={t('scanSettings.appSettings')}
+        label={t('scanScreen.appSettings')}
         onPress={onNavigateToSettings}
         style={styles.settingsButton}
         textStyle={styles.settingsButtonText}

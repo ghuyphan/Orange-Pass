@@ -18,6 +18,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { Provider } from "react-redux";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { PaperProvider } from "react-native-paper";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 import "react-native-get-random-values";
 import * as SecureStore from "expo-secure-store";
 
@@ -102,7 +103,7 @@ class TokenManager {
 
   static async performTokenRefresh(router: any): Promise<boolean> {
     if (this.isRefreshing) {
-      console.log("[TokenManager] Refresh already in progress");
+      ("[TokenManager] Refresh already in progress");
       return true;
     }
 
@@ -111,12 +112,12 @@ class TokenManager {
       const userID = await SecureStore.getItemAsync("userID");
 
       if (!this.shouldRefreshToken(authToken, userID)) {
-        console.log("[TokenManager] Token refresh not needed");
+        ("[TokenManager] Token refresh not needed");
         return true;
       }
 
       this.isRefreshing = true;
-      console.log("[TokenManager] Starting token refresh after background period");
+      ("[TokenManager] Starting token refresh after background period");
 
       const currentLastSynced = store.getState().auth.lastSynced;
       store.dispatch(setSyncStatus({
@@ -132,7 +133,7 @@ class TokenManager {
           isSyncing: false,
           lastSynced: new Date().toISOString(),
         }));
-        console.log("[TokenManager] Token refresh successful");
+        ("[TokenManager] Token refresh successful");
         return true;
       } else {
         console.warn("[TokenManager] Token refresh failed - clearing auth");
@@ -170,11 +171,9 @@ class TokenManager {
 
   static onAppBackground(): void {
     this.backgroundStartTime = Date.now();
-    console.log("[TokenManager] App backgrounded at:", new Date().toISOString());
   }
 
   static onAppForeground(): void {
-    console.log("[TokenManager] App foregrounded at:", new Date().toISOString());
     // Reset background timer but don't automatically refresh
     this.backgroundStartTime = 0;
   }
@@ -215,12 +214,12 @@ export default function RootLayout() {
   // Database initialization
   const initializeDatabase = useCallback(async (): Promise<void> => {
     try {
-      console.log("[RootLayout] Initializing database tables...");
+      ("[RootLayout] Initializing database tables...");
       await Promise.all([
         createUserTable(),
         createQrTable(),
       ]);
-      console.log("[RootLayout] Database tables initialized successfully");
+      ("[RootLayout] Database tables initialized successfully");
     } catch (error) {
       console.error("[RootLayout] Failed to initialize database tables:", error);
       throw error;
@@ -231,7 +230,6 @@ export default function RootLayout() {
   const checkOnboardingStatus = useCallback(async (): Promise<boolean> => {
     try {
       const hasSeenOnboarding = storage.getBoolean(ONBOARDING_STORAGE_KEY) ?? false;
-      console.log("[RootLayout] Onboarding status:", hasSeenOnboarding);
       return hasSeenOnboarding;
     } catch (error) {
       console.error("[RootLayout] Error reading onboarding status:", error);
@@ -243,12 +241,10 @@ export default function RootLayout() {
   const prepareApp = useCallback(async (): Promise<void> => {
     // Prevent multiple simultaneous initializations
     if (initializationPromise.current) {
-      console.log("[RootLayout] App preparation already in progress");
       return initializationPromise.current;
     }
 
     initializationPromise.current = (async () => {
-      console.log("[RootLayout] Starting app preparation...");
 
       try {
         // Initialize core services
@@ -265,15 +261,8 @@ export default function RootLayout() {
           checkGuestModeStatus(),
         ]);
 
-        console.log("[RootLayout] Status checks complete:", {
-          onboarding: onboardingStatus,
-          quickLogin: quickLoginEnabled,
-          guestMode: guestModePreference,
-        });
-
         // Check authentication status
         const sessionActive = await checkInitialAuth(!onboardingStatus);
-        console.log("[RootLayout] Authentication check complete. Active session:", sessionActive);
 
         // Update app state with all resolved values
         setAppState({
@@ -284,9 +273,7 @@ export default function RootLayout() {
           useGuestMode: guestModePreference,
         });
 
-        console.log("[RootLayout] App preparation completed successfully");
       } catch (error) {
-        console.error("[RootLayout] CRITICAL: App initialization failed:", error);
 
         // Set fallback state to prevent app from being stuck
         setAppState({
@@ -306,14 +293,11 @@ export default function RootLayout() {
   useEffect(() => {
     if (fontsLoaded || fontError) {
       if (fontError) {
-        console.error("[RootLayout] Font loading failed:", fontError);
       } else {
-        console.log("[RootLayout] Fonts loaded successfully");
       }
 
       // Start app preparation once fonts are settled
       prepareApp().catch(error => {
-        console.error("[RootLayout] prepareApp promise rejected:", error);
       });
     }
   }, [fontsLoaded, fontError, prepareApp]);
@@ -324,7 +308,6 @@ export default function RootLayout() {
       const prevState = appStateRef.current;
 
       if (prevState.match(/inactive|background/) && nextAppState === "active") {
-        console.log("[RootLayout] App resumed from background");
         TokenManager.onAppForeground();
 
         // Only attempt token refresh if we're online
@@ -333,13 +316,10 @@ export default function RootLayout() {
           try {
             await TokenManager.performTokenRefresh(router);
           } catch (error) {
-            console.error("[RootLayout] Error during token refresh on resume:", error);
           }
         } else {
-          console.log("[RootLayout] App resumed but offline, skipping token refresh");
         }
       } else if (nextAppState === "background" || nextAppState === "inactive") {
-        console.log("[RootLayout] App going to background/inactive");
         TokenManager.onAppBackground();
         cleanupResponsiveManager();
       }
@@ -359,7 +339,6 @@ export default function RootLayout() {
   // Handle navigation based on app state
   useEffect(() => {
     if (!appState.initializationComplete) {
-      console.log("[RootLayout] Navigation deferred: initialization incomplete");
       return;
     }
 
@@ -396,14 +375,6 @@ export default function RootLayout() {
       targetRoute = "/(public)/login";
     }
 
-    console.log("[RootLayout] Navigation decision:", {
-      onboarding: hasSeenOnboarding,
-      authenticated: isAuthenticated,
-      guestMode: useGuestMode,
-      quickLogin: hasQuickLoginEnabled,
-      target: targetRoute,
-    });
-
     router.replace(targetRoute);
   }, [appState, router]);
 
@@ -425,12 +396,9 @@ export default function RootLayout() {
   const onLayoutRootView = useCallback(async () => {
     if (appState.initializationComplete && !splashHiddenRef.current) {
       try {
-        console.log("[RootLayout] Hiding splash screen");
         await SplashScreen.hideAsync();
         splashHiddenRef.current = true;
-        console.log("[RootLayout] Splash screen hidden successfully");
       } catch (error) {
-        console.error("[RootLayout] Failed to hide splash screen:", error);
       }
     }
   }, [appState.initializationComplete]);
@@ -441,19 +409,21 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider>
-      <Provider store={store}>
-        <GestureHandlerRootView style={styles.container}>
-          <PaperProvider>
-            <LocaleProvider>
-              <ThemedView style={styles.root} onLayout={onLayoutRootView}>
-                {stackNavigator}
-              </ThemedView>
-            </LocaleProvider>
-          </PaperProvider>
-        </GestureHandlerRootView>
-      </Provider>
-    </ThemeProvider>
+    <KeyboardProvider>
+      <ThemeProvider>
+        <Provider store={store}>
+          <GestureHandlerRootView style={styles.container}>
+            <PaperProvider>
+              <LocaleProvider>
+                <ThemedView style={styles.root} onLayout={onLayoutRootView}>
+                  {stackNavigator}
+                </ThemedView>
+              </LocaleProvider>
+            </PaperProvider>
+          </GestureHandlerRootView>
+        </Provider>
+      </ThemeProvider>
+    </KeyboardProvider>
   );
 }
 

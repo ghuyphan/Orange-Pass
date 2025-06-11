@@ -12,7 +12,7 @@ export const getTokenExpirationDate = (token: string) => {
             return new Date(decoded.exp * 1000);
         }
     } catch (error) {
-        console.log(error);
+         (error);
         return null;
     }
 }

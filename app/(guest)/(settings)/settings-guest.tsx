@@ -37,8 +37,6 @@ import { clearAuthData } from "@/store/reducers/authSlice";
 import { removeAllQrData } from "@/store/reducers/qrSlice";
 import { clearErrorMessage } from "@/store/reducers/errorSlice";
 import pb from "@/services/pocketBase";
-// import { useMMKVString } from 'react-native-mmkv'; // Only if directly changing locale here
-// import { useLocale } from '@/context/LocaleContext'; // Only if directly changing locale here
 import { useTheme } from "@/context/ThemeContext";
 import { MaterialIcons } from "@expo/vector-icons";
 import {
@@ -47,27 +45,29 @@ import {
   getResponsiveHeight,
 } from "@/utils/responsive";
 import * as Application from "expo-application";
-import { MMKV_KEYS, SECURE_KEYS } from "@/services/auth"; // Import exitGuestMode
+import { MMKV_KEYS, SECURE_KEYS } from "@/services/auth";
 import { useLocale } from "@/context/LocaleContext";
 import { useMMKVString } from "react-native-mmkv";
+import { useGlassStyle } from "@/hooks/useGlassStyle";
 
-const GUEST_USER_ID = ""; // Consistent with AuthService
+const GUEST_USER_ID = "";
 
 interface SettingsCardItem {
   leftIcon: keyof typeof MaterialIcons.glyphMap;
   settingsTitle: string;
   onPress: () => void;
-  hideForGuest?: boolean; // To control visibility for guests
+  hideForGuest?: boolean;
 }
 
 function SettingsScreen() {
-    const { updateLocale } = useLocale();
-    const [locale, setLocale] = useMMKVString('locale', storage);
+  const { overlayColor, borderColor } = useGlassStyle(); // Use the hook
+  const { updateLocale } = useLocale();
+  const [locale, setLocale] = useMMKVString("locale", storage);
   const avatarConfig = useSelector(
     (state: RootState) => state.auth.avatarConfig
   );
   const user = useSelector((state: RootState) => state.auth.user);
-  const userId = user?.id ?? GUEST_USER_ID; // Default to guest if user is null
+  const userId = user?.id ?? GUEST_USER_ID;
   const isGuest = userId === GUEST_USER_ID;
 
   const { currentTheme } = useTheme();
@@ -77,7 +77,9 @@ function SettingsScreen() {
   const dispatch = useDispatch();
   const scrollY = useSharedValue(0);
 
-  const name = isGuest ? t("settingsScreen.guestLoginPrompt") : user?.name ?? "-";
+  const name = isGuest
+    ? t("settingsScreen.guestLoginPrompt")
+    : user?.name ?? "-";
   const appVersion = Application.nativeApplicationVersion;
 
   const sectionsColors = useMemo(
@@ -108,7 +110,7 @@ function SettingsScreen() {
     };
   }, []);
 
-  const scrollHandler = useAnimatedScrollHandler(event => {
+  const scrollHandler = useAnimatedScrollHandler((event) => {
     scrollY.value = event.contentOffset.y;
   });
 
@@ -142,9 +144,6 @@ function SettingsScreen() {
   }, [router, isGuest]);
 
   const onNavigateToLogin = useCallback(() => {
-    // exitGuestMode().then(() => {
-    //   router.replace("/login");
-    // });
     router.push("/login");
   }, [router]);
 
@@ -157,22 +156,18 @@ function SettingsScreen() {
   }, [isGuest, router, onNavigateToLogin]);
 
   const logout = useCallback(async () => {
-    if (isGuest) return; // Should not be callable by guest
+    if (isGuest) return;
     try {
       setIsModalVisible(false);
       setIsLoading(true);
-
       await SecureStore.deleteItemAsync(SECURE_KEYS.AUTH_TOKEN);
       await SecureStore.deleteItemAsync(SECURE_KEYS.USER_ID);
       pb.authStore.clear();
-
       dispatch(clearErrorMessage());
       dispatch(removeAllQrData());
       dispatch(clearAuthData());
-
       const quickLoginEnabled =
         storage.getBoolean(MMKV_KEYS.QUICK_LOGIN_ENABLED) ?? false;
-
       if (quickLoginEnabled) {
         router.push("/quick-login");
       } else {
@@ -190,56 +185,48 @@ function SettingsScreen() {
     setIsModalVisible(true);
   }, [isGuest]);
 
-  const settingsData: SettingsCardItem[][] = useMemo(() => [
-    [
-      {
-        leftIcon: "person-outline",
-        settingsTitle: t("settingsScreen.editProfile"),
-        onPress: onNavigateToEditScreen,
-        hideForGuest: true,
-      },
-      {
-        leftIcon: "lock-outline",
-        settingsTitle: t("settingsScreen.changePassword"),
-        onPress: () => {},
-        hideForGuest: true,
-      },
-      {
-        leftIcon: "mail-outline",
-        settingsTitle: t("settingsScreen.changeEmail"),
-        onPress: () => {},
-        hideForGuest: true,
-      },
+  const settingsData: SettingsCardItem[][] = useMemo(
+    () => [
+      [
+        {
+          leftIcon: "person-outline",
+          settingsTitle: t("settingsScreen.editProfile"),
+          onPress: onNavigateToEditScreen,
+          hideForGuest: true,
+        },
+      ],
+      [
+        {
+          leftIcon: "translate",
+          settingsTitle: t("settingsScreen.language"),
+          onPress: () => router.push("/language"),
+          hideForGuest: false,
+        },
+        {
+          leftIcon: "contrast",
+          settingsTitle: t("settingsScreen.appTheme"),
+          onPress: () => router.push("/theme"),
+          hideForGuest: false,
+        },
+      ],
     ],
-    [
-      {
-        leftIcon: "translate",
-        settingsTitle: t("settingsScreen.language"),
-        onPress: () => router.push("/language"), // Accessible to guests
-        hideForGuest: false, // Explicitly false or omit
-      },
-      {
-        leftIcon: "contrast",
-        settingsTitle: t("settingsScreen.appTheme"),
-        onPress: () => router.push("/theme"), // Accessible to guests
-        hideForGuest: false, // Explicitly false or omit
-      },
-    ],
-  ], [t, onNavigateToEditScreen, isGuest, router]);
+    [t, onNavigateToEditScreen, isGuest, router, locale]
+  );
 
   const renderItem = useCallback(
     ({ item, index }: { item: SettingsCardItem[]; index: number }) => {
       const visibleItems = item.filter(
-        subItem => !(isGuest && subItem.hideForGuest)
+        (subItem) => !(isGuest && subItem.hideForGuest)
       );
       if (visibleItems.length === 0) return null;
 
       return (
         <View
           key={index}
-          style={[styles.sectionContainer, { backgroundColor: sectionsColors }]}
+          style={[styles.sectionContainer, { backgroundColor: sectionsColors, borderColor: borderColor }]}
         >
-          {visibleItems.map(subItem => (
+          <View style={[styles.defaultOverlay, { backgroundColor: overlayColor }]} />
+          {visibleItems.map((subItem) => (
             <ThemedSettingsCardItem
               key={subItem.settingsTitle}
               {...subItem}
@@ -283,10 +270,11 @@ function SettingsScreen() {
           <Pressable
             style={[
               styles.avatarContainer,
-              { backgroundColor: sectionsColors },
+              { backgroundColor: sectionsColors, borderColor: borderColor },
             ]}
             onPress={handleAvatarSectionPress}
           >
+            <View style={[styles.defaultOverlay, { backgroundColor: overlayColor }]} />
             <View style={styles.avatarWrapper}>
               {isGuest ? (
                 <View style={styles.guestAvatarPlaceholder}>
@@ -335,6 +323,7 @@ function SettingsScreen() {
               name="chevron-right"
               size={getResponsiveFontSize(16)}
               color={iconColor}
+              style={{ zIndex: 1 }}
             />
           </Pressable>
         }
@@ -431,19 +420,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: getResponsiveWidth(4.8),
     marginBottom: getResponsiveHeight(2),
     borderRadius: getResponsiveWidth(4),
-    gap: 0,
+    borderWidth: 1,
+    // borderColor: DEFAULT_OVERLAY_CONFIG.borderColor,
+    overflow: "hidden",
   },
   avatarWrapper: {
     flexDirection: "row",
     alignItems: "center",
+    zIndex: 1,
   },
-  guestAvatarPlaceholder: { // Style for guest avatar placeholder
+  guestAvatarPlaceholder: {
     width: getResponsiveWidth(11) + getResponsiveWidth(1.2) * 2,
     height: getResponsiveWidth(11) + getResponsiveWidth(1.2) * 2,
     borderRadius: getResponsiveWidth(12),
     justifyContent: "center",
     alignItems: "center",
-    // backgroundColor: '#e0e0e0', // Optional: a light background for the placeholder
   },
   avatarLoadContainer: {
     width: getResponsiveWidth(11),
@@ -468,6 +459,13 @@ const styles = StyleSheet.create({
     borderRadius: getResponsiveWidth(4),
     marginBottom: getResponsiveHeight(2),
     overflow: "hidden",
+    borderWidth: 1,
+    // borderColor: DEFAULT_OVERLAY_CONFIG.borderColor,
+  },
+  defaultOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    // backgroundColor: DEFAULT_OVERLAY_CONFIG.overlayColor,
+    zIndex: 0,
   },
   versionText: {
     marginTop: getResponsiveHeight(2),

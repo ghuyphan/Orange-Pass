@@ -27,7 +27,7 @@ export const processScannedCode = ({
     WIFI: {
       pattern: /^WIFI:/,
       handler: () => {
-        console.log('WIFI:', codeMetadata);
+         ('WIFI:', codeMetadata);
         const ssidMatch = codeMetadata.match(/S:([^;]*)/);
         const passMatch = codeMetadata.match(/P:([^;]*)/);
         const isWepMatch = codeMetadata.match(/T:([^;]*)/);
@@ -40,7 +40,7 @@ export const processScannedCode = ({
         // if (quickScan) {
           const password = passMatch ? passMatch[1] : '';
           const isWep = isWepMatch ? isWepMatch[1] === 'WEP' : undefined;
-          console.log('WIFI:', ssid, password, isWep);
+           ('WIFI:', ssid, password, isWep);
 
           // setIsConnecting(true);
           // WifiManager.connectToProtectedWifiSSID({

@@ -57,7 +57,7 @@ export const useGalleryPicker = ({
                     codeFormat: codeFormat,
                 });
 
-                console.log('Decoded QR code:', result);
+                 ('Decoded QR code:', result);
 
                 if (result) {
                     const actionMap: Record<string, () => void> = {
@@ -68,16 +68,16 @@ export const useGalleryPicker = ({
                         'ewallet': () => onNavigateToAddScreen(result.codeFormat, result.rawCodeValue, result.bin, result.codeType, result.provider),
                         'alphanumeric': () => {
                             onNavigateToAddScreen(result.codeFormat, result.rawCodeValue);},
-                        'unknown': () => console.log('Unknown code format:', result.rawCodeValue),
+                        'unknown': () =>  ('Unknown code format:', result.rawCodeValue),
                     };
 
                     const action = actionMap[result.codeType] || actionMap['unknown'];
                     action();
                 } else {
-                    console.log('Failed to decode QR code');
+                     ('Failed to decode QR code');
                 }
             } catch (error) {
-                console.log('Error opening image picker or handling code:', error);
+                 ('Error opening image picker or handling code:', error);
             }
         },
         [handleCodeScanned, onNavigateToAddScreen, onOpenSheet]

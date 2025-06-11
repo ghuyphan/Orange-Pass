@@ -122,7 +122,7 @@ const AddScreen: React.FC = () => {
     async (accountNumber: string, accountName: string, brandBin: string) => {
       setIsVietQrLoading(true);
       try {
-        console.log("Fetching VietQR data...");
+         ("Fetching VietQR data...");
         const response = await getVietQRData(
           accountNumber,
           accountName ?? "",

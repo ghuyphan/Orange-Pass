@@ -91,7 +91,7 @@ export default function CreateQRScreen() {
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    paddingHorizontal: getResponsiveWidth(4.8),
+    paddingHorizontal: getResponsiveWidth(3.6),
   },
   loadingWrapper: {
     flex: 1,

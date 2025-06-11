@@ -55,7 +55,7 @@ export async function createQrTable(): Promise<void> {
     );
 
     await db.runAsync("COMMIT;");
-    console.log("[qrDB] qrcodes table created/verified successfully.");
+     ("[qrDB] qrcodes table created/verified successfully.");
   } catch (error) {
     await db.runAsync("ROLLBACK;");
     console.error("[qrDB] Error creating qr table or indexes:", error);
@@ -143,7 +143,7 @@ export async function deleteQrCode(id: string, userId: string): Promise<void> {
     `,
       [updatedAt, isSyncedValue, id, userId]
     );
-    console.log(`[qrDB] Soft-deleted QR code ${id} for user ${userId}.`);
+     (`[qrDB] Soft-deleted QR code ${id} for user ${userId}.`);
   } catch (error) {
     console.error(
       `[qrDB] Failed to soft-delete QR code ${id} for user ${userId}:`,
@@ -193,7 +193,7 @@ export async function insertQrCodesBulk(
       values
     );
     await db.runAsync("COMMIT;");
-    console.log(`[qrDB] Bulk inserted ${qrDataArray.length} QR codes.`);
+     (`[qrDB] Bulk inserted ${qrDataArray.length} QR codes.`);
   } catch (error) {
     await db.runAsync("ROLLBACK;");
     console.error("[qrDB] Failed to insert bulk QR codes:", error);
@@ -256,28 +256,28 @@ export async function getLocallyDeletedQrCodes(
  */
 export async function syncQrCodes(userId: string): Promise<void> {
   if (userId === GUEST_USER_ID || !userId) {
-    console.log(
+     (
       "[qrDB] syncQrCodes: Skipped for guest or invalid userId."
     );
     return;
   }
-  console.log(`[qrDB] syncQrCodes: Starting sync for userId: ${userId}`);
+   (`[qrDB] syncQrCodes: Starting sync for userId: ${userId}`);
   const db = await openDatabase();
 
   try {
     const unsyncedChanges = await getUnsyncedQrCodes(userId);
     const locallyDeleted = await getLocallyDeletedQrCodes(userId);
 
-    console.log(
+     (
       `[qrDB] syncQrCodes: Found ${unsyncedChanges.length} unsynced changes to potentially create/update.`
     );
-    console.log(
+     (
       `[qrDB] syncQrCodes: Found ${locallyDeleted.length} locally deleted items to delete/mark on server.`
     );
 
     // --- Handle Deletions on Server ---
     if (locallyDeleted.length > 0) {
-      console.log(
+       (
         `[qrDB] syncQrCodes: Processing ${locallyDeleted.length} locally deleted records for server.`
       );
       const serverDeletionPromises = locallyDeleted.map((qr) =>
@@ -311,7 +311,7 @@ export async function syncQrCodes(userId: string): Promise<void> {
             userId,
           ]
         );
-        console.log(
+         (
           `[qrDB] syncQrCodes: Marked ${successfullyDeletedServerIds.length} server-deleted records as synced locally.`
         );
       }
@@ -371,7 +371,7 @@ export async function syncQrCodes(userId: string): Promise<void> {
             !serverInfo.is_deleted &&
             new Date(qrCode.updated) > new Date(serverInfo.updated)
           ) {
-            console.log(
+             (
               `[qrDB] syncQrCodes: Preparing UPDATE for server record ID ${localId}.`
             );
             recordsToUpdatePayloads.push({
@@ -379,11 +379,11 @@ export async function syncQrCodes(userId: string): Promise<void> {
               data: payloadWithUser,
             });
           } else if (serverInfo.is_deleted) {
-            console.log(
+             (
               `[qrDB] syncQrCodes: Server record ID ${localId} is marked deleted. Local is not. Potential conflict/resurrection.`
             );
             if (new Date(qrCode.updated) > new Date(serverInfo.updated)) {
-              console.log(
+               (
                 `[qrDB] syncQrCodes: Preparing UPDATE (to undelete) for server record ID ${localId}.`
               );
               recordsToUpdatePayloads.push({
@@ -392,7 +392,7 @@ export async function syncQrCodes(userId: string): Promise<void> {
               });
             }
           } else {
-            console.log(
+             (
               `[qrDB] syncQrCodes: Server record ID ${localId} is newer or same and not deleted. Marking local as synced.`
             );
             await db.runAsync(
@@ -402,7 +402,7 @@ export async function syncQrCodes(userId: string): Promise<void> {
           }
         } else {
           // Record with this localId does NOT exist on server, so create it
-          console.log(
+           (
             `[qrDB] syncQrCodes: Preparing CREATE for local record ID ${localId}.`
           );
           // Payload for server creation:
@@ -419,7 +419,7 @@ export async function syncQrCodes(userId: string): Promise<void> {
 
       // Perform Creations
       if (recordsToCreatePayloads.length > 0) {
-        console.log(
+         (
           `[qrDB] syncQrCodes: Creating ${recordsToCreatePayloads.length} records on server for user ${userId}.`
         );
         for (const itemToCreate of recordsToCreatePayloads) {
@@ -452,7 +452,7 @@ export async function syncQrCodes(userId: string): Promise<void> {
                 userId,
               ]
             );
-            console.log(
+             (
               `[qrDB] syncQrCodes: Successfully created server record (new ID: ${serverRecord.id}) for local ID ${itemToCreate.localId}. Local record updated and synced.`
             );
           } catch (e: any) {
@@ -466,7 +466,7 @@ export async function syncQrCodes(userId: string): Promise<void> {
 
       // Perform Updates
       if (recordsToUpdatePayloads.length > 0) {
-        console.log(
+         (
           `[qrDB] syncQrCodes: Updating ${recordsToUpdatePayloads.length} records on server for user ${userId}.`
         );
         for (const itemToUpdate of recordsToUpdatePayloads) {
@@ -478,7 +478,7 @@ export async function syncQrCodes(userId: string): Promise<void> {
               `UPDATE qrcodes SET is_synced = 1, updated = ? WHERE id = ? AND user_id = ?`,
               [updatedRecord.updated, itemToUpdate.id, userId]
             );
-            console.log(
+             (
               `[qrDB] syncQrCodes: Successfully updated server record ${itemToUpdate.id}. Marked local as synced.`
             );
           } catch (e: any) {
@@ -490,7 +490,7 @@ export async function syncQrCodes(userId: string): Promise<void> {
         }
       }
     }
-    console.log(`[qrDB] Sync completed for user: ${userId}`);
+     (`[qrDB] Sync completed for user: ${userId}`);
   } catch (error) {
     console.error(`[qrDB] Error during sync for user ${userId}:`, error);
     // Do not re-throw here if you want the calling function (e.g., in HomeScreen)
@@ -533,7 +533,7 @@ export async function fetchServerData(userId: string): Promise<QRRecord[]> {
     let currentPage = 1;
     let totalPages = 1;
 
-    console.log(`[qrDB] fetchServerData: Fetching with filter: ${filter}`);
+     (`[qrDB] fetchServerData: Fetching with filter: ${filter}`);
 
     do {
       const serverDataPage = await pb
@@ -550,7 +550,7 @@ export async function fetchServerData(userId: string): Promise<QRRecord[]> {
       currentPage++;
     } while (currentPage <= totalPages);
 
-    console.log(`[qrDB] fetchServerData: Fetched ${allServerItems.length} items from server.`);
+     (`[qrDB] fetchServerData: Fetched ${allServerItems.length} items from server.`);
 
 
     return allServerItems.map((item): QRRecord => {
@@ -678,7 +678,7 @@ export async function insertOrUpdateQrCodes(
       }
     }
     await db.runAsync("COMMIT;");
-    // console.log(`[qrDB] Inserted/Updated ${qrDataArray.length} QR codes.`);
+    //  (`[qrDB] Inserted/Updated ${qrDataArray.length} QR codes.`);
   } catch (error) {
     await db.runAsync("ROLLBACK;");
     console.error("[qrDB] Failed to insert/update QR codes:", error);
@@ -834,7 +834,7 @@ export async function getNextQrIndex(userId: string): Promise<number> {
  * Transfers QR codes from the guest account to a newly logged-in user.
  */
 export async function transferGuestDataToUser(newUserId: string): Promise<void> {
-  console.log(
+   (
     `[qrDB] transferGuestDataToUser: Called for newUserId: ${newUserId}`
   );
   if (!newUserId || newUserId === GUEST_USER_ID) {
@@ -847,24 +847,24 @@ export async function transferGuestDataToUser(newUserId: string): Promise<void> 
   const db = await openDatabase();
   try {
     await db.runAsync("BEGIN TRANSACTION;");
-    console.log("[qrDB] transferGuestDataToUser: Transaction started.");
+     ("[qrDB] transferGuestDataToUser: Transaction started.");
 
     const guestQrRecords = await db.getAllAsync<QRRecord>(
       "SELECT * FROM qrcodes WHERE user_id = ? AND is_deleted = 0 ORDER BY qr_index ASC",
       GUEST_USER_ID
     );
-    console.log(
+     (
       `[qrDB] transferGuestDataToUser: Found ${guestQrRecords.length} guest records.`
     );
 
     if (!guestQrRecords.length) {
-      console.log("[qrDB] transferGuestDataToUser: No guest data to migrate.");
+       ("[qrDB] transferGuestDataToUser: No guest data to migrate.");
       await db.runAsync("COMMIT;"); // Commit even if no data to ensure transaction is closed
       return;
     }
 
     const nextUserStartIndex = await getNextQrIndex(newUserId);
-    console.log(
+     (
       `[qrDB] transferGuestDataToUser: Next user start index: ${nextUserStartIndex}`
     );
     const now = new Date().toISOString();
@@ -872,7 +872,7 @@ export async function transferGuestDataToUser(newUserId: string): Promise<void> 
     for (let i = 0; i < guestQrRecords.length; i++) {
       const guestRecord = guestQrRecords[i];
       const newQrIndex = nextUserStartIndex + i;
-      console.log(
+       (
         `[qrDB] transferGuestDataToUser: Migrating guest record ID ${guestRecord.id} to user ${newUserId}, new index ${newQrIndex}`
       );
       // When transferring, the item becomes unsynced for the new user
@@ -885,7 +885,7 @@ export async function transferGuestDataToUser(newUserId: string): Promise<void> 
     }
 
     await db.runAsync("COMMIT;");
-    console.log(
+     (
       `[qrDB] transferGuestDataToUser: Successfully migrated ${guestQrRecords.length} guest QR records to user ${newUserId}. Transaction committed.`
     );
   } catch (error) {
@@ -905,7 +905,7 @@ export async function closeDatabase(): Promise<void> {
   const db = await openDatabase();
   try {
     await db.closeAsync();
-    console.log("[qrDB] Database connection closed.");
+     ("[qrDB] Database connection closed.");
   } catch (error) {
     console.error("[qrDB] Error closing the database:", error);
   }

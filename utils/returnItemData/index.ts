@@ -86,7 +86,7 @@ function getDarkModeColor(lightColor: string): string {
 // --- Data Manager ---
 
 const createDataManager = (primaryLocale: string = 'vi') => { // Use 'vi' as default locale based on export
-  console.log(`[DataManager] Initializing with primary locale: ${primaryLocale}`);
+   (`[DataManager] Initializing with primary locale: ${primaryLocale}`);
   const startTime = performance.now();
 
   // --- Data Stores ---
@@ -131,7 +131,7 @@ const createDataManager = (primaryLocale: string = 'vi') => { // Use 'vi' as def
         console.warn(`[DataManager] No items found or invalid format for type: ${type}`);
         return;
     }
-    console.log(`[DataManager] Processing ${items.length} items for type: ${type}`);
+     (`[DataManager] Processing ${items.length} items for type: ${type}`);
 
     for (const item of items) {
       if (!item || !item.code || !item.name || !item.full_name) {
@@ -183,7 +183,7 @@ const createDataManager = (primaryLocale: string = 'vi') => { // Use 'vi' as def
           console.warn(`[DataManager] No VietQR banks found or invalid format.`);
           return;
       }
-      console.log(`[DataManager] Processing ${banks.length} items for type: vietqr`);
+       (`[DataManager] Processing ${banks.length} items for type: vietqr`);
       const type: DataType = 'vietqr';
       const defaultLightColor = '#1E90FF'; // Default blue for VietQR
       const defaultDarkColor = getDarkModeColor(defaultLightColor);
@@ -232,7 +232,7 @@ const createDataManager = (primaryLocale: string = 'vi') => { // Use 'vi' as def
     // Process VietQR type from vietQRBanks.json
     processVietQRData();
 
-    console.log(`[DataManager] Data initialization complete. Took: ${performance.now() - initStartTime}ms`);
+     (`[DataManager] Data initialization complete. Took: ${performance.now() - initStartTime}ms`);
   };
 
   initializeData(); // Run initialization when the manager is created
@@ -256,7 +256,7 @@ const createDataManager = (primaryLocale: string = 'vi') => { // Use 'vi' as def
   };
 
   const getItemsByType = (type: DataType): ItemType[] => {
-    // console.log(`[DataManager] getItemsByType called for: ${type}`); // Optional: for debugging
+    //  (`[DataManager] getItemsByType called for: ${type}`); // Optional: for debugging
     if (dataByCode[type]) {
       // Return the array of pre-processed items
       return Object.values(dataByCode[type]);
@@ -331,7 +331,7 @@ const createDataManager = (primaryLocale: string = 'vi') => { // Use 'vi' as def
       return null;
   };
 
-  console.log(`[DataManager] Manager created. Total time: ${performance.now() - startTime}ms`);
+   (`[DataManager] Manager created. Total time: ${performance.now() - startTime}ms`);
 
   // Return the public API
   return {

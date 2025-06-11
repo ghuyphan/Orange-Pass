@@ -120,7 +120,7 @@ const AddScreenGuest: React.FC = () => {
     async (accountNumber: string, accountName: string, brandBin: string) => {
       setIsVietQrLoading(true);
       try {
-        console.log("Fetching VietQR data for guest...");
+         ("Fetching VietQR data for guest...");
         const response = await getVietQRData(
           accountNumber,
           accountName ?? "",

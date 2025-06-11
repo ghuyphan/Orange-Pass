@@ -350,7 +350,9 @@
     "copied": "Copied",
     "settings": "Settings",
     "wifi": "Wi-Fi Network",
-    "linking": "Link"
+    "linking": "Link",
+    "showIndicator": "Show scan area indicator",
+    "appSettings": "App Settings"
   },
   "permissionScreen": {
     "cameraTitle": "Allow Camera Access",

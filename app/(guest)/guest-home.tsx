@@ -177,7 +177,7 @@ function GuestHomeScreen() {
       if (timeoutRefs.current.network)
         clearTimeout(timeoutRefs.current.network);
     };
-  }, [isOffline, t]);
+  }, [isOffline]);
 
   const animateEmptyCard = useCallback(() => {
     emptyCardOffset.value = withSpring(0, { damping: 30, stiffness: 150 });
@@ -321,7 +321,7 @@ function GuestHomeScreen() {
       if (timeoutRefs.current.edit) clearTimeout(timeoutRefs.current.edit);
       timeoutRefs.current.edit = setTimeout(() => {
         router.push({
-          pathname: `/(guest)/edit-guest`,
+          pathname: `/(guest)/edit`,
           params: { id: selectedItemId },
         });
       }, 200);

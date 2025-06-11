@@ -38,7 +38,7 @@ export const useFocusGesture = (
 
         cameraRef.current
           .focus(adjustedPoint)
-          .then(() => console.log('Focus successful'))
+          .then(() =>  ('Focus successful'))
           .catch((error) => {
             if (error.code !== 'capture/focus-canceled') {
               console.error('Focus failed:', error);

@@ -170,7 +170,7 @@ const OnBoardScreen = () => {
         // 4. Perform the full guest initialization in the background.
         initializeGuestMode()
           .then(() => {
-            console.log(
+             (
               "[OnBoardScreen] Background guest mode initialization successful."
             );
           })

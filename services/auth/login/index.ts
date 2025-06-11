@@ -94,7 +94,7 @@ const loginWithTimeout = async (
   } catch (error) {
     const loginError = error as LoginError;
     if (attempt < MAX_RETRIES && loginError.isTimeout) {
-      console.log(`Login attempt ${attempt} timed out, retrying...`);
+       (`Login attempt ${attempt} timed out, retrying...`);
       return loginWithTimeout(email, password, attempt + 1);
     }
     throw error;

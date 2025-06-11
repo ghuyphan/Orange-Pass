@@ -350,7 +350,9 @@
     "copied": "Скопировано",
     "settings": "Настройки",
     "wifi": "Сеть Wi-Fi",
-    "linking": "Ссылка"
+    "linking": "Ссылка",
+    "showIndicator": "Показывать индикатор области сканирования",
+    "appSettings": "Настройки приложения"
   },
   "permissionScreen": {
     "cameraTitle": "Разрешить доступ к камере",

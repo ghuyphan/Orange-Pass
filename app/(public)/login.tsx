@@ -282,12 +282,12 @@ export default function LoginScreen() {
 
         const wasGuest = await checkGuestModeStatus();
         if (wasGuest) {
-          console.log(
+           (
             "[LoginScreen] User was guest, attempting to transfer data..."
           );
           try {
             await transferGuestDataToUser(newUserId);
-            console.log(
+             (
               "[LoginScreen] Guest data transfer successful."
             );
           } catch (transferError) {
@@ -298,7 +298,7 @@ export default function LoginScreen() {
           }
           const exitedSuccessfully = await exitGuestMode();
           if (exitedSuccessfully) {
-            console.log(
+             (
               "[LoginScreen] Successfully exited guest mode after login attempt."
             );
           } else {

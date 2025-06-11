@@ -1,72 +1,95 @@
-import React, { forwardRef } from 'react';
-import { Text, type TextProps, StyleSheet } from 'react-native';
+import React, { forwardRef } from "react";
+import { Text, type TextProps, StyleSheet } from "react-native";
 
-import { useThemeColor } from '@/hooks/useThemeColor';
+import { useThemeColor } from "@/hooks/useThemeColor";
+
+// --- Configuration for the Glass Text Effect ---
+// This provides a consistent color and shadow for all glass text.
+const GLASS_TEXT_CONFIG = {
+  color: "rgba(255, 255, 255, 0.95)",
+  shadow: {
+    textShadowColor: "rgba(0, 0, 0, 0.3)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+};
 
 export type ThemedTextProps = TextProps & {
   lightColor?: string;
   darkColor?: string;
-  type?: 'default' | 'title' | 'defaultSemiBold' | 'subtitle' | 'link';
+  type?: "default" | "title" | "defaultSemiBold" | "subtitle" | "link";
+  variant?: "default" | "glass"; // New prop for the glass style
 };
 
-export const ThemedText = forwardRef<Text, ThemedTextProps>(({
-  style,
-  lightColor,
-  darkColor,
-  type = 'default',
-  ...rest
-}, ref) => {  // Added forwardRef here
-  const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
+export const ThemedText = forwardRef<Text, ThemedTextProps>(
+  (
+    {
+      style,
+      lightColor,
+      darkColor,
+      type = "default",
+      variant = "default", // Default to standard text
+      ...rest
+    },
+    ref
+  ) => {
+    const themedColor = useThemeColor(
+      { light: lightColor, dark: darkColor },
+      "text"
+    );
 
-  return (
-    <Text
-      ref={ref} // Pass the ref down to the Text component
-      style={[
-        { color },
-        type === 'default' ? styles.default : undefined,
-        type === 'title' ? styles.title : undefined,
-        type === 'defaultSemiBold' ? styles.defaultSemiBold : undefined,
-        type === 'subtitle' ? styles.subtitle : undefined,
-        type === 'link' ? styles.link : undefined,
-        style,
-      ]}
-      {...rest}
-    />
-  );
-});
+    // Determine the final color and style based on the variant
+    const isGlass = variant === "glass";
+    const finalColor = isGlass ? GLASS_TEXT_CONFIG.color : themedColor;
+    const glassStyle = isGlass ? GLASS_TEXT_CONFIG.shadow : undefined;
 
-ThemedText.displayName = 'ThemedText'; // Add displayName for better debugging
+    return (
+      <Text
+        ref={ref}
+        style={[
+          { color: finalColor },
+          type === "default" ? styles.default : undefined,
+          type === "title" ? styles.title : undefined,
+          type === "defaultSemiBold" ? styles.defaultSemiBold : undefined,
+          type === "subtitle" ? styles.subtitle : undefined,
+          type === "link" ? styles.link : undefined,
+          glassStyle, // Apply the glass shadow effect if the variant is 'glass'
+          style, // User-provided styles come last to allow overrides
+        ]}
+        {...rest}
+      />
+    );
+  }
+);
 
+ThemedText.displayName = "ThemedText";
 
 const styles = StyleSheet.create({
   default: {
     fontSize: 16,
     lineHeight: 24,
-    // fontWeight: '400',
-    fontFamily: 'Roboto-Regular', // Use Roboto-Regular
+    fontFamily: "Roboto-Regular",
   },
   defaultSemiBold: {
     fontSize: 16,
     lineHeight: 24,
-    // fontWeight: '600',
-    fontWeight: 'medium',
-    fontFamily: 'Roboto-Medium', // Use Roboto-Medium
+    fontFamily: "Roboto-Medium",
   },
   title: {
     fontSize: 32,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     lineHeight: 32,
-    fontFamily: 'Roboto-Bold', // Use Roboto-Bold
+    fontFamily: "Roboto-Bold",
   },
   subtitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    fontFamily: 'Roboto-Bold', // Use Roboto-Bold
+    fontWeight: "bold",
+    fontFamily: "Roboto-Bold",
   },
   link: {
     lineHeight: 30,
     fontSize: 16,
-    color: '#0a7ea4',
-    fontFamily: 'Roboto-Regular', // Use Roboto-Regular
+    color: "#0a7ea4",
+    fontFamily: "Roboto-Regular",
   },
 });
