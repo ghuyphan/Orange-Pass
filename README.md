@@ -14,9 +14,9 @@
 
 ## ✨ Features
 
-*   **⚡️ Blazing-Fast QR Scanning:** Capture QR code data in an instant.
+*   **⚡️ Blazing-Fast QR Scanning:** Capture QR code data in an instant using the device's camera.
 *   **📴 Offline-First Access:** Your codes are always available, with or without an internet connection.
-*   **☁️ Secure Cloud Sync:** Automatically back up and synchronize your data across devices.
+*   **☁️ Secure Cloud Sync:** Automatically back up and synchronize your data across devices using PocketBase.
 *   **🎨 Light & Dark Modes:** A beautiful interface that adapts to your system's theme.
 *   **🌍 Multi-Language Support:** Fully localized in English, Vietnamese, and Russian.
 *   **🗂️ Versatile & Organized:** Cleanly manage codes from banks, e-wallets, loyalty cards, and more.
@@ -25,16 +25,19 @@
 
 | Light Mode                               | Dark Mode                                |
 | ---------------------------------------- | ---------------------------------------- |
-| <img src=".github/assets/screenshot-light.png" width="250" alt="App Light Mode"> | <img src=".github/assets/screenshot-dark.png" width="250" alt="App Dark Mode">   |
+| <img src="" width="250" alt="App Light Mode"> | <img src="" width="250" alt="App Dark Mode">   |
 
 ## 🛠️ Tech Stack
 
 *   **Framework:** React Native with Expo
 *   **Language:** TypeScript
 *   **Navigation:** Expo Router (File-based)
-*   **QR Scanning:** `react-native-ml-kit`
-*   **Local Storage:** `react-native-mmkv` *(<- Example, update with your library)*
-*   **State Management:** Redux Toolkit *(<- Example, update with your library)*
+*   **State Management:** Redux Toolkit
+*   **Backend & Sync:** PocketBase
+*   **Local Storage:** React Native MMKV (High-performance key-value store)
+*   **UI & Components:** React Native Paper (Material Design), Moti (Animations), Gorhom Bottom Sheet
+*   **Camera & QR Scanning:** React Native Vision Camera & React Native ML Kit
+*   **Form Handling:** Formik & Yup
 *   **Package Manager:** Yarn
 
 ## 🚀 Getting Started
@@ -63,14 +66,14 @@ Follow these instructions to get the project up and running on your local machin
 
 3.  **Start the development server:**
     ```bash
-    yarn expo start
+    yarn start
     ```
 
 4.  **Run on your device:**
     Scan the QR code generated in the terminal using the Expo Go app on your phone.
 
 > **⚠️ Important Note**
-> This project uses `react-native-ml-kit` for QR code scanning, which relies on native device capabilities. Therefore, **it will not work on an iOS Simulator or Android Emulator.** You must run the app on a physical device.
+> This project uses `react-native-vision-camera` and `react-native-ml-kit` for QR code scanning, which rely on native device capabilities. Therefore, **it will not work on an iOS Simulator or Android Emulator.** You must run the app on a physical device.
 
 ## 📁 Project Structure
 
@@ -91,7 +94,7 @@ The project is structured using a feature-based approach with a clear separation
 ├── hooks/              # Custom React hooks for reusable logic
 ├── locales/            # Internationalization (i18n) files
 ├── services/           # Modules for external APIs or services
-├── store/              # Global state management (e.g., Redux, Zustand)
+├── store/              # Global state management (Redux Toolkit)
 ├── types/              # TypeScript type definitions
 └── utils/              # Utility helper functions
 ```
@@ -107,13 +110,21 @@ The project is structured using a feature-based approach with a clear separation
 
 *   **`constants/`**: Stores static, unchanging values used throughout the app, such as color palettes, API endpoints, or dimension guidelines.
 
-*   **`context/` & `store/`**: These directories manage the application's global state. `context` is likely used for React's built-in Context API (e.g., for theme or authentication state), while `store` might contain more complex state logic using a library like Zustand or Redux.
+*   **`store/`**: Manages the application's global state using **Redux Toolkit**, which provides a simple and powerful way to handle complex state logic.
 
 *   **`hooks/`**: Home to custom React hooks that encapsulate and reuse stateful logic, such as fetching data or interacting with device APIs.
 
-*   **`services/`**: Handles all external communication, such as making API requests to a backend server or interacting with third-party services like Firebase.
+*   **`services/`**: Handles all external communication, such as making API requests to a backend server (PocketBase) or interacting with third-party services.
 
 *   **`types/`**: Centralizes all TypeScript type and interface definitions, ensuring type safety across the entire project.
+
+### Resetting the Project
+
+This repository is set up as a starter template. If you want to start over from a clean slate, you can run the reset script. This will restore the original example code.
+
+```bash
+yarn reset-project
+```
 
 ## 🤝 Contributing
 
@@ -141,7 +152,8 @@ Please open an issue first to discuss any significant changes you would like to 
 *   [React Native Documentation](https://reactnative.dev/docs/getting-started)
 *   [Expo Documentation](https://docs.expo.dev/)
 *   [Expo Router Documentation](https://expo.github.io/router/docs/)
-*   [react-native-ml-kit](https://github.com/agencyenterprise/react-native-ml-kit)
+*   [React Native Vision Camera](https://react-native-vision-camera.com/)
+*   [PocketBase Documentation](https://pocketbase.io/docs/)
 
 ## 📝 License
 
