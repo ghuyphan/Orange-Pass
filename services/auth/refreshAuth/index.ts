@@ -77,44 +77,26 @@ async function loadLocalData(): Promise<boolean> {
     const authToken = await SecureStore.getItemAsync("authToken");
 
     if (!userID || userID === GUEST_USER_ID) {
-       (
-        LOG_PREFIX_AUTH,
-        "No valid userID found in SecureStore for logged-in user."
-      );
       return false;
     }
-     (LOG_PREFIX_AUTH, `UserID found for logged-in user: ${userID}`);
 
     if (authToken) {
       const expirationDate = getTokenExpirationDate(authToken);
       const now = new Date();
       if (expirationDate && expirationDate < now) {
-         (
-          LOG_PREFIX_AUTH,
-          "Token expired, cannot authenticate in offline mode with this token."
-        );
         await clearAuthDataAndSecureStorage();
         return false;
       }
     } else {
-       (
-        LOG_PREFIX_AUTH,
-        "UserID found but no authToken. Clearing auth."
-      );
       await clearAuthDataAndSecureStorage();
       return false;
     }
 
     const localUserData = await getUserById(userID);
     if (!localUserData) {
-       (
-        LOG_PREFIX_AUTH,
-        "No local user data found for userID. Clearing auth."
-      );
       await clearAuthDataAndSecureStorage();
       return false;
     }
-     (LOG_PREFIX_AUTH, "Local user data loaded.");
 
     // REMOVE: const localQrData = await getQrCodesByUserId(userID);
     // REMOVE:  (LOG_PREFIX_AUTH, "Local QR data loaded for logged-in user.");
@@ -129,10 +111,6 @@ async function loadLocalData(): Promise<boolean> {
     store.dispatch(loadUserQrDataThunk(userID));
 
     store.dispatch(setSyncStatus({ isSyncing: false, lastSynced: undefined }));
-     (
-      LOG_PREFIX_AUTH,
-      "Local data dispatched to Redux for logged-in user."
-    );
 
     return true;
   } catch (error) {
@@ -177,8 +155,6 @@ export async function initializeGuestMode(): Promise<boolean> {
     // Initialize QR data as empty. loadGuestQrData (via thunk) will populate it.
     // store.dispatch(setQrData([])); // This is fine for initialization
     // store.dispatch(setSyncStatus({ isSyncing: false, lastSynced: undefined }));
-
-     (LOG_PREFIX_AUTH, "Guest mode session initialized.");
     return true;
   } catch (error) {
     console.error(
@@ -197,12 +173,9 @@ export async function initializeGuestMode(): Promise<boolean> {
  */
 export async function loadGuestQrData(): Promise<boolean> {
   try {
-     (
-      LOG_PREFIX_AUTH,
-      "Dispatching thunk to load QR data for guest user..."
-    );
+
     // MODIFIED: Dispatch the thunk
-    await store.dispatch(loadGuestQrDataThunk());
+    store.dispatch(loadGuestQrDataThunk());
     // The thunk itself should log success/failure.
     // We assume if dispatch doesn't throw, the process was initiated.
     return true;
@@ -220,9 +193,7 @@ export async function loadGuestQrData(): Promise<boolean> {
 
 export async function exitGuestMode(): Promise<boolean> {
   try {
-     (LOG_PREFIX_AUTH, "Exiting guest mode...");
     storage.set(GUEST_MODE_KEY, false);
-     (LOG_PREFIX_AUTH, "Guest mode flag set to false.");
     return true;
   } catch (error) {
     console.error(LOG_PREFIX_AUTH, "Failed to exit guest mode:", error);
@@ -245,39 +216,19 @@ export async function clearAuthDataAndSecureStorage() {
   }
   store.dispatch(clearAuthData());
   store.dispatch(setQrData([])); // Explicitly clear QR data from Redux
-   (
-    LOG_PREFIX_AUTH,
-    "Cleared auth data from Redux and attempted to clear SecureStorage."
-  );
 }
 
 export async function checkInitialAuth(
   onboardingPending: boolean
 ): Promise<boolean> {
   try {
-     (
-      LOG_PREFIX_AUTH,
-      `checkInitialAuth: Starting... Onboarding pending: ${onboardingPending}`
-    );
     const useGuestModeStorage = await checkGuestModeStatus();
 
     if (useGuestModeStorage) {
-       (
-        LOG_PREFIX_AUTH,
-        "checkInitialAuth: User prefers guest mode (from storage)."
-      );
       const guestSessionInitialized = await initializeGuestMode();
       if (guestSessionInitialized) {
-         (
-          LOG_PREFIX_AUTH,
-          "checkInitialAuth: Guest session initialized, now loading associated QR data..."
-        );
         // MODIFIED: loadGuestQrData now dispatches a thunk
         await loadGuestQrData();
-         (
-          LOG_PREFIX_AUTH,
-          "checkInitialAuth: Guest QR data loading initiated."
-        );
         return true;
       } else {
         console.warn(
@@ -289,40 +240,18 @@ export async function checkInitialAuth(
     }
 
     if (onboardingPending) {
-       (
-        LOG_PREFIX_AUTH,
-        "checkInitialAuth: Onboarding pending, not guest; no active user session."
-      );
       return false;
     }
-
-     (
-      LOG_PREFIX_AUTH,
-      "checkInitialAuth: Onboarding complete, not guest. Checking logged-in user data..."
-    );
     // MODIFIED: loadLocalData now dispatches a thunk for QR data
     const hasLocalLoggedInData = await loadLocalData();
-     (
-      LOG_PREFIX_AUTH,
-      `checkInitialAuth: Local logged-in data presence: ${hasLocalLoggedInData}`
-    );
-
     const isOffline = store.getState().network.isOffline;
     if (!isOffline && hasLocalLoggedInData) {
       const authToken = await SecureStore.getItemAsync("authToken");
       const currentUserID = store.getState().auth.user?.id;
 
       if (authToken && currentUserID && currentUserID !== GUEST_USER_ID) {
-         (
-          LOG_PREFIX_AUTH,
-          "checkInitialAuth: Online, logged-in. Scheduling background token refresh."
-        );
         setTimeout(async () => {
           const currentLastSynced = store.getState().auth.lastSynced;
-           (
-            LOG_PREFIX_AUTH,
-            "checkInitialAuth: Background token refresh task starting..."
-          );
           store.dispatch(
             setSyncStatus({
               isSyncing: true,
@@ -339,17 +268,9 @@ export async function checkInitialAuth(
                 : currentLastSynced ?? undefined,
             })
           );
-           (
-            LOG_PREFIX_AUTH,
-            "checkInitialAuth: Background token refresh task completed."
-          );
         }, 0);
       }
     } else if (isOffline && hasLocalLoggedInData) {
-       (
-        LOG_PREFIX_AUTH,
-        "checkInitialAuth: Offline, local data exists. Setting offline message."
-      );
       store.dispatch(setErrorMessage(t("network.offlineMode")));
     }
 
@@ -383,10 +304,6 @@ async function handleTokenRefreshError(error: AuthError): Promise<boolean> {
       return true;
     }
   } else if (errorStatus === AuthErrorStatus.Unauthorized) {
-     (
-      LOG_PREFIX_AUTH,
-      "Unauthorized error during token refresh. Clearing all auth data."
-    );
     await clearAuthDataAndSecureStorage();
     store.dispatch(
       setErrorMessage(t("authRefresh.warnings.sessionExpiredBackground"))
@@ -412,33 +329,20 @@ export async function refreshAuthToken(authToken: string): Promise<boolean> {
   const storedUserID = await SecureStore.getItemAsync("userID");
 
   if (isOffline || !storedUserID || storedUserID === GUEST_USER_ID) {
-     (
-      LOG_PREFIX_AUTH,
-      "RefreshAuthToken: Skipped (offline, no userID, or guest)."
-    );
     return !!storedUserID && storedUserID !== GUEST_USER_ID;
   }
 
   if (isRefreshing) {
-     (LOG_PREFIX_AUTH, "RefreshAuthToken: Already in progress.");
     return false;
   }
 
   isRefreshing = true;
   let success = false;
-   (
-    LOG_PREFIX_AUTH,
-    `RefreshAuthToken: Attempting for user ${storedUserID}`
-  );
 
   try {
     pb.authStore.save(authToken, null);
 
     if (!pb.authStore.isValid) {
-       (
-        LOG_PREFIX_AUTH,
-        "RefreshAuthToken: Token invalid before refresh."
-      );
       await SecureStore.deleteItemAsync("authToken");
       const currentUser = store.getState().auth.user;
       if (currentUser && currentUser.id === storedUserID) {
@@ -485,11 +389,6 @@ export async function refreshAuthToken(authToken: string): Promise<boolean> {
       })
     );
     // REMOVED: store.dispatch(loadUserQrDataThunk(userData.id));
-
-     (
-      LOG_PREFIX_AUTH,
-      `RefreshAuthToken: Success for user ${userData.id}`
-    );
     success = true;
   } catch (error) {
     console.error(LOG_PREFIX_AUTH, "RefreshAuthToken: Error caught.", error);
@@ -520,8 +419,6 @@ export async function syncWithServer(): Promise<boolean> {
     );
     return false;
   }
-
-   (LOG_PREFIX_AUTH, `Manual sync triggered for user ${user.id}.`);
   store.dispatch(
     setSyncStatus({
       isSyncing: true,
@@ -563,17 +460,9 @@ export async function syncWithServer(): Promise<boolean> {
 
   let dataSyncSuccess = false;
   try {
-     (
-      LOG_PREFIX_AUTH,
-      `Starting data synchronization for user ${user.id}...`
-    );
     store.dispatch(loadUserQrDataThunk(user.id));
 
     dataSyncSuccess = true;
-     (
-      LOG_PREFIX_AUTH,
-      `Data synchronization successful for user ${user.id}.`
-    );
     store.dispatch(setErrorMessage(t("network.syncComplete")));
   } catch (syncError) {
     console.error(
