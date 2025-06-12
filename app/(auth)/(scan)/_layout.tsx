@@ -27,7 +27,7 @@ export default function ScanLayout() {
       <Stack
         screenOptions={{
           headerShown: false,
-          animation: 'ios'
+          animation: 'ios_from_right'
         }}
       >
         <Stack.Screen name="scan-main" />

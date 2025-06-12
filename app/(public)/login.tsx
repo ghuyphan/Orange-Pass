@@ -21,7 +21,11 @@ import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
 
 // Components
 import { ThemedText } from "@/components/ThemedText";
-import { ThemedInput } from "@/components/Inputs/ThemedInput";
+import {
+  ThemedInput,
+  InputGroup,
+  InputGroupError,
+} from "@/components/Inputs/ThemedInput";
 import { ThemedButton } from "@/components/buttons/ThemedButton";
 import { ThemedTextButton } from "@/components/buttons/ThemedTextButton";
 import { ThemedToast } from "@/components/toast/ThemedToast";
@@ -82,15 +86,10 @@ const createLanguageOptions = () => {
 // Create styles
 const createStyles = () => {
   return StyleSheet.create({
-    // The main container for the scroll view's content.
-    // `flexGrow: 1` ensures it can scroll even if content is short.
-    // We removed `justifyContent: 'space-between'` for more predictable scrolling.
     scrollContentContainer: {
       flexGrow: 1,
       paddingHorizontal: getResponsiveWidth(3.6),
-
     },
-    // This wrapper takes up all available space, pushing the footer down.
     mainContent: {
       flex: 1,
     },
@@ -103,7 +102,6 @@ const createStyles = () => {
       marginVertical: getResponsiveHeight(6),
     },
     inputsWrapper: {
-      gap: getResponsiveHeight(2),
       width: "100%",
       marginBottom: getResponsiveHeight(2),
     },
@@ -116,7 +114,6 @@ const createStyles = () => {
       marginBottom: getResponsiveHeight(4),
       marginTop: getResponsiveHeight(2),
     },
-    // This container holds the elements at the bottom of the screen.
     footerContainer: {
       alignItems: "center",
       paddingBottom:
@@ -405,124 +402,132 @@ export default function LoginScreen() {
         errors,
         touched,
         isSubmitting,
-      }) => (
-        <KeyboardAwareScrollView
-          // Use the new content container style
-          contentContainerStyle={[styles.scrollContentContainer, {backgroundColor: themeColors.backgroundColor}]}
-          // `bottomOffset` adds padding between the focused input and the keyboard
-          bottomOffset={50}
-          // `keyboardShouldPersistTaps` is a standard ScrollView prop.
-          // "handled" is best for forms, as it prevents the keyboard from
-          // closing when you tap a button.
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Main content wrapper. `flex: 1` makes it expand to push the footer down. */}
-          <View style={styles.mainContent}>
-            <View style={styles.languageSelectorContainer}>
-              <ThemedTextButton
-                onPress={toggleLanguageDropdown}
-                label={languageSelectorLabel}
-                rightIconName="chevron-down"
-              />
-            </View>
+      }) => {
+        const getGroupErrors = (): InputGroupError[] => {
+          const activeErrors: InputGroupError[] = [];
+          const fieldOrder: (keyof typeof values)[] = ["email", "password"];
 
-            <View style={styles.logoContainer}>
-              <Logo size={getResponsiveWidth(3.5)} />
-            </View>
+          for (const field of fieldOrder) {
+            if (touched[field] && errors[field]) {
+              const fieldLabel = t(`loginScreen.${field}`);
+              activeErrors.push({
+                inputId: fieldLabel.toLowerCase(),
+                message: t(`loginScreen.errors.${errors[field]}`),
+                label: fieldLabel,
+              });
+            }
+          }
+          return activeErrors;
+        };
 
-            <View style={styles.inputsWrapper}>
-              <ThemedInput
-                placeholder={t("loginScreen.email")}
-                onChangeText={handleChange("email")}
-                isError={touched.email && !!errors.email}
-                onBlur={handleBlur("email")}
-                value={values.email}
-                errorMessage={
-                  touched.email && errors.email
-                    ? t(`loginScreen.errors.${errors.email}`)
-                    : ""
-                }
+        const inputGroupErrors = getGroupErrors();
+
+        return (
+          <KeyboardAwareScrollView
+            contentContainerStyle={[
+              styles.scrollContentContainer,
+              { backgroundColor: themeColors.backgroundColor },
+            ]}
+            bottomOffset={50}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.mainContent}>
+              <View style={styles.languageSelectorContainer}>
+                <ThemedTextButton
+                  onPress={toggleLanguageDropdown}
+                  label={languageSelectorLabel}
+                  rightIconName="chevron-down"
+                />
+              </View>
+
+              <View style={styles.logoContainer}>
+                <Logo size={getResponsiveWidth(3.5)} />
+              </View>
+
+              <View style={styles.inputsWrapper}>
+                <InputGroup errors={inputGroupErrors}>
+                  <ThemedInput
+                    label={t("loginScreen.email")}
+                    onChangeText={handleChange("email")}
+                    onBlur={handleBlur("email")}
+                    value={values.email}
+                    disabled={isSubmitting}
+                    disableOpacityChange={false}
+                    groupPosition="top"
+                  />
+
+                  <ThemedInput
+                    label={t("loginScreen.password")}
+                    secureTextEntry={true}
+                    onChangeText={handleChange("password")}
+                    onBlur={handleBlur("password")}
+                    value={values.password}
+                    disabled={isSubmitting}
+                    disableOpacityChange={false}
+                    groupPosition="bottom"
+                  />
+                </InputGroup>
+              </View>
+
+              <ThemedButton
+                label={t("loginScreen.login")}
+                style={styles.loginButton}
+                onPress={() => {
+                  Keyboard.dismiss();
+                  handleSubmit();
+                }}
+                loadingLabel={t("loginScreen.loggingIn")}
+                loading={isSubmitting}
+                textStyle={styles.loginButtonText}
                 disabled={isSubmitting}
-                disableOpacityChange={false}
               />
 
-              <ThemedInput
-                placeholder={t("loginScreen.password")}
-                secureTextEntry={true}
-                onChangeText={handleChange("password")}
-                isError={touched.password && !!errors.password}
-                onBlur={handleBlur("password")}
-                value={values.password}
-                errorMessage={
-                  touched.password && errors.password
-                    ? t(`loginScreen.errors.${errors.password}`)
-                    : ""
-                }
-                disabled={isSubmitting}
-                disableOpacityChange={false}
-              />
+              <View style={styles.forgotButtonContainer}>
+                <ThemedTextButton
+                  label={t("loginScreen.forgotPassword")}
+                  onPress={onNavigateToForgot}
+                  style={{ opacity: 0.6 }}
+                  disabled={isSubmitting}
+                />
+              </View>
             </View>
 
-            <ThemedButton
-              label={t("loginScreen.login")}
-              style={styles.loginButton}
-              onPress={() => {
-                Keyboard.dismiss();
-                handleSubmit();
-              }}
-              loadingLabel={t("loginScreen.loggingIn")}
-              loading={isSubmitting}
-              textStyle={styles.loginButtonText}
-              disabled={isSubmitting}
+            <View style={styles.footerContainer}>
+              <ThemedButton
+                label={t("loginScreen.registerNow")}
+                onPress={onNavigateToRegister}
+                style={styles.createAccountButton}
+                textStyle={styles.createAccountButtonText}
+                outline
+                disabled={isSubmitting}
+              />
+              <ThemedText type="defaultSemiBold" style={styles.metaText}>
+                {t("common.appName")}
+              </ThemedText>
+            </View>
+
+            <ThemedToast
+              duration={5000}
+              message={errorMessage}
+              isVisible={isToastVisible}
+              style={styles.toastContainer}
+              onDismiss={onDismissToast}
+              onVisibilityToggle={setIsToastVisible}
+              iconName="error"
             />
 
-            <View style={styles.forgotButtonContainer}>
-              <ThemedTextButton
-                label={t("loginScreen.forgotPassword")}
-                onPress={onNavigateToForgot}
-                style={{ opacity: 0.6 }}
-                disabled={isSubmitting}
-              />
-            </View>
-          </View>
-
-          {/* Footer content is now in its own container */}
-          <View style={styles.footerContainer}>
-            <ThemedButton
-              label={t("loginScreen.registerNow")}
-              onPress={onNavigateToRegister}
-              style={styles.createAccountButton}
-              textStyle={styles.createAccountButtonText}
-              outline
-              disabled={isSubmitting}
+            <ThemedReuseableSheet
+              ref={bottomSheetRef}
+              title={t("loginScreen.selectLanguage")}
+              snapPoints={["40%"]}
+              showCloseButton={true}
+              contentType="custom"
+              customContent={languageOptionsContent}
             />
-            <ThemedText type="defaultSemiBold" style={styles.metaText}>
-              {t("common.appName")}
-            </ThemedText>
-          </View>
-
-          {/* Absolutely positioned elements can remain here */}
-          <ThemedToast
-            duration={5000}
-            message={errorMessage}
-            isVisible={isToastVisible}
-            style={styles.toastContainer}
-            onDismiss={onDismissToast}
-            onVisibilityToggle={setIsToastVisible}
-            iconName="error"
-          />
-
-          <ThemedReuseableSheet
-            ref={bottomSheetRef}
-            title={t("loginScreen.selectLanguage")}
-            snapPoints={["40%"]}
-            showCloseButton={true}
-            contentType="custom"
-            customContent={languageOptionsContent}
-          />
-        </KeyboardAwareScrollView>
-      )}
+          </KeyboardAwareScrollView>
+        );
+      }}
     </Formik>
   );
 }

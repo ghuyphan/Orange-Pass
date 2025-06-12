@@ -2,11 +2,15 @@
   "expo": {
     "name": "Orange Pass",
     "slug": "orange2",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
+    "statusBar": {
+      "style": "auto",
+      "translucent": false
+    },
     "ios": {
       "splash": {
         "backgroundColor": "#FFF5E1",
@@ -36,7 +40,8 @@
         "android.permission.ACCESS_WIFI_STATE",
         "android.permission.CHANGE_WIFI_STATE"
       ],
-      "allowBackup": false
+      "allowBackup": false,
+      "softwareKeyboardLayoutMode": "resize"
     },
     "web": {
       "bundler": "metro",
@@ -60,7 +65,9 @@
         {
           "fineLocationPermission": true
         }
-      ]
+      ],
+      "expo-build-properties",
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true

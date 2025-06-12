@@ -7,7 +7,7 @@ export default function HomeLayout() {
       <Stack
         screenOptions={{
           headerShown: false,
-          animation: 'ios',
+          animation: 'ios_from_right',
         }}
       >
         <Stack.Screen name="home"/>

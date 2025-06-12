@@ -19,8 +19,10 @@ import { Provider } from "react-redux";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { PaperProvider } from "react-native-paper";
 import { KeyboardProvider } from "react-native-keyboard-controller";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import "react-native-get-random-values";
 import * as SecureStore from "expo-secure-store";
+import { StatusBar } from "expo-status-bar";
 
 // --- Store ---
 import { store } from "@/store";
@@ -52,7 +54,7 @@ const ONBOARDING_STORAGE_KEY = "hasSeenOnboarding";
 const TOKEN_REFRESH_THRESHOLD = 5 * 60 * 1000; // 5 minutes
 const BACKGROUND_TIME_THRESHOLD = 30 * 60 * 1000; // 30 minutes
 
-// Define possible navigation routes for type safety
+// Define possible navigation routes for type safety - Updated for SDK 52
 type AppRoute =
   | "/onboard"
   | "/(guest)/guest-home"
@@ -77,33 +79,39 @@ const fontAssets = {
   "Roboto-Italic": require("../assets/fonts/Roboto-Italic.ttf"),
 };
 
-// Token Management Class
+// Token Management Class with SDK 52 fixes
 class TokenManager {
   private static lastRefreshTime = 0;
   private static backgroundStartTime = 0;
   private static isRefreshing = false;
 
-  static shouldRefreshToken(authToken: string | null, userID: string | null): boolean {
-    if (!authToken || !userID || userID === GUEST_USER_ID || this.isRefreshing) {
+  static shouldRefreshToken(
+    authToken: string | null,
+    userID: string | null,
+  ): boolean {
+    if (
+      !authToken ||
+      !userID ||
+      userID === GUEST_USER_ID ||
+      this.isRefreshing
+    ) {
       return false;
     }
 
     const now = Date.now();
     const timeSinceLastRefresh = now - this.lastRefreshTime;
-    const backgroundDuration = this.backgroundStartTime > 0 ? now - this.backgroundStartTime : 0;
+    const backgroundDuration =
+      this.backgroundStartTime > 0 ? now - this.backgroundStartTime : 0;
 
-    // Only refresh if:
-    // 1. Haven't refreshed recently AND
-    // 2. App was in background for significant time
     return (
       timeSinceLastRefresh > TOKEN_REFRESH_THRESHOLD &&
       backgroundDuration > BACKGROUND_TIME_THRESHOLD
     );
   }
 
-  static async performTokenRefresh(router: any): Promise<boolean> {
+  // Fixed router typing for SDK 52
+  static async performTokenRefresh(router: ReturnType<typeof useRouter>): Promise<boolean> {
     if (this.isRefreshing) {
-      ("[TokenManager] Refresh already in progress");
       return true;
     }
 
@@ -112,28 +120,29 @@ class TokenManager {
       const userID = await SecureStore.getItemAsync("userID");
 
       if (!this.shouldRefreshToken(authToken, userID)) {
-        ("[TokenManager] Token refresh not needed");
         return true;
       }
 
       this.isRefreshing = true;
-      ("[TokenManager] Starting token refresh after background period");
 
       const currentLastSynced = store.getState().auth.lastSynced;
-      store.dispatch(setSyncStatus({
-        isSyncing: true,
-        lastSynced: currentLastSynced ?? undefined,
-      }));
+      store.dispatch(
+        setSyncStatus({
+          isSyncing: true,
+          lastSynced: currentLastSynced ?? undefined,
+        }),
+      );
 
       const success = await refreshAuthToken(authToken!);
 
       if (success) {
         this.lastRefreshTime = Date.now();
-        store.dispatch(setSyncStatus({
-          isSyncing: false,
-          lastSynced: new Date().toISOString(),
-        }));
-        ("[TokenManager] Token refresh successful");
+        store.dispatch(
+          setSyncStatus({
+            isSyncing: false,
+            lastSynced: new Date().toISOString(),
+          }),
+        );
         return true;
       } else {
         console.warn("[TokenManager] Token refresh failed - clearing auth");
@@ -146,24 +155,23 @@ class TokenManager {
       return false;
     } finally {
       this.isRefreshing = false;
-      store.dispatch(setSyncStatus({
-        isSyncing: false,
-        lastSynced: store.getState().auth.lastSynced ?? undefined,
-      }));
+      store.dispatch(
+        setSyncStatus({
+          isSyncing: false,
+          lastSynced: store.getState().auth.lastSynced ?? undefined,
+        }),
+      );
     }
   }
 
-  private static async handleAuthFailure(router: any): Promise<void> {
+  // Fixed router typing for SDK 52
+  private static async handleAuthFailure(router: ReturnType<typeof useRouter>): Promise<void> {
     try {
-      // Clear invalid tokens
       await SecureStore.deleteItemAsync("authToken");
       await SecureStore.deleteItemAsync("userID");
-
-      // Reset auth state
       store.dispatch(clearAuthData());
-
-      // Navigate to login
-      router.replace("/(public)/login");
+      // Use push instead of replace for better navigation behavior in SDK 52
+      router.push("/(public)/login");
     } catch (error) {
       console.error("[TokenManager] Error handling auth failure:", error);
     }
@@ -174,7 +182,6 @@ class TokenManager {
   }
 
   static onAppForeground(): void {
-    // Reset background timer but don't automatically refresh
     this.backgroundStartTime = 0;
   }
 
@@ -183,6 +190,60 @@ class TokenManager {
     this.backgroundStartTime = 0;
     this.isRefreshing = false;
   }
+}
+
+// Updated AppNavigator with SDK 52 improvements
+function AppNavigator() {
+  const stackNavigator = useMemo(
+    () => (
+      <Stack>
+        <Stack.Screen
+          name="(guest)"
+          options={{
+            headerShown: false,
+            animation: "ios_from_right",
+            // Updated animation types for SDK 52
+          }}
+        />
+        <Stack.Screen
+          name="(public)"
+          options={{
+            headerShown: false,
+            animation: "ios_from_right",
+          }}
+        />
+        <Stack.Screen
+          name="(auth)"
+          options={{
+            headerShown: false,
+            animation: "ios_from_right",
+          }}
+        />
+        <Stack.Screen
+          name="onboard"
+          options={{
+            headerShown: false,
+            presentation: "modal",
+          }}
+        />
+        {/* <Stack.Screen name="+not-found" /> */}
+      </Stack>
+    ),
+    [],
+  );
+
+  return (
+    <>
+      {/* Updated StatusBar configuration for SDK 52 */}
+      {/* <StatusBar
+        // style="auto"
+        style="dark"
+        backgroundColor="transparent"
+        translucent={true}
+      /> */}
+      {stackNavigator}
+    </>
+  );
 }
 
 export default function RootLayout() {
@@ -196,10 +257,11 @@ export default function RootLayout() {
     useGuestMode: false,
   });
 
-  // Refs for managing state
   const initializationPromise = useRef<Promise<void> | null>(null);
   const appStateRef = useRef<AppStateStatus>(AppState.currentState);
   const splashHiddenRef = useRef(false);
+  // Add navigation ref to prevent multiple navigations
+  const navigationInProgressRef = useRef(false);
 
   // Initialize Android layout animations
   useEffect(() => {
@@ -214,14 +276,12 @@ export default function RootLayout() {
   // Database initialization
   const initializeDatabase = useCallback(async (): Promise<void> => {
     try {
-      ("[RootLayout] Initializing database tables...");
-      await Promise.all([
-        createUserTable(),
-        createQrTable(),
-      ]);
-      ("[RootLayout] Database tables initialized successfully");
+      await Promise.all([createUserTable(), createQrTable()]);
     } catch (error) {
-      console.error("[RootLayout] Failed to initialize database tables:", error);
+      console.error(
+        "[RootLayout] Failed to initialize database tables:",
+        error,
+      );
       throw error;
     }
   }, []);
@@ -229,7 +289,8 @@ export default function RootLayout() {
   // Check onboarding status
   const checkOnboardingStatus = useCallback(async (): Promise<boolean> => {
     try {
-      const hasSeenOnboarding = storage.getBoolean(ONBOARDING_STORAGE_KEY) ?? false;
+      const hasSeenOnboarding =
+        storage.getBoolean(ONBOARDING_STORAGE_KEY) ?? false;
       return hasSeenOnboarding;
     } catch (error) {
       console.error("[RootLayout] Error reading onboarding status:", error);
@@ -239,32 +300,23 @@ export default function RootLayout() {
 
   // Main app preparation function
   const prepareApp = useCallback(async (): Promise<void> => {
-    // Prevent multiple simultaneous initializations
     if (initializationPromise.current) {
       return initializationPromise.current;
     }
 
     initializationPromise.current = (async () => {
-
       try {
-        // Initialize core services
         await initializeDatabase();
 
-        // Get all required status checks in parallel
-        const [
-          onboardingStatus,
-          quickLoginEnabled,
-          guestModePreference,
-        ] = await Promise.all([
-          checkOnboardingStatus(),
-          getQuickLoginStatus(),
-          checkGuestModeStatus(),
-        ]);
+        const [onboardingStatus, quickLoginEnabled, guestModePreference] =
+          await Promise.all([
+            checkOnboardingStatus(),
+            getQuickLoginStatus(),
+            checkGuestModeStatus(),
+          ]);
 
-        // Check authentication status
         const sessionActive = await checkInitialAuth(!onboardingStatus);
 
-        // Update app state with all resolved values
         setAppState({
           initializationComplete: true,
           isAuthenticated: sessionActive,
@@ -272,10 +324,8 @@ export default function RootLayout() {
           hasQuickLoginEnabled: quickLoginEnabled,
           useGuestMode: guestModePreference,
         });
-
       } catch (error) {
-
-        // Set fallback state to prevent app from being stuck
+        console.error("[RootLayout] App preparation error:", error);
         setAppState({
           initializationComplete: true,
           isAuthenticated: false,
@@ -292,17 +342,13 @@ export default function RootLayout() {
   // Handle font loading and app preparation
   useEffect(() => {
     if (fontsLoaded || fontError) {
-      if (fontError) {
-      } else {
-      }
-
-      // Start app preparation once fonts are settled
-      prepareApp().catch(error => {
+      prepareApp().catch((error) => {
+        console.error("[RootLayout] App preparation failed:", error);
       });
     }
   }, [fontsLoaded, fontError, prepareApp]);
 
-  // Handle app state changes (background/foreground)
+  // Handle app state changes with SDK 52 improvements
   useEffect(() => {
     const handleAppStateChange = async (nextAppState: AppStateStatus) => {
       const prevState = appStateRef.current;
@@ -310,14 +356,13 @@ export default function RootLayout() {
       if (prevState.match(/inactive|background/) && nextAppState === "active") {
         TokenManager.onAppForeground();
 
-        // Only attempt token refresh if we're online
         const isOffline = store.getState().network?.isOffline ?? true;
         if (!isOffline) {
           try {
             await TokenManager.performTokenRefresh(router);
           } catch (error) {
+            console.error("[RootLayout] Token refresh failed:", error);
           }
-        } else {
         }
       } else if (nextAppState === "background" || nextAppState === "inactive") {
         TokenManager.onAppBackground();
@@ -327,18 +372,21 @@ export default function RootLayout() {
       appStateRef.current = nextAppState;
     };
 
-    const appStateSubscription = AppState.addEventListener("change", handleAppStateChange);
+    const appStateSubscription = AppState.addEventListener(
+      "change",
+      handleAppStateChange,
+    );
     const networkUnsubscribe = checkOfflineStatus();
 
     return () => {
-      appStateSubscription.remove();
+      appStateSubscription?.remove();
       if (networkUnsubscribe) networkUnsubscribe();
     };
   }, [router]);
 
-  // Handle navigation based on app state
+  // Handle navigation based on app state - Fixed for SDK 52
   useEffect(() => {
-    if (!appState.initializationComplete) {
+    if (!appState.initializationComplete || navigationInProgressRef.current) {
       return;
     }
 
@@ -349,18 +397,23 @@ export default function RootLayout() {
       useGuestMode,
     } = appState;
 
-    // Validate that all required states are resolved
     if (
       hasSeenOnboarding === null ||
       isAuthenticated === null ||
       hasQuickLoginEnabled === null
     ) {
-      console.error("[RootLayout] CRITICAL: Essential states are null after initialization");
-      router.replace("/(public)/login");
+      console.error(
+        "[RootLayout] CRITICAL: Essential states are null after initialization",
+      );
+      navigationInProgressRef.current = true;
+      router.push("/(public)/login");
+      // Reset navigation flag after a delay
+      setTimeout(() => {
+        navigationInProgressRef.current = false;
+      }, 1000);
       return;
     }
 
-    // Determine target route based on app state
     let targetRoute: AppRoute;
 
     if (!hasSeenOnboarding) {
@@ -375,22 +428,17 @@ export default function RootLayout() {
       targetRoute = "/(public)/login";
     }
 
-    router.replace(targetRoute);
-  }, [appState, router]);
+    // Prevent multiple navigation calls
+    navigationInProgressRef.current = true;
 
-  // Stack navigator configuration
-  const stackNavigator = useMemo(
-    () => (
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(guest)" options={{ animation: "ios" }} />
-        <Stack.Screen name="(public)" options={{ animation: "ios" }} />
-        <Stack.Screen name="(auth)" options={{ animation: "none" }} />
-        <Stack.Screen name="onboard" options={{ animation: "fade_from_bottom" }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-    ),
-    []
-  );
+    // Use push instead of replace for better navigation behavior in SDK 52
+    router.push(targetRoute);
+
+    // Reset navigation flag after a delay
+    setTimeout(() => {
+      navigationInProgressRef.current = false;
+    }, 1000);
+  }, [appState, router]);
 
   // Handle splash screen hiding
   const onLayoutRootView = useCallback(async () => {
@@ -399,31 +447,33 @@ export default function RootLayout() {
         await SplashScreen.hideAsync();
         splashHiddenRef.current = true;
       } catch (error) {
+        console.error("[RootLayout] Failed to hide splash screen:", error);
       }
     }
   }, [appState.initializationComplete]);
 
-  // Show nothing until initialization is complete (splash screen remains visible)
   if (!appState.initializationComplete) {
     return null;
   }
 
   return (
-    <KeyboardProvider>
-      <ThemeProvider>
-        <Provider store={store}>
-          <GestureHandlerRootView style={styles.container}>
-            <PaperProvider>
-              <LocaleProvider>
-                <ThemedView style={styles.root} onLayout={onLayoutRootView}>
-                  {stackNavigator}
-                </ThemedView>
-              </LocaleProvider>
-            </PaperProvider>
-          </GestureHandlerRootView>
-        </Provider>
-      </ThemeProvider>
-    </KeyboardProvider>
+    <SafeAreaProvider>
+      <KeyboardProvider>
+        <ThemeProvider>
+          <Provider store={store}>
+            <GestureHandlerRootView style={styles.container}>
+              <PaperProvider>
+                <LocaleProvider>
+                  <ThemedView style={styles.root} onLayout={onLayoutRootView}>
+                    <AppNavigator />
+                  </ThemedView>
+                </LocaleProvider>
+              </PaperProvider>
+            </GestureHandlerRootView>
+          </Provider>
+        </ThemeProvider>
+      </KeyboardProvider>
+    </SafeAreaProvider>
   );
 }
 

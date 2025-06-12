@@ -571,7 +571,7 @@ export default function GuestScanScreen() {
         style={styles.toastContainer}
       />
 
-      <StatusBar barStyle="light-content" />
+      {/* <StatusBar barStyle="light-content" /> */}
 
       {/* Bottom sheet */}
       {isCameraReady && (

@@ -13,7 +13,7 @@ export default function AddLayout() {
       <Stack
         screenOptions={{
           headerShown: false,
-          animation: 'ios'
+          animation: 'ios_from_right'
         }}
       >
         <Stack.Screen name="edit" />

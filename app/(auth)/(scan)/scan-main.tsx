@@ -530,7 +530,7 @@ export default function ScanScreen() {
         style={styles.toastContainer}
       />
 
-      <StatusBar barStyle="light-content" />
+      {/* <StatusBar barStyle="light-content" /> */}
 
       {isCameraReady && (
         <Suspense fallback={null}>

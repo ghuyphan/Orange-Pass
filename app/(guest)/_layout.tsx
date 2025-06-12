@@ -9,7 +9,7 @@ export default function GuestLayout() {
       <Stack
         screenOptions={{
           headerShown: false, // No default headers for screens in this stack
-          animation: "ios",
+          animation: "ios_from_right",
         }}
       >
         <Stack.Screen name="guest-home" />

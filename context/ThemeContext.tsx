@@ -1,8 +1,9 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
-import { Appearance, StatusBar, Platform } from 'react-native';
+import { Appearance, Platform } from 'react-native';
 import { useMMKVBoolean } from 'react-native-mmkv';
 import { storage } from '@/utils/storage';
 import * as NavigationBar from 'expo-navigation-bar';
+import { StatusBar } from 'expo-status-bar';
 
 type Theme = 'light' | 'dark';
 
@@ -36,7 +37,7 @@ export const useTheme = () => {
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isDarkMode, setIsDarkMode] = useMMKVBoolean('dark-mode', storage);
-  const [systemTheme, setSystemTheme] = useState<Theme>(() => 
+  const [systemTheme, setSystemTheme] = useState<Theme>(() =>
     Appearance.getColorScheme() || 'light'
   );
 
@@ -98,7 +99,12 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   return (
     <ThemeContext.Provider value={themeContextValue}>
-      <StatusBar barStyle={currentTheme === 'dark' ? 'light-content' : 'dark-content'} />
+      <StatusBar
+        // style="auto"
+        style={currentTheme === 'dark' ? 'light' : 'dark'}
+        backgroundColor="transparent"
+        translucent={true}
+      />
       {children}
     </ThemeContext.Provider>
   );

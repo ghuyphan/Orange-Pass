@@ -18,10 +18,10 @@ export default function ScanLayout() {
       <Stack
         screenOptions={{
           headerShown: false,
-          animation: 'ios'
+          animation: 'ios_from_right'
         }}
       >
-        <Stack.Screen name="settings" options={{ animation: 'none' }} />
+        <Stack.Screen name="settings" />
         <Stack.Screen name="theme" />
         <Stack.Screen name="language" />
         <Stack.Screen name="edit" />

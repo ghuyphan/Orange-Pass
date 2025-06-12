@@ -115,7 +115,8 @@ export default function ForgotPasswordScreen() {
 
             <View style={styles.inputContainer}>
               <ThemedInput
-                placeholder={t("forgotPasswordScreen.email")}
+                label={t("forgotPasswordScreen.email")}
+
                 onChangeText={handleChange("email")}
                 isError={touched.email && errors.email ? true : false}
                 onBlur={handleBlur("email")}
@@ -126,8 +127,9 @@ export default function ForgotPasswordScreen() {
                     : ""
                 }
                 disabled={isSubmitting}
-                 disableOpacityChange={false}
+                disableOpacityChange={false}
                 ref={inputRef}
+                groupPosition="single"
               />
             </View>
 
@@ -163,7 +165,7 @@ const styles = StyleSheet.create({
   contentContainer: {
     flex: 1,
   },
-  title:{
+  title: {
     fontSize: getResponsiveFontSize(16),
     marginTop: getResponsiveHeight(10),
     textAlign: 'center',
@@ -180,7 +182,7 @@ const styles = StyleSheet.create({
     marginBottom: getResponsiveHeight(2.4),
   },
   forgotButton: {
- 
+
     marginBottom: getResponsiveHeight(2),
   },
   buttonText: {

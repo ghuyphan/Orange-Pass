@@ -316,10 +316,7 @@ export const ThemedFAB = forwardRef<View, ThemedFABProps>(
             iconName={open ? "close" : mainIconName}
             iconColor={colors.icon}
             iconSize={24}
-            style={{
-              padding: 15,
-              bottom: 10,
-            }}
+            style={[styles.fab]}
           />
         </Animated.View>
       </>

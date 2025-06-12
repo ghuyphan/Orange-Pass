@@ -128,10 +128,12 @@ export function ThemedEmptyCard({
   );
 
   // --- Glassmorphism Gradients ---
-  const backgroundGradient = useMemo(() => {
-    if (!enableGlassmorphism) return null;
-    return [Colors.light.cardBackground, Colors.light.cardFooter];
-  }, [enableGlassmorphism]);
+const backgroundGradient = useMemo(() => {
+  if (!enableGlassmorphism) return null;
+  return colorScheme === "light" 
+    ? [Colors.light.toastBackground, Colors.light.toastBackground]
+    : [Colors.light.cardBackground, Colors.light.cardFooter];
+}, [enableGlassmorphism, colorScheme]); // Also added colorScheme to dependencies
 
   const glassGradientColors = useMemo(() => {
     if (!enableGlassmorphism) return [];
