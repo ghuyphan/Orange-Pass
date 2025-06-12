@@ -13,7 +13,7 @@ export const Colors = {
     tabIconDefault: "#C5C5C5",    // A crisp modern gray
     tabIconSelected: tintColorLight,
     error: "#F26A66",             // Updated error red with a contemporary feel
-    toastBackground: "rgba(232, 219, 208, 0.9)",  // Semi-transparent version
+    toastBackground: "rgba(232, 219, 208, 1)",  // Semi-transparent version
     buttonBackground: "rgba(230, 220, 209, 0.7)", // Glass version of your button
     buttonHighlight: "rgba(255, 234, 168, 0.8)",  // Semi-transparent highlight
     cardBackground: "rgba(249, 239, 231, 0.6)",   // Glass version of your card
@@ -32,7 +32,7 @@ export const Colors = {
     tabIconDefault: "#757575",
     tabIconSelected: tintColorDark,
     error: "#FF6E6B",             // A modern twist on the error tone for dark mode
-    toastBackground: "rgba(63, 56, 54, 0.9)",     // Semi-transparent version
+    toastBackground: "rgba(63, 56, 54, 1)",     // Semi-transparent version
     buttonBackground: "rgba(58, 46, 47, 0.7)",    // Glass version of your dark button
     buttonHighlight: "rgba(138, 105, 95, 0.8)",   // Semi-transparent highlight
     cardBackground: "rgba(45, 39, 43, 0.6)",      // Glass version of your card

@@ -135,7 +135,7 @@ const PermissionScreen = () => {
       if (locationGranted) {
         // --- MODIFICATION START ---
         // Navigate immediately without fading out the content first
-        runOnJS(router.replace)('/(auth)/(scan)/scan-main');
+        runOnJS(router.replace)('/(guest)/(scan)/scan-main');
         // --- MODIFICATION END ---
       }
       // If location permission is denied, we just stay on this screen

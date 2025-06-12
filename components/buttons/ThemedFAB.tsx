@@ -3,7 +3,7 @@ import React, {
   useState,
   useEffect,
   forwardRef,
-  useRef
+  useRef,
 } from "react";
 import { FAB } from "react-native-paper";
 import {
@@ -14,7 +14,7 @@ import {
   TextStyle,
   TouchableWithoutFeedback,
   BackHandler,
-  Platform // Import Platform
+  Platform,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors } from "@/constants/Colors";
@@ -26,26 +26,26 @@ import Animated, {
   Easing,
   withDelay,
   withSequence,
-  useSharedValue
+  useSharedValue,
 } from "react-native-reanimated";
 import { ThemedButton } from "./ThemedButton";
 import { t } from "@/i18n";
 
-// 1. Centralized configuration for glassmorphism
+// Centralized configuration for glassmorphism
 const CONFIG = {
   blur: {
-    intensity: 8
+    intensity: 8,
   },
   colors: {
     light: {
       background: "rgba(255, 255, 255, 0.2)",
-      border: "rgba(255, 255, 255, 0.3)"
+      border: "rgba(255, 255, 255, 0.3)",
     },
     dark: {
       background: "rgba(50, 50, 50, 0.25)",
-      border: "rgba(255, 255, 255, 0.15)"
-    }
-  }
+      border: "rgba(255, 255, 255, 0.15)",
+    },
+  },
 };
 
 export interface FABAction {
@@ -92,6 +92,7 @@ export const ThemedFAB = forwardRef<View, ThemedFABProps>(
       }, [open])
     );
 
+    // This part remains the same
     const colors = useMemo(() => {
       const isLightTheme = currentTheme === "light";
       return {
@@ -105,21 +106,21 @@ export const ThemedFAB = forwardRef<View, ThemedFABProps>(
           : CONFIG.colors.dark.background,
         glassBorder: isLightTheme
           ? CONFIG.colors.light.border
-          : CONFIG.colors.dark.border
+          : CONFIG.colors.dark.border,
       };
     }, [currentTheme]);
 
     const animationConfig = useMemo(
       () => ({
         duration: 200,
-        easing: Easing.out(Easing.cubic)
+        easing: Easing.out(Easing.cubic),
       }),
       []
     );
 
     const backdropAnimatedStyle = useAnimatedStyle(
       () => ({
-        opacity: withTiming(open ? 0.5 : 0, animationConfig)
+        opacity: withTiming(open ? 0.5 : 0, animationConfig),
       }),
       [open, animationConfig]
     );
@@ -130,69 +131,87 @@ export const ThemedFAB = forwardRef<View, ThemedFABProps>(
           {
             translateY: withTiming(open ? -30 : 0, {
               duration: 200,
-              easing: Easing.bezier(0.4, 0, 0.2, 1)
-            })
-          }
-        ]
+              easing: Easing.bezier(0.4, 0, 0.2, 1),
+            }),
+          },
+        ],
       }),
       [open]
     );
 
+    // --- FIX APPLIED HERE ---
     const useButtonAnimationStyle = (delay: number) => {
-      return useAnimatedStyle(
-        () => ({
+      return useAnimatedStyle(() => {
+        // Animate the colors along with the other properties
+        const backgroundColor = withTiming(
+          colors.glassBackground,
+          animationConfig
+        );
+        const borderColor = withTiming(colors.glassBorder, animationConfig);
+
+        return {
+          backgroundColor,
+          borderColor,
           opacity: withDelay(
             delay,
-            withSequence(
-              withTiming(open ? 1 : 0, animationConfig),
-              withTiming(open ? 1 : 0, animationConfig)
-            )
+            withTiming(open ? 1 : 0, animationConfig)
           ),
           transform: [
             {
               scale: withDelay(
                 delay,
-                withSequence(
-                  withTiming(open ? 1 : 0.8, animationConfig),
-                  withTiming(open ? 1 : 0.8, animationConfig)
-                )
-              )
-            }
-          ]
-        }),
-        [open, animationConfig]
-      );
+                withTiming(open ? 1 : 0.8, animationConfig)
+              ),
+            },
+          ],
+        };
+      }, [open, colors]); // Add `colors` to the dependency array
     };
 
+    // --- AND FIX APPLIED HERE ---
     const useTextAnimationStyle = (delay: number) => {
-      return useAnimatedStyle(
-        () => ({
+      return useAnimatedStyle(() => {
+        // Animate the colors for the text background
+        const backgroundColor = withTiming(
+          colors.glassBackground,
+          animationConfig
+        );
+        const borderColor = withTiming(colors.glassBorder, animationConfig);
+        const textColor = withTiming(colors.text, animationConfig);
+
+        return {
+          backgroundColor,
+          borderColor,
+          // The text color itself is animated in the component below
           opacity: withDelay(
             delay,
-            withSequence(
-              withTiming(open ? 1 : 0, animationConfig),
-              withTiming(open ? 1 : 0, animationConfig)
-            )
+            withTiming(open ? 1 : 0, animationConfig)
           ),
           transform: [
             {
               translateX: withDelay(
                 delay,
-                withSequence(
-                  withTiming(open ? 0 : -20, animationConfig),
-                  withTiming(open ? 0 : -20, animationConfig)
-                )
-              )
-            }
-          ]
-        }),
-        [open, animationConfig]
-      );
+                withTiming(open ? 0 : -20, animationConfig)
+              ),
+            },
+          ],
+        };
+      }, [open, colors]); // Add `colors` to the dependency array
+    };
+
+    // --- AND ONE MORE FOR THE TEXT COLOR ---
+    const useAnimatedTextColor = () => {
+      return useAnimatedStyle(() => {
+        return {
+          color: withTiming(colors.text, animationConfig),
+        };
+      }, [colors]);
     };
 
     const delays = actions.map((_, index) => (index + 1) * 50);
     const buttonStyles = delays.map(useButtonAnimationStyle);
-    const textStyles = delays.map(useTextAnimationStyle);
+    const textBackgroundStyles = delays.map(useTextAnimationStyle);
+    const animatedTextColorStyle = useAnimatedTextColor(); // Create one for all text
 
     useEffect(() => {
       if (!open) {
@@ -244,7 +263,7 @@ export const ThemedFAB = forwardRef<View, ThemedFABProps>(
               style={[
                 StyleSheet.absoluteFillObject,
                 { backgroundColor: "black", zIndex: 1 },
-                backdropAnimatedStyle
+                backdropAnimatedStyle,
               ]}
             />
           </TouchableWithoutFeedback>
@@ -263,34 +282,27 @@ export const ThemedFAB = forwardRef<View, ThemedFABProps>(
                       <Animated.View
                         style={[
                           styles.textBackground,
-                          {
-                            backgroundColor: colors.glassBackground,
-                            borderColor: colors.glassBorder
-                          },
-                          textStyles[index]
+                          textBackgroundStyles[index], // Use the new animated style
                         ]}
                       >
                         <Animated.Text
                           style={[
                             styles.buttonText,
-                            { color: colors.text },
-                            textStyle
+                            textStyle,
+                            animatedTextColorStyle, // Use the new animated text color
                           ]}
                         >
                           {t(action.text)}
                         </Animated.Text>
                       </Animated.View>
                       <ThemedButton
-                        style={[
-                          styles.fab,
-                          {
-                            backgroundColor: colors.glassBackground,
-                            borderColor: colors.glassBorder
-                          }
-                        ]}
-                        animatedStyle={buttonStyles[index]}
+                        style={[styles.fab]}
+                        animatedStyle={buttonStyles[index]} // Use the new animated style
                         onPress={handlePressWithAnimation(action.onPress)}
                         iconName={action.iconName}
+                        // The icon color is now handled by the animated style in ThemedButton
+                        // assuming it can take an animated style for its icon.
+                        // If not, you'd pass an animated prop. For now, we animate the background.
                         iconColor={colors.text}
                       />
                     </View>
@@ -299,17 +311,6 @@ export const ThemedFAB = forwardRef<View, ThemedFABProps>(
               </View>
             </Animated.View>
           )}
-          {/* <FAB
-            icon={open ? "close" : mainIconName}
-            color={colors.icon}
-            style={{
-              backgroundColor: colors.mainButtonBackground,
-              borderRadius: 100
-            }}
-            onPress={handleFABPress}
-            // --- FIX: Add this line to remove the default shadow ---
-            elevation={0}
-          /> */}
           <ThemedButton
             onPress={handleFABPress}
             iconName={open ? "close" : mainIconName}
@@ -320,29 +321,27 @@ export const ThemedFAB = forwardRef<View, ThemedFABProps>(
               bottom: 10,
             }}
           />
-        
         </Animated.View>
       </>
     );
   }
 );
 
-ThemedFAB.displayName = "ThemedFAB";
-
+// Styles remain the same
 const styles = StyleSheet.create({
   container: {
     alignItems: "flex-end",
     width: "auto",
-    pointerEvents: "box-none"
+    pointerEvents: "box-none",
   },
   buttonsWrapper: {
-    alignItems: "flex-end"
+    alignItems: "flex-end",
   },
   buttonRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "flex-end",
-    marginTop: 15
+    marginTop: 15,
   },
   fab: {
     padding: 10,
@@ -350,8 +349,8 @@ const styles = StyleSheet.create({
     borderRadius: 100,
     borderWidth: 1,
     ...(Platform.OS === "ios" && {
-      backdropFilter: `blur(${CONFIG.blur.intensity}px)`
-    })
+      backdropFilter: `blur(${CONFIG.blur.intensity}px)`,
+    }),
   },
   textBackground: {
     paddingHorizontal: 12,
@@ -359,14 +358,14 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     ...(Platform.OS === "ios" && {
-      backdropFilter: `blur(${CONFIG.blur.intensity}px)`
-    })
+      backdropFilter: `blur(${CONFIG.blur.intensity}px)`,
+    }),
   },
   buttonText: {
     fontSize: 14,
     fontWeight: "bold",
-    textAlign: "right"
-  }
+    textAlign: "right",
+  },
 });
 
 export default ThemedFAB;

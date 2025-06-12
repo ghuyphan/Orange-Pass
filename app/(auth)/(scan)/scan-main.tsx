@@ -33,7 +33,6 @@ import BottomSheet from "@gorhom/bottom-sheet";
 import { t } from "@/i18n";
 import { STATUSBAR_HEIGHT } from "@/constants/Statusbar";
 import { MAX_ZOOM_FACTOR, width } from "@/constants/Constants";
-// import { storage } from "@/utils/storage";
 import { triggerLightHapticFeedback } from "@/utils/haptic";
 import SheetType from "@/types/sheetType";
 
@@ -51,7 +50,6 @@ import LinkingSheetContent from "@/components/bottomsheet/LinkingSheetContent";
 import ScanSettingsSheetContent from "@/components/bottomsheet/ScanSettingsSheetContent";
 
 // Hooks
-// import { useMMKVBoolean } from "react-native-mmkv";
 import { useLocale } from "@/context/LocaleContext";
 import { useCameraScanner } from "@/hooks/useCameraScanner";
 import { useCameraSetup } from "@/hooks/useCameraSetup";
@@ -69,7 +67,7 @@ export default function ScanScreen() {
   const router = useRouter();
   const isMounted = useRef(true);
 
-  // Camera Ref and Setup - Defer camera setup until component is mounted
+  // Camera Ref and Setup
   const cameraRef = useRef(null);
   const [setupCamera, setSetupCamera] = useState(false);
   const { device, hasPermission, torch, toggleFlash } =
@@ -80,6 +78,7 @@ export default function ScanScreen() {
     boolean | null
   >(null);
 
+  // --- NEW: Zoom and Focus Setup ---
   const zoom = useSharedValue(1);
   const minZoom = device?.minZoom ?? 1;
   const maxZoom = Math.min(device?.maxZoom ?? 1, MAX_ZOOM_FACTOR);
@@ -91,7 +90,13 @@ export default function ScanScreen() {
     [maxZoom, minZoom, zoom]
   );
 
-  // Use effect to defer camera setup
+  const { gesture, focusPoint, animatedFocusStyle } = useFocusGesture(
+    cameraRef,
+    zoom
+  );
+  // --- END NEW ---
+
+  // Defer camera setup
   useEffect(() => {
     const timer = setTimeout(() => {
       if (isMounted.current) {
@@ -105,13 +110,6 @@ export default function ScanScreen() {
     };
   }, []);
 
-  // Focus Gesture - Only initialize when camera is ready
-  const { gesture, focusPoint, animatedFocusStyle } = useFocusGesture(
-    cameraRef,
-    zoom
-  );
-
-  // Camera Scanner - Memoize scanner to prevent unnecessary re-renders
   const {
     scanFrame,
     codeScannerHighlights,
@@ -144,7 +142,6 @@ export default function ScanScreen() {
   const [wifiPassword, setWifiPassword] = useState<string | null>(null);
   const [wifiIsWep, setWifiIsWep] = useState(false);
 
-  // Toast handler with cleanup
   const showToast = useCallback((message: string) => {
     setToastMessage(message);
     setIsToastVisible(true);
@@ -156,42 +153,31 @@ export default function ScanScreen() {
     return timeoutId;
   }, []);
 
-  // Clean up toast timeouts
   useEffect(() => {
     let toastTimeoutId: NodeJS.Timeout | null = null;
-
     return () => {
       if (toastTimeoutId) clearTimeout(toastTimeoutId);
     };
   }, []);
 
-  // Auto-close sheet when new code is detected
   useEffect(() => {
     if (codeValue && sheetType) {
       bottomSheetRef.current?.close();
     }
   }, [codeValue, sheetType]);
 
-  // Haptic feedback on code detection
   useEffect(() => {
     if (codeValue) {
       triggerLightHapticFeedback();
     }
   }, [codeValue]);
 
-  // const handleExpandPress = useCallback(() => {
-  //   bottomSheetRef.current?.snapToIndex(0);
-  // }, []);
-
-  // Layout handler
   const onLayout = useCallback((event: LayoutChangeEvent) => {
     setLayout(event.nativeEvent.layout);
   }, []);
 
-  // Unmount brightness handler
   useUnmountBrightness(1, true);
 
-  // Code scanner - Memoize to prevent re-creation
   const codeScanner = useCodeScanner({
     codeTypes: [
       "qr",
@@ -206,13 +192,13 @@ export default function ScanScreen() {
     onCodeScanned: createCodeScannerCallback,
   });
 
-  // Navigation handler - Memoized and throttled
+  // --- KEPT ORIGINAL: Navigation handler for authenticated users ---
   const onNavigateToAddScreen = useCallback(
     throttle(
       (codeFormat, codeValue, bin, codeType, codeProvider) => {
         if (isMounted.current) {
           router.push({
-            pathname: `/(auth)/(add)/add-new`,
+            pathname: `/(auth)/(add)/add-new`, // This path is specific to ScanScreen
             params: {
               codeFormat,
               codeValue,
@@ -238,7 +224,6 @@ export default function ScanScreen() {
     [setSheetType]
   );
 
-  // Sheet handler
   const onOpenSheet = useCallback(
     (
       type: SheetType,
@@ -260,16 +245,13 @@ export default function ScanScreen() {
     []
   );
 
-  // Gallery picker
   const onOpenGallery = useGalleryPicker({
     onOpenSheet,
     onNavigateToAddScreen,
   });
 
-  // Render sheet content
   const renderSheetContent = useCallback(() => {
     if (!sheetType) return null;
-
     switch (sheetType) {
       case "wifi":
         return (
@@ -310,13 +292,11 @@ export default function ScanScreen() {
     showToast,
   ]);
 
-  // Animation values
   const opacity = useSharedValue(0);
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
   }));
 
-  // Update opacity when code is scanned
   useEffect(() => {
     if (codeMetadata.length > 0) {
       opacity.value = withTiming(1, { duration: 300 });
@@ -325,33 +305,22 @@ export default function ScanScreen() {
     }
   }, [codeMetadata, opacity]);
 
-  // Camera opacity animation
   const cameraOpacity = useSharedValue(0);
   const animatedCameraStyle = useAnimatedStyle(() => ({
     opacity: withTiming(cameraOpacity.value, { duration: 500 }),
   }));
 
-  // App state handler to manage camera activation
   useEffect(() => {
     const handleAppStateChange = (nextAppState: string) => {
-      if (nextAppState === "active") {
-        setCameraIsActive(true);
-      } else {
-        setCameraIsActive(false);
-      }
+      setCameraIsActive(nextAppState === "active");
     };
-
     const subscription = AppState.addEventListener(
       "change",
       handleAppStateChange
     );
-
-    return () => {
-      subscription.remove();
-    };
+    return () => subscription.remove();
   }, []);
 
-  // Camera ready handler - Defer camera activation
   useEffect(() => {
     if (device && setupCamera) {
       const timeout = setTimeout(() => {
@@ -360,7 +329,6 @@ export default function ScanScreen() {
           setIsCameraReady(true);
         }
       }, 200);
-
       return () => clearTimeout(timeout);
     }
   }, [device, cameraOpacity, setupCamera]);
@@ -368,23 +336,19 @@ export default function ScanScreen() {
   const checkAllPermissions = async () => {
     try {
       if (!hasPermission) return false;
-
-      const hasFineLocationPermission = await PermissionsAndroid.check(
+      const fineLocation = await PermissionsAndroid.check(
         PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
       );
-
-      const hasCoarseLocationPermission = await PermissionsAndroid.check(
+      const coarseLocation = await PermissionsAndroid.check(
         PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION
       );
-
-      return hasFineLocationPermission && hasCoarseLocationPermission;
+      return fineLocation && coarseLocation;
     } catch (error) {
       console.error("Error checking permissions:", error);
       return false;
     }
   };
 
-  // Request permissions if not granted
   const requestPermissions = useCallback(async () => {
     try {
       const cameraStatus = await Camera.requestCameraPermission();
@@ -392,13 +356,12 @@ export default function ScanScreen() {
         PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
         PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
       ]);
-
       return (
         cameraStatus === "granted" &&
         locationStatus["android.permission.ACCESS_FINE_LOCATION"] ===
-        "granted" &&
+          "granted" &&
         locationStatus["android.permission.ACCESS_COARSE_LOCATION"] ===
-        "granted"
+          "granted"
       );
     } catch (error) {
       console.error("Error requesting permissions:", error);
@@ -409,7 +372,6 @@ export default function ScanScreen() {
   useEffect(() => {
     const verifyPermissions = async () => {
       const permissionsGranted = await checkAllPermissions();
-
       if (!permissionsGranted) {
         const result = await requestPermissions();
         setAllPermissionsGranted(result);
@@ -417,11 +379,9 @@ export default function ScanScreen() {
         setAllPermissionsGranted(true);
       }
     };
-
     verifyPermissions();
   }, [requestPermissions]);
 
-  // Clean up sensitive data
   useEffect(() => {
     return () => {
       setWifiPassword(null);
@@ -429,7 +389,6 @@ export default function ScanScreen() {
     };
   }, []);
 
-  // Redirect to permission screen if permissions are not granted
   if (allPermissionsGranted === false) {
     return (
       <ThemedView style={{ flex: 1 }}>
@@ -438,7 +397,6 @@ export default function ScanScreen() {
     );
   }
 
-  // Show loader while camera is initializing
   if (!device) {
     return (
       <View style={styles.loader}>
@@ -491,24 +449,6 @@ export default function ScanScreen() {
                     />
                   )}
                 </View>
-                <View
-                  style={{
-                    position: "absolute",
-                    bottom: 60,
-                    left: 0,
-                    right: 0,
-                  }}
-                >
-                  {codeMetadata.length > 0 && (
-                    <QRResult
-                      codeValue={codeValue}
-                      codeType={codeType}
-                      iconName={iconName}
-                      animatedStyle={animatedStyle}
-                      onNavigateToAdd={onNavigateToAddScreen}
-                    />
-                  )}
-                </View>
               </>
             ) : (
               <View style={styles.cameraFallback}>
@@ -520,6 +460,17 @@ export default function ScanScreen() {
             )}
           </Reanimated.View>
         </GestureDetector>
+        <View style={styles.qrResultContainer}>
+          {codeMetadata.length > 0 && (
+            <QRResult
+              codeValue={codeValue}
+              codeType={codeType}
+              iconName={iconName}
+              animatedStyle={animatedStyle}
+              onNavigateToAdd={onNavigateToAddScreen}
+            />
+          )}
+        </View>
         {device && (
           <View style={styles.zoomControlContainer}>
             <ZoomControl
@@ -541,6 +492,7 @@ export default function ScanScreen() {
             style={styles.bottomButton}
             loading={isDecoding}
             loadingColor="#fff"
+            variant="glass"
           />
           <ThemedButton
             iconName="cog"
@@ -548,6 +500,7 @@ export default function ScanScreen() {
             underlayColor="#fff"
             onPress={() => onOpenSheet("setting")}
             style={styles.bottomButton}
+            variant="glass"
           />
         </View>
       </View>
@@ -579,7 +532,6 @@ export default function ScanScreen() {
 
       <StatusBar barStyle="light-content" />
 
-      {/* Bottom sheet */}
       {isCameraReady && (
         <Suspense fallback={null}>
           <ThemedReuseableSheet
@@ -599,7 +551,6 @@ export default function ScanScreen() {
             }
             styles={{
               customContent: {
-                // borderRadius: getResponsiveWidth(4),
                 marginHorizontal: getResponsiveWidth(3.6),
               },
             }}
@@ -615,14 +566,15 @@ export default function ScanScreen() {
   );
 }
 
+// --- NEW: Styles adopted from GuestScanScreen ---
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "black",
   },
   cameraContainer: {
-    marginTop: STATUSBAR_HEIGHT,
-    flex: getResponsiveHeight(0.25),
+    marginTop: STATUSBAR_HEIGHT + getResponsiveHeight(11),
+    flex: getResponsiveHeight(0.35),
     backgroundColor: "black",
     borderRadius: getResponsiveWidth(4),
     overflow: "hidden",
@@ -649,16 +601,14 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     position: "absolute",
-    top: STATUSBAR_HEIGHT + 15,
+    top: STATUSBAR_HEIGHT + 25,
     width: "100%",
     flexDirection: "row",
     justifyContent: "space-between",
-    // paddingHorizontal: getResponsiveWidth(3.6),
     zIndex: 10,
   },
   headerButton: {
-    // backgroundColor: "rgba(0, 0, 0, 0.3)",
-    marginHorizontal: 10,
+    marginHorizontal: 15,
   },
   bottomContainer: {
     flex: 1,
@@ -671,6 +621,12 @@ const styles = StyleSheet.create({
     bottom: 10,
     right: 0,
     left: 0,
+  },
+  qrResultContainer: {
+    position: "absolute",
+    bottom: 60,
+    left: 0,
+    right: 0,
   },
   bottomButtonsContainer: {
     flexDirection: "row",

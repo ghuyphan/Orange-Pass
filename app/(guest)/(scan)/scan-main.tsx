@@ -390,9 +390,9 @@ export default function GuestScanScreen() {
       return (
         cameraStatus === "granted" &&
         locationStatus["android.permission.ACCESS_FINE_LOCATION"] ===
-        "granted" &&
+          "granted" &&
         locationStatus["android.permission.ACCESS_COARSE_LOCATION"] ===
-        "granted"
+          "granted"
       );
     } catch (error) {
       console.error("Error requesting permissions:", error);
@@ -507,8 +507,6 @@ export default function GuestScanScreen() {
           {codeMetadata.length > 0 && (
             <QRResult
               codeValue={codeValue}
-              // codeType={codeType}
-              // iconName={iconName}
               animatedStyle={animatedStyle}
               onNavigateToAdd={onNavigateToAddScreen}
             />
@@ -616,10 +614,10 @@ const styles = StyleSheet.create({
     backgroundColor: "black",
   },
   cameraContainer: {
-    marginTop: STATUSBAR_HEIGHT,
-    flex: getResponsiveHeight(0.25),
+    marginTop: STATUSBAR_HEIGHT + getResponsiveHeight(11),
+    flex: getResponsiveHeight(0.35),
     backgroundColor: "black",
-    borderRadius: getResponsiveWidth(4),
+    // borderRadius: getResponsiveWidth(4),
     overflow: "hidden",
   },
   loader: {
@@ -644,14 +642,14 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     position: "absolute",
-    top: STATUSBAR_HEIGHT + 15,
+    top: STATUSBAR_HEIGHT + 25,
     width: "100%",
     flexDirection: "row",
     justifyContent: "space-between",
     zIndex: 10,
   },
   headerButton: {
-    marginHorizontal: 10,
+    marginHorizontal: 15,
   },
   bottomContainer: {
     flex: 1,

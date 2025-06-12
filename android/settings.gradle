@@ -44,7 +44,7 @@ if (getRNMinorVersion() >= 75) {
   }
 }
 
-rootProject.name = 'Orange⁺'
+rootProject.name = 'Orange Pass'
 
 dependencyResolutionManagement {
   versionCatalogs {

@@ -32,8 +32,8 @@ const useDimensions = () =>
   useMemo(
     () => ({
       frameSize: 220,
-      initialCornerSize: 15,
-      initialCornerBorderWidth: 3,
+      initialCornerSize: 14,
+      initialCornerBorderWidth: 2.5,
       cornerRadius: 6,
     }),
     []

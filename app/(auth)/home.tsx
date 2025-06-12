@@ -1045,7 +1045,7 @@ const styles = StyleSheet.create({
   },
   titleButton: {},
   listContainer: {
-    paddingTop: getResponsiveHeight(18.1),
+    paddingTop: getResponsiveHeight(18.4),
     flexGrow: 1,
   },
   emptyItem: {
