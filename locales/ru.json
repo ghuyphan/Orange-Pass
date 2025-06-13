@@ -410,7 +410,7 @@
   },
   "settingsScreen": {
     "title": "Настройки",
-    "guestLoginPrompt": "Guest (Tap to Sign In)",
+    "guestLoginPrompt": "Гость (нажмите, чтобы войти)",
     "language": "Язык",
     "about": "О Orange Pass",
     "editProfile": "Редактировать профиль",

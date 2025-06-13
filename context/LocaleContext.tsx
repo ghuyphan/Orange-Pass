@@ -15,7 +15,7 @@ interface LocaleProviderProps {
 }
 
 export const LocaleProvider: React.FC<LocaleProviderProps> = ({ children }) => {
-  const [locale, setLocale] = useMMKVString('locale', storage);
+  const [locale, setLocale] = useMMKVString('locale' );
 
   // Memoized update locale function
   const updateLocale = useCallback((newLocale: string | undefined) => {

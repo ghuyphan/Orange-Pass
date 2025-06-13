@@ -13,11 +13,10 @@ import {
   Pressable,
   Image,
   ActivityIndicator,
-  Platform,
 } from "react-native";
 import * as Linking from "expo-linking";
 import { useDispatch, useSelector } from "react-redux";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { useRouter, useLocalSearchParams } from "expo-router";
 // import { useUnmountBrightness } from "@reeq/react-native-device-brightness"; // Not used, can be removed if not needed elsewhere
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -120,7 +119,7 @@ const DetailScreen = () => {
   const router = useRouter();
 
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const editNavigationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const editNavigationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [toastKey, setToastKey] = useState(0);
   const [amount, setAmount] = useState("");
@@ -460,9 +459,8 @@ const DetailScreen = () => {
 
       try {
         const itemName = returnItemData(item.code, item.type);
-        const message = `${t("detailsScreen.transferMessage")} ${
-          item.account_name
-        }`;
+        const message = `${t("detailsScreen.transferMessage")} ${item.account_name
+          }`;
         const numericAmount = parseInt(amount.replace(/,/g, ""), 10);
         if (isNaN(numericAmount)) throw new Error("Invalid amount format");
 
@@ -603,12 +601,17 @@ const DetailScreen = () => {
 
   return (
     <KeyboardAwareScrollView
+      contentContainerStyle={[
+        styles.container,
+        {
+          backgroundColor:
+            currentTheme === "light"
+              ? Colors.light.background
+              : Colors.dark.background,
+        },
+      ]}
+      bottomOffset={50}
       keyboardShouldPersistTaps="handled"
-      style={[{ backgroundColor: backgroundColor, flex: 1 }]}
-      contentContainerStyle={styles.container}
-      enableOnAndroid={Platform.OS === "android"}
-      enableAutomaticScroll={Platform.OS === "ios"}
-      extraScrollHeight={Platform.OS === "ios" ? 0 : -getResponsiveHeight(5)}
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.headerWrapper}>
@@ -632,7 +635,7 @@ const DetailScreen = () => {
           <Pressable onPress={handleOpenMap} style={styles.actionButton}>
             <View style={styles.actionHeader}>
               <MaterialCommunityIcons
-                name="map-marker-outline"
+                name="map-marker"
                 size={getResponsiveFontSize(16)}
                 color={iconColor}
               />
@@ -746,7 +749,7 @@ const DetailScreen = () => {
               >
                 <View style={styles.bankTransferHeader}>
                   <MaterialCommunityIcons
-                    name="bank-outline"
+                    name="bank"
                     size={getResponsiveFontSize(18)}
                     color={iconColor}
                   />
@@ -805,8 +808,8 @@ const DetailScreen = () => {
         title={t("homeScreen.confirmDeleteTitle")}
         message={t("homeScreen.confirmDeleteMessage")}
         isVisible={isModalVisible}
-        iconName="delete-outline"
-        // isPrimaryActionLoading={isDeleteSyncing} // Pass loading state to modal
+        iconName="delete"
+      // isPrimaryActionLoading={isDeleteSyncing} // Pass loading state to modal
       />
       <ThemedTopToast
         key={toastKey}

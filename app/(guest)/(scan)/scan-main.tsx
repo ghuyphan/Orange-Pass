@@ -11,7 +11,6 @@ import {
   Text,
   ActivityIndicator,
   SafeAreaView,
-  StatusBar,
   AppState,
   PermissionsAndroid,
   LayoutChangeEvent,
@@ -68,7 +67,7 @@ export default function GuestScanScreen() {
   const isMounted = useRef(true);
 
   // Camera Ref and Setup - Defer camera setup until component is mounted
-  const cameraRef = useRef(null);
+  const cameraRef = useRef<Camera>(null as unknown as Camera);
   const [setupCamera, setSetupCamera] = useState(false);
   const { device, hasPermission, torch, toggleFlash } =
     useCameraSetup(cameraRef);
@@ -390,9 +389,9 @@ export default function GuestScanScreen() {
       return (
         cameraStatus === "granted" &&
         locationStatus["android.permission.ACCESS_FINE_LOCATION"] ===
-          "granted" &&
+        "granted" &&
         locationStatus["android.permission.ACCESS_COARSE_LOCATION"] ===
-          "granted"
+        "granted"
       );
     } catch (error) {
       console.error("Error requesting permissions:", error);

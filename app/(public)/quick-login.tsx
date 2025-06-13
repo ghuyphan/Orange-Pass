@@ -52,7 +52,7 @@ interface SavedAccount {
 
 export default function QuickLoginScreen() {
   const { updateLocale } = useLocale();
-  const [locale, setLocale] = useMMKVString('locale', storage);
+  const [locale, setLocale] = useMMKVString('locale' );
   const { currentTheme } = useTheme();
   const insets = useSafeAreaInsets();
   const passwordInputRef = useRef<TextInput>(null);

@@ -1,27 +1,38 @@
-import { ThemedButton } from '@/components/buttons/ThemedButton';
-import { Stack, useRouter } from 'expo-router'; // Removed useSegments as it's no longer needed here
-import 'react-native-reanimated';
-import { View, StyleSheet } from 'react-native';
-import { useMemo } from 'react'; // Removed useEffect and useState as they are no longer needed
-import { ThemedView } from '@/components/ThemedView';
-import { getResponsiveHeight, getResponsiveWidth } from '@/utils/responsive';
-// storage and MMKV_KEYS are removed as hasQuickLoginAccounts logic is removed from this component
-import { useSelector } from 'react-redux';
-import { RootState } from '@/store/rootReducer';
+import { ThemedButton } from "@/components/buttons/ThemedButton";
+import { Stack, useRouter, usePathname } from "expo-router"; // Add usePathname
+import "react-native-reanimated";
+import { View, StyleSheet } from "react-native";
+import { useMemo } from "react";
+import { ThemedView } from "@/components/ThemedView";
+import { getResponsiveHeight, getResponsiveWidth } from "@/utils/responsive";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/rootReducer";
 
 export default function AuthLayout() {
-  const router = useRouter(); // Router hook to access navigation functions
+  const router = useRouter();
+  const pathname = usePathname(); // Get current route
 
   // Redux: is login in progress?
   const isLoginInProgress = useSelector(
     (state: RootState) => state.authStatus.isLoginInProgress
   );
 
-  // The back button should only be disabled if a login is actively in progress.
-  // Its rendering is handled separately by router.canGoBack().
-  const disableBackButton = useMemo(() => {
-    return isLoginInProgress;
-  }, [isLoginInProgress]);
+  // Routes that should never show back button
+  const routesWithoutBackButton = ["/quick-login", "/(public)/quick-login"];
+
+  // Check if back button should be shown
+  const shouldShowBackButton = useMemo(() => {
+    // Don't show back button if:
+    // 1. Can't go back
+    // 2. Current route is in the exclusion list
+    // 3. Login is in progress
+    const canGoBack = router.canGoBack();
+    const isExcludedRoute = routesWithoutBackButton.some(route => 
+      pathname.includes("quick-login")
+    );
+    
+    return canGoBack && !isExcludedRoute && !isLoginInProgress;
+  }, [router, pathname, isLoginInProgress]);
 
   // Navigate back if possible
   const handleBackPress = () => {
@@ -36,22 +47,18 @@ export default function AuthLayout() {
         <Stack
           screenOptions={{
             headerShown: false,
-            animation: 'ios_from_right', // Standard iOS animation for stack screens
+            animation: "ios_from_right",
           }}
-        >
-          <Stack.Screen name="login" />
-          <Stack.Screen name="register" />
-          <Stack.Screen name="forgot-password" />
-          <Stack.Screen name="quick-login" />
-        </Stack>
+        />
       </View>
-      {/* Conditionally render the back button container if router.canGoBack() is true */}
-      {router.canGoBack() && (
+      
+      {/* Show back button only when appropriate */}
+      {shouldShowBackButton && (
         <View style={styles.headerContainer}>
           <ThemedButton
             onPress={handleBackPress}
             iconName="chevron-left"
-            disabled={disableBackButton} // Disable button if login is in progress
+            disabled={isLoginInProgress}
           />
         </View>
       )}
@@ -61,15 +68,15 @@ export default function AuthLayout() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1, // Ensure the layout takes up the full screen
+    flex: 1,
   },
   screenContainer: {
-    flex: 1, // The area where the current screen (login, register, etc.) is displayed
+    flex: 1,
   },
   headerContainer: {
-    position: 'absolute', // Position the header independently of the screen content
-    top: getResponsiveHeight(10), // Position from the top
-    left: getResponsiveWidth(3.6), // Position from the left
-    // zIndex: 10, // Uncomment if you face issues with the button being behind other elements
+    position: "absolute",
+    top: getResponsiveHeight(10),
+    left: getResponsiveWidth(3.6),
+    // zIndex: 10,
   },
 });

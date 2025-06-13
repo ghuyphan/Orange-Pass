@@ -54,10 +54,10 @@ export const CategorySheetItem: React.FC<SheetItemProps> = ({
           size={getResponsiveFontSize(18)}
           name={
             categoryItem.value === 'store'
-              ? 'store-outline'
+              ? 'store'
               : categoryItem.value === 'bank'
-                ? 'bank-outline'
-                : 'wallet-outline'
+                ? 'bank'
+                : 'wallet'
           }
         />
         <ThemedText style={styles.sheetItemText}>{categoryItem.display}</ThemedText>

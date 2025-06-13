@@ -30,6 +30,7 @@ import { ThemedButton } from "@/components/buttons/ThemedButton";
 import { ThemedTextButton } from "@/components/buttons/ThemedTextButton";
 import { ThemedToast } from "@/components/toast/ThemedToast";
 import ThemedReuseableSheet from "@/components/bottomsheet/ThemedReusableSheet";
+import BottomSheet from "@gorhom/bottom-sheet";
 import { Logo } from "@/components/AppLogo";
 
 // SVGs
@@ -197,7 +198,7 @@ export default function LoginScreen() {
   const [isToastVisible, setIsToastVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  const bottomSheetRef = useRef(null);
+const bottomSheetRef = useRef<BottomSheet | null>(null);
 
   const themeColors = useMemo(() => {
     const isLight = currentTheme === "light";
@@ -346,7 +347,7 @@ export default function LoginScreen() {
         >
           <View style={styles.leftSectionContainer}>
             <MaterialCommunityIcons
-              name="cog-outline"
+              name="cog"
               size={getResponsiveFontSize(18)}
               color={themeColors.iconColor}
             />

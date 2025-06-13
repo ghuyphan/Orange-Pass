@@ -110,7 +110,7 @@ function GuestHomeScreen() {
   // Refs
   const flatListRef = useRef<FlatList<QRRecord> | null>(null);
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const timeoutRefs = useRef<{ [key: string]: NodeJS.Timeout | null }>({
+  const timeoutRefs = useRef<{ [key: string]: ReturnType<typeof setTimeout> | null }>({
     processing: null,
     idle: null,
     edit: null,
@@ -832,7 +832,7 @@ function GuestHomeScreen() {
         title={t("homeScreen.confirmDeleteTitle")}
         message={t("homeScreen.confirmDeleteMessage")}
         isVisible={isModalVisible}
-        iconName="delete-outline"
+        iconName="delete"
       />
     </ThemedView>
   );

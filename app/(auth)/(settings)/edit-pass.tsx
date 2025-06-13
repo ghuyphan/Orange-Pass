@@ -134,7 +134,7 @@ const ChangePasswordScreen = () => {
             showsVerticalScrollIndicator={false}
             enableOnAndroid
           >
-            <View style={[styles.sectionContainer, { backgroundColor: cardColor }]}>
+            <View style={[styles.sectionContainer]}>
               <ThemedInput
                 label={t('changePasswordScreen.currentPassword')}
                 placeholder={t('changePasswordScreen.currentPasswordPlaceholder')}
@@ -149,8 +149,9 @@ const ChangePasswordScreen = () => {
                 }
                 disabled={isSubmitting}
                 disableOpacityChange={false}
+                groupPosition='top'
               />
-              <ThemedView style={styles.divider} />
+              {/* <ThemedView style={styles.divider} /> */}
               <ThemedInput
                 label={t('changePasswordScreen.newPassword')}
                 placeholder={t('changePasswordScreen.newPasswordPlaceholder')}
@@ -165,6 +166,7 @@ const ChangePasswordScreen = () => {
                 }
                 disabled={isSubmitting}
                 disableOpacityChange={false}
+                groupPosition='middle'
               />
               <ThemedView style={styles.divider} />
               <ThemedInput
@@ -183,6 +185,7 @@ const ChangePasswordScreen = () => {
                 }
                 disabled={isSubmitting}
                 disableOpacityChange={false}
+                groupPosition='bottom'
               />
             </View>
             <ThemedButton

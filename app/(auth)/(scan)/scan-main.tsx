@@ -68,10 +68,9 @@ export default function ScanScreen() {
   const isMounted = useRef(true);
 
   // Camera Ref and Setup
-  const cameraRef = useRef(null);
+  const cameraRef = useRef<Camera>(null as unknown as Camera);
   const [setupCamera, setSetupCamera] = useState(false);
-  const { device, hasPermission, torch, toggleFlash } =
-    useCameraSetup(cameraRef);
+  const { device, hasPermission, torch, toggleFlash } = useCameraSetup(cameraRef);
   const bottomSheetRef = useRef<BottomSheet>(null);
 
   const [allPermissionsGranted, setAllPermissionsGranted] = useState<
@@ -359,9 +358,9 @@ export default function ScanScreen() {
       return (
         cameraStatus === "granted" &&
         locationStatus["android.permission.ACCESS_FINE_LOCATION"] ===
-          "granted" &&
+        "granted" &&
         locationStatus["android.permission.ACCESS_COARSE_LOCATION"] ===
-          "granted"
+        "granted"
       );
     } catch (error) {
       console.error("Error requesting permissions:", error);

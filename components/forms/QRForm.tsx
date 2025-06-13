@@ -120,7 +120,7 @@ const BankMetadataFetcher: React.FC<{
     showToast,
     setCardMetadata,
   }) => {
-    const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const completedFetchesRef = useRef<Set<string>>(new Set());
     const activeRequestRef = useRef<boolean>(false);
 
@@ -280,7 +280,7 @@ const QRForm: React.FC<QRFormProps> = ({
   const isSheetVisible = useRef(false);
   const bottomSheetRef = useRef<BottomSheet>(null);
   const modalManagerRef = useRef<any>(null);
-  const openSheetTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const openSheetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const allBrandsForCurrentCategoryRef = useRef<BrandItem[]>([]);
   const lastLoadedBrandCategoryValueRef = useRef<string | null | undefined>(
     null,
@@ -874,7 +874,7 @@ const QRForm: React.FC<QRFormProps> = ({
 
               <ThemedView style={[styles.formContainer]}>
                 <ThemedDisplayInput
-                  iconName="format-list-bulleted-type"
+                  // iconName="format-list-bulleted-type"
                   placeholder={t("addScreen.categoryPlaceholder")}
                   value={values.category?.display}
                   onPress={() => onOpenSheet("category", values.category)}
@@ -886,9 +886,11 @@ const QRForm: React.FC<QRFormProps> = ({
                   }
                   isError={touched.category && !!errors.category}
                   disabled={isSubmitting || isMetadataLoading}
+                  groupPosition="top"
+                  label="Category"
                 />
                 <ThemedDisplayInput
-                  iconName="domain"
+                  // iconName="domain"
                   placeholder={t("addScreen.brandPlaceholder")}
                   logoCode={codeProvider || values.brand?.code}
                   value={values.brand?.full_name}
@@ -901,6 +903,7 @@ const QRForm: React.FC<QRFormProps> = ({
                   }
                   isError={touched.brand && !!errors.brand}
                   disabled={isSubmitting || isMetadataLoading}
+                  groupPosition="middle"
                 />
                 {values.category?.value === "bank" && (
                   <Animated.View
@@ -909,7 +912,7 @@ const QRForm: React.FC<QRFormProps> = ({
                     exiting={FadeOut.duration(300)}
                   >
                     <ThemedDisplayInput
-                      iconName="qrcode-scan"
+                      // iconName="qrcode-scan"
                       label={t("addScreen.qrCodeDataLabel")}
                       value={values.metadata}
                       isLoading={isMetadataLoading}
@@ -927,6 +930,7 @@ const QRForm: React.FC<QRFormProps> = ({
                           : undefined
                       }
                       isError={touched.metadata && !!errors.metadata}
+                      groupPosition="middle"
                     />
                   </Animated.View>
                 )}
@@ -937,7 +941,7 @@ const QRForm: React.FC<QRFormProps> = ({
                       exiting={FadeOut.duration(300)}
                     >
                       <ThemedInput
-                        iconName="credit-card-outline"
+                        // iconName="credit-card"
                         placeholder={t("addScreen.metadataPlaceholder")}
                         value={values.metadata}
                         onChangeText={handleChange("metadata")}
@@ -955,11 +959,12 @@ const QRForm: React.FC<QRFormProps> = ({
                         }
                         isError={touched.metadata && !!errors.metadata}
                         onDisabledPress={onEmptyInputPress}
+                        groupPosition="middle"
                       />
                     </Animated.View>
                   )}
                 <ThemedDisplayInput
-                  iconName="qrcode"
+                  // iconName="qrcode"
                   placeholder={t("addScreen.metadataTypePlaceholder")}
                   value={values.metadataType?.display}
                   onPress={() =>
@@ -970,6 +975,7 @@ const QRForm: React.FC<QRFormProps> = ({
                   }
                   showClearButton={false}
                   disabled={isSubmitting || isMetadataLoading}
+                  groupPosition="bottom"
                 />
               </ThemedView>
               {shouldShowAccountSection(values.category) && (
@@ -993,6 +999,7 @@ const QRForm: React.FC<QRFormProps> = ({
                     isError={touched.accountName && !!errors.accountName}
                     onDisabledPress={onEmptyInputPress}
                     disabled={isSubmitting || isMetadataLoading}
+                    groupPosition="top"
                   />
                   <ThemedInput
                     iconName="account-cash"
@@ -1010,6 +1017,7 @@ const QRForm: React.FC<QRFormProps> = ({
                     isError={touched.accountNumber && !!errors.accountNumber}
                     onDisabledPress={onEmptyInputPress}
                     disabled={isSubmitting || isMetadataLoading}
+                    groupPosition="bottom"
                   />
                 </Animated.View>
               )}
@@ -1086,8 +1094,8 @@ const QRForm: React.FC<QRFormProps> = ({
             <ModalManager
               ref={modalManagerRef}
               onNavigateBack={onNavigateBack}
-              dirty={dirty}
-              isSheetVisible={isSheetVisible}
+              isDirty={dirty}
+              isSheetVisibleRef={isSheetVisible}
               bottomSheetRef={bottomSheetRef}
             />
           </ThemedView>
@@ -1133,7 +1141,7 @@ const styles = StyleSheet.create({
     marginTop: getResponsiveHeight(1.2),
     marginBottom: getResponsiveHeight(2.4),
     padding: getResponsiveWidth(1),
-    gap: getResponsiveHeight(1.2),
+    // gap: getResponsiveHeight(1.2),
   },
   saveButton: {
     marginTop: getResponsiveHeight(2.4),

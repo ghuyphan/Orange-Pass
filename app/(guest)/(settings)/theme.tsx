@@ -199,7 +199,7 @@ const ThemeScreen = () => {
           <View style={[styles.defaultOverlay, { backgroundColor: overlayColor }]} />
           {renderThemeOption("light", "weather-sunny", isDarkMode === false)}
           {renderThemeOption("dark", "weather-night", isDarkMode === true)}
-          {renderThemeOption("system", "cog-outline", isDarkMode === undefined)}
+          {renderThemeOption("system", "cog", isDarkMode === undefined)}
         </ThemedView>
       </Animated.ScrollView>
     </ThemedView>

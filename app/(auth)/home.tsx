@@ -71,9 +71,6 @@ import {
 } from "@/utils/responsive";
 import { t } from "@/i18n";
 
-// REMOVED: No longer needed for periodic sync
-// const SYNC_CHECK_INTERVAL = 5 * 60 * 1000;
-
 function HomeScreen() {
   const isFocused = useIsFocused();
   const dispatch = useDispatch();
@@ -91,11 +88,12 @@ function HomeScreen() {
     "idle" | "syncing" | "synced" | "error"
   >("idle");
 
+  // --- Animation States ---
+  const [emptyAnimationPerformed, setEmptyAnimationPerformed] = useState(false);
+
   // --- Efficiency States ---
   const [initialLoadAttemptedForUser, setInitialLoadAttemptedForUser] =
     useState<string | null>(null);
-  // REMOVED: No longer needed for periodic sync
-  // const lastSyncCheckTimestampRef = useRef<number>(0);
 
   // --- UI States ---
   const isEmpty = useMemo(() => qrData.length === 0, [qrData]);
@@ -123,7 +121,9 @@ function HomeScreen() {
   // --- Refs ---
   const flatListRef = useRef<FlatList<QRRecord> | null>(null);
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const timeoutRefs = useRef<{ [key: string]: NodeJS.Timeout | null }>({
+  const timeoutRefs = useRef<{
+    [key: string]: ReturnType<typeof setTimeout> | null;
+  }>({
     sync: null,
     idle: null,
     edit: null,
@@ -158,7 +158,7 @@ function HomeScreen() {
     async (userIdToSync: string) => {
       if (isOffline || isSyncing) return;
 
-       (
+      console.log(
         `HomeScreen: Initiating syncWithServer for user ${userIdToSync}`
       );
       setIsSyncing(true);
@@ -204,8 +204,6 @@ function HomeScreen() {
   );
 
   // --- EFFECT 1: Initial Data Load & First-Time Sync ---
-  // This effect now handles both loading local data and triggering a sync
-  // ONLY if no local data exists for the user.
   useEffect(() => {
     if (!isFocused) {
       if (userId && initialLoadAttemptedForUser !== userId && isLoading) {
@@ -220,7 +218,7 @@ function HomeScreen() {
       dispatch(setQrData([]));
       setSyncStatus("idle");
       setInitialLoadAttemptedForUser(null);
-       ("HomeScreen: No userId, cleared data and reset states.");
+      console.log("HomeScreen: No userId, cleared data and reset states.");
       return;
     }
 
@@ -232,7 +230,7 @@ function HomeScreen() {
 
     let isMounted = true;
     setIsLoading(true);
-     (`HomeScreen: Starting initial data load for user: ${userId}`);
+    console.log(`HomeScreen: Starting initial data load for user: ${userId}`);
 
     const loadAndSyncOnce = async () => {
       try {
@@ -240,8 +238,7 @@ function HomeScreen() {
         if (!isMounted) return;
 
         if (localDbExists) {
-          // If local data exists, just load it from DB
-           (
+          console.log(
             `HomeScreen: Local data found for user ${userId}. Loading from DB.`
           );
           const currentLocalData = await getQrCodesByUserId(userId);
@@ -249,15 +246,12 @@ function HomeScreen() {
             dispatch(setQrData(currentLocalData));
           }
         } else if (!isOffline) {
-          // If NO local data and we are ONLINE, perform the first-time sync
-           (
+          console.log(
             `HomeScreen: No local data for user ${userId}. Triggering first-time sync.`
           );
-          // syncWithServer will fetch and dispatch the data
           await syncWithServer(userId);
         } else {
-          // No local data and offline, so we have an empty state
-           (
+          console.log(
             `HomeScreen: No local data and offline for user ${userId}.`
           );
           dispatch(setQrData([]));
@@ -268,7 +262,7 @@ function HomeScreen() {
         setSyncStatus("error");
         setTopToastMessage(t("homeScreen.loadError"));
         setIsTopToastVisible(true);
-        dispatch(setQrData([])); // Clear data on error
+        dispatch(setQrData([]));
       } finally {
         if (isMounted) {
           setInitialLoadAttemptedForUser(userId);
@@ -291,12 +285,11 @@ function HomeScreen() {
     t,
     isOffline,
     syncWithServer,
+    isLoading,
+    initialAnimationsDone,
   ]);
 
-  // REMOVED: EFFECT 2 (Smart Sync Trigger) is no longer needed.
-  // Its "first-time sync" logic is now part of EFFECT 1.
-
-  // --- EFFECT 3: Network Status Toasts ---
+  // --- EFFECT 2: Network Status Toasts ---
   useEffect(() => {
     if (isOffline) {
       setBottomToastIcon("wifi-off");
@@ -331,28 +324,37 @@ function HomeScreen() {
     };
   }, [isOffline, t, isFocused, bottomToastMessage, isBottomToastVisible]);
 
-  // --- EFFECT 4: Animations ---
+  // --- EFFECT 3: Animations ---
   const animateEmptyCard = useCallback(() => {
     emptyCardOffset.value = withSpring(0, { damping: 30, stiffness: 150 });
   }, [emptyCardOffset]);
 
+  // Updated animation effect to prevent re-animation on focus
   useEffect(() => {
-    if (!isFocused || !initialAnimationsDone) {
-      if (!isFocused) {
-        listOpacity.value = 0;
-      }
-      return;
-    }
+    if (!initialAnimationsDone) return;
 
     isEmptyShared.value = isEmpty ? 1 : 0;
 
     if (isEmpty) {
       listOpacity.value = 0;
-      emptyCardOffset.value = 350;
-      animateEmptyCard();
+      
+      // Only animate if we haven't performed the empty animation yet
+      if (!emptyAnimationPerformed) {
+        emptyCardOffset.value = 350;
+        animateEmptyCard();
+        setEmptyAnimationPerformed(true);
+      }
+      // If animation was already performed, just ensure it's in the correct position
+      else {
+        emptyCardOffset.value = 0;
+      }
     } else {
       emptyCardOffset.value = 350;
       listOpacity.value = withTiming(1, { duration: 300 });
+      // Reset the empty animation flag when we have data
+      if (emptyAnimationPerformed) {
+        setEmptyAnimationPerformed(false);
+      }
     }
   }, [
     isEmpty,
@@ -361,7 +363,18 @@ function HomeScreen() {
     listOpacity,
     emptyCardOffset,
     isEmptyShared,
+    emptyAnimationPerformed,
   ]);
+
+  // Handle focus changes separately for list opacity
+  useEffect(() => {
+    if (!isFocused) {
+      listOpacity.value = 0;
+    } else if (isFocused && initialAnimationsDone && !isEmpty) {
+      // Only restore list opacity if we have data
+      listOpacity.value = withTiming(1, { duration: 300 });
+    }
+  }, [isFocused, initialAnimationsDone, isEmpty, listOpacity]);
 
   // --- Animated Styles ---
   const titleContainerStyle = useAnimatedStyle(() => {
@@ -419,6 +432,7 @@ function HomeScreen() {
     }),
     [emptyCardOffset]
   );
+
   const listContainerAnimatedStyle = useAnimatedStyle(
     () => ({
       opacity: listOpacity.value,
@@ -535,12 +549,14 @@ function HomeScreen() {
       setFabOpen(true);
     }
   });
+
   const onScrollOffsetChange = useCallback(
     (offset: number) => {
       scrollY.value = offset;
     },
     [scrollY]
   );
+
   const onDragBegin = useCallback(() => {
     triggerHapticFeedback();
     setIsActive(true);
@@ -553,8 +569,7 @@ function HomeScreen() {
 
   const handleSync = useCallback(() => {
     if (userId && !isOffline && !isSyncing) {
-       ("HomeScreen: Manual sync initiated by user.");
-      // No longer need to manage timestamps, just call the function
+      console.log("HomeScreen: Manual sync initiated by user.");
       syncWithServer(userId);
     } else if (isOffline) {
       setTopToastMessage(t("homeScreen.offlineNoSync"));
@@ -604,7 +619,7 @@ function HomeScreen() {
       triggerHapticFeedback();
       setIsActive(false);
       if (!userId) return;
-       ("HomeScreen: Drag ended, reordering items.");
+      console.log("HomeScreen: Drag ended, reordering items.");
 
       InteractionManager.runAfterInteractions(() => {
         let finalDataToDispatch: QRRecord[];
@@ -651,7 +666,7 @@ function HomeScreen() {
         dispatch(setQrData(finalDataToDispatch));
         updateQrIndexes(finalDataToDispatch, userId)
           .then(() =>
-             (
+            console.log(
               "HomeScreen: QR indexes updated successfully after drag."
             )
           )
@@ -667,10 +682,12 @@ function HomeScreen() {
     setTopToastMessage(message);
     setIsTopToastVisible(true);
   }, []);
+
   const handleCopySuccess = useCallback(
     () => showToast(t("homeScreen.copied")),
     [showToast, t]
   );
+
   const onDeleteSheetPress = useCallback(() => {
     bottomSheetRef.current?.close();
     setIsModalVisible(true);
@@ -809,6 +826,7 @@ function HomeScreen() {
       </Animated.View>
     )
   );
+
   const LoadingComponent = React.memo(() => (
     <View style={styles.loadingContainer}>
       <View style={{ marginBottom: 20 }}>
@@ -819,6 +837,7 @@ function HomeScreen() {
       ))}
     </View>
   ));
+
   const ListHeaderComponent = React.memo(
     ({
       listHeaderStyle: localListHeaderStyle,
@@ -842,6 +861,7 @@ function HomeScreen() {
       </Animated.View>
     )
   );
+
   const EmptyItemComponent = React.memo(
     ({ color: itemColor }: { color: string }) => (
       <View style={styles.emptyItem}>
@@ -1012,7 +1032,7 @@ function HomeScreen() {
         title={t("homeScreen.confirmDeleteTitle")}
         message={t("homeScreen.confirmDeleteMessage")}
         isVisible={isModalVisible}
-        iconName="delete-outline"
+        iconName="delete "
       />
     </ThemedView>
   );

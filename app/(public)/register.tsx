@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useRef } from "react";
-import { StyleSheet, View, Keyboard, Platform } from "react-native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import React, { useState } from "react";
+import { StyleSheet, View, Keyboard } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { Formik } from "formik";
 import { router } from "expo-router";
 
@@ -31,7 +31,6 @@ export default function RegisterScreen() {
   const { currentTheme } = useTheme();
   const [isToastVisible, setIsToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
-  const scrollViewRef = useRef<KeyboardAwareScrollView>(null);
 
   const onDismissToast = () => {
     setIsToastVisible(false);
@@ -117,23 +116,18 @@ export default function RegisterScreen() {
 
         return (
           <KeyboardAwareScrollView
-            ref={scrollViewRef}
+            contentContainerStyle={[
+              styles.container,
+              {
+                backgroundColor:
+                  currentTheme === "light"
+                    ? Colors.light.background
+                    : Colors.dark.background,
+              },
+            ]}
+            bottomOffset={50}
             keyboardShouldPersistTaps="handled"
-            style={{
-              backgroundColor:
-                currentTheme === "light"
-                  ? Colors.light.background
-                  : Colors.dark.background,
-            }}
-            contentContainerStyle={styles.container}
-            extraScrollHeight={
-              Platform.OS === "ios" ? getResponsiveHeight(4) : 0
-            }
-            enableOnAndroid={true}
-            enableResetScrollToCoords={false}
             showsVerticalScrollIndicator={false}
-            scrollEnabled={true}
-            keyboardOpeningTime={0}
           >
             <View style={styles.contentContainer}>
               <ThemedText type="defaultSemiBold" style={styles.title}>

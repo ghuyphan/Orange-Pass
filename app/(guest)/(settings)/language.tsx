@@ -190,7 +190,7 @@ const LanguageScreen = () => {
               <View style={styles.leftSectionContainer}>
                 <View style={[styles.iconContainer]}>
                   <MaterialCommunityIcons
-                    name="cog-outline"
+                    name="cog"
                     size={getResponsiveFontSize(18)}
                     color={colors}
                   />

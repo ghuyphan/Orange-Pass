@@ -17,7 +17,7 @@ import {
 } from "react-native";
 import * as Linking from "expo-linking";
 import { useDispatch, useSelector } from "react-redux";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import BottomSheet from "@gorhom/bottom-sheet";
@@ -55,13 +55,7 @@ import {
 import { ThemedTopToast } from "@/components/toast/ThemedTopToast";
 import SettingSheetContent from "@/components/bottomsheet/SettingSheetContent";
 import { GUEST_USER_ID } from "@/constants/Constants";
-
-// --- Style Configurations ---
-const DEFAULT_OVERLAY_CONFIG = {
-   overlayColor: "rgba(255, 255, 255, 0.05)",
-  borderColor: "rgba(255, 255, 255, 0.2)",
-};
-
+import { useGlassStyle } from "@/hooks/useGlassStyle";
 // Constants
 const DEFAULT_AMOUNT_SUGGESTIONS = [
   "10,000",
@@ -113,7 +107,7 @@ const DetailScreen = () => {
   const router = useRouter();
 
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const editNavigationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const editNavigationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [toastKey, setToastKey] = useState(0);
   const [amount, setAmount] = useState("");
@@ -129,6 +123,7 @@ const DetailScreen = () => {
   const [allBanks, setAllBanks] = useState<BankItem[]>([]);
   const [isLoadingMoreBanks, setIsLoadingMoreBanks] = useState(false);
   const [isBanksInitiallyLoading, setIsBanksInitiallyLoading] = useState(true);
+  const { overlayColor, borderColor } = useGlassStyle();
 
   const item = useMemo<ItemData | null>(() => {
     if (!encodedItem) return null;
@@ -421,9 +416,8 @@ const DetailScreen = () => {
       setIsSyncing(true);
       try {
         const itemName = returnItemData(item.code, item.type);
-        const message = `${t("detailsScreen.transferMessage")} ${
-          item.account_name
-        }`;
+        const message = `${t("detailsScreen.transferMessage")} ${item.account_name
+          }`;
         const numericAmount = parseInt(amount.replace(/,/g, ""), 10);
         if (isNaN(numericAmount)) throw new Error("Invalid amount format");
         const response = await getVietQRData(
@@ -557,12 +551,17 @@ const DetailScreen = () => {
 
   return (
     <KeyboardAwareScrollView
+      contentContainerStyle={[
+        styles.container,
+        {
+          backgroundColor:
+            currentTheme === "light"
+              ? Colors.light.background
+              : Colors.dark.background,
+        },
+      ]}
+      bottomOffset={50}
       keyboardShouldPersistTaps="handled"
-      style={[{ backgroundColor: backgroundColor, flex: 1 }]}
-      contentContainerStyle={styles.container}
-      enableOnAndroid={Platform.OS === "android"}
-      enableAutomaticScroll={Platform.OS === "ios"}
-      extraScrollHeight={Platform.OS === "ios" ? 0 : -getResponsiveHeight(5)}
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.headerWrapper}>
@@ -583,12 +582,12 @@ const DetailScreen = () => {
       />
 
       {(item.type === "bank" || item.type === "store") && (
-        <View style={[styles.infoWrapper, { backgroundColor: cardColor }]}>
-          <View style={styles.defaultOverlay} />
+        <View style={[styles.infoWrapper, { backgroundColor: cardColor, borderColor: borderColor }]}>
+          <View style={[styles.defaultOverlay, { backgroundColor: overlayColor }]} />
           <Pressable onPress={handleOpenMap} style={styles.actionButton}>
             <View style={styles.actionHeader}>
               <MaterialCommunityIcons
-                name="map-marker-outline"
+                name="map-marker"
                 size={getResponsiveFontSize(16)}
                 color={iconColor}
               />
@@ -615,7 +614,12 @@ const DetailScreen = () => {
                   {t("detailsScreen.createQrCode")}
                 </ThemedText>
               </View>
-              <View style={styles.transferSection}>
+              <View
+                style={[
+                  styles.transferSection,
+                  dynamicSuggestions.length === 0 && { paddingBottom: 0, gap: 0 },
+                ]}
+              >
                 <View style={styles.inputWrapper}>
                   <TextInput
                     style={[styles.inputField, { color: textColor }]}
@@ -702,7 +706,7 @@ const DetailScreen = () => {
               >
                 <View style={styles.bankTransferHeader}>
                   <MaterialCommunityIcons
-                    name="bank-outline"
+                    name="bank"
                     size={getResponsiveFontSize(18)}
                     color={iconColor}
                   />
@@ -761,7 +765,7 @@ const DetailScreen = () => {
         title={t("homeScreen.confirmDeleteTitle")}
         message={t("homeScreen.confirmDeleteMessage")}
         isVisible={isModalVisible}
-        iconName="delete-outline"
+        iconName="delete"
       />
       <ThemedTopToast
         key={toastKey}
@@ -799,11 +803,9 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     marginVertical: getResponsiveHeight(3.6),
     borderWidth: 1,
-    borderColor: DEFAULT_OVERLAY_CONFIG.borderColor,
   },
   defaultOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: DEFAULT_OVERLAY_CONFIG.overlayColor,
     zIndex: 0,
   },
   actionButton: {

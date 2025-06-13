@@ -7,16 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
-    "statusBar": {
-      "style": "auto",
-      "translucent": false
-    },
     "ios": {
-      "splash": {
-        "backgroundColor": "#FFF5E1",
-        "image": "./assets/images/splash.png",
-        "resizeMode": "contain"
-      },
       "supportsTablet": false,
       "bundleIdentifier": "com.giahuyphan0110.orange2",
       "infoPlist": {
@@ -25,11 +16,7 @@
       }
     },
     "android": {
-      "splash": {
-        "backgroundColor": "#FFF5E1",
-        "image": "./assets/images/splash.png",
-        "resizeMode": "contain"
-      },
+      "edgeToEdgeEnabled": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#FFF5E1"
@@ -67,7 +54,17 @@
         }
       ],
       "expo-build-properties",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#FFF5E1",
+          "image": "./assets/images/icon.png",
+          "imageWidth": 200
+        }
+      ],
+      "expo-sqlite",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true

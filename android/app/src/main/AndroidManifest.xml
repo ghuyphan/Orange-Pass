@@ -30,7 +30,6 @@
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="myapp"/>
-        <data android:scheme="com.giahuyphan0110.orange2"/>
       </intent-filter>
     </activity>
   </application>

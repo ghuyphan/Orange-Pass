@@ -59,10 +59,10 @@ interface SettingsCardItem {
   hideForGuest?: boolean;
 }
 
-function SettingsScreen() {
+function SettingsGuestScreen() {
   const { overlayColor, borderColor } = useGlassStyle(); // Use the hook
   const { updateLocale } = useLocale();
-  const [locale, setLocale] = useMMKVString("locale", storage);
+  const [locale, setLocale] = useMMKVString("locale");
   const avatarConfig = useSelector(
     (state: RootState) => state.auth.avatarConfig
   );
@@ -169,9 +169,9 @@ function SettingsScreen() {
       const quickLoginEnabled =
         storage.getBoolean(MMKV_KEYS.QUICK_LOGIN_ENABLED) ?? false;
       if (quickLoginEnabled) {
-        router.push("/quick-login");
+        router.replace("/quick-login");
       } else {
-        router.push("/login");
+        router.replace("/login");
       }
     } catch (error) {
       console.error("Logout error:", error);
@@ -185,33 +185,30 @@ function SettingsScreen() {
     setIsModalVisible(true);
   }, [isGuest]);
 
-  const settingsData: SettingsCardItem[][] = useMemo(
-    () => [
-      [
-        {
-          leftIcon: "person-outline",
-          settingsTitle: t("settingsScreen.editProfile"),
-          onPress: onNavigateToEditScreen,
-          hideForGuest: true,
-        },
-      ],
-      [
-        {
-          leftIcon: "translate",
-          settingsTitle: t("settingsScreen.language"),
-          onPress: () => router.push("/language"),
-          hideForGuest: false,
-        },
-        {
-          leftIcon: "contrast",
-          settingsTitle: t("settingsScreen.appTheme"),
-          onPress: () => router.push("/theme"),
-          hideForGuest: false,
-        },
-      ],
+  const settingsData: SettingsCardItem[][] = [
+    [
+      {
+        leftIcon: "person",
+        settingsTitle: t("settingsScreen.editProfile"),
+        onPress: onNavigateToEditScreen,
+        hideForGuest: true,
+      },
     ],
-    [t, onNavigateToEditScreen, isGuest, router, locale]
-  );
+    [
+      {
+        leftIcon: "translate",
+        settingsTitle: t("settingsScreen.language"),
+        onPress: () => router.push("/language"),
+        hideForGuest: false,
+      },
+      {
+        leftIcon: "contrast",
+        settingsTitle: t("settingsScreen.appTheme"),
+        onPress: () => router.push("/theme"),
+        hideForGuest: false,
+      },
+    ],
+  ];
 
   const renderItem = useCallback(
     ({ item, index }: { item: SettingsCardItem[]; index: number }) => {
@@ -364,7 +361,7 @@ function SettingsScreen() {
   );
 }
 
-export default React.memo(SettingsScreen);
+export default React.memo(SettingsGuestScreen);
 
 const styles = StyleSheet.create({
   container: {

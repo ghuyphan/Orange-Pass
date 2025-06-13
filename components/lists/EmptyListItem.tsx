@@ -25,7 +25,7 @@ const EmptyListItem: React.FC<EmptyListItemProps> = ({
   dropdownOptions,
 }) => {
   const { updateLocale } = useLocale();
-  const [locale, setLocale] = useMMKVString('locale', storage);
+  const [locale, setLocale] = useMMKVString('locale' );
 
   return (
     <Animated.ScrollView

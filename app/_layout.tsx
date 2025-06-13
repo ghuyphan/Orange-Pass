@@ -11,6 +11,7 @@ import {
   Platform,
   AppState,
   AppStateStatus,
+  StatusBar as RNStatusBar,
 } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { useFonts } from "expo-font";
@@ -54,7 +55,21 @@ const ONBOARDING_STORAGE_KEY = "hasSeenOnboarding";
 const TOKEN_REFRESH_THRESHOLD = 5 * 60 * 1000; // 5 minutes
 const BACKGROUND_TIME_THRESHOLD = 30 * 60 * 1000; // 30 minutes
 
-// Define possible navigation routes for type safety - Updated for SDK 52
+// FORCE STATUS BAR CONFIGURATION IMMEDIATELY
+if (Platform.OS === "android") {
+  // Set this immediately when the module loads
+  RNStatusBar.setTranslucent(true);
+  RNStatusBar.setBackgroundColor("transparent", true);
+  
+  // Also try to set these additional properties
+  try {
+    RNStatusBar.setHidden(false, 'none');
+  } catch (error) {
+    console.warn("Could not set status bar hidden state:", error);
+  }
+}
+
+// Define possible navigation routes for type safety
 type AppRoute =
   | "/onboard"
   | "/(guest)/guest-home"
@@ -79,7 +94,54 @@ const fontAssets = {
   "Roboto-Italic": require("../assets/fonts/Roboto-Italic.ttf"),
 };
 
-// Token Management Class with SDK 52 fixes
+// Status Bar Manager - Aggressive approach
+class StatusBarManager {
+  private static intervalId: number | null = null;
+  
+  static forceStatusBarConfiguration() {
+    if (Platform.OS === "android") {
+      RNStatusBar.setTranslucent(true);
+      RNStatusBar.setBackgroundColor("transparent", true);
+      
+      try {
+        RNStatusBar.setHidden(false, 'none');
+      } catch (error) {
+        // Ignore error
+      }
+    }
+  }
+  
+  static startPersistentConfiguration() {
+    if (Platform.OS === "android" && !this.intervalId) {
+      // Apply immediately
+      this.forceStatusBarConfiguration();
+      
+      // Then apply every 100ms for the first 5 seconds to ensure it sticks
+      let count = 0;
+      this.intervalId = setInterval(() => {
+        this.forceStatusBarConfiguration();
+        count++;
+        
+        if (count >= 50) { // 50 * 100ms = 5 seconds
+          this.stopPersistentConfiguration();
+        }
+      }, 100);
+    }
+  }
+  
+  static stopPersistentConfiguration() {
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+      this.intervalId = null;
+    }
+  }
+  
+  static cleanup() {
+    this.stopPersistentConfiguration();
+  }
+}
+
+// Token Management Class
 class TokenManager {
   private static lastRefreshTime = 0;
   private static backgroundStartTime = 0;
@@ -109,8 +171,9 @@ class TokenManager {
     );
   }
 
-  // Fixed router typing for SDK 52
-  static async performTokenRefresh(router: ReturnType<typeof useRouter>): Promise<boolean> {
+  static async performTokenRefresh(
+    router: ReturnType<typeof useRouter>,
+  ): Promise<boolean> {
     if (this.isRefreshing) {
       return true;
     }
@@ -164,14 +227,14 @@ class TokenManager {
     }
   }
 
-  // Fixed router typing for SDK 52
-  private static async handleAuthFailure(router: ReturnType<typeof useRouter>): Promise<void> {
+  private static async handleAuthFailure(
+    router: ReturnType<typeof useRouter>,
+  ): Promise<void> {
     try {
       await SecureStore.deleteItemAsync("authToken");
       await SecureStore.deleteItemAsync("userID");
       store.dispatch(clearAuthData());
-      // Use push instead of replace for better navigation behavior in SDK 52
-      router.push("/(public)/login");
+      router.replace("/(public)/login");
     } catch (error) {
       console.error("[TokenManager] Error handling auth failure:", error);
     }
@@ -183,6 +246,8 @@ class TokenManager {
 
   static onAppForeground(): void {
     this.backgroundStartTime = 0;
+    // Re-apply status bar configuration when app comes to foreground
+    StatusBarManager.forceStatusBarConfiguration();
   }
 
   static reset(): void {
@@ -192,7 +257,7 @@ class TokenManager {
   }
 }
 
-// Updated AppNavigator with SDK 52 improvements
+// App Navigator Component
 function AppNavigator() {
   const stackNavigator = useMemo(
     () => (
@@ -202,7 +267,6 @@ function AppNavigator() {
           options={{
             headerShown: false,
             animation: "ios_from_right",
-            // Updated animation types for SDK 52
           }}
         />
         <Stack.Screen
@@ -226,24 +290,12 @@ function AppNavigator() {
             presentation: "modal",
           }}
         />
-        {/* <Stack.Screen name="+not-found" /> */}
       </Stack>
     ),
     [],
   );
 
-  return (
-    <>
-      {/* Updated StatusBar configuration for SDK 52 */}
-      {/* <StatusBar
-        // style="auto"
-        style="dark"
-        backgroundColor="transparent"
-        translucent={true}
-      /> */}
-      {stackNavigator}
-    </>
-  );
+  return stackNavigator;
 }
 
 export default function RootLayout() {
@@ -260,8 +312,21 @@ export default function RootLayout() {
   const initializationPromise = useRef<Promise<void> | null>(null);
   const appStateRef = useRef<AppStateStatus>(AppState.currentState);
   const splashHiddenRef = useRef(false);
-  // Add navigation ref to prevent multiple navigations
   const navigationInProgressRef = useRef(false);
+
+  // FORCE STATUS BAR CONFIGURATION ON COMPONENT MOUNT
+  useEffect(() => {
+    StatusBarManager.startPersistentConfiguration();
+    
+    return () => {
+      StatusBarManager.cleanup();
+    };
+  }, []);
+
+  // ALSO FORCE STATUS BAR ON EVERY STATE CHANGE (AGGRESSIVE)
+  useEffect(() => {
+    StatusBarManager.forceStatusBarConfiguration();
+  });
 
   // Initialize Android layout animations
   useEffect(() => {
@@ -348,7 +413,7 @@ export default function RootLayout() {
     }
   }, [fontsLoaded, fontError, prepareApp]);
 
-  // Handle app state changes with SDK 52 improvements
+  // Handle app state changes
   useEffect(() => {
     const handleAppStateChange = async (nextAppState: AppStateStatus) => {
       const prevState = appStateRef.current;
@@ -384,7 +449,7 @@ export default function RootLayout() {
     };
   }, [router]);
 
-  // Handle navigation based on app state - Fixed for SDK 52
+  // Handle navigation based on app state
   useEffect(() => {
     if (!appState.initializationComplete || navigationInProgressRef.current) {
       return;
@@ -406,8 +471,7 @@ export default function RootLayout() {
         "[RootLayout] CRITICAL: Essential states are null after initialization",
       );
       navigationInProgressRef.current = true;
-      router.push("/(public)/login");
-      // Reset navigation flag after a delay
+      router.replace("/(public)/login");
       setTimeout(() => {
         navigationInProgressRef.current = false;
       }, 1000);
@@ -428,13 +492,9 @@ export default function RootLayout() {
       targetRoute = "/(public)/login";
     }
 
-    // Prevent multiple navigation calls
     navigationInProgressRef.current = true;
+    router.replace(targetRoute);
 
-    // Use push instead of replace for better navigation behavior in SDK 52
-    router.push(targetRoute);
-
-    // Reset navigation flag after a delay
     setTimeout(() => {
       navigationInProgressRef.current = false;
     }, 1000);
@@ -446,6 +506,8 @@ export default function RootLayout() {
       try {
         await SplashScreen.hideAsync();
         splashHiddenRef.current = true;
+        // Force status bar configuration after splash screen is hidden
+        StatusBarManager.forceStatusBarConfiguration();
       } catch (error) {
         console.error("[RootLayout] Failed to hide splash screen:", error);
       }
@@ -465,6 +527,7 @@ export default function RootLayout() {
               <PaperProvider>
                 <LocaleProvider>
                   <ThemedView style={styles.root} onLayout={onLayoutRootView}>
+                    {/* DON'T use expo-status-bar StatusBar component - it conflicts */}
                     <AppNavigator />
                   </ThemedView>
                 </LocaleProvider>

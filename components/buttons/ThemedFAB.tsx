@@ -86,9 +86,9 @@ export const ThemedFAB = forwardRef<View, ThemedFABProps>(
           return false;
         };
 
-        BackHandler.addEventListener("hardwareBackPress", onBackPress);
-        return () =>
-          BackHandler.removeEventListener("hardwareBackPress", onBackPress);
+        const backHandlerSubscription = BackHandler.addEventListener("hardwareBackPress", onBackPress);
+
+        return () => backHandlerSubscription.remove();
       }, [open])
     );
 
@@ -100,7 +100,7 @@ export const ThemedFAB = forwardRef<View, ThemedFABProps>(
         mainButtonBackground: isLightTheme
           ? Colors.light.buttonBackground
           : Colors.dark.buttonBackground,
-        text: isLightTheme ? Colors.light.text : Colors.dark.text,
+        text: '#ffffff',
         glassBackground: isLightTheme
           ? CONFIG.colors.light.background
           : CONFIG.colors.dark.background,

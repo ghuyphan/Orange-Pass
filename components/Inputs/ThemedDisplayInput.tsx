@@ -3,6 +3,7 @@ import React, {
   useMemo,
   forwardRef,
   useEffect,
+  useCallback,
 } from "react";
 import {
   StyleSheet,
@@ -11,11 +12,11 @@ import {
   View,
   Pressable,
   Image,
+  TextStyle
 } from "react-native";
 import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { ThemedText } from "../ThemedText";
-import { ThemedView } from "../ThemedView";
 import { useTheme } from "@/context/ThemeContext";
 import { Colors } from "@/constants/Colors";
 import { getIconPath } from "@/utils/returnIcon";
@@ -24,7 +25,7 @@ import {
   getResponsiveWidth,
   getResponsiveHeight,
 } from "@/utils/responsive";
-import { useGlassStyle } from "@/hooks/useGlassStyle"; // Import the new hook
+import { useGlassStyle } from "@/hooks/useGlassStyle";
 
 import Animated, {
   useSharedValue,
@@ -38,52 +39,77 @@ import Animated, {
 
 const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
 
-const SHIMMER_STRIP_WIDTH = getResponsiveWidth(25);
-const SHIMMER_DURATION = 1500;
-const LOADING_LINE_HEIGHT = getResponsiveHeight(0.25);
-
 export type ThemedDisplayInputProps = {
-  iconName?: keyof typeof MaterialCommunityIcons.glyphMap;
-  logoCode?: string;
+  // Core Display Props
   label?: string;
   value?: string;
   placeholder?: string;
-  style?: StyleProp<ViewStyle>;
-  isError?: boolean;
-  errorMessage?: string;
+
+  // Iconography
+  iconName?: keyof typeof MaterialCommunityIcons.glyphMap;
+  logoCode?: string;
+
+  // Interaction & Modes
+  isLoading?: boolean;
+  disabled?: boolean;
   onPress?: () => void;
   onClear?: () => void;
   showClearButton?: boolean;
-  disabled?: boolean;
+
+  // Error Handling
+  isError?: boolean;
+  errorMessage?: string;
+
+  // Styling
+  style?: StyleProp<ViewStyle>;
+  inputStyle?: StyleProp<TextStyle>;
+  labelStyle?: StyleProp<TextStyle>;
+  iconStyle?: StyleProp<TextStyle>;
+  errorTextStyle?: StyleProp<TextStyle>;
   backgroundColor?: string;
-  isLoading?: boolean;
+  required?: boolean;
+
+  // Grouping Props
+  groupPosition?: "single" | "top" | "middle" | "bottom";
 };
 
 export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
   (
     {
+      // Core
+      label,
+      value = "",
+      placeholder,
+      // Icons
       iconName,
       logoCode,
-      label,
-      placeholder,
-      value = "",
-      style,
+      // Modes
+      isLoading = false,
+      disabled = false,
+      onPress = () => { },
+      onClear = () => { },
+      showClearButton = true,
+      // Error
       isError = false,
       errorMessage = "",
-      onPress = () => {},
-      onClear = () => {},
-      showClearButton = true,
-      disabled = false,
+      // Styling
+      style,
+      inputStyle,
+      labelStyle,
+      iconStyle,
+      errorTextStyle,
       backgroundColor,
-      isLoading = false,
+      required = false,
+      // Grouping
+      groupPosition = "single",
     },
     ref
   ) => {
     const { currentTheme } = useTheme();
-    const { overlayColor, borderColor: glassBorderColor } = useGlassStyle(); // Use the hook
-    const [displayValue, setDisplayValue] = useState(value);
-    const [inputRowWidth, setInputRowWidth] = useState(0);
+    const { overlayColor, borderColor: glassBorderColor } = useGlassStyle();
+    const [inputWidth, setInputWidth] = useState(0);
 
+    // --- Setup Colors & Icons ---
     const color =
       currentTheme === "light" ? Colors.light.text : Colors.dark.text;
     const placeholderColor =
@@ -92,290 +118,266 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
         : Colors.dark.placeHolder;
     const errorColor =
       currentTheme === "light" ? Colors.light.error : Colors.dark.error;
-    const iconPath = useMemo(() => getIconPath(logoCode ?? ""), [logoCode]);
+    const iconPath = getIconPath(logoCode ?? "");
 
-    const themedInputBackgroundColor =
-      backgroundColor ??
-      (currentTheme === "light"
-        ? Colors.light.inputBackground
-        : Colors.dark.inputBackground);
-
-    const inputContainerStyle = useMemo(
-      () => [
-        styles.inputContainer,
-        {
-          backgroundColor: themedInputBackgroundColor,
-          borderColor: glassBorderColor, // Use border color from hook
-        },
-      ],
-      [currentTheme, themedInputBackgroundColor, glassBorderColor]
-    );
-
-    const animatedBorderWidth = useSharedValue(
-      isError && errorMessage ? getResponsiveWidth(0.3) : 0
-    );
+    // --- Animations ---
+    const animatedOpacity = useSharedValue(1);
     const errorTextHeight = useSharedValue(0);
     const errorTextOpacity = useSharedValue(0);
     const errorShakeValue = useSharedValue(0);
-    const shimmerProgress = useSharedValue(0);
+    const errorBackgroundOpacity = useSharedValue(0);
+    const groupErrorBorderWidth = useSharedValue(0);
+    const shimmerProgress = useSharedValue(-1);
 
-    const animatedBorderStyle = useAnimatedStyle(() => ({
-      borderBottomWidth: animatedBorderWidth.value,
-    }));
-
-    const animatedErrorTextStyle = useAnimatedStyle(() => ({
-      height: errorTextHeight.value,
-      opacity: errorTextOpacity.value,
-      overflow: "hidden",
-    }));
-
-    const animatedErrorIconStyle = useAnimatedStyle(() => ({
-      transform: [{ translateX: errorShakeValue.value }],
-    }));
-
-    const shimmerGradientColors = useMemo(() => {
-      const baseBg =
-        currentTheme === "light"
-          ? Colors.light.inputBackground
-          : Colors.dark.inputBackground;
-      const tint =
-        currentTheme === "light" ? Colors.light.tint : Colors.dark.tint;
-
-      const transparentVersion = (hex: string) => {
-        let r = 0,
-          g = 0,
-          b = 0;
-        if (hex.length === 4) {
-          r = parseInt(hex[1] + hex[1], 16);
-          g = parseInt(hex[2] + hex[2], 16);
-          b = parseInt(hex[3] + hex[3], 16);
-        } else if (hex.length === 7) {
-          r = parseInt(hex[1] + hex[2], 16);
-          g = parseInt(hex[3] + hex[4], 16);
-          b = parseInt(hex[5] + hex[6], 16);
-        }
-        return `rgba(${r}, ${g}, ${b}, 0.1)`;
-      };
-
-      const shimmerBase = transparentVersion(baseBg);
-      const shimmerHighlight = tint;
-
-      return [shimmerBase, shimmerHighlight, shimmerBase];
-    }, [currentTheme]);
-
-    const animatedLeftShimmerStyle = useAnimatedStyle(() => {
-      if (inputRowWidth === 0) return { transform: [{ translateX: -10000 }] };
-      const startX = inputRowWidth / 2 - SHIMMER_STRIP_WIDTH / 2;
-      const endX = -SHIMMER_STRIP_WIDTH;
-      const currentX = startX + shimmerProgress.value * (endX - startX);
-      return {
-        transform: [{ translateX: currentX }],
-      };
-    });
-
-    const animatedRightShimmerStyle = useAnimatedStyle(() => {
-      if (inputRowWidth === 0) return { transform: [{ translateX: 10000 }] };
-      const startX = inputRowWidth / 2 - SHIMMER_STRIP_WIDTH / 2;
-      const endX = inputRowWidth;
-      const currentX = startX + shimmerProgress.value * (endX - startX);
-      return {
-        transform: [{ translateX: currentX }],
-      };
-    });
+    // --- Effects ---
+    useEffect(() => {
+      const targetOpacity = disabled && !isLoading ? 0.5 : 1;
+      animatedOpacity.value = withTiming(targetOpacity, { duration: 200 });
+    }, [disabled, isLoading]);
 
     useEffect(() => {
-      if (isLoading && inputRowWidth > 0) {
-        shimmerProgress.value = 0;
-        shimmerProgress.value = withRepeat(
-          withTiming(1, {
-            duration: SHIMMER_DURATION,
-            easing: Easing.linear,
-          }),
-          -1,
-          false
-        );
-      } else {
-        cancelAnimation(shimmerProgress);
-        shimmerProgress.value = 0;
-      }
-    }, [isLoading, inputRowWidth, shimmerProgress]);
-
-    useEffect(() => {
-      if (isError && errorMessage) {
-        animatedBorderWidth.value = withTiming(getResponsiveWidth(0.3), {
+      const shouldShowError = isError && errorMessage;
+      if (shouldShowError && groupPosition === "single") {
+        errorTextHeight.value = withTiming(getResponsiveHeight(2.2), {
           duration: 200,
-        });
-        errorTextHeight.value = withTiming(getResponsiveHeight(2.5), {
-          duration: 200,
-          easing: Easing.out(Easing.ease),
         });
         errorTextOpacity.value = withTiming(1, { duration: 250 });
         errorShakeValue.value = withSequence(
-          withTiming(-getResponsiveWidth(1), { duration: 50 }),
-          withTiming(getResponsiveWidth(1), { duration: 50 }),
-          withTiming(-getResponsiveWidth(0.7), { duration: 50 }),
-          withTiming(getResponsiveWidth(0.7), { duration: 50 }),
+          withTiming(-5, { duration: 50 }),
+          withTiming(5, { duration: 50 }),
+          withTiming(-2, { duration: 50 }),
+          withTiming(2, { duration: 50 }),
           withTiming(0, { duration: 50 })
         );
       } else {
-        animatedBorderWidth.value = withTiming(0, { duration: 200 });
         errorTextHeight.value = withTiming(0, { duration: 150 });
         errorTextOpacity.value = withTiming(0, { duration: 100 });
       }
-    }, [isError, errorMessage]);
+
+      errorBackgroundOpacity.value = withTiming(shouldShowError ? 0.04 : 0, {
+        duration: 200,
+      });
+      groupErrorBorderWidth.value = withTiming(
+        shouldShowError && groupPosition === "single"
+          ? getResponsiveWidth(0.25)
+          : 0,
+        { duration: 200 }
+      );
+    }, [isError, errorMessage, groupPosition]);
 
     useEffect(() => {
-      setDisplayValue(value);
-    }, [value]);
+      if (isLoading && inputWidth > 0) {
+        shimmerProgress.value = withRepeat(
+          withTiming(1, { duration: 1200, easing: Easing.inOut(Easing.ease) }),
+          -1,
+          true
+        );
+      } else {
+        cancelAnimation(shimmerProgress);
+        shimmerProgress.value = withTiming(-1, { duration: 300 });
+      }
+    }, [isLoading, inputWidth]);
 
-    const handleClear = () => {
-      setDisplayValue("");
-      onClear();
+    // --- Animated Styles ---
+    const animatedContainerStyle = useAnimatedStyle(() => ({
+      opacity: animatedOpacity.value,
+    }));
+    const animatedErrorBackgroundStyle = useAnimatedStyle(() => ({
+      backgroundColor: `rgba(${currentTheme === "light" ? "220, 53, 69" : "248, 81, 73"
+        }, ${errorBackgroundOpacity.value})`,
+    }));
+    const animatedErrorTextStyle = useAnimatedStyle(() => ({
+      height: errorTextHeight.value,
+      opacity: errorTextOpacity.value,
+    }));
+    const animatedErrorIconStyle = useAnimatedStyle(() => ({
+      transform: [{ translateX: errorShakeValue.value }],
+    }));
+    const animatedSingleWrapperStyle = useAnimatedStyle(() => ({
+      borderBottomWidth: groupErrorBorderWidth.value,
+      borderBottomColor: errorColor,
+    }));
+    const animatedShimmerStyle = useAnimatedStyle(() => {
+      const shimmerWidth = inputWidth * 0.8;
+      const translateX =
+        (shimmerProgress.value - 0.5) * (inputWidth + shimmerWidth);
+      return {
+        width: shimmerWidth,
+        transform: [{ translateX }],
+        opacity: isLoading ? 1 : 0,
+      };
+    });
+    const animatedContentStyle = useAnimatedStyle(() => ({
+      opacity: withTiming(isLoading ? 0.3 : 1),
+    }));
+
+    // --- Style Computations ---
+    const getGroupedStyles = () => {
+      switch (groupPosition) {
+        case "top":
+          return styles.groupTop;
+        case "middle":
+          return styles.groupMiddle;
+        case "bottom":
+          return styles.groupBottom;
+        default:
+          return styles.groupSingle;
+      }
     };
 
-    return (
-      <View style={[styles.container, style]}>
-        <ThemedView style={inputContainerStyle}>
-          <View
-            style={[styles.defaultOverlay, { backgroundColor: overlayColor }]}
-          />
-          {!iconName && !logoCode && !isLoading && (
-            <ThemedText style={[styles.label, { color }]} type="defaultSemiBold">
-              {label}
-            </ThemedText>
+    const isEffectivelyDisabled = disabled || isLoading;
+    const hasValue = value.length > 0;
+
+    const containerStyle = [
+      styles.container,
+      groupPosition !== "single" && { marginBottom: 0 },
+      style,
+    ];
+
+    const inputContainerStyle = [
+      styles.inputContainer,
+      {
+        backgroundColor:
+          backgroundColor ??
+          (currentTheme === "light"
+            ? Colors.light.inputBackground
+            : Colors.dark.inputBackground),
+        borderColor: glassBorderColor,
+      },
+      getGroupedStyles(),
+    ];
+
+    // --- Render Logic ---
+    const InputContent = (
+      <Pressable
+        ref={ref}
+        onPress={onPress}
+        disabled={isEffectivelyDisabled}
+        style={[inputContainerStyle, animatedContainerStyle]}
+        onLayout={(e) => setInputWidth(e.nativeEvent.layout.width)}
+      >
+        {/* Overlays */}
+        <View
+          style={[styles.defaultOverlay, { backgroundColor: overlayColor }]}
+        />
+        <Animated.View
+          style={[styles.defaultOverlay, animatedErrorBackgroundStyle]}
+        />
+
+        <Animated.View style={[styles.contentWrapper, animatedContentStyle]}>
+          {/* Label */}
+          {label && (
+            <View style={styles.labelContainer}>
+              <ThemedText
+                style={[styles.label, { color }, labelStyle]}
+                type="defaultSemiBold"
+              >
+                {label}
+                {required && (
+                  <ThemedText style={{ color: errorColor }}> *</ThemedText>
+                )}
+              </ThemedText>
+            </View>
           )}
 
-          <Pressable
-            onPress={onPress}
-            disabled={disabled || isLoading}
-            style={styles.pressableContainer}
-          >
-            <Animated.View
-              onLayout={(event) => {
-                setInputRowWidth(event.nativeEvent.layout.width);
-              }}
-              style={[
-                styles.inputRow,
-                { borderBottomColor: errorColor },
-                animatedBorderStyle,
-              ]}
-            >
-              {isLoading && inputRowWidth > 0 && (
-                <>
-                  <AnimatedLinearGradient
-                    style={[styles.shimmerStrip, animatedLeftShimmerStyle]}
-                    colors={shimmerGradientColors}
-                    start={{ x: 0, y: 0.5 }}
-                    end={{ x: 1, y: 0.5 }}
-                    locations={[0.2, 0.5, 0.8]}
-                  />
-                  <AnimatedLinearGradient
-                    style={[styles.shimmerStrip, animatedRightShimmerStyle]}
-                    colors={shimmerGradientColors}
-                    start={{ x: 0, y: 0.5 }}
-                    end={{ x: 1, y: 0.5 }}
-                    locations={[0.2, 0.5, 0.8]}
-                  />
-                </>
-              )}
+          {/* Main Content */}
+          <View style={styles.inputRow}>
+            {iconName && (
+              <MaterialCommunityIcons
+                name={iconName}
+                size={getResponsiveFontSize(16)}
+                color={placeholderColor}
+                style={[styles.leftIcon, iconStyle]}
+              />
+            )}
+            {logoCode && (
+              <View style={styles.logoContainer}>
+                <Image
+                  source={iconPath}
+                  style={styles.logo}
+                  resizeMode="contain"
+                />
+              </View>
+            )}
 
-              <View
-                style={[
-                  styles.inputContentContainer,
-                  isLoading && styles.contentHidden,
-                ]}
-              >
-                {iconName && (
-                  <MaterialCommunityIcons
-                    name={iconName}
-                    size={getResponsiveFontSize(18)}
-                    color={placeholderColor}
+            <ThemedText
+              style={[
+                styles.input,
+                { color: hasValue ? color : placeholderColor },
+                inputStyle,
+              ]}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {hasValue ? value : placeholder}
+            </ThemedText>
+
+            {/* Right Icons */}
+            <View style={styles.rightContainer}>
+              {showClearButton && hasValue && !isEffectivelyDisabled && (
+                <Pressable
+                  onPress={onClear}
+                  style={styles.iconButton}
+                  hitSlop={styles.hitSlop}
+                >
+                  <MaterialIcons
+                    name="cancel"
+                    size={getResponsiveFontSize(16)}
+                    color={color}
                   />
-                )}
-                {logoCode && (
-                  <View
-                    style={[
-                      styles.logoContainer,
-                      { marginLeft: iconName ? getResponsiveWidth(2.4) : 0 },
-                    ]}
-                  >
-                    <Image
-                      source={iconPath}
-                      style={styles.logo}
-                      resizeMode="contain"
-                    />
-                  </View>
-                )}
+                </Pressable>
+              )}
+              {isError && errorMessage && !isLoading && (
+                <Animated.View style={animatedErrorIconStyle}>
+                  <MaterialIcons
+                    name="error-outline"
+                    size={getResponsiveFontSize(16)}
+                    color={errorColor}
+                  />
+                </Animated.View>
+              )}
+            </View>
+          </View>
+        </Animated.View>
+
+        {/* Loading Shimmer */}
+        {isLoading && (
+          <AnimatedLinearGradient
+            style={[styles.shimmer, animatedShimmerStyle]}
+            colors={[`${color}00`, `${color}33`, `${color}00`]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+          />
+        )}
+      </Pressable>
+    );
+
+    return (
+      <View style={containerStyle}>
+        {groupPosition === "single" ? (
+          <Animated.View
+            style={[styles.inputGroupWrapper, animatedSingleWrapperStyle]}
+          >
+            {InputContent}
+            <Animated.View
+              style={[styles.errorContainer, animatedErrorTextStyle]}
+            >
+              {isError && errorMessage && (
                 <ThemedText
                   style={[
-                    styles.input,
-                    {
-                      color: displayValue ? color : placeholderColor,
-                      marginLeft:
-                        iconName || logoCode ? getResponsiveWidth(2.4) : 0,
-                    },
+                    styles.errorText,
+                    { color: errorColor },
+                    errorTextStyle,
                   ]}
-                  numberOfLines={1}
-                  ellipsizeMode="tail"
+                  numberOfLines={2}
                 >
-                  {displayValue || placeholder}
+                  {errorMessage}
                 </ThemedText>
-
-                <View style={styles.rightContainer}>
-                  {showClearButton &&
-                    !disabled &&
-                    !isLoading &&
-                    displayValue.length > 0 && (
-                      <Pressable
-                        onPress={handleClear}
-                        style={styles.iconTouchable}
-                        hitSlop={{
-                          top: getResponsiveHeight(0.6),
-                          bottom: getResponsiveHeight(0.6),
-                          left: getResponsiveWidth(1.2),
-                          right: getResponsiveWidth(1.2),
-                        }}
-                      >
-                        <MaterialIcons
-                          name="cancel"
-                          color={color}
-                          size={getResponsiveFontSize(16)}
-                        />
-                      </Pressable>
-                    )}
-                  {isError && errorMessage && !isLoading && (
-                    <Animated.View
-                      style={[
-                        styles.errorIconContainer,
-                        animatedErrorIconStyle,
-                      ]}
-                    >
-                      <MaterialIcons
-                        name="error-outline"
-                        size={getResponsiveWidth(5)}
-                        color={errorColor}
-                      />
-                    </Animated.View>
-                  )}
-                </View>
-              </View>
+              )}
             </Animated.View>
-          </Pressable>
-        </ThemedView>
-
-        {!isLoading && (
-          <Animated.View
-            style={[styles.errorContainer, animatedErrorTextStyle]}
-          >
-            {isError && errorMessage && (
-              <ThemedText
-                style={[styles.errorText, { color: errorColor }]}
-                numberOfLines={1}
-              >
-                {errorMessage}
-              </ThemedText>
-            )}
           </Animated.View>
+        ) : (
+          InputContent
         )}
       </View>
     );
@@ -385,29 +387,58 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
 ThemedDisplayInput.displayName = "ThemedDisplayInput";
 
 const styles = StyleSheet.create({
-  container: {
-    flexDirection: "column",
+  // --- Containers ---
+  container: { width: "100%", marginBottom: getResponsiveHeight(1) },
+  inputGroupWrapper: {
+    borderRadius: getResponsiveWidth(3.5),
+    overflow: "hidden",
+    marginBottom: getResponsiveHeight(1),
   },
   inputContainer: {
-    paddingVertical: getResponsiveHeight(1.8),
-    paddingHorizontal: getResponsiveWidth(4.8),
-    borderRadius: getResponsiveWidth(4),
-    flexDirection: "column",
-    borderWidth: 1, // Default border for the glass effect
-    overflow: "hidden", // Important for overlay's border radius
+    borderWidth: 1,
+    justifyContent: "center",
+    overflow: "hidden",
   },
-  defaultOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 0, // Ensure it's behind the content
+  contentWrapper: {
+    paddingHorizontal: getResponsiveWidth(3.5),
+    paddingVertical: getResponsiveHeight(1.2),
   },
-  pressableContainer: {
-    width: "100%",
+  inputRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    minHeight: getResponsiveHeight(2.8),
   },
+  rightContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: getResponsiveWidth(2),
+    marginLeft: getResponsiveWidth(2),
+  },
+  // --- Grouping Styles ---
+  groupSingle: { borderRadius: getResponsiveWidth(3.5) },
+  groupTop: {
+    borderTopLeftRadius: getResponsiveWidth(3.5),
+    borderTopRightRadius: getResponsiveWidth(3.5),
+  },
+  groupMiddle: { borderRadius: 0 },
+  groupBottom: {
+    borderBottomLeftRadius: getResponsiveWidth(3.5),
+    borderBottomRightRadius: getResponsiveWidth(3.5),
+  },
+  // --- Elements ---
+  labelContainer: { marginBottom: getResponsiveHeight(1) },
   label: {
-    fontSize: getResponsiveFontSize(13),
-    marginBottom: getResponsiveHeight(0.5),
-    zIndex: 1, // Ensure label is on top of the overlay
+    fontSize: getResponsiveFontSize(12),
+    opacity: 0.7,
+    lineHeight: getResponsiveHeight(2),
   },
+  input: {
+    fontSize: getResponsiveFontSize(15),
+    flex: 1,
+    lineHeight: getResponsiveHeight(2.4),
+  },
+  // --- Icons ---
+  leftIcon: { marginRight: getResponsiveWidth(2.5) },
   logoContainer: {
     width: getResponsiveWidth(6),
     height: getResponsiveWidth(6),
@@ -415,59 +446,30 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "white",
     borderRadius: getResponsiveWidth(6),
+    marginRight: getResponsiveWidth(2.5),
   },
-  logo: {
-    width: "55%",
-    height: "55%",
-  },
-  inputRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    minHeight: getResponsiveHeight(3.6),
-    position: "relative",
-    overflow: "hidden",
-  },
-  inputContentContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
+  logo: { width: "55%", height: "55%" },
+  iconButton: { padding: getResponsiveWidth(0.5) },
+  hitSlop: { top: 8, bottom: 8, left: 8, right: 8 },
+  // --- Overlays & Effects ---
+  defaultOverlay: { ...StyleSheet.absoluteFillObject, zIndex: -2 },
+  shimmer: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: 0,
+    borderRadius: getResponsiveHeight(0.25),
     zIndex: 1,
   },
-  contentHidden: {
-    opacity: 0.3,
-  },
-  input: {
-    fontSize: getResponsiveFontSize(16),
-    flex: 1,
-    marginRight: getResponsiveWidth(2.4),
-  },
-  rightContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: getResponsiveWidth(2.4),
-  },
-  iconTouchable: {
-    borderRadius: getResponsiveWidth(12),
-    overflow: "hidden",
-  },
-  errorIconContainer: {
-    marginLeft: getResponsiveWidth(1.2),
-    padding: getResponsiveWidth(0.5),
-  },
+  // --- Error States ---
   errorContainer: {
-    marginHorizontal: getResponsiveWidth(4.8),
+    marginHorizontal: getResponsiveWidth(3.5),
+    marginTop: getResponsiveHeight(0.5),
     justifyContent: "center",
   },
   errorText: {
     fontSize: getResponsiveFontSize(11),
-    lineHeight: getResponsiveHeight(2.2),
-  },
-  shimmerStrip: {
-    position: "absolute",
-    bottom: 0,
-    height: LOADING_LINE_HEIGHT,
-    width: SHIMMER_STRIP_WIDTH,
-    zIndex: 0,
+    lineHeight: getResponsiveHeight(1.8),
   },
 });
 

@@ -63,22 +63,8 @@ export type ThemedInputProps = {
   rightButtonIconName?: keyof typeof MaterialCommunityIcons.glyphMap;
   onRightButtonPress?: () => void;
   rightButtonIconStyle?: StyleProp<TextStyle>;
-  /**
-   * Defines the input's position within a group to adjust border radius.
-   * 'single': (Default) A standalone input with all corners rounded.
-   * 'top': The first input in a group, with top corners rounded.
-   * 'middle': An input in the middle of a group, with no rounded corners.
-   * 'bottom': The last input in a group, with bottom corners rounded.
-   */
   groupPosition?: "single" | "top" | "middle" | "bottom";
-  /**
-   * If true, shows a thin separator line at the bottom.
-   * Automatically applied for 'top' and 'middle' group positions.
-   */
   showSeparator?: boolean;
-  /**
-   * Group-level error handling - prevents individual borders from breaking group appearance
-   */
   groupId?: string;
   showIndividualErrors?: boolean;
   suppressGroupErrorBorder?: boolean;
@@ -118,10 +104,10 @@ export const ThemedInput = forwardRef<
       errorMessage = "",
       secureTextEntry = false,
       keyboardType = "default",
-      onChangeText = () => {},
-      onBlur = () => {},
-      onFocus = () => {},
-      onSubmitEditing = () => {},
+      onChangeText = () => { },
+      onBlur = () => { },
+      onFocus = () => { },
+      onSubmitEditing = () => { },
       disabled = false,
       backgroundColor,
       disableOpacityChange = false,
@@ -168,15 +154,11 @@ export const ThemedInput = forwardRef<
     const targetOpacity = disabled && !disableOpacityChange ? 0.5 : 1;
     const animatedOpacity = useSharedValue(targetOpacity);
 
-    // Individual error text handling
+    // Animation values
     const errorTextHeight = useSharedValue(0);
     const errorTextOpacity = useSharedValue(0);
     const errorShakeValue = useSharedValue(0);
-
-    // Error background tint for inputs with errors
     const errorBackgroundOpacity = useSharedValue(0);
-
-    // Group error border for single inputs (like InputGroup)
     const groupErrorBorderWidth = useSharedValue(0);
 
     useEffect(() => {
@@ -184,36 +166,23 @@ export const ThemedInput = forwardRef<
     }, [disabled, disableOpacityChange]);
 
     useEffect(() => {
-      // Handle individual error text for single inputs
-      if (isError && errorMessage && groupPosition === "single") {
-        errorTextHeight.value = withTiming(getResponsiveHeight(2.5), {
+      const shouldShowError = isError && errorMessage;
+      const shouldShowIndividualError =
+        shouldShowError &&
+        ((groupPosition === "single") ||
+          (groupPosition !== "single" && showIndividualErrors));
+
+      if (shouldShowIndividualError) {
+        errorTextHeight.value = withTiming(getResponsiveHeight(2.2), {
           duration: 200,
           easing: Easing.out(Easing.ease),
         });
         errorTextOpacity.value = withTiming(1, { duration: 250 });
         errorShakeValue.value = withSequence(
-          withTiming(-getResponsiveWidth(1), { duration: 50 }),
-          withTiming(getResponsiveWidth(1), { duration: 50 }),
-          withTiming(-getResponsiveWidth(0.7), { duration: 50 }),
-          withTiming(getResponsiveWidth(0.7), { duration: 50 }),
-          withTiming(0, { duration: 50 })
-        );
-      } else if (
-        isError &&
-        errorMessage &&
-        groupPosition !== "single" &&
-        showIndividualErrors
-      ) {
-        errorTextHeight.value = withTiming(getResponsiveHeight(2.5), {
-          duration: 200,
-          easing: Easing.out(Easing.ease),
-        });
-        errorTextOpacity.value = withTiming(1, { duration: 250 });
-        errorShakeValue.value = withSequence(
-          withTiming(-getResponsiveWidth(1), { duration: 50 }),
-          withTiming(getResponsiveWidth(1), { duration: 50 }),
-          withTiming(-getResponsiveWidth(0.7), { duration: 50 }),
-          withTiming(getResponsiveWidth(0.7), { duration: 50 }),
+          withTiming(-getResponsiveWidth(0.8), { duration: 50 }),
+          withTiming(getResponsiveWidth(0.8), { duration: 50 }),
+          withTiming(-getResponsiveWidth(0.5), { duration: 50 }),
+          withTiming(getResponsiveWidth(0.5), { duration: 50 }),
           withTiming(0, { duration: 50 })
         );
       } else {
@@ -221,16 +190,16 @@ export const ThemedInput = forwardRef<
         errorTextOpacity.value = withTiming(0, { duration: 100 });
       }
 
-      // Error background tint for all inputs with errors
-      if (isError) {
-        errorBackgroundOpacity.value = withTiming(0.05, { duration: 200 });
+      // Error background tint
+      if (shouldShowError) {
+        errorBackgroundOpacity.value = withTiming(0.04, { duration: 200 });
       } else {
         errorBackgroundOpacity.value = withTiming(0, { duration: 200 });
       }
 
-      // Group-style error border for single inputs
-      if (isError && errorMessage && groupPosition === "single") {
-        groupErrorBorderWidth.value = withTiming(getResponsiveWidth(0.3), {
+      // Group error border for single inputs
+      if (shouldShowError && groupPosition === "single") {
+        groupErrorBorderWidth.value = withTiming(getResponsiveWidth(0.25), {
           duration: 200,
         });
       } else {
@@ -258,9 +227,8 @@ export const ThemedInput = forwardRef<
     }));
 
     const animatedErrorBackgroundStyle = useAnimatedStyle(() => ({
-      backgroundColor: `rgba(${
-        currentTheme === "light" ? "220, 53, 69" : "248, 81, 73"
-      }, ${errorBackgroundOpacity.value})`,
+      backgroundColor: `rgba(${currentTheme === "light" ? "220, 53, 69" : "248, 81, 73"
+        }, ${errorBackgroundOpacity.value})`,
     }));
 
     const onClearValue = useCallback(() => {
@@ -307,9 +275,9 @@ export const ThemedInput = forwardRef<
       if (onRightButtonPress && !disabled) onRightButtonPress();
     }, [onRightButtonPress, disabled]);
 
-    // Improved grouping logic
+    // Grouping styles
     const getGroupedStyles = () => {
-      const radius = getResponsiveWidth(4);
+      const radius = getResponsiveWidth(3.5);
 
       switch (groupPosition) {
         case "top":
@@ -356,10 +324,9 @@ export const ThemedInput = forwardRef<
             ? Colors.light.inputBackground
             : Colors.dark.inputBackground),
         borderColor: glassBorderColor,
+        minHeight: label ? getResponsiveHeight(4.8) : getResponsiveHeight(3.8),
       },
       getGroupedStyles(),
-      // Add proper height for labels
-      label && { minHeight: label ? getResponsiveHeight(6.5) : getResponsiveHeight(4.5) },
     ];
 
     const containerStyle = [
@@ -403,13 +370,13 @@ export const ThemedInput = forwardRef<
             </View>
           )}
 
-          <View style={[styles.inputRow, label && styles.inputRowWithLabel]}>
+          <View style={styles.inputRow}>
             {iconName && (
               <MaterialCommunityIcons
                 name={iconName}
-                size={getResponsiveFontSize(16)}
+                size={getResponsiveFontSize(15)}
                 color={placeholderColor}
-                style={iconStyle}
+                style={[styles.leftIcon, iconStyle]}
               />
             )}
 
@@ -420,7 +387,7 @@ export const ThemedInput = forwardRef<
                 styles.input,
                 {
                   color: disabled ? placeholderColor : color,
-                  marginLeft: iconName ? getResponsiveWidth(2.5) : 0,
+                  marginLeft: iconName ? getResponsiveWidth(2) : 0,
                 },
                 inputStyle,
               ]}
@@ -436,24 +403,20 @@ export const ThemedInput = forwardRef<
               keyboardType={keyboardType}
               editable={!disabled}
               cursorColor={color}
+              textAlignVertical="center"
             />
 
             <View style={styles.rightContainer}>
               {rightButtonIconName && onRightButtonPress && (
                 <Pressable
                   onPress={handleRightButtonPress}
-                  style={styles.iconTouchable}
-                  hitSlop={{
-                    top: getResponsiveHeight(0.6),
-                    bottom: getResponsiveHeight(0.6),
-                    left: getResponsiveWidth(1.2),
-                    right: getResponsiveWidth(1.2),
-                  }}
+                  style={styles.iconButton}
+                  hitSlop={styles.hitSlop}
                   disabled={disabled}
                 >
                   <MaterialCommunityIcons
                     name={rightButtonIconName}
-                    size={getResponsiveFontSize(16)}
+                    size={getResponsiveFontSize(15)}
                     color={color}
                     style={[
                       {
@@ -468,18 +431,13 @@ export const ThemedInput = forwardRef<
               {localValue.length > 0 && (
                 <Pressable
                   onPress={disabled ? undefined : onClearValue}
-                  style={styles.iconTouchable}
-                  hitSlop={{
-                    top: getResponsiveHeight(0.6),
-                    bottom: getResponsiveHeight(0.6),
-                    left: getResponsiveWidth(1.2),
-                    right: getResponsiveWidth(1.2),
-                  }}
+                  style={styles.iconButton}
+                  hitSlop={styles.hitSlop}
                   disabled={disabled}
                 >
                   <MaterialIcons
                     name="cancel"
-                    size={getResponsiveFontSize(16)}
+                    size={getResponsiveFontSize(15)}
                     color={color}
                     style={{
                       opacity: disabled && !disableOpacityChange ? 0.5 : 1,
@@ -491,18 +449,13 @@ export const ThemedInput = forwardRef<
               {localValue.length > 0 && secureTextEntry && (
                 <Pressable
                   onPress={disabled ? undefined : onToggleSecureValue}
-                  style={styles.iconTouchable}
-                  hitSlop={{
-                    top: getResponsiveHeight(0.6),
-                    bottom: getResponsiveHeight(0.6),
-                    left: getResponsiveWidth(1.2),
-                    right: getResponsiveWidth(1.2),
-                  }}
+                  style={styles.iconButton}
+                  hitSlop={styles.hitSlop}
                   disabled={disabled}
                 >
                   <MaterialIcons
                     name={isSecure ? "visibility" : "visibility-off"}
-                    size={getResponsiveWidth(4)}
+                    size={getResponsiveFontSize(15)}
                     color={color}
                     style={{
                       opacity: disabled && !disableOpacityChange ? 0.5 : 1,
@@ -516,8 +469,8 @@ export const ThemedInput = forwardRef<
                   style={[styles.errorIconContainer, animatedErrorIconStyle]}
                 >
                   <MaterialIcons
-                    name="error-outline"
-                    size={getResponsiveWidth(4)}
+                    name="error"
+                    size={getResponsiveFontSize(15)}
                     color={errorColor}
                   />
                 </Animated.View>
@@ -530,13 +483,11 @@ export const ThemedInput = forwardRef<
 
     return (
       <View style={containerStyle}>
-        {/* For single inputs, wrap in group-like container */}
         {groupPosition === "single" ? (
           <Animated.View
             style={[styles.inputGroupWrapper, animatedSingleWrapperStyle]}
           >
             {InputContent}
-            {/* Error text inside the wrapper for single inputs */}
             <Animated.View
               style={[styles.errorContainer, animatedErrorTextStyle]}
             >
@@ -547,7 +498,7 @@ export const ThemedInput = forwardRef<
                     { color: errorColor },
                     errorTextStyle,
                   ]}
-                  numberOfLines={1}
+                  numberOfLines={2}
                 >
                   {errorMessage}
                 </ThemedText>
@@ -557,7 +508,6 @@ export const ThemedInput = forwardRef<
         ) : (
           <>
             {InputContent}
-            {/* Error text outside for grouped inputs when showIndividualErrors is true */}
             <Animated.View
               style={[styles.errorContainer, animatedErrorTextStyle]}
             >
@@ -568,7 +518,7 @@ export const ThemedInput = forwardRef<
                     { color: errorColor },
                     errorTextStyle,
                   ]}
-                  numberOfLines={1}
+                  numberOfLines={2}
                 >
                   {errorMessage}
                 </ThemedText>
@@ -581,7 +531,7 @@ export const ThemedInput = forwardRef<
   }
 );
 
-// Input Group Component for managing multiple inputs with consolidated errors
+// Input Group Component
 export const InputGroup: React.FC<InputGroupProps> = ({
   children,
   errors = [],
@@ -605,16 +555,16 @@ export const InputGroup: React.FC<InputGroupProps> = ({
   useEffect(() => {
     if (hasErrors && showConsolidatedErrors) {
       const estimatedHeight =
-        getResponsiveHeight(2.5) * displayErrors.length +
-        (hasMoreErrors ? getResponsiveHeight(2.5) : 0) +
-        getResponsiveHeight(1); // padding
+        getResponsiveHeight(2.2) * displayErrors.length +
+        (hasMoreErrors ? getResponsiveHeight(2.2) : 0) +
+        getResponsiveHeight(0.8);
 
       errorTextHeight.value = withTiming(estimatedHeight, {
         duration: 200,
         easing: Easing.out(Easing.ease),
       });
       errorTextOpacity.value = withTiming(1, { duration: 250 });
-      groupErrorBorderWidth.value = withTiming(getResponsiveWidth(0.3), {
+      groupErrorBorderWidth.value = withTiming(getResponsiveWidth(0.25), {
         duration: 200,
       });
     } else {
@@ -635,7 +585,6 @@ export const InputGroup: React.FC<InputGroupProps> = ({
     borderBottomColor: errorColor,
   }));
 
-  // Clone children with group-specific props
   const enhancedChildren = React.Children.map(children, (child, index) => {
     if (!React.isValidElement(child)) return child;
 
@@ -649,8 +598,8 @@ export const InputGroup: React.FC<InputGroupProps> = ({
       ...child.props,
       isError: !!childError || child.props.isError,
       errorMessage: childError?.message || child.props.errorMessage,
-      showIndividualErrors: false, // Suppress individual errors in favor of consolidated
-      suppressGroupErrorBorder: true, // Let the group handle the border
+      showIndividualErrors: false,
+      suppressGroupErrorBorder: true,
     });
   });
 
@@ -673,10 +622,10 @@ export const InputGroup: React.FC<InputGroupProps> = ({
           {displayErrors.map((error, index) => (
             <View key={`${error.inputId}-${index}`} style={styles.errorRow}>
               <MaterialIcons
-                name="error-outline"
-                size={getResponsiveFontSize(14)}
+                name="error"
+                size={getResponsiveFontSize(13)}
                 color={errorColor}
-                style={{ marginRight: getResponsiveWidth(1.5) }}
+                style={styles.errorIcon}
               />
               <ThemedText
                 style={[styles.consolidatedErrorText, { color: errorColor }]}
@@ -693,9 +642,9 @@ export const InputGroup: React.FC<InputGroupProps> = ({
             <View style={styles.errorRow}>
               <MaterialIcons
                 name="more-horiz"
-                size={getResponsiveFontSize(14)}
+                size={getResponsiveFontSize(13)}
                 color={errorColor}
-                style={{ marginRight: getResponsiveWidth(1.5) }}
+                style={styles.errorIcon}
               />
               <ThemedText
                 style={[styles.consolidatedErrorText, { color: errorColor }]}
@@ -717,6 +666,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "column",
     width: "100%",
+    marginBottom: getResponsiveHeight(1),
   },
   groupContainer: {
     flexDirection: "column",
@@ -726,16 +676,15 @@ const styles = StyleSheet.create({
   inputGroupWrapper: {
     flexDirection: "column",
     width: "100%",
-    borderRadius: getResponsiveWidth(4),
+    borderRadius: getResponsiveWidth(3.5),
     overflow: "hidden",
-    marginBottom: getResponsiveHeight(1),
   },
   inputContainer: {
     paddingVertical: getResponsiveHeight(1.8),
     paddingHorizontal: getResponsiveWidth(4.8),
     flexDirection: "column",
     borderWidth: 1,
-    overflow: "hidden",
+    justifyContent: "center",
   },
   defaultOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -744,67 +693,82 @@ const styles = StyleSheet.create({
   separator: {
     position: "absolute",
     bottom: 0,
-    left: getResponsiveWidth(4.8),
-    right: getResponsiveWidth(4.8),
+    left: getResponsiveWidth(3.5),
+    right: getResponsiveWidth(3.5),
     height: StyleSheet.hairlineWidth,
     zIndex: 1,
   },
   labelContainer: {
     zIndex: 1,
-    marginBottom: getResponsiveHeight(0.5),
+    marginBottom: getResponsiveHeight(1),
   },
   label: {
-    fontSize: getResponsiveFontSize(13),
-    opacity: 0.6,
+    fontSize: getResponsiveFontSize(12),
+    opacity: 0.7,
+    lineHeight: getResponsiveHeight(2),
   },
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
     zIndex: 1,
+    minHeight: getResponsiveHeight(2.8),
   },
-  inputRowWithLabel: {
-    marginTop: 0, // Remove the margin since we have labelContainer spacing
+  leftIcon: {
+    marginRight: getResponsiveWidth(2),
   },
   input: {
-    fontSize: getResponsiveFontSize(16),
-    height: getResponsiveHeight(3.6),
+    fontSize: getResponsiveFontSize(15),
     flex: 1,
-    marginRight: getResponsiveWidth(2.4),
+    paddingVertical: 0,
+    lineHeight: getResponsiveHeight(2.2),
+    includeFontPadding: false,
   },
   rightContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: getResponsiveWidth(3.6),
+    marginLeft: getResponsiveWidth(2),
   },
-  iconTouchable: {
-    borderRadius: getResponsiveWidth(12),
-    overflow: "hidden",
+  iconButton: {
+    padding: getResponsiveWidth(0.5),
+    marginLeft: getResponsiveWidth(1.5),
+    borderRadius: getResponsiveWidth(2),
+  },
+  hitSlop: {
+    top: getResponsiveHeight(0.5),
+    bottom: getResponsiveHeight(0.5),
+    left: getResponsiveWidth(1),
+    right: getResponsiveWidth(1),
   },
   errorIconContainer: {
+    marginLeft: getResponsiveWidth(1.5),
     padding: getResponsiveWidth(0.5),
   },
   errorContainer: {
-    height: 0,
-    marginHorizontal: getResponsiveWidth(4.8),
+    marginHorizontal: getResponsiveWidth(3.5),
+    marginTop: getResponsiveHeight(0.5),
     justifyContent: "center",
   },
   errorText: {
     fontSize: getResponsiveFontSize(11),
-    lineHeight: getResponsiveHeight(2.2),
+    lineHeight: getResponsiveHeight(1.8),
   },
   consolidatedErrorContainer: {
-    marginHorizontal: getResponsiveWidth(4.8),
-    marginTop: getResponsiveHeight(1),
-    paddingVertical: getResponsiveHeight(0.5),
+    marginHorizontal: getResponsiveWidth(3.5),
+    marginTop: getResponsiveHeight(0.8),
+    paddingVertical: getResponsiveHeight(0.3),
   },
   errorRow: {
     flexDirection: "row",
     alignItems: "flex-start",
-    marginBottom: getResponsiveHeight(0.5),
+    marginBottom: getResponsiveHeight(0.3),
+  },
+  errorIcon: {
+    marginRight: getResponsiveWidth(1.2),
+    marginTop: getResponsiveHeight(0.1),
   },
   consolidatedErrorText: {
-    fontSize: getResponsiveFontSize(12),
-    lineHeight: getResponsiveHeight(2.2),
+    fontSize: getResponsiveFontSize(11),
+    lineHeight: getResponsiveHeight(1.8),
     flex: 1,
   },
 });
