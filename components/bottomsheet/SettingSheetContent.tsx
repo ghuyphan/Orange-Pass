@@ -1,11 +1,23 @@
-import React from 'react';
-import { View, StyleSheet, Pressable, StyleProp, ViewStyle } from 'react-native';
-import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
-import { ThemedText } from '@/components/ThemedText';
-import { useTheme } from '@/context/ThemeContext';
-import { Colors } from '@/constants/Colors';
-import { getResponsiveFontSize, getResponsiveHeight, getResponsiveWidth } from '@/utils/responsive';
-import { t } from '@/i18n';
+import React from "react";
+import {
+  View,
+  StyleSheet,
+  Pressable,
+  StyleProp,
+  ViewStyle,
+} from "react-native";
+import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
+
+import { ThemedText } from "@/components/ThemedText";
+import { useTheme } from "@/context/ThemeContext";
+import { Colors } from "@/constants/Colors";
+import {
+  getResponsiveFontSize,
+  getResponsiveHeight,
+  getResponsiveWidth,
+} from "@/utils/responsive";
+import { t } from "@/i18n";
+import { useGlassStyle } from "@/hooks/useGlassStyle";
 
 interface SettingSheetContentProps {
   style?: StyleProp<ViewStyle>;
@@ -16,57 +28,51 @@ interface SettingSheetContentProps {
 const SettingSheetContent: React.FC<SettingSheetContentProps> = ({
   style,
   onDelete,
-  onEdit
+  onEdit,
 }) => {
   const { currentTheme } = useTheme();
+  const { overlayColor, borderColor } = useGlassStyle();
 
-  const colors = {
-    cardBg: currentTheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground,
-    icon: currentTheme === 'light' ? Colors.light.icon : Colors.dark.icon, // Define icon color
-  };
+  const iconColor =
+    currentTheme === "light" ? Colors.light.icon : Colors.dark.icon;
 
-  const renderIcon = (iconName: React.ComponentProps<typeof MaterialCommunityIcons>['name'], iconLibrary: 'MaterialCommunityIcons' | 'MaterialIcons' = 'MaterialCommunityIcons') => {
-    const iconColor = colors.icon;
-    const iconSize = getResponsiveFontSize(18);
-
-    if (iconLibrary === 'MaterialIcons') {
-      return (
-        <MaterialIcons
-          name={iconName}
-          size={iconSize}
-          color={iconColor}
-        />
-      );
-    }
-
+  const renderIcon = (
+    iconName: React.ComponentProps<typeof MaterialCommunityIcons>["name"],
+  ) => {
     return (
       <MaterialCommunityIcons
         name={iconName}
-        size={iconSize}
+        size={getResponsiveFontSize(18)}
         color={iconColor}
       />
     );
   };
 
-
   return (
-    <View style={[styles.container, { backgroundColor: colors.cardBg }, style]}>
+    <View style={[styles.container, { borderColor }, style]}>
+      <View
+        style={[styles.defaultOverlay, { backgroundColor: overlayColor }]}
+      />
       <View style={styles.buttonsContainer}>
         <Pressable
           onPress={onEdit}
           style={styles.button}
-          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }} // Better touch target
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
         >
-           {renderIcon('pencil')}
-          <ThemedText style={styles.buttonText}>{t('homeScreen.edit')}</ThemedText>
+          {renderIcon("pencil")}
+          <ThemedText style={styles.buttonText}>
+            {t("homeScreen.edit")}
+          </ThemedText>
         </Pressable>
         <Pressable
           onPress={onDelete}
           style={styles.button}
-          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}  // Better touch target
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
         >
-          {renderIcon('delete')}
-          <ThemedText style={styles.buttonText}>{t('homeScreen.delete')}</ThemedText>
+          {renderIcon("delete")}
+          <ThemedText style={styles.buttonText}>
+            {t("homeScreen.delete")}
+          </ThemedText>
         </Pressable>
       </View>
     </View>
@@ -78,20 +84,26 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingHorizontal: getResponsiveWidth(4.8),
     marginHorizontal: getResponsiveWidth(3.6),
-    gap: 15, // Consistent spacing
+    borderWidth: 1,
+    overflow: "hidden",
+  },
+  defaultOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 0,
   },
   buttonsContainer: {
-    flexDirection: 'column', // Stack buttons vertically, like ReuseableSheet
-    gap: getResponsiveHeight(0.6), // Consistent gap
-    marginTop: getResponsiveHeight(1),
+    flexDirection: "column",
+    gap: getResponsiveHeight(0.6),
+    marginVertical: getResponsiveHeight(1),
+    zIndex: 1,
   },
   button: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: getResponsiveWidth(2.4),
     paddingVertical: getResponsiveHeight(1.2),
-    borderRadius: getResponsiveWidth(4),  // Rounded corners
-    overflow: 'hidden', // Ensures ripple effect doesn't overflow
+    borderRadius: getResponsiveWidth(4),
+    overflow: "hidden",
   },
   buttonText: {
     fontSize: getResponsiveFontSize(16),

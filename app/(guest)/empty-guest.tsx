@@ -20,7 +20,7 @@ export default function EmptyScreen() {
 
   ];
   const onNavigateToScanScreen = () => {
-    router.push('/(scan)/scan-main');
+    router.push('/(guest)/(scan)/scan-main');
   };
 const onNavigateToAddScreen = () => {
   router.push(`/add-guest`);

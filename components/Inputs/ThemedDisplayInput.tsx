@@ -12,7 +12,7 @@ import {
   View,
   Pressable,
   Image,
-  TextStyle
+  TextStyle,
 } from "react-native";
 import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -71,6 +71,8 @@ export type ThemedDisplayInputProps = {
 
   // Grouping Props
   groupPosition?: "single" | "top" | "middle" | "bottom";
+  showSeparator?: boolean;
+  showIndividualErrors?: boolean;
 };
 
 export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
@@ -86,8 +88,8 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
       // Modes
       isLoading = false,
       disabled = false,
-      onPress = () => { },
-      onClear = () => { },
+      onPress = () => {},
+      onClear = () => {},
       showClearButton = true,
       // Error
       isError = false,
@@ -102,6 +104,8 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
       required = false,
       // Grouping
       groupPosition = "single",
+      showSeparator,
+      showIndividualErrors = true,
     },
     ref
   ) => {
@@ -118,6 +122,10 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
         : Colors.dark.placeHolder;
     const errorColor =
       currentTheme === "light" ? Colors.light.error : Colors.dark.error;
+    const separatorColor =
+      currentTheme === "light"
+        ? "rgba(0, 0, 0, 0.08)"
+        : "rgba(255, 255, 255, 0.08)";
     const iconPath = getIconPath(logoCode ?? "");
 
     // --- Animations ---
@@ -137,7 +145,12 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
 
     useEffect(() => {
       const shouldShowError = isError && errorMessage;
-      if (shouldShowError && groupPosition === "single") {
+      const shouldShowIndividualError =
+        shouldShowError &&
+        (groupPosition === "single" ||
+          (groupPosition !== "single" && showIndividualErrors));
+
+      if (shouldShowIndividualError) {
         errorTextHeight.value = withTiming(getResponsiveHeight(2.2), {
           duration: 200,
         });
@@ -163,7 +176,7 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
           : 0,
         { duration: 200 }
       );
-    }, [isError, errorMessage, groupPosition]);
+    }, [isError, errorMessage, groupPosition, showIndividualErrors]);
 
     useEffect(() => {
       if (isLoading && inputWidth > 0) {
@@ -183,8 +196,9 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
       opacity: animatedOpacity.value,
     }));
     const animatedErrorBackgroundStyle = useAnimatedStyle(() => ({
-      backgroundColor: `rgba(${currentTheme === "light" ? "220, 53, 69" : "248, 81, 73"
-        }, ${errorBackgroundOpacity.value})`,
+      backgroundColor: `rgba(${
+        currentTheme === "light" ? "220, 53, 69" : "248, 81, 73"
+      }, ${errorBackgroundOpacity.value})`,
     }));
     const animatedErrorTextStyle = useAnimatedStyle(() => ({
       height: errorTextHeight.value,
@@ -213,15 +227,32 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
 
     // --- Style Computations ---
     const getGroupedStyles = () => {
+      const radius = getResponsiveWidth(3.5);
       switch (groupPosition) {
         case "top":
-          return styles.groupTop;
+          return {
+            borderTopLeftRadius: radius,
+            borderTopRightRadius: radius,
+            borderBottomLeftRadius: 0,
+            borderBottomRightRadius: 0,
+            borderBottomWidth: 0,
+          };
         case "middle":
-          return styles.groupMiddle;
+          return {
+            borderRadius: 0,
+            borderTopWidth: 0,
+            borderBottomWidth: 0,
+          };
         case "bottom":
-          return styles.groupBottom;
+          return {
+            borderTopLeftRadius: 0,
+            borderTopRightRadius: 0,
+            borderBottomLeftRadius: radius,
+            borderBottomRightRadius: radius,
+            borderTopWidth: 0,
+          };
         default:
-          return styles.groupSingle;
+          return { borderRadius: radius };
       }
     };
 
@@ -247,6 +278,11 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
       getGroupedStyles(),
     ];
 
+    const shouldShowSeparatorLine =
+      (showSeparator === undefined
+        ? groupPosition === "top" || groupPosition === "middle"
+        : showSeparator) && !isError;
+
     // --- Render Logic ---
     const InputContent = (
       <Pressable
@@ -263,6 +299,11 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
         <Animated.View
           style={[styles.defaultOverlay, animatedErrorBackgroundStyle]}
         />
+        {shouldShowSeparatorLine && (
+          <View
+            style={[styles.separator, { backgroundColor: separatorColor }]}
+          />
+        )}
 
         <Animated.View style={[styles.contentWrapper, animatedContentStyle]}>
           {/* Label */}
@@ -327,15 +368,6 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
                   />
                 </Pressable>
               )}
-              {isError && errorMessage && !isLoading && (
-                <Animated.View style={animatedErrorIconStyle}>
-                  <MaterialIcons
-                    name="error-outline"
-                    size={getResponsiveFontSize(16)}
-                    color={errorColor}
-                  />
-                </Animated.View>
-              )}
             </View>
           </View>
         </Animated.View>
@@ -352,6 +384,33 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
       </Pressable>
     );
 
+    const ErrorDisplay = ({ show }: { show: boolean }) => (
+      <Animated.View style={[styles.errorContainer, animatedErrorTextStyle]}>
+        {show && (
+          <View style={styles.errorRow}>
+            <Animated.View style={animatedErrorIconStyle}>
+              <MaterialIcons
+                name="error"
+                size={getResponsiveFontSize(13)}
+                color={errorColor}
+                style={styles.errorIcon}
+              />
+            </Animated.View>
+            <ThemedText
+              style={[
+                styles.consolidatedErrorText,
+                { color: errorColor },
+                errorTextStyle,
+              ]}
+              numberOfLines={2}
+            >
+              {errorMessage}
+            </ThemedText>
+          </View>
+        )}
+      </Animated.View>
+    );
+
     return (
       <View style={containerStyle}>
         {groupPosition === "single" ? (
@@ -359,25 +418,15 @@ export const ThemedDisplayInput = forwardRef<View, ThemedDisplayInputProps>(
             style={[styles.inputGroupWrapper, animatedSingleWrapperStyle]}
           >
             {InputContent}
-            <Animated.View
-              style={[styles.errorContainer, animatedErrorTextStyle]}
-            >
-              {isError && errorMessage && (
-                <ThemedText
-                  style={[
-                    styles.errorText,
-                    { color: errorColor },
-                    errorTextStyle,
-                  ]}
-                  numberOfLines={2}
-                >
-                  {errorMessage}
-                </ThemedText>
-              )}
-            </Animated.View>
+            <ErrorDisplay show={!!(isError && errorMessage)} />
           </Animated.View>
         ) : (
-          InputContent
+          <>
+            {InputContent}
+            <ErrorDisplay
+              show={!!(isError && errorMessage && showIndividualErrors)}
+            />
+          </>
         )}
       </View>
     );
@@ -392,7 +441,6 @@ const styles = StyleSheet.create({
   inputGroupWrapper: {
     borderRadius: getResponsiveWidth(3.5),
     overflow: "hidden",
-    marginBottom: getResponsiveHeight(1),
   },
   inputContainer: {
     borderWidth: 1,
@@ -413,17 +461,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: getResponsiveWidth(2),
     marginLeft: getResponsiveWidth(2),
-  },
-  // --- Grouping Styles ---
-  groupSingle: { borderRadius: getResponsiveWidth(3.5) },
-  groupTop: {
-    borderTopLeftRadius: getResponsiveWidth(3.5),
-    borderTopRightRadius: getResponsiveWidth(3.5),
-  },
-  groupMiddle: { borderRadius: 0 },
-  groupBottom: {
-    borderBottomLeftRadius: getResponsiveWidth(3.5),
-    borderBottomRightRadius: getResponsiveWidth(3.5),
   },
   // --- Elements ---
   labelContainer: { marginBottom: getResponsiveHeight(1) },
@@ -453,6 +490,14 @@ const styles = StyleSheet.create({
   hitSlop: { top: 8, bottom: 8, left: 8, right: 8 },
   // --- Overlays & Effects ---
   defaultOverlay: { ...StyleSheet.absoluteFillObject, zIndex: -2 },
+  separator: {
+    position: "absolute",
+    bottom: 0,
+    left: getResponsiveWidth(3.5),
+    right: getResponsiveWidth(3.5),
+    height: StyleSheet.hairlineWidth,
+    zIndex: 1,
+  },
   shimmer: {
     position: "absolute",
     top: 0,
@@ -467,9 +512,19 @@ const styles = StyleSheet.create({
     marginTop: getResponsiveHeight(0.5),
     justifyContent: "center",
   },
-  errorText: {
+  errorRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginBottom: getResponsiveHeight(0.3),
+  },
+  errorIcon: {
+    marginRight: getResponsiveWidth(1.2),
+    marginTop: getResponsiveHeight(0.1),
+  },
+  consolidatedErrorText: {
     fontSize: getResponsiveFontSize(11),
     lineHeight: getResponsiveHeight(1.8),
+    flex: 1,
   },
 });
 

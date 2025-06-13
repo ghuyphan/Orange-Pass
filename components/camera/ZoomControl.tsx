@@ -49,7 +49,7 @@ const useDimensions = (scale = 1) =>
         height: getResponsiveWidth(10 * scale),
         borderRadius: getResponsiveWidth(7 * scale),
         borderWidth: 0.5,
-        // padding: getResponsiveWidth(0.8 * scale),
+        padding: getResponsiveWidth(0.8 * scale),
       },
       button: {
         inactiveSize: getResponsiveWidth(7 * scale),

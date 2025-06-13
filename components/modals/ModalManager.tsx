@@ -126,7 +126,7 @@ const UnsavedChangesBackHandler = forwardRef<
       title={t("common.unsavedChangesTitle")}
       secondaryActionText={t("common.discard")}
       onSecondaryAction={handleDiscard}
-      iconName="alert-triangle" // A more fitting icon for a warning
+      iconName="report-problem" // A more fitting icon for a warning
     />
   );
 });

@@ -91,7 +91,7 @@ function SettingsScreen() {
   );
 
   const iconColor = useMemo(
-    () => (currentTheme === "light" ? Colors.light.text : Colors.dark.text),
+    () => (currentTheme === "light" ? Colors.light.icon : Colors.dark.icon),
     [currentTheme]
   );
 

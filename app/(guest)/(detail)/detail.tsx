@@ -98,7 +98,7 @@ const storage = new MMKV();
 const formatAmount = (numStr: string): string =>
   numStr.replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
-const DetailScreen = () => {
+const GuestDetailScreen = () => {
   const { currentTheme } = useTheme();
   const dispatch = useDispatch();
   const { item: encodedItem, id } = useLocalSearchParams();
@@ -628,6 +628,7 @@ const DetailScreen = () => {
                     value={amount}
                     placeholderTextColor={placeholderColor}
                     onChangeText={(text) => setAmount(formatAmount(text))}
+                    cursorColor={textColor}
                   />
                   {amount ? (
                     <Pressable
@@ -984,4 +985,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default DetailScreen;
+export default GuestDetailScreen;

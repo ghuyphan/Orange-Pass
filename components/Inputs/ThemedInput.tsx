@@ -104,10 +104,10 @@ export const ThemedInput = forwardRef<
       errorMessage = "",
       secureTextEntry = false,
       keyboardType = "default",
-      onChangeText = () => { },
-      onBlur = () => { },
-      onFocus = () => { },
-      onSubmitEditing = () => { },
+      onChangeText = () => {},
+      onBlur = () => {},
+      onFocus = () => {},
+      onSubmitEditing = () => {},
       disabled = false,
       backgroundColor,
       disableOpacityChange = false,
@@ -118,9 +118,7 @@ export const ThemedInput = forwardRef<
       rightButtonIconStyle,
       groupPosition = "single",
       showSeparator,
-      groupId,
       showIndividualErrors = true,
-      suppressGroupErrorBorder = false,
     },
     ref
   ) => {
@@ -169,7 +167,7 @@ export const ThemedInput = forwardRef<
       const shouldShowError = isError && errorMessage;
       const shouldShowIndividualError =
         shouldShowError &&
-        ((groupPosition === "single") ||
+        (groupPosition === "single" ||
           (groupPosition !== "single" && showIndividualErrors));
 
       if (shouldShowIndividualError) {
@@ -227,8 +225,9 @@ export const ThemedInput = forwardRef<
     }));
 
     const animatedErrorBackgroundStyle = useAnimatedStyle(() => ({
-      backgroundColor: `rgba(${currentTheme === "light" ? "220, 53, 69" : "248, 81, 73"
-        }, ${errorBackgroundOpacity.value})`,
+      backgroundColor: `rgba(${
+        currentTheme === "light" ? "220, 53, 69" : "248, 81, 73"
+      }, ${errorBackgroundOpacity.value})`,
     }));
 
     const onClearValue = useCallback(() => {
@@ -463,22 +462,37 @@ export const ThemedInput = forwardRef<
                   />
                 </Pressable>
               )}
-
-              {isError && errorMessage && (
-                <Animated.View
-                  style={[styles.errorIconContainer, animatedErrorIconStyle]}
-                >
-                  <MaterialIcons
-                    name="error"
-                    size={getResponsiveFontSize(15)}
-                    color={errorColor}
-                  />
-                </Animated.View>
-              )}
             </View>
           </View>
         </Animated.View>
       </Pressable>
+    );
+
+    const ErrorDisplay = ({ show }: { show: boolean }) => (
+      <Animated.View style={[styles.errorContainer, animatedErrorTextStyle]}>
+        {show && (
+          <View style={styles.errorRow}>
+            <Animated.View style={animatedErrorIconStyle}>
+              <MaterialIcons
+                name="error"
+                size={getResponsiveFontSize(13)}
+                color={errorColor}
+                style={styles.errorIcon}
+              />
+            </Animated.View>
+            <ThemedText
+              style={[
+                styles.consolidatedErrorText,
+                { color: errorColor },
+                errorTextStyle,
+              ]}
+              numberOfLines={2}
+            >
+              {errorMessage}
+            </ThemedText>
+          </View>
+        )}
+      </Animated.View>
     );
 
     return (
@@ -488,42 +502,14 @@ export const ThemedInput = forwardRef<
             style={[styles.inputGroupWrapper, animatedSingleWrapperStyle]}
           >
             {InputContent}
-            <Animated.View
-              style={[styles.errorContainer, animatedErrorTextStyle]}
-            >
-              {isError && errorMessage && (
-                <ThemedText
-                  style={[
-                    styles.errorText,
-                    { color: errorColor },
-                    errorTextStyle,
-                  ]}
-                  numberOfLines={2}
-                >
-                  {errorMessage}
-                </ThemedText>
-              )}
-            </Animated.View>
+            <ErrorDisplay show={!!(isError && errorMessage)} />
           </Animated.View>
         ) : (
           <>
             {InputContent}
-            <Animated.View
-              style={[styles.errorContainer, animatedErrorTextStyle]}
-            >
-              {isError && errorMessage && showIndividualErrors && (
-                <ThemedText
-                  style={[
-                    styles.errorText,
-                    { color: errorColor },
-                    errorTextStyle,
-                  ]}
-                  numberOfLines={2}
-                >
-                  {errorMessage}
-                </ThemedText>
-              )}
-            </Animated.View>
+            <ErrorDisplay
+              show={!!(isError && errorMessage && showIndividualErrors)}
+            />
           </>
         )}
       </View>
@@ -738,10 +724,6 @@ const styles = StyleSheet.create({
     bottom: getResponsiveHeight(0.5),
     left: getResponsiveWidth(1),
     right: getResponsiveWidth(1),
-  },
-  errorIconContainer: {
-    marginLeft: getResponsiveWidth(1.5),
-    padding: getResponsiveWidth(0.5),
   },
   errorContainer: {
     marginHorizontal: getResponsiveWidth(3.5),

@@ -202,19 +202,19 @@ export default function QuickLoginPromptScreen() {
     </View>
   );
 
-  // Show navigation loading state
-  if (isNavigating) {
-    return (
-      <ThemedView style={styles.container}>
-        <View style={[styles.contentContainer, { justifyContent: 'center' }]}>
-          <ActivityIndicator size="large" color="#a18cd1" />
-          <ThemedText style={styles.navigationText}>
-            {t('quickLoginPrompt.redirecting')}
-          </ThemedText>
-        </View>
-      </ThemedView>
-    );
-  }
+  // // Show navigation loading state
+  // if (isNavigating) {
+  //   return (
+  //     <ThemedView style={styles.container}>
+  //       <View style={[styles.contentContainer, { justifyContent: 'center' }]}>
+  //         <ActivityIndicator size="large" color="#a18cd1" />
+  //         <ThemedText style={styles.navigationText}>
+  //           {t('quickLoginPrompt.redirecting')}
+  //         </ThemedText>
+  //       </View>
+  //     </ThemedView>
+  //   );
+  // }
 
   return (
     <ThemedView style={styles.container}>

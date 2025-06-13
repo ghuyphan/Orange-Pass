@@ -18,7 +18,6 @@ import * as Linking from "expo-linking";
 import { useDispatch, useSelector } from "react-redux";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { useRouter, useLocalSearchParams } from "expo-router";
-// import { useUnmountBrightness } from "@reeq/react-native-device-brightness"; // Not used, can be removed if not needed elsewhere
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import BottomSheet from "@gorhom/bottom-sheet";
 import { throttle } from "lodash";
@@ -55,6 +54,7 @@ import {
 } from "@/utils/responsive";
 import { ThemedTopToast } from "@/components/toast/ThemedTopToast";
 import SettingSheetContent from "@/components/bottomsheet/SettingSheetContent";
+import { useGlassStyle } from "@/hooks/useGlassStyle";
 
 // Constants
 const DEFAULT_AMOUNT_SUGGESTIONS = [
@@ -64,7 +64,7 @@ const DEFAULT_AMOUNT_SUGGESTIONS = [
   "100,000",
   "500,000",
   "1,000,000",
-  "5,000,000", // Added a few more reasonable defaults
+  "5,000,000",
   "10,000,000",
 ];
 const SUGGESTION_MULTIPLIERS = [1000, 10000, 100000, 1000000];
@@ -100,15 +100,6 @@ const storage = new MMKV();
 const formatAmount = (numStr: string): string =>
   numStr.replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
-const generateSuggestion = (prefix: number, multiplier: number): string => {
-  const result = prefix * multiplier;
-  if (!Number.isSafeInteger(result)) {
-    console.warn(`Generated suggestion exceeds safe integer limit: ${result}`);
-    return result.toLocaleString("en-US");
-  }
-  return formatAmount(String(result));
-};
-
 const DetailScreen = () => {
   const { currentTheme } = useTheme();
   const dispatch = useDispatch();
@@ -119,7 +110,9 @@ const DetailScreen = () => {
   const router = useRouter();
 
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const editNavigationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const editNavigationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
 
   const [toastKey, setToastKey] = useState(0);
   const [amount, setAmount] = useState("");
@@ -135,6 +128,7 @@ const DetailScreen = () => {
   const [allBanks, setAllBanks] = useState<BankItem[]>([]);
   const [isLoadingMoreBanks, setIsLoadingMoreBanks] = useState(false);
   const [isBanksInitiallyLoading, setIsBanksInitiallyLoading] = useState(true);
+  const { overlayColor, borderColor: glassBorderColor } = useGlassStyle();
 
   const item = useMemo<ItemData | null>(() => {
     if (!encodedItem) return null;
@@ -151,17 +145,6 @@ const DetailScreen = () => {
       currentTheme === "light"
         ? Colors.light.cardBackground
         : Colors.dark.cardBackground,
-    [currentTheme],
-  );
-  const buttonColor = useMemo(
-    () =>
-      currentTheme === "light"
-        ? Colors.light.buttonBackground
-        : Colors.dark.buttonBackground,
-    [currentTheme],
-  );
-  const buttonTextColor = useMemo(
-    () => (currentTheme === "light" ? Colors.light.icon : Colors.dark.icon),
     [currentTheme],
   );
   const iconColor = useMemo(
@@ -191,13 +174,6 @@ const DetailScreen = () => {
       currentTheme === "light"
         ? "rgba(0, 0, 0, 0.2)"
         : "rgba(255, 255, 255, 0.2)",
-    [currentTheme],
-  );
-  const backgroundColor = useMemo(
-    () =>
-      currentTheme === "light"
-        ? Colors.light.background
-        : Colors.dark.background,
     [currentTheme],
   );
 
@@ -299,10 +275,13 @@ const DetailScreen = () => {
       if (editNavigationTimeoutRef.current) {
         clearTimeout(editNavigationTimeoutRef.current);
       }
+      const editId = Array.isArray(id) ? id[0] : id;
+      if (!editId) return;
+
       editNavigationTimeoutRef.current = setTimeout(() => {
         router.push({
           pathname: `/(edit)/edit`,
-          params: { id: id as string },
+          params: { id: editId },
         });
       }, EDIT_NAVIGATION_DELAY);
     }, THROTTLE_WAIT),
@@ -336,7 +315,7 @@ const DetailScreen = () => {
         ? currentUserId
         : GUEST_USER_ID_STRING;
 
-    setIsDeleteSyncing(true); // Use separate syncing state for delete
+    setIsDeleteSyncing(true);
     setIsToastVisible(true);
     setToastMessage(t("homeScreen.deleting"));
 
@@ -350,18 +329,17 @@ const DetailScreen = () => {
         id: qrItem.id,
         qr_index: index,
         updated: new Date().toISOString(),
-        // Ensure other QRRecord fields are here or qrItem is already QRRecord
       }));
       dispatch(setQrData(reindexedData as any));
       await updateQrIndexes(reindexedData, userIdToUse);
 
       setIsModalVisible(false);
-      setIsToastVisible(false); // Hide toast on success
+      setIsToastVisible(false);
       router.replace("/home");
     } catch (error) {
       console.error("Error deleting QR code:", error);
       setToastMessage(t("homeScreen.deleteError"));
-      setIsToastVisible(true); // Keep toast for error
+      setIsToastVisible(true);
       setIsModalVisible(false);
     } finally {
       setIsDeleteSyncing(false);
@@ -454,13 +432,13 @@ const DetailScreen = () => {
         return;
       }
 
-      setIsSyncing(true); // This will show loader on button
-      // Removed toast for "Generating QR Code"
+      setIsSyncing(true);
 
       try {
         const itemName = returnItemData(item.code, item.type);
-        const message = `${t("detailsScreen.transferMessage")} ${item.account_name
-          }`;
+        const message = `${t("detailsScreen.transferMessage")} ${
+          item.account_name
+        }`;
         const numericAmount = parseInt(amount.replace(/,/g, ""), 10);
         if (isNaN(numericAmount)) throw new Error("Invalid amount format");
 
@@ -482,14 +460,12 @@ const DetailScreen = () => {
             originalItem: encodeURIComponent(JSON.stringify(item)),
           },
         });
-        // Success: No toast needed here as we navigate away.
-        // If navigation failed, an error would be caught.
       } catch (error) {
         console.error("Error generating QR code:", error);
         setToastMessage(t("detailsScreen.generateError"));
-        setIsToastVisible(true); // Show error toast
+        setIsToastVisible(true);
       } finally {
-        setIsSyncing(false); // Hide loader on button
+        setIsSyncing(false);
       }
     }, THROTTLE_WAIT),
     [item, amount, router, showTopToast, isOffline],
@@ -504,20 +480,20 @@ const DetailScreen = () => {
 
   const renderSuggestionItem = useCallback(
     ({ item: suggestionItem }: { item: string }) => (
-      <Pressable
+      <ThemedButton
         onPress={() => setAmount(suggestionItem)}
-        style={[styles.suggestionItem, { backgroundColor: buttonColor }]}
-      >
-        <ThemedText style={styles.suggestionText}>{suggestionItem}</ThemedText>
-      </Pressable>
+        label={suggestionItem}
+        style={styles.suggestionItem}
+        textStyle={styles.suggestionText}
+      />
     ),
-    [buttonColor],
+    [],
   );
 
   const renderPaymentMethodItem = useCallback(
     ({ item: bankItem }: { item: BankItem }) => (
-      <Pressable
-        style={[styles.bankItemPressable, { backgroundColor: buttonColor }]}
+      <ThemedButton
+        style={styles.bankItemPressable}
         onPress={() => handleOpenBank(bankItem.code)}
       >
         <View style={styles.bankIconContainer}>
@@ -527,15 +503,12 @@ const DetailScreen = () => {
             resizeMode="contain"
           />
         </View>
-        <ThemedText
-          numberOfLines={1}
-          style={[styles.bankItemText, { color: buttonTextColor }]}
-        >
+        <ThemedText numberOfLines={1} style={styles.bankItemText}>
           {bankItem.name}
         </ThemedText>
-      </Pressable>
+      </ThemedButton>
     ),
-    [handleOpenBank, buttonColor, buttonTextColor],
+    [handleOpenBank],
   );
 
   const renderEmptyComponent = useCallback(
@@ -560,24 +533,26 @@ const DetailScreen = () => {
     }
     if (vietQRBanks.length < allBanks.length) {
       return (
-        <Pressable
-          style={[styles.bankItemPressable, { backgroundColor: buttonColor }]}
+        <ThemedButton
+          style={styles.bankItemPressable}
           onPress={handleLoadMoreBanks}
         >
-          <View style={styles.bankIconContainer}>
+          <View
+            style={[
+              styles.bankIconContainer,
+              { backgroundColor: "transparent" },
+            ]}
+          >
             <MaterialCommunityIcons
               name="dots-horizontal"
               size={getResponsiveFontSize(24)}
               color={iconColor}
             />
           </View>
-          <ThemedText
-            numberOfLines={1}
-            style={[styles.bankItemText, { color: buttonTextColor }]}
-          >
+          <ThemedText numberOfLines={1} style={styles.bankItemText}>
             {t("detailsScreen.loadMore")}
           </ThemedText>
-        </Pressable>
+        </ThemedButton>
       );
     }
     return null;
@@ -586,8 +561,6 @@ const DetailScreen = () => {
     vietQRBanks.length,
     allBanks.length,
     iconColor,
-    buttonColor,
-    buttonTextColor,
     handleLoadMoreBanks,
   ]);
 
@@ -628,10 +601,19 @@ const DetailScreen = () => {
         accountName={item.account_name}
         accountNumber={item.account_number}
         onAccountNumberPress={onCopyAccountNumber}
+        enableGlassmorphism={true}
       />
 
       {(item.type === "bank" || item.type === "store") && (
-        <View style={[styles.infoWrapper, { backgroundColor: cardColor }]}>
+        <View
+          style={[
+            styles.infoWrapper,
+            { backgroundColor: cardColor, borderColor: glassBorderColor },
+          ]}
+        >
+          <View
+            style={[styles.defaultOverlay, { backgroundColor: overlayColor }]}
+          />
           <Pressable onPress={handleOpenMap} style={styles.actionButton}>
             <View style={styles.actionHeader}>
               <MaterialCommunityIcons
@@ -662,7 +644,15 @@ const DetailScreen = () => {
                   {t("detailsScreen.createQrCode")}
                 </ThemedText>
               </View>
-              <View style={styles.transferSection}>
+              <View
+                style={[
+                  styles.transferSection,
+                  dynamicSuggestions.length === 0 && {
+                    paddingBottom: 0,
+                    gap: 0,
+                  },
+                ]}
+              >
                 <View style={styles.inputWrapper}>
                   <TextInput
                     style={[styles.inputField, { color: textColor }]}
@@ -671,6 +661,7 @@ const DetailScreen = () => {
                     value={amount}
                     placeholderTextColor={placeholderColor}
                     onChangeText={(text) => setAmount(formatAmount(text))}
+                    cursorColor={textColor}
                   />
                   {amount ? (
                     <Pressable
@@ -705,13 +696,13 @@ const DetailScreen = () => {
                     onPress={handleTransferAmount}
                     style={[
                       styles.transferButton,
-                      { opacity: amount && !isSyncing ? 1 : 0.5 }, // Dim if no amount or syncing
+                      { opacity: amount && !isSyncing ? 1 : 0.5 },
                     ]}
                     disabled={!amount || isSyncing}
                   >
                     {isSyncing ? (
                       <ActivityIndicator
-                        size={getResponsiveFontSize(16)} // Match icon size
+                        size={getResponsiveFontSize(16)}
                         color={iconColor}
                       />
                     ) : (
@@ -809,7 +800,6 @@ const DetailScreen = () => {
         message={t("homeScreen.confirmDeleteMessage")}
         isVisible={isModalVisible}
         iconName="delete"
-      // isPrimaryActionLoading={isDeleteSyncing} // Pass loading state to modal
       />
       <ThemedTopToast
         key={toastKey}
@@ -818,7 +808,7 @@ const DetailScreen = () => {
         onVisibilityToggle={onVisibilityToggle}
       />
       <ThemedStatusToast
-        isSyncing={isDeleteSyncing} // Use delete syncing state for this toast
+        isSyncing={isDeleteSyncing}
         isVisible={isToastVisible}
         message={toastMessage}
         onDismiss={() => setIsToastVisible(false)}
@@ -835,20 +825,22 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   headerWrapper: {
-    paddingTop: getResponsiveHeight(10), // Consider STATUSBAR_HEIGHT if applicable
+    paddingTop: getResponsiveHeight(10),
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: getResponsiveHeight(3.6),
   },
-  pinnedCardWrapper: {
-    // marginBottom: getResponsiveHeight(3.6),
-  },
+  pinnedCardWrapper: {},
   infoWrapper: {
     borderRadius: getResponsiveWidth(4),
     overflow: "hidden",
-    marginBottom: getResponsiveHeight(3.6),
-    marginTop: getResponsiveHeight(3.6),
+    marginVertical: getResponsiveHeight(3.6),
+    borderWidth: 1,
+  },
+  defaultOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 0,
   },
   actionButton: {
     flexDirection: "row",
@@ -856,6 +848,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: getResponsiveWidth(4.8),
     paddingVertical: getResponsiveHeight(1.8),
+    zIndex: 1,
   },
   actionHeader: {
     flexDirection: "row",
@@ -871,7 +864,7 @@ const styles = StyleSheet.create({
     fontSize: getResponsiveFontSize(16),
   },
   transferContainer: {
-    // Container for header, input, and suggestions
+    zIndex: 1,
   },
   transferHeader: {
     flexDirection: "row",
@@ -903,8 +896,8 @@ const styles = StyleSheet.create({
   transferButton: {
     padding: getResponsiveWidth(1.2),
     marginLeft: getResponsiveWidth(1.2),
-    width: getResponsiveWidth(6), // Give it a fixed width to prevent layout shift
-    height: getResponsiveWidth(6), // Give it a fixed height
+    width: getResponsiveWidth(6),
+    height: getResponsiveWidth(6),
     justifyContent: "center",
     alignItems: "center",
   },
@@ -928,20 +921,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     height: getResponsiveHeight(9.6),
-    width: getResponsiveWidth(16.8), // Match bankItemPressable width
+    width: getResponsiveWidth(16.8),
   },
   bankListContent: {
     gap: getResponsiveWidth(2.4),
     paddingHorizontal: getResponsiveWidth(4.8),
     paddingBottom: getResponsiveHeight(1.8),
-    // flexGrow: 1, // Not always needed for horizontal lists
-    // justifyContent: "center", // Can make list look odd if not full
-    // alignItems: "center",
-    // minWidth: "100%",
   },
   bankItemPressable: {
-    borderRadius: getResponsiveWidth(4),
-    overflow: "hidden",
     height: getResponsiveHeight(9.6),
     width: getResponsiveWidth(16.8),
     justifyContent: "center",
@@ -962,11 +949,13 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     borderRadius: getResponsiveWidth(4.2),
     overflow: "hidden",
+    zIndex: 1,
   },
   bankItemText: {
     fontSize: getResponsiveFontSize(12),
     maxWidth: "90%",
     textAlign: "center",
+    zIndex: 1,
   },
   vietQRLogo: {
     height: getResponsiveHeight(3.6),
@@ -988,9 +977,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     textAlign: "center",
   },
-  suggestionList: {
-    // Flex grow isn't needed for horizontal list
-  },
+  suggestionList: {},
   suggestionListContent: {
     gap: getResponsiveWidth(2.4),
     paddingHorizontal: getResponsiveWidth(4.8),
@@ -999,26 +986,21 @@ const styles = StyleSheet.create({
   suggestionItem: {
     paddingHorizontal: getResponsiveWidth(3.6),
     paddingVertical: getResponsiveHeight(0.9),
-    borderRadius: getResponsiveWidth(4),
-    overflow: "hidden",
-    justifyContent: "center",
-    alignItems: "center",
   },
   suggestionText: {
     fontSize: getResponsiveFontSize(14),
   },
-  bankList: {
-    // flexGrow: 1, // Not always needed for horizontal lists
-  },
+  bankList: {},
   toastContainer: {
     position: "absolute",
     bottom: getResponsiveHeight(2),
     left: getResponsiveWidth(3.6),
     right: getResponsiveWidth(3.6),
-    zIndex: 10, // Ensure toast is on top
+    zIndex: 10,
   },
   bottomContainer: {
     flexDirection: "column",
+    zIndex: 1,
   },
   bankTransferHeader: {
     flexDirection: "row",

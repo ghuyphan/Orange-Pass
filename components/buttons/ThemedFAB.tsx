@@ -100,7 +100,7 @@ export const ThemedFAB = forwardRef<View, ThemedFABProps>(
         mainButtonBackground: isLightTheme
           ? Colors.light.buttonBackground
           : Colors.dark.buttonBackground,
-        text: '#ffffff',
+        text: isLightTheme ? Colors.light.text : Colors.dark.text,
         glassBackground: isLightTheme
           ? CONFIG.colors.light.background
           : CONFIG.colors.dark.background,

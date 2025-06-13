@@ -20,7 +20,7 @@ export default function EmptyScreen() {
 
   ];
   const onNavigateToScanScreen = () => {
-    router.push('/(scan)/scan-main');
+    router.push('/(auth)/(scan)/scan-main');
   };
 const onNavigateToAddScreen = () => {
   router.push(`/(auth)/(add)/add-new`);
@@ -42,11 +42,10 @@ const onNavigateToAddScreen = () => {
           footButtonLabel={('homeScreen.emptyCard.footerButton')}
           cardOnPress={() => { }}
           buttonOnPress={onNavigateToScanScreen}
-          style={{ paddingTop: getResponsiveHeight(8.3) }}
+          style={{ paddingTop: getResponsiveHeight(13) }}
           footerStyle={{ borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }}
           paddingTop={getResponsiveHeight(3)}
           dropdownOptions={dropdownOptions}
-          menuElevation={0}
         />
         <ThemedText style={styles.content} type="default">
           {t('homeScreen.emptyCard.content')}
