@@ -39,7 +39,7 @@ const AddScreen: React.FC = () => {
 
   const categoryMap = useMemo(
     () => ({
-      bank: { display: t("addScreen.bankCategory"), value: "bank" },
+      q: { display: t("addScreen.bankCategory"), value: "bank" },
       ewallet: { display: t("addScreen.ewalletCategory"), value: "ewallet" },
       store: { display: t("addScreen.storeCategory"), value: "store" },
     }),

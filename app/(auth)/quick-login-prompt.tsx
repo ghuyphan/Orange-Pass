@@ -268,7 +268,7 @@ export default function QuickLoginPromptScreen() {
           loading={isDeclining}
           loadingLabel={t('quickLoginPrompt.saving')}
           textStyle={styles.notNowButtonText}
-          outline
+          variant='outline'
           disabled={isNavigating} // Disable during navigation
         />
       </View>

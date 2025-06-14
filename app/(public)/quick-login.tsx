@@ -473,7 +473,7 @@ export default function QuickLoginScreen() {
           onPress={onNavigateToRegister}
           style={styles.registerButton}
           textStyle={styles.buttonText}
-          outline
+          variant='outline'
           disabled={isLoading}
         />
         <ThemedText type='defaultSemiBold' style={styles.appName}>

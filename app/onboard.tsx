@@ -139,7 +139,7 @@ const OnBoardScreen = () => {
       subtitle: t("onboardingScreen.subtitle1"),
     },
     {
-      icon: "cloud-sync ",
+      icon: "cloud-sync",
       title: t("onboardingScreen.title2"),
       subtitle: t("onboardingScreen.subtitle2"),
     },

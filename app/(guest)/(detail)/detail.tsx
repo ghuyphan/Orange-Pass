@@ -272,7 +272,7 @@ const GuestDetailScreen = () => {
       if (!editId) return;
       editNavigationTimeoutRef.current = setTimeout(() => {
         router.push({
-          pathname: `/(edit)/edit`,
+          pathname: `/(guest)/(edit)/edit`,
           params: { id: editId },
         });
       }, EDIT_NAVIGATION_DELAY);
@@ -725,6 +725,7 @@ const GuestDetailScreen = () => {
                 />
               </Pressable>
               <FlatList
+              key={amount}
                 data={vietQRBanks}
                 horizontal
                 style={styles.bankList}
@@ -750,7 +751,7 @@ const GuestDetailScreen = () => {
       <ThemedReuseableSheet
         ref={bottomSheetRef}
         title={t("homeScreen.manage")}
-        snapPoints={["25%"]}
+        snapPoints={["30%"]}
         customContent={
           <SettingSheetContent onEdit={onEditPress} onDelete={onDeletePress} />
         }
@@ -787,7 +788,7 @@ const GuestDetailScreen = () => {
 
 const styles = StyleSheet.create({
   container: {
-    paddingBottom: getResponsiveHeight(5),
+    // paddingBottom: getResponsiveHeight(5),
     paddingHorizontal: getResponsiveWidth(3.6),
     flexGrow: 1,
   },

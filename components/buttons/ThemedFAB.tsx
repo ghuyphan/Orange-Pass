@@ -72,9 +72,9 @@ export const ThemedFAB = forwardRef<View, ThemedFABProps>(
     const [closing, setClosing] = useState(false);
     const isAnimating = useSharedValue(false);
 
-    const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-    const pressTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-    const closingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const animationTimeoutRef = useRef<number | null>(null);
+    const pressTimeoutRef = useRef<number | null>(null);
+    const closingTimeoutRef = useRef<number | null>(null);
 
     useFocusEffect(
       React.useCallback(() => {
@@ -147,11 +147,11 @@ export const ThemedFAB = forwardRef<View, ThemedFABProps>(
           colors.glassBackground,
           animationConfig
         );
-        const borderColor = withTiming(colors.glassBorder, animationConfig);
+        // const borderColor = withTiming(colors.glassBorder, animationConfig);
 
         return {
           backgroundColor,
-          borderColor,
+          // borderColor,
           opacity: withDelay(
             delay,
             withTiming(open ? 1 : 0, animationConfig)
@@ -203,7 +203,7 @@ export const ThemedFAB = forwardRef<View, ThemedFABProps>(
     const useAnimatedTextColor = () => {
       return useAnimatedStyle(() => {
         return {
-          color: withTiming(colors.text, animationConfig),
+          color: withTiming('#fff', animationConfig),
         };
       }, [colors]);
     };
@@ -303,7 +303,7 @@ export const ThemedFAB = forwardRef<View, ThemedFABProps>(
                         // The icon color is now handled by the animated style in ThemedButton
                         // assuming it can take an animated style for its icon.
                         // If not, you'd pass an animated prop. For now, we animate the background.
-                        iconColor={colors.text}
+                        iconColor={'#fff'}
                       />
                     </View>
                   ) : null

@@ -8,7 +8,7 @@ export const Colors = {
     background: "#FFFDF9",        // A warm off-white for a clean look
     tint: tintColorLight,
     icon: "#7A5848",              // A refined tone for icons
-    inputBackground: "rgba(249, 239, 231, 0.8)",  // Semi-transparent version of your original
+    inputBackground: "rgba(249, 239, 231, 0.5)",  // Semi-transparent version of your original
     placeHolder: "#9E9E9E",       // Keeps the neutral appearance for placeholders
     tabIconDefault: "#C5C5C5",    // A crisp modern gray
     tabIconSelected: tintColorLight,
@@ -27,7 +27,7 @@ export const Colors = {
     background: "#121212",
     tint: tintColorDark,
     icon: "#FFFFFF",
-    inputBackground: "rgba(45, 39, 43, 0.8)",     // Semi-transparent version
+    inputBackground: "rgba(45, 39, 43, 0.5)",     // Semi-transparent version
     placeHolder: "#757575",
     tabIconDefault: "#757575",
     tabIconSelected: tintColorDark,

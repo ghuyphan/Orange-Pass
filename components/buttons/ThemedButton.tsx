@@ -25,7 +25,6 @@ import Animated, {
   useSharedValue,
   withRepeat,
   withTiming,
-  withSequence,
   runOnJS,
 } from "react-native-reanimated";
 import {
@@ -33,37 +32,81 @@ import {
   getResponsiveWidth,
   getResponsiveHeight,
 } from "@/utils/responsive";
-import { useGlassStyle } from "@/hooks/useGlassStyle";
+import { useGlassStyle, GlassIntensity } from "@/hooks/useGlassStyle";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-// --- Config for the "Frosted Glass" variant ---
-const GLASS_VARIANT_CONFIG = {
-  background: Platform.select({
-    ios: "rgba(255, 255, 255, 0.1)",
-    android: "rgba(255, 255, 255, 0.15)",
-  }),
-  borderColor: "rgba(255, 255, 255, 0.2)",
-  blur: 10,
-  shadow: {
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
+// --- Helper Components (Extracted for Performance) ---
+
+type CloudWithIndicatorProps = {
+  indicatorName: keyof typeof MaterialCommunityIcons.glyphMap;
+  iconSize: number;
+  cloudColor: string;
+  indicatorBackgroundColor: string;
+  indicatorIconColor: string;
+  animated?: boolean;
 };
+
+// Memoized to prevent re-renders when props are unchanged.
+const CloudWithIndicator = React.memo(
+  ({
+    indicatorName,
+    iconSize,
+    cloudColor,
+    indicatorBackgroundColor,
+    indicatorIconColor,
+    animated = false,
+  }: CloudWithIndicatorProps) => {
+    const rotation = useSharedValue(0);
+
+    // Animate only when needed
+    useEffect(() => {
+      if (animated) {
+        rotation.value = withRepeat(withTiming(360, { duration: 1000 }), -1);
+      } else {
+        rotation.value = 0;
+      }
+    }, [animated, rotation]);
+
+    const animatedStyle = useAnimatedStyle(() => ({
+      transform: [{ rotate: `${rotation.value}deg` }],
+    }));
+
+    return (
+      <View style={styles.iconContainer}>
+        <MaterialCommunityIcons
+          name="cloud"
+          size={iconSize}
+          color={cloudColor}
+          style={styles.baseIcon}
+        />
+        <Animated.View
+          style={[
+            styles.syncIndicator,
+            animated ? animatedStyle : undefined,
+            { backgroundColor: indicatorBackgroundColor },
+          ]}
+        >
+          <MaterialCommunityIcons
+            name={indicatorName}
+            size={iconSize * 0.58}
+            color={indicatorIconColor}
+          />
+        </Animated.View>
+      </View>
+    );
+  }
+);
+
+// --- Main Component ---
 
 export type ThemedButtonProps = {
   ref?: React.RefObject<React.ElementRef<typeof Pressable>>;
-  lightColor?: string;
-  darkColor?: string;
   label?: string;
   loadingLabel?: string;
   iconName?: keyof typeof MaterialCommunityIcons.glyphMap;
   iconColor?: string;
   iconSize?: number;
-  underlayColor?: string;
   onPress: () => void;
   style?: StyleProp<ViewStyle>;
   animatedStyle?: StyleProp<ViewStyle>;
@@ -74,18 +117,16 @@ export type ThemedButtonProps = {
   textStyle?: StyleProp<TextStyle>;
   syncStatus?: "idle" | "syncing" | "synced" | "error";
   debounceTime?: number;
-  outline?: boolean;
+  variant?: "default" | "solid" | "glass" | "outline";
+  outline?: boolean; // Restored for convenience
+  glassIntensity?: GlassIntensity;
   borderColor?: string;
   borderWidth?: number;
-  variant?: "default" | "glass";
 };
 
 export function ThemedButton({
   ref,
-  lightColor,
-  darkColor,
   label,
-  loadingLabel,
   iconName,
   iconColor,
   iconSize = getResponsiveWidth(4.5),
@@ -99,34 +140,37 @@ export function ThemedButton({
   textStyle,
   syncStatus,
   debounceTime = 300,
-  outline = false,
-  borderWidth = 1,
   variant = "default",
+  outline = false,
+  glassIntensity = "medium",
+  borderColor,
+  borderWidth = 1,
 }: ThemedButtonProps): JSX.Element {
-  const { overlayColor, borderColor } = useGlassStyle();
-  const color = useThemeColor({ light: lightColor, dark: darkColor }, "text");
-  const icon = useThemeColor(
+  const glassStyle = useGlassStyle(
+    variant === "glass" ? "strong" : glassIntensity
+  );
+  const iconThemeColor = useThemeColor(
     { light: Colors.light.icon, dark: Colors.dark.icon },
     "icon"
   );
+  const solidBackgroundColor = useThemeColor(
+    {
+      light: Colors.light.buttonBackground,
+      dark: Colors.dark.buttonBackground,
+    },
+    "buttonBackground"
+  );
   const { currentTheme } = useTheme();
 
-  // Debounce state
   const [isDebouncing, setIsDebouncing] = useState(false);
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const debounceTimerRef = useRef<number | null>(null);
 
-  // Icon transition state
-  const [currentIcon, setCurrentIcon] = useState<{
-    name?: keyof typeof MaterialCommunityIcons.glyphMap;
-    syncStatus?: "idle" | "syncing" | "synced" | "error";
-  }>({ name: iconName, syncStatus });
-  const [isTransitioning, setIsTransitioning] = useState(false);
-
-  // Animation values
+  // State for managing icon transitions
+  const [currentIcon, setCurrentIcon] = useState({ iconName, syncStatus });
   const iconOpacity = useSharedValue(1);
   const iconScale = useSharedValue(1);
-  const rotation = useSharedValue(0);
 
+  // Cleanup debounce timer on unmount
   useEffect(() => {
     return () => {
       if (debounceTimerRef.current) {
@@ -135,95 +179,129 @@ export function ThemedButton({
     };
   }, []);
 
-  // Handle icon changes with animation
+  // Animate icon changes (cross-fade effect)
   useEffect(() => {
-    const newIconState = { name: iconName, syncStatus };
+    const newIconState = { iconName, syncStatus };
     const hasIconChanged =
-      currentIcon.name !== newIconState.name ||
+      currentIcon.iconName !== newIconState.iconName ||
       currentIcon.syncStatus !== newIconState.syncStatus;
 
-    if (hasIconChanged && !isTransitioning) {
-      setIsTransitioning(true);
-      
-      // Animate out current icon
-      iconOpacity.value = withSequence(
-        withTiming(0, { duration: 150 }),
-        withTiming(1, { duration: 150 }, (finished) => {
-          if (finished) {
-            runOnJS(setIsTransitioning)(false);
-          }
-        })
-      );
-      
-      iconScale.value = withSequence(
-        withTiming(0.8, { duration: 150 }),
-        withTiming(1, { duration: 150 })
-      );
+    if (hasIconChanged) {
+      iconOpacity.value = withTiming(0, { duration: 150 });
+      iconScale.value = withTiming(0.8, { duration: 150 });
 
-      // Update icon after fade out starts
       setTimeout(() => {
-        setCurrentIcon(newIconState);
-      }, 75);
+        runOnJS(setCurrentIcon)(newIconState);
+        iconOpacity.value = withTiming(1, { duration: 150 });
+        iconScale.value = withTiming(1, { duration: 150 });
+      }, 150);
     }
-  }, [iconName, syncStatus, currentIcon, isTransitioning, iconOpacity, iconScale]);
+  }, [iconName, syncStatus, iconOpacity, iconScale]);
 
-  // Colors
+  // --- Memoized Values ---
+
+  const indicatorIconColor = useMemo(
+    () =>
+      currentTheme === "light"
+        ? Colors.light.background
+        : Colors.dark.background,
+    [currentTheme]
+  );
+
   const displayedIconColor = useMemo(() => {
-    if (variant === "glass") {
-      return "#FFFFFF";
-    }
     if (currentIcon.syncStatus === "error") {
       return currentTheme === "light"
         ? Colors.light.error
         : Colors.dark.error;
     }
-    return iconColor ? iconColor : icon;
-  }, [variant, currentIcon.syncStatus, currentTheme, iconColor, icon]);
+    return iconColor || iconThemeColor;
+  }, [currentIcon.syncStatus, currentTheme, iconColor, iconThemeColor]);
 
-  const buttonBackgroundColor = useMemo(
-    () =>
-      currentTheme === "light"
-        ? Colors.light.buttonBackground
-        : Colors.dark.buttonBackground,
-    [currentTheme]
-  );
+  const textColor = displayedIconColor;
 
-  const textColor = useMemo(() => {
-    if (variant === "glass") {
-      return "#FFFFFF";
+  const isButtonDisabled =
+    disabled || loading || syncStatus === "syncing" || isDebouncing;
+
+  // --- Styles ---
+
+  const buttonStyle = useMemo<StyleProp<ViewStyle>>(() => {
+    const baseStyle: ViewStyle = {
+      ...styles.touchable,
+      opacity: isButtonDisabled ? 0.7 : 1,
+    };
+
+    // The 'outline' prop takes precedence for convenience/backward compatibility
+    if (outline) {
+      return [
+        baseStyle,
+        {
+          backgroundColor: "transparent",
+          borderWidth: borderWidth,
+          borderColor: Colors.light.icon,
+        },
+        style,
+      ];
     }
-    return color;
-  }, [variant, color]);
 
-  const outlineBorderColor = useMemo(
-    () => borderColor || buttonBackgroundColor,
-    [borderColor, buttonBackgroundColor]
-  );
-
-  // --- Animation for sync icon ---
-  useEffect(() => {
-    if (currentIcon.syncStatus === "syncing") {
-      rotation.value = 0;
-      rotation.value = withRepeat(
-        withTiming(360, { duration: 1000 }),
-        -1,
-        false
-      );
-    } else {
-      rotation.value = 0;
+    // If outline is false, we use the variant
+    switch (variant) {
+      case "solid":
+        return [
+          baseStyle,
+          { backgroundColor: solidBackgroundColor },
+          style,
+        ];
+      case "glass":
+        return [
+          baseStyle,
+          {
+            backgroundColor: glassStyle.background,
+            ...glassStyle.getGlassBorder(),
+            ...(Platform.OS === "ios" && { backdropFilter: "blur(10px)" }),
+          },
+          glassStyle.getGlassShadow(),
+          style,
+        ];
+      case "outline":
+        return [
+          baseStyle,
+          {
+            backgroundColor: "transparent",
+            borderWidth: borderWidth,
+            borderColor: borderColor || displayedIconColor,
+          },
+          style,
+        ];
+      default: // 'default' variant remains the frosted glass effect
+        return [
+          baseStyle,
+          {
+            backgroundColor: glassStyle.background,
+            ...glassStyle.getGlassBorder(),
+          },
+          glassStyle.getGlassShadow(),
+          style,
+        ];
     }
-  }, [currentIcon.syncStatus, rotation]);
-
-  const syncAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${rotation.value}deg` }],
-  }));
+  }, [
+    isButtonDisabled,
+    variant,
+    outline,
+    glassStyle,
+    style,
+    borderWidth,
+    borderColor,
+    displayedIconColor,
+    solidBackgroundColor,
+  ]);
 
   const iconAnimatedStyle = useAnimatedStyle(() => ({
     opacity: iconOpacity.value,
     transform: [{ scale: iconScale.value }],
   }));
 
-  // Debounced onPress handler
+  // --- Handlers and Renderers ---
+
   const handlePress = useCallback(() => {
     if (isDebouncing) return;
     onPress();
@@ -233,124 +311,45 @@ export function ThemedButton({
     }, debounceTime);
   }, [onPress, isDebouncing, debounceTime]);
 
-  const isButtonDisabled =
-    disabled || loading || currentIcon.syncStatus === "syncing" || isDebouncing;
+  const renderIcon = () => {
+    const { syncStatus: status, iconName: name } = currentIcon;
 
-  // Button style
-  const buttonStyle = useMemo(() => {
-    const baseStyle = { opacity: isButtonDisabled ? 0.7 : 1 };
-
-    if (variant === "glass") {
-      return [
-        styles.touchable,
-        baseStyle,
-        {
-          backgroundColor: GLASS_VARIANT_CONFIG.background,
-          borderWidth: 1,
-          borderColor: GLASS_VARIANT_CONFIG.borderColor,
-          ...(Platform.OS === "ios" && {
-            backdropFilter: `blur(${GLASS_VARIANT_CONFIG.blur}px)`,
-          }),
-        },
-        GLASS_VARIANT_CONFIG.shadow,
-      ];
+    if (status) {
+      if (status === "error") {
+        return (
+          <MaterialCommunityIcons
+            name="cloud-alert"
+            size={iconSize}
+            color={displayedIconColor}
+          />
+        );
+      }
+      const indicatorMap: Record<
+        string,
+        keyof typeof MaterialCommunityIcons.glyphMap
+      > = {
+        idle: "sync",
+        syncing: "sync",
+        synced: "check",
+      };
+      return (
+        <CloudWithIndicator
+          indicatorName={indicatorMap[status]}
+          iconSize={iconSize}
+          cloudColor={displayedIconColor}
+          indicatorBackgroundColor={displayedIconColor}
+          indicatorIconColor={indicatorIconColor}
+          animated={status === "syncing"}
+        />
+      );
     }
 
-    if (outline) {
-      return [
-        styles.touchable,
-        baseStyle,
-        {
-          backgroundColor: "transparent",
-          borderWidth: borderWidth,
-          borderColor: outlineBorderColor,
-        },
-      ];
-    }
-
-    return [
-      styles.touchable,
-      baseStyle,
-      {
-        backgroundColor: buttonBackgroundColor,
-        borderWidth: 1,
-        borderColor: borderColor,
-      },
-    ];
-  }, [
-    isButtonDisabled,
-    variant,
-    outline,
-    borderWidth,
-    outlineBorderColor,
-    buttonBackgroundColor,
-  ]);
-
-  // Cloud with indicator
-  type CloudWithIndicatorProps = {
-    indicatorName: keyof typeof MaterialCommunityIcons.glyphMap;
-    animated?: boolean;
-  };
-
-  const CloudWithIndicator: React.FC<CloudWithIndicatorProps> = ({
-    indicatorName,
-    animated = false,
-  }) => (
-    <Animated.View style={[styles.iconContainer, iconAnimatedStyle]}>
+    return name ? (
       <MaterialCommunityIcons
-        name="cloud"
+        name={name}
         size={iconSize}
         color={displayedIconColor}
-        style={styles.baseIcon}
       />
-      <Animated.View
-        style={[
-          styles.syncIndicator,
-          animated ? syncAnimatedStyle : undefined,
-          {
-            backgroundColor: "transparent",
-          },
-        ]}
-      >
-        <MaterialCommunityIcons
-          name={indicatorName}
-          size={iconSize * 0.58}
-          color={displayedIconColor}
-        />
-      </Animated.View>
-    </Animated.View>
-  );
-
-  // Render icon
-  const renderIcon = () => {
-    if (currentIcon.syncStatus) {
-      switch (currentIcon.syncStatus) {
-        case "idle":
-          return <CloudWithIndicator indicatorName="sync" />;
-        case "syncing":
-          return <CloudWithIndicator indicatorName="sync" animated />;
-        case "synced":
-          return <CloudWithIndicator indicatorName="check" />;
-        case "error":
-          return (
-            <Animated.View style={iconAnimatedStyle}>
-              <MaterialCommunityIcons
-                name="cloud-alert"
-                size={iconSize}
-                color={displayedIconColor}
-              />
-            </Animated.View>
-          );
-      }
-    }
-    return currentIcon.name ? (
-      <Animated.View style={iconAnimatedStyle}>
-        <MaterialCommunityIcons
-          name={currentIcon.name}
-          size={iconSize}
-          color={displayedIconColor}
-        />
-      </Animated.View>
     ) : null;
   };
 
@@ -363,8 +362,7 @@ export function ThemedButton({
       accessible
       accessibilityLabel={label}
       accessibilityRole="button"
-      accessibilityHint={`Press to ${label}`}
-      style={[buttonStyle, style, animatedStyle]}
+      style={[buttonStyle, animatedStyle]}
       hitSlop={{
         top: getResponsiveHeight(1.2),
         bottom: getResponsiveHeight(1.2),
@@ -372,27 +370,31 @@ export function ThemedButton({
         right: getResponsiveWidth(2.4),
       }}
     >
-      {variant === "default" && !outline && (
-        <View style={[styles.defaultOverlay, { backgroundColor: overlayColor }]} />
-      )}
-      {loading ? (
-        <ActivityIndicator
-          size={getResponsiveFontSize(23)}
-          color={loadingColor ? loadingColor : textColor}
+      {variant === "default" && (
+        <View
+          style={[styles.defaultOverlay, glassStyle.getGlassOverlay()]}
         />
-      ) : (
-        <>
-          {renderIcon()}
-          {label && (
-            <ThemedText
-              style={[styles.label, { color: textColor }, textStyle]}
-              type="defaultSemiBold"
-            >
-              {label}
-            </ThemedText>
-          )}
-        </>
       )}
+      <Animated.View style={iconAnimatedStyle}>
+        {loading ? (
+          <ActivityIndicator
+            size={getResponsiveFontSize(23)}
+            color={loadingColor || textColor}
+          />
+        ) : (
+          <View style={styles.contentContainer}>
+            {renderIcon()}
+            {label && (
+              <ThemedText
+                style={[styles.label, { color: textColor }, textStyle]}
+                type="defaultSemiBold"
+              >
+                {label}
+              </ThemedText>
+            )}
+          </View>
+        )}
+      </Animated.View>
     </AnimatedPressable>
   );
 }
@@ -400,16 +402,20 @@ export function ThemedButton({
 const styles = StyleSheet.create({
   touchable: {
     padding: getResponsiveWidth(2),
-    borderRadius: getResponsiveWidth(12),
+    borderRadius: getResponsiveWidth(100),
     alignItems: "center",
     justifyContent: "center",
-    flexDirection: "row",
-    gap: getResponsiveWidth(1.2),
     overflow: "hidden",
+  },
+  contentContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: getResponsiveWidth(1.2),
   },
   defaultOverlay: {
     ...StyleSheet.absoluteFillObject,
-    borderRadius: getResponsiveWidth(12),
+    borderRadius: getResponsiveWidth(100),
   },
   label: {
     fontSize: getResponsiveFontSize(16),
@@ -421,7 +427,6 @@ const styles = StyleSheet.create({
     height: getResponsiveWidth(4.5),
     alignItems: "center",
     justifyContent: "center",
-    zIndex: 1,
   },
   baseIcon: {
     position: "absolute",
@@ -430,7 +435,9 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: getResponsiveWidth(-0.5),
     right: getResponsiveWidth(-0.5),
-    padding: getResponsiveWidth(0.05),
+    padding: getResponsiveWidth(0.2),
     borderRadius: getResponsiveWidth(100),
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

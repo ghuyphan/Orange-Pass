@@ -575,7 +575,7 @@ const styles = StyleSheet.create({
     marginTop: STATUSBAR_HEIGHT + getResponsiveHeight(11),
     flex: getResponsiveHeight(0.35),
     backgroundColor: "black",
-    borderRadius: getResponsiveWidth(4),
+
     overflow: "hidden",
   },
   loader: {
@@ -600,7 +600,7 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     position: "absolute",
-    top: STATUSBAR_HEIGHT + 25,
+    top: STATUSBAR_HEIGHT + getResponsiveHeight(4.5),
     width: "100%",
     flexDirection: "row",
     justifyContent: "space-between",
@@ -608,6 +608,7 @@ const styles = StyleSheet.create({
   },
   headerButton: {
     marginHorizontal: 15,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
   },
   bottomContainer: {
     flex: 1,

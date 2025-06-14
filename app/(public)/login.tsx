@@ -500,7 +500,7 @@ const bottomSheetRef = useRef<BottomSheet | null>(null);
                 onPress={onNavigateToRegister}
                 style={styles.createAccountButton}
                 textStyle={styles.createAccountButtonText}
-                outline
+                variant="outline"
                 disabled={isSubmitting}
               />
               <ThemedText type="defaultSemiBold" style={styles.metaText}>

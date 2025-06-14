@@ -49,6 +49,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedFAB } from "@/components/buttons";
 import { ThemedButton } from "@/components/buttons";
+import { ThemedDualButton } from "@/components/buttons/ThemedDualButton";
 import ThemedReuseableSheet from "@/components/bottomsheet/ThemedReusableSheet";
 import ThemedCardItem from "@/components/cards/ThemedCardItem";
 import {
@@ -337,7 +338,7 @@ function HomeScreen() {
 
     if (isEmpty) {
       listOpacity.value = 0;
-      
+
       // Only animate if we haven't performed the empty animation yet
       if (!emptyAnimationPerformed) {
         emptyCardOffset.value = 350;
@@ -457,7 +458,7 @@ function HomeScreen() {
     [userId]
   );
   const onNavigateToScanScreen = useCallback(
-    () => router.push("/(scan)/scan-main"),
+    () => router.push("/(auth)/(scan)/scan-main"),
     []
   );
   const onNavigateToSettingsScreen = useCallback(
@@ -496,7 +497,7 @@ function HomeScreen() {
       timeoutRefs.current.edit = setTimeout(
         () =>
           router.push({
-            pathname: `/(edit)/edit`,
+            pathname: `/(auth)/(edit)/edit`,
             params: { id: selectedItemId },
           }),
         200
@@ -802,18 +803,22 @@ function HomeScreen() {
             {t("homeScreen.title")}
           </ThemedText>
           <View style={styles.titleButtonContainer}>
-            <ThemedButton
-              iconName="cloud-sync"
-              syncStatus={currentSyncStatus}
+            <ThemedDualButton
+              // --- Global Props ---
               style={styles.titleButton}
-              onPress={onSync}
               disabled={currentIsSyncingOp || currentIsLoading || isOffline}
-            />
-            <ThemedButton
-              iconName="camera"
-              style={styles.titleButton}
-              onPress={onScan}
-              disabled={currentIsLoading}
+              // --- Left Button Config ---
+              leftButton={{
+                iconName: "cloud-sync", // Note: syncStatus is not part of this component
+                onPress: onSync,
+              }}
+              // --- Right Button Config ---
+              rightButton={{
+                iconName: "camera",
+                onPress: onScan,
+              }}
+            // --- Active State Example ---
+            // activeSide={currentIsSyncingOp ? 'left' : 'none'}
             />
             <ThemedButton
               iconName="cog"
@@ -1032,7 +1037,7 @@ function HomeScreen() {
         title={t("homeScreen.confirmDeleteTitle")}
         message={t("homeScreen.confirmDeleteMessage")}
         isVisible={isModalVisible}
-        iconName="delete "
+        iconName="delete"
       />
     </ThemedView>
   );

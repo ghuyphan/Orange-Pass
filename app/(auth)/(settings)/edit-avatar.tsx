@@ -172,8 +172,8 @@ const getThemedStyles = (
       fontSize: getResponsiveFontSize(14),
     },
     saveButton: {
-      marginTop: getResponsiveHeight(2),
-      marginBottom: getResponsiveHeight(3),
+      marginTop: getResponsiveHeight(1.5),
+      marginBottom: getResponsiveHeight(1.5),
     },
     customSheetContent: {
       flex: 1,
@@ -294,7 +294,7 @@ const EditAvatarScreen = () => {
 
   // Effect to defer Avatar rendering
   useEffect(() => {
-    let timerId: NodeJS.Timeout | undefined;
+    let timerId: number | undefined;
     const interactionPromise = InteractionManager.runAfterInteractions(() => {
       timerId = setTimeout(() => {
         setIsAvatarPreviewReady(true);
@@ -441,7 +441,7 @@ const EditAvatarScreen = () => {
 
     return (
       <View style={styles.selectorContainer} key={property}>
-        <ThemedText style={styles.label}>{label}</ThemedText>
+        <ThemedText style={styles.label} type="defaultSemiBold">{label}</ThemedText>
         <View style={styles.optionsRow}>
           {options.map((option, index) => {
             const isSelected = currentPropertyValue === option;

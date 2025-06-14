@@ -280,7 +280,7 @@ const DetailScreen = () => {
 
       editNavigationTimeoutRef.current = setTimeout(() => {
         router.push({
-          pathname: `/(edit)/edit`,
+          pathname: `/(auth)/(edit)/edit`,
           params: { id: editId },
         });
       }, EDIT_NAVIGATION_DELAY);
@@ -436,9 +436,8 @@ const DetailScreen = () => {
 
       try {
         const itemName = returnItemData(item.code, item.type);
-        const message = `${t("detailsScreen.transferMessage")} ${
-          item.account_name
-        }`;
+        const message = `${t("detailsScreen.transferMessage")} ${item.account_name
+          }`;
         const numericAmount = parseInt(amount.replace(/,/g, ""), 10);
         if (isNaN(numericAmount)) throw new Error("Invalid amount format");
 
@@ -715,6 +714,7 @@ const DetailScreen = () => {
                   </Pressable>
                 </View>
                 <FlatList
+                  key={amount}
                   data={dynamicSuggestions}
                   horizontal
                   style={styles.suggestionList}
@@ -783,7 +783,7 @@ const DetailScreen = () => {
       <ThemedReuseableSheet
         ref={bottomSheetRef}
         title={t("homeScreen.manage")}
-        snapPoints={["25%"]}
+        snapPoints={["30%"]}
         customContent={
           <SettingSheetContent onEdit={onEditPress} onDelete={onDeletePress} />
         }
@@ -820,7 +820,7 @@ const DetailScreen = () => {
 
 const styles = StyleSheet.create({
   container: {
-    paddingBottom: getResponsiveHeight(5),
+    // paddingBottom: getResponsiveHeight(5),
     paddingHorizontal: getResponsiveWidth(3.6),
     flexGrow: 1,
   },

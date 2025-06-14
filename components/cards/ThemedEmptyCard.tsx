@@ -39,11 +39,6 @@ export type ThemedEmptyCardProps = {
 };
 
 export const DEFAULT_IMAGE = require("@/assets/images/card.png");
-
-// Default gradient for glassmorphism background
-const DEFAULT_GRADIENT_START = "#E0E5F2";
-const DEFAULT_GRADIENT_END = "#B8C6E0";
-
 export function ThemedEmptyCard({
   headerLabel,
   footerLabel,
@@ -128,12 +123,12 @@ export function ThemedEmptyCard({
   );
 
   // --- Glassmorphism Gradients ---
-const backgroundGradient = useMemo(() => {
-  if (!enableGlassmorphism) return null;
-  return colorScheme === "light" 
-    ? [Colors.light.toastBackground, Colors.light.toastBackground]
-    : [Colors.light.cardBackground, Colors.light.cardFooter];
-}, [enableGlassmorphism, colorScheme]); // Also added colorScheme to dependencies
+  const backgroundGradient = useMemo(() => {
+    if (!enableGlassmorphism) return null;
+    return colorScheme === "light"
+      ? [Colors.light.toastBackground, Colors.light.toastBackground]
+      : [Colors.light.cardBackground, Colors.light.cardFooter];
+  }, [enableGlassmorphism, colorScheme]); // Also added colorScheme to dependencies
 
   const glassGradientColors = useMemo(() => {
     if (!enableGlassmorphism) return [];
@@ -150,10 +145,10 @@ const backgroundGradient = useMemo(() => {
         enableGlassmorphism
           ? styles.cardWrapper
           : [
-              styles.cardContainer,
-              { backgroundColor: colors.cardBackground },
-              style
-            ]
+            styles.cardContainer,
+            { backgroundColor: colors.cardBackground },
+            style
+          ]
       }
     >
       {/* Background and overlay layers for glassmorphism */}
@@ -170,17 +165,11 @@ const backgroundGradient = useMemo(() => {
       )}
 
       <LinearGradient
-        // Use transparent gradient for glass, or a single transparent color for standard
-        colors={
-          enableGlassmorphism
-            ? glassGradientColors
-            : ["transparent", "transparent"]
-        }
+        colors={[colors.cardBackground, colors.cardBackground]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[
           styles.cardContainer,
-          enableGlassmorphism && styles.glassCard,
           !enableGlassmorphism && { backgroundColor: colors.cardBackground },
           style
         ]}
@@ -233,13 +222,14 @@ const backgroundGradient = useMemo(() => {
                 <ThemedButton
                   label={t(footButtonLabel)}
                   onPress={handleButtonPress}
-                  style={[
-                    styles.cardFooterButton,
-                    enableGlassmorphism
-                      ? styles.glassButton
-                      : { backgroundColor: colors.buttonBackground }
-                  ]}
-                  textStyle={enableGlassmorphism ? styles.glassText : {}}
+                  style={{backgroundColor: Colors.light.cardBackground}}
+                  // style={[
+                  //   styles.cardFooterButton,
+                  //   enableGlassmorphism
+                  //     ? styles.glassButton
+                  //     : { backgroundColor: colors.buttonBackground }
+                  // ]}
+                  // textStyle={enableGlassmorphism ? styles.glassText : {}}
                 />
               }
               anchorPosition="bottom"
