@@ -38,6 +38,7 @@ import { storage } from '@/utils/storage';
 
 import Avatar, { AvatarFullConfig } from '@zamplyy/react-native-nice-avatar';
 import { useIsFocused } from '@react-navigation/native';
+import { ThemedTextButton } from '@/components/buttons';
 
 interface QuickLoginPreferences {
   [userId: string]: boolean;
@@ -260,7 +261,6 @@ export default function QuickLoginPromptScreen() {
           textStyle={styles.saveButtonText}
           disabled={isNavigating} // Disable during navigation
         />
-
         <ThemedButton
           label={t('quickLoginPrompt.notNow')}
           style={styles.notNowButton}
@@ -268,7 +268,8 @@ export default function QuickLoginPromptScreen() {
           loading={isDeclining}
           loadingLabel={t('quickLoginPrompt.saving')}
           textStyle={styles.notNowButtonText}
-          variant='outline'
+          variant='text'
+          
           disabled={isNavigating} // Disable during navigation
         />
       </View>

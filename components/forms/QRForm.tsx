@@ -237,7 +237,7 @@ const QRForm: React.FC<QRFormProps> = ({
   formikRef,
   onAttemptBankMetadataFetch,
 }) => {
-  // --- Hooks and State (unchanged) ---
+  // --- Hooks and State ---
   const { currentTheme } = useTheme();
   const { locale: currentLocale } = useLocale();
   const locale = currentLocale ?? "en";
@@ -283,6 +283,9 @@ const QRForm: React.FC<QRFormProps> = ({
   const [hasMoreBrandItems, setHasMoreBrandItems] = useState<boolean>(true);
   const [isFetchingNextBrandBatch, setIsFetchingNextBrandBatch] =
     useState<boolean>(false);
+  // --- MODIFICATION 1: Add new state for sheet content loading ---
+  const [isSheetContentLoading, setIsSheetContentLoading] =
+    useState<boolean>(false);
 
   const isSheetVisible = useRef(false);
   const bottomSheetRef = useRef<BottomSheet>(null);
@@ -303,7 +306,6 @@ const QRForm: React.FC<QRFormProps> = ({
   const animationRange = getResponsiveHeight(5);
   const translateYValue = -getResponsiveHeight(3);
   const scaleValue = 0.8;
-  // --- CHANGE 1: Define the card's approximate height for calculations ---
   const INITIAL_CARD_HEIGHT = getResponsiveHeight(25);
 
   // --- Data and Callbacks (unchanged) ---
@@ -482,6 +484,7 @@ const QRForm: React.FC<QRFormProps> = ({
     showToast(t("addScreen.errors.emptyInputMessage"));
   }, [showToast]);
 
+  // --- MODIFICATION 2: Update onOpenSheet to be instant ---
   const onOpenSheet = useCallback(
     (type: SheetType, currentCategoryFromForm: CategoryItem | null) => {
       if (isMetadataLoading) return;
@@ -492,26 +495,21 @@ const QRForm: React.FC<QRFormProps> = ({
         showToast(t("addScreen.errors.selectCategoryFirstMessage"));
         return;
       }
-      setSheetType(type);
-      Keyboard.dismiss();
 
+      Keyboard.dismiss();
+      setSheetType(type);
+
+      // If brand sheet needs initial data, set loading state.
       if (type === "brand" && currentCategoryFromForm?.value) {
-        if (
+        const needsLoading =
           lastLoadedBrandCategoryValueRef.current !==
-            currentCategoryFromForm.value ||
-          displayedBrandItems.length === 0
-        ) {
-          setDisplayedBrandItems([]);
-          setBrandItemsOffset(0);
-          setHasMoreBrandItems(true);
-          loadBrandItems(
-            currentCategoryFromForm.value as DataType,
-            0,
-            true
-          );
+            currentCategoryFromForm.value || displayedBrandItems.length === 0;
+        if (needsLoading) {
+          setIsSheetContentLoading(true);
         }
       }
 
+      // Open the sheet immediately.
       if (openSheetTimeoutRef.current) {
         clearTimeout(openSheetTimeoutRef.current);
       }
@@ -519,12 +517,41 @@ const QRForm: React.FC<QRFormProps> = ({
         setIsSheetOpen(true);
         openSheetTimeoutRef.current = setTimeout(
           () => bottomSheetRef.current?.snapToIndex(0),
-          Platform.OS === "ios" ? 50 : 50
+          50 // Small delay for animation smoothness
         );
       });
     },
-    [isMetadataLoading, showToast, loadBrandItems, displayedBrandItems.length]
+    [isMetadataLoading, showToast, displayedBrandItems.length]
   );
+
+  // --- MODIFICATION 3: Add a useEffect to handle data loading when the sheet opens ---
+  useEffect(() => {
+    if (isSheetOpen && isSheetContentLoading && sheetType === "brand") {
+      const categoryValue =
+        formikRef && typeof formikRef !== "function" && formikRef.current
+          ? formikRef.current.values.category?.value
+          : null;
+
+      if (categoryValue) {
+        // Reset state before loading new data
+        setDisplayedBrandItems([]);
+        setBrandItemsOffset(0);
+        setHasMoreBrandItems(true);
+
+        const loadData = async () => {
+          try {
+            await loadBrandItems(categoryValue as DataType, 0, true);
+          } finally {
+            setIsSheetContentLoading(false); // Turn off loading indicator
+          }
+        };
+        loadData();
+      } else {
+        // Should not happen due to checks in onOpenSheet, but as a safeguard:
+        setIsSheetContentLoading(false);
+      }
+    }
+  }, [isSheetOpen, isSheetContentLoading, sheetType, loadBrandItems, formikRef]);
 
   const handleSheetItemSelect = useCallback(
     (
@@ -576,7 +603,12 @@ const QRForm: React.FC<QRFormProps> = ({
 
   const handleSheetChange = useCallback((index: number) => {
     isSheetVisible.current = index !== -1;
-    setIsSheetOpen(index !== -1);
+    const sheetIsOpen = index !== -1;
+    setIsSheetOpen(sheetIsOpen);
+    // If sheet is closed, reset loading state
+    if (!sheetIsOpen) {
+      setIsSheetContentLoading(false);
+    }
   }, []);
 
   const sheetData = useCallback(() => {
@@ -593,7 +625,7 @@ const QRForm: React.FC<QRFormProps> = ({
   }, [sheetType, categoryData, metadataTypeData, displayedBrandItems]);
 
   const keyExtractor = useCallback(
-    (item: SheetItem, index?: number): string => {
+    (item: unknown, index?: number): string => {
       const currentIndex: number = typeof index === "number" ? index : -1;
       if (typeof item !== "object" || item === null) {
         if (process.env.NODE_ENV !== "production") {
@@ -721,7 +753,7 @@ const QRForm: React.FC<QRFormProps> = ({
     []
   );
 
-  // --- Animated Styles ---
+  // --- Animated Styles (unchanged) ---
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => (scrollY.value = event.contentOffset.y),
   });
@@ -763,7 +795,6 @@ const QRForm: React.FC<QRFormProps> = ({
     [scrollThreshold, scaleValue]
   );
 
-  // --- CHANGE 2: Create the new animated style for the form container ---
   const formContainerStyle = useAnimatedStyle(() => {
     const emptySpace =
       INITIAL_CARD_HEIGHT *
@@ -789,7 +820,7 @@ const QRForm: React.FC<QRFormProps> = ({
     if (initialValues.category?.value) {
       if (
         lastLoadedBrandCategoryValueRef.current !==
-          initialValues.category.value ||
+        initialValues.category.value ||
         allBrandsForCurrentCategoryRef.current.length === 0
       ) {
         prepareAllBrandsForCategory(initialValues.category.value as DataType);
@@ -952,7 +983,6 @@ const QRForm: React.FC<QRFormProps> = ({
                 {renderCardItemDisplay()}
               </Animated.View>
 
-              {/* --- CHANGE 3: Wrap all form content in the new Animated.View --- */}
               <Animated.View style={formContainerStyle}>
                 <InputGroup
                   style={styles.formContainer}
@@ -992,7 +1022,7 @@ const QRForm: React.FC<QRFormProps> = ({
                           isMetadataLoading
                             ? t("addScreen.qrLoadingPlaceholder")
                             : values.metadata ||
-                              t("addScreen.qrGeneratedPlaceholder")
+                            t("addScreen.qrGeneratedPlaceholder")
                         }
                         groupPosition="middle"
                       />
@@ -1001,7 +1031,7 @@ const QRForm: React.FC<QRFormProps> = ({
                     <View></View>
                   )}
                   {values.category?.value === "store" ||
-                  values.category?.value === "ewallet" ? (
+                    values.category?.value === "ewallet" ? (
                     <Animated.View
                       entering={FadeIn.duration(300)}
                       exiting={FadeOut.duration(300)}
@@ -1095,17 +1125,17 @@ const QRForm: React.FC<QRFormProps> = ({
                   sheetType === "category"
                     ? t("addScreen.categoryTitle")
                     : sheetType === "brand"
-                    ? t("addScreen.brandTitle")
-                    : sheetType === "metadataType"
-                    ? t("addScreen.metadataTypeTitle")
-                    : ""
+                      ? t("addScreen.brandTitle")
+                      : sheetType === "metadataType"
+                        ? t("addScreen.metadataTypeTitle")
+                        : ""
                 }
                 snapPoints={
                   sheetType === "category"
                     ? ["32%"]
                     : sheetType === "metadataType"
-                    ? ["25%"]
-                    : ["85%"]
+                      ? ["25%"]
+                      : ["85%"]
                 }
                 onChange={handleSheetChange}
                 contentType="flat"
@@ -1128,6 +1158,13 @@ const QRForm: React.FC<QRFormProps> = ({
                     onEndReached:
                       sheetType === "brand" ? handleLoadMoreBrands : undefined,
                     onEndReachedThreshold: 0.5,
+                    // --- MODIFICATION 4: Add loading indicators ---
+                    ListEmptyComponent:
+                      isSheetContentLoading && sheetType === "brand" ? (
+                        <View style={styles.sheetLoadingContainer}>
+                          <ActivityIndicator size="large" />
+                        </View>
+                      ) : null,
                     ListFooterComponent:
                       sheetType === "brand" && isFetchingNextBrandBatch ? (
                         <ActivityIndicator
@@ -1156,14 +1193,14 @@ const QRForm: React.FC<QRFormProps> = ({
   );
 };
 
-// --- Styles (unchanged) ---
+// --- MODIFICATION 5: Add the new style for the loading container ---
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scrollViewContent: {
     flexGrow: 1,
     paddingHorizontal: getResponsiveWidth(4.8),
     paddingTop: getResponsiveHeight(18),
-    paddingBottom: getResponsiveHeight(5),
+    // paddingBottom: getResponsiveHeight(5),
   },
   titleContainer: {
     position: "absolute",
@@ -1188,15 +1225,21 @@ const styles = StyleSheet.create({
   titleButton: {},
   formContainer: {
     marginTop: getResponsiveHeight(1.2),
-    marginBottom: getResponsiveHeight(2.4),
+    // marginBottom: getResponsiveHeight(2.4),
   },
   saveButton: {
-    marginBottom: getResponsiveHeight(3),
+    // marginBottom: getResponsiveHeight(3),
   },
   flatListStyle: {
     borderRadius: getResponsiveWidth(4),
     marginHorizontal: getResponsiveWidth(3.6),
-    marginBottom: getResponsiveHeight(3.6),
+    // marginBottom: getResponsiveHeight(3.6),
+  },
+  sheetLoadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    height: getResponsiveHeight(20), // Give it some space to be visible
   },
 });
 

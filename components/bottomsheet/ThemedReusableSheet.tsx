@@ -506,7 +506,7 @@ const styles = StyleSheet.create({
   searchBarContainer: {},
   searchBar: {
     marginTop: getResponsiveHeight(0.6),
-    borderRadius: getResponsiveWidth(10),
+    borderRadius: getResponsiveWidth(100),
     paddingVertical: getResponsiveHeight(1),
   },
 });

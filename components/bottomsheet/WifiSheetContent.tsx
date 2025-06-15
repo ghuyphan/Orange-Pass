@@ -52,6 +52,7 @@ const WifiSheetContent: React.FC<WifiSheetContentProps> = ({
   onNotification,
 }) => {
   const { currentTheme } = useTheme();
+  const cardBackgroundColor = currentTheme === "dark" ? Colors.dark.cardBackground : Colors.light.cardBackground;
   const { overlayColor, borderColor } = useGlassStyle();
 
   const [showPassword, setShowPassword] = useState(false);
@@ -414,7 +415,7 @@ const WifiSheetContent: React.FC<WifiSheetContentProps> = ({
   return (
     <View style={[styles.container, { borderColor }, style]}>
       <View
-        style={[styles.defaultOverlay, { backgroundColor: overlayColor }]}
+        style={[styles.defaultOverlay, { backgroundColor: cardBackgroundColor }]}
       />
       <ThemedModal
         onPrimaryAction={() => setIsModalVisible(false)}

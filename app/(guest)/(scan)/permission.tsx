@@ -175,13 +175,19 @@ const PermissionScreen = () => {
   return (
     <ThemedView style={styles.container}>
       <Animated.View style={[styles.contentContainer, contentAnimatedStyle]}>
-        <View style={[styles.iconContainer, { backgroundColor: iconColor }]}>
-          <Ionicons
+        {/* <View style={[styles.iconContainer, { backgroundColor: iconColor }]}> */}
+          {/* <Ionicons
             name={step === 1 ? 'camera' : 'wifi'}
             size={getResponsiveFontSize(75)}
             color={textColor}
-          />
-        </View>
+          /> */}
+          <ThemedButton 
+           iconName={step === 1 ? 'camera' : 'wifi'}
+            onPress={() => {}}
+            style={styles.iconContainer}
+            iconSize={getResponsiveFontSize(50)}
+            />
+        {/* </View> */}
         <ThemedText style={styles.title} type="title">
           {step === 1
             ? t('permissionScreen.cameraTitle')
@@ -224,7 +230,7 @@ const styles = StyleSheet.create({
   iconContainer: {
     justifyContent: 'center',
     alignItems: 'center',
-    padding: getResponsiveWidth(7.2),
+    padding: getResponsiveWidth(8.2),
     borderRadius: getResponsiveWidth(24),
     marginBottom: getResponsiveHeight(2.4),
   },

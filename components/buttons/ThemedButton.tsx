@@ -117,7 +117,7 @@ export type ThemedButtonProps = {
   textStyle?: StyleProp<TextStyle>;
   syncStatus?: "idle" | "syncing" | "synced" | "error";
   debounceTime?: number;
-  variant?: "default" | "solid" | "glass" | "outline";
+  variant?: "default" | "solid" | "glass" | "outline" | "text";
   outline?: boolean; // Restored for convenience
   glassIntensity?: GlassIntensity;
   borderColor?: string;
@@ -129,7 +129,7 @@ export function ThemedButton({
   label,
   iconName,
   iconColor,
-  iconSize = getResponsiveWidth(4.5),
+  iconSize = getResponsiveWidth(5),
   onPress,
   style = {},
   animatedStyle = {},
@@ -219,15 +219,17 @@ export function ThemedButton({
 
   const textColor = displayedIconColor;
 
-  const isButtonDisabled =
-    disabled || loading || syncStatus === "syncing" || isDebouncing;
+  // Separate visual state from functional disabled state
+  const isVisuallyDisabled = disabled || loading || syncStatus === "syncing";
+  const isButtonDisabled = isVisuallyDisabled || isDebouncing;
 
   // --- Styles ---
 
   const buttonStyle = useMemo<StyleProp<ViewStyle>>(() => {
     const baseStyle: ViewStyle = {
       ...styles.touchable,
-      opacity: isButtonDisabled ? 0.7 : 1,
+      // Opacity is now tied to visual disabled state, not debouncing
+      opacity: isVisuallyDisabled ? 0.7 : 1,
     };
 
     // The 'outline' prop takes precedence for convenience/backward compatibility
@@ -238,6 +240,16 @@ export function ThemedButton({
           backgroundColor: "transparent",
           borderWidth: borderWidth,
           borderColor: Colors.light.icon,
+        },
+        style,
+      ];
+    } 
+    
+    if (variant === "text") {
+      return [
+        baseStyle,
+        {
+          backgroundColor: "transparent",
         },
         style,
       ];
@@ -284,7 +296,7 @@ export function ThemedButton({
         ];
     }
   }, [
-    isButtonDisabled,
+    isVisuallyDisabled, // Changed from isButtonDisabled
     variant,
     outline,
     glassStyle,

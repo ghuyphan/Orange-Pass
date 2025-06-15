@@ -129,7 +129,6 @@ function HomeScreen() {
     idle: null,
     edit: null,
     delete: null,
-    sheet: null,
     toast: null,
     network: null,
   });
@@ -201,7 +200,7 @@ function HomeScreen() {
         setIsSyncing(false);
       }
     },
-    [dispatch, isOffline, isSyncing, t]
+    [dispatch, isOffline, isSyncing]
   );
 
   // --- EFFECT 1: Initial Data Load & First-Time Sync ---
@@ -283,7 +282,6 @@ function HomeScreen() {
     userId,
     initialLoadAttemptedForUser,
     dispatch,
-    t,
     isOffline,
     syncWithServer,
     isLoading,
@@ -323,7 +321,7 @@ function HomeScreen() {
       if (timeoutRefs.current.network)
         clearTimeout(timeoutRefs.current.network);
     };
-  }, [isOffline, t, isFocused, bottomToastMessage, isBottomToastVisible]);
+  }, [isOffline, isFocused, bottomToastMessage, isBottomToastVisible]);
 
   // --- EFFECT 3: Animations ---
   const animateEmptyCard = useCallback(() => {
@@ -518,6 +516,7 @@ function HomeScreen() {
     ) => {
       setSheetType(type);
       setIsSheetOpen(true);
+      // setIsSheetOpen is now handled by handleSheetChange
       setSelectedItemId(id || null);
       if (type === "wifi" && ssid && password) {
         setWifiSsid(ssid);
@@ -531,6 +530,12 @@ function HomeScreen() {
     },
     []
   );
+
+  // *** NEW ***: Callback to handle bottom sheet state changes
+  const handleSheetChange = useCallback((index: number) => {
+    // Sheet is open if index is 0 or greater, closed if -1
+    setIsSheetOpen(index > -1);
+  }, []);
 
   const onOpenGallery = useGalleryPicker({
     onOpenSheet,
@@ -806,19 +811,19 @@ function HomeScreen() {
             <ThemedDualButton
               // --- Global Props ---
               style={styles.titleButton}
-              disabled={currentIsSyncingOp || currentIsLoading || isOffline}
               // --- Left Button Config ---
               leftButton={{
                 iconName: "cloud-sync", // Note: syncStatus is not part of this component
                 onPress: onSync,
+                disabled: currentIsSyncingOp || currentIsLoading || isOffline,
               }}
               // --- Right Button Config ---
               rightButton={{
                 iconName: "camera",
                 onPress: onScan,
               }}
-            // --- Active State Example ---
-            // activeSide={currentIsSyncingOp ? 'left' : 'none'}
+              // --- Active State Example ---
+              // activeSide={currentIsSyncingOp ? 'left' : 'none'}
             />
             <ThemedButton
               iconName="cog"
@@ -1002,14 +1007,7 @@ function HomeScreen() {
                 ? t("homeScreen.linking")
                 : t("homeScreen.settings")
         }
-        onClose={() => {
-          if (timeoutRefs.current.sheet)
-            clearTimeout(timeoutRefs.current.sheet);
-          timeoutRefs.current.sheet = setTimeout(
-            () => setIsSheetOpen(false),
-            50
-          );
-        }}
+        onChange={handleSheetChange} // <-- *** UPDATED ***
         snapPoints={
           sheetType === "setting"
             ? ["25%"]
@@ -1098,7 +1096,7 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: "absolute",
-    bottom: getResponsiveHeight(2),
+    bottom: getResponsiveHeight(3),
     right: getResponsiveWidth(3.6),
     zIndex: 3,
   },

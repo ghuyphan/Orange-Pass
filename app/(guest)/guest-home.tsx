@@ -286,7 +286,7 @@ function GuestHomeScreen() {
     [],
   );
   const onNavigateToSettingsScreen = useCallback(
-    () => router.push("/(guest)/settings-guest"),
+    () => router.push("/(guest)/(settings)/settings-guest"),
     [],
   );
 
@@ -321,7 +321,7 @@ function GuestHomeScreen() {
       if (timeoutRefs.current.edit) clearTimeout(timeoutRefs.current.edit);
       timeoutRefs.current.edit = setTimeout(() => {
         router.push({
-          pathname: `/(guest)/edit`,
+          pathname: `/(guest)/(edit)/edit`,
           params: { id: selectedItemId },
         });
       }, 200);
@@ -485,8 +485,8 @@ function GuestHomeScreen() {
       triggerHapticFeedback();
       setIsActive(false);
       setIsProcessing(true);
-      setToastMessage(t("homeScreen.reordering"));
-      setIsToastVisible(true);
+      // setToastMessage(t("homeScreen.reordering"));
+      // setIsToastVisible(true);
 
       let finalDataToSave: QRRecord[];
 
@@ -527,12 +527,12 @@ function GuestHomeScreen() {
         if (finalDataToSave.length > 0) {
           await updateQrIndexes(finalDataToSave, GUEST_USER_ID);
         }
-        setIsToastVisible(false); // Clear "reordering" toast
-        setTopToastMessage(t("homeScreen.reordered"));
-        setIsTopToastVisible(true);
+        // setIsToastVisible(false); // Clear "reordering" toast
+        // setTopToastMessage(t("homeScreen.reordered"));
+        // setIsTopToastVisible(true);
       } catch (error) {
         console.error("Error reordering QR for guest:", error);
-        setToastMessage(t("homeScreen.reorderError"));
+        // setToastMessage(t("homeScreen.reorderError"));
         // Keep isToastVisible true to show the error
       } finally {
         if (timeoutRefs.current.processing)

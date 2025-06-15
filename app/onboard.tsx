@@ -27,6 +27,8 @@ import {
 import { useTheme } from "@/context/ThemeContext";
 import { GUEST_MODE_KEY } from "@/constants/Constants";
 import { initializeGuestMode } from "@/services/auth";
+import { useGlassStyle } from "@/hooks/useGlassStyle";
+import { current } from "@reduxjs/toolkit";
 
 // Define a type for features
 type Feature = {
@@ -38,81 +40,104 @@ type Feature = {
 // Type for bottom sheet types
 type SheetType = "tos" | "privacy" | null;
 
-// Terms of Service Content
-const TermsOfServiceContent = ({ cardColor }: { cardColor: string }) => (
-  <>
-    <View
-      style={[
-        styles.sectionContainer,
-        { backgroundColor: cardColor, marginBottom: getResponsiveHeight(2.4) },
-      ]}
-    >
-      <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
-        {t("onboardingScreen.termsOfService.termsOfServiceTitle")} 🚀
-      </ThemedText>
-      <ThemedText style={styles.sectionText}>
-        {t("onboardingScreen.termsOfService.termsOfServiceContent1")}
-      </ThemedText>
-    </View>
-    <View style={[styles.sectionContainer, { backgroundColor: cardColor }]}>
-      <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
-        {t("onboardingScreen.termsOfService.termsOfServiceDescription")} 📋
-      </ThemedText>
-      <View style={styles.bulletContainer}>
-        {t("onboardingScreen.termsOfService.termsOfServiceContent2")
-          .split("\n")
-          .map((bullet, index) =>
-            bullet.trim().startsWith("*") ? (
-              <View key={index} style={styles.bulletPoint}>
-                <ThemedText style={styles.bulletIcon}>•</ThemedText>
-                <ThemedText style={styles.bulletText}>
-                  {bullet.replace("*", "").trim()}
-                </ThemedText>
-              </View>
-            ) : null
-          )}
+// Terms of Service Content with Glass Effect
+const TermsOfServiceContent = () => {
+  const { currentTheme } = useTheme();
+  const cardBackgroundColor = currentTheme === "dark" ? Colors.dark.cardBackground : Colors.light.cardBackground;
+  const { overlayColor, borderColor } = useGlassStyle();
+  return (
+    <>
+      <View
+        style={[
+          styles.sectionContainer,
+          { borderColor, marginBottom: getResponsiveHeight(2.4) },
+        ]}
+      >
+        <View
+          style={[styles.defaultOverlay, { backgroundColor: cardBackgroundColor }]}
+        />
+        <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
+          {t("onboardingScreen.termsOfService.termsOfServiceTitle")} 🚀
+        </ThemedText>
+        <ThemedText style={styles.sectionText}>
+          {t("onboardingScreen.termsOfService.termsOfServiceContent1")}
+        </ThemedText>
       </View>
-    </View>
-  </>
-);
+      <View style={[styles.sectionContainer, { borderColor }]}>
+        <View
+          style={[styles.defaultOverlay, { backgroundColor: cardBackgroundColor }]}
+        />
+        <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
+          {t("onboardingScreen.termsOfService.termsOfServiceDescription")} 📋
+        </ThemedText>
+        <View style={styles.bulletContainer}>
+          {t("onboardingScreen.termsOfService.termsOfServiceContent2")
+            .split("\n")
+            .map((bullet, index) =>
+              bullet.trim().startsWith("*") ? (
+                <View key={index} style={styles.bulletPoint}>
+                  <ThemedText style={styles.bulletIcon}>•</ThemedText>
+                  <ThemedText style={styles.bulletText}>
+                    {bullet.replace("*", "").trim()}
+                  </ThemedText>
+                </View>
+              ) : null
+            )}
+        </View>
+      </View>
+    </>
+  );
+};
 
-// Privacy Policy Content
-const PrivacyPolicyContent = ({ cardColor }: { cardColor: string }) => (
-  <>
-    <View
-      style={[
-        styles.sectionContainer,
-        { backgroundColor: cardColor, marginBottom: getResponsiveHeight(2.4) },
-      ]}
-    >
-      <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
-        {t("onboardingScreen.termsOfService.privacyPolicyTitle")} 🔒
-      </ThemedText>
-      <ThemedText style={styles.sectionText}>
-        {t("onboardingScreen.termsOfService.privacyPolicyContent1")}
-      </ThemedText>
-    </View>
-    <View style={[styles.sectionContainer, { backgroundColor: cardColor }]}>
-      <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
-        {t("onboardingScreen.termsOfService.privacyPolicyDescription")} 🤝
-      </ThemedText>
-      <View style={styles.bulletContainer}>
-        {t("onboardingScreen.termsOfService.privacyPolicyContent2")
-          .split("\n")
-          .map((bullet, index) =>
-            bullet.trim().startsWith("*") ? (
-              <View key={index} style={styles.bulletPoint}>
-                <ThemedText style={styles.bulletIcon}>•</ThemedText>
-                <ThemedText style={styles.bulletText}>
-                  {bullet.replace("*", "").trim()}
-                </ThemedText>
-              </View>
-            ) : null
-          )}
+// Privacy Policy Content with Glass Effect
+const PrivacyPolicyContent = () => {
+  const { currentTheme } = useTheme();
+  const { overlayColor, borderColor } = useGlassStyle();
+  const cardBackgroundColor = currentTheme === "dark" ? Colors.dark.cardBackground : Colors.light.cardBackground;
+
+  return (
+    <>
+      <View
+        style={[
+          styles.sectionContainer,
+          { borderColor, marginBottom: getResponsiveHeight(2.4) },
+        ]}
+      >
+        <View
+          style={[styles.defaultOverlay, { backgroundColor: cardBackgroundColor }]}
+        />
+        <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
+          {t("onboardingScreen.termsOfService.privacyPolicyTitle")} 🔒
+        </ThemedText>
+        <ThemedText style={styles.sectionText}>
+          {t("onboardingScreen.termsOfService.privacyPolicyContent1")}
+        </ThemedText>
       </View>
-    </View>
-  </>
-);
+      <View style={[styles.sectionContainer, { borderColor }]}>
+        <View
+          style={[styles.defaultOverlay, { backgroundColor: cardBackgroundColor }]}
+        />
+        <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
+          {t("onboardingScreen.termsOfService.privacyPolicyDescription")} 🤝
+        </ThemedText>
+        <View style={styles.bulletContainer}>
+          {t("onboardingScreen.termsOfService.privacyPolicyContent2")
+            .split("\n")
+            .map((bullet, index) =>
+              bullet.trim().startsWith("*") ? (
+                <View key={index} style={styles.bulletPoint}>
+                  <ThemedText style={styles.bulletIcon}>•</ThemedText>
+                  <ThemedText style={styles.bulletText}>
+                    {bullet.replace("*", "").trim()}
+                  </ThemedText>
+                </View>
+              ) : null
+            )}
+        </View>
+      </View>
+    </>
+  );
+};
 
 const OnBoardScreen = () => {
   const router = useRouter();
@@ -151,26 +176,18 @@ const OnBoardScreen = () => {
   ];
 
   const onContinueAsGuest = useCallback(async () => {
-    setLoading(true); // Set loading state
+    setLoading(true);
 
-    // Defer the rest of the logic to allow the UI to update
     setTimeout(async () => {
       try {
-        // 1. Set onboarding complete flag
         storage.set("hasSeenOnboarding", true);
-
-        // 2. Set guest mode preference flag IMMEDIATELY
         storage.set(GUEST_MODE_KEY, true);
-
         triggerSuccessHapticFeedback();
-
-        // 3. Navigate optimistically.
         router.replace("/(guest)/guest-home");
 
-        // 4. Perform the full guest initialization in the background.
         initializeGuestMode()
           .then(() => {
-             (
+            console.log(
               "[OnBoardScreen] Background guest mode initialization successful."
             );
           })
@@ -180,40 +197,31 @@ const OnBoardScreen = () => {
               err
             );
           });
-
       } catch (error) {
         console.error(
           "[OnBoardScreen] Error during guest mode setup (inside timeout):",
           error
         );
-        // If an error occurs before or during navigation,
-        // and the screen is still visible, turn off loading.
         setLoading(false);
       }
-    }, 0); // A 0ms delay is usually enough.
+    }, 0);
   }, [router]);
-  
 
   const onOpenSheet = useCallback((type: SheetType) => {
     setSheetType(type);
     bottomSheetRef.current?.snapToIndex(0);
   }, []);
 
-  const onCloseSheet = useCallback(() => {
-    bottomSheetRef.current?.close();
-    setSheetType(null);
-  }, []);
-
   const renderSheetContent = useMemo(() => {
     return () => {
       if (sheetType === "tos") {
-        return <TermsOfServiceContent cardColor={cardColor} />;
+        return <TermsOfServiceContent />;
       } else if (sheetType === "privacy") {
-        return <PrivacyPolicyContent cardColor={cardColor} />;
+        return <PrivacyPolicyContent />;
       }
       return null;
     };
-  }, [sheetType, cardColor]);
+  }, [sheetType]);
 
   return (
     <KeyboardAwareScrollView
@@ -243,18 +251,23 @@ const OnBoardScreen = () => {
         <View style={styles.featuresContainer}>
           {features.map((feature, index) => (
             <View key={index} style={styles.featureContainer}>
-              <View
+              {/* <View
                 style={[
                   styles.iconContainer,
                   { backgroundColor: cardColor },
                 ]}
-              >
-                <MaterialCommunityIcons
+              > */}
+                {/* <MaterialCommunityIcons
                   name={feature.icon as any}
                   size={getResponsiveWidth(7)}
                   color={iconColor}
+                /> */}
+                <ThemedButton
+                  onPress={() => {}}
+                  iconName={feature.icon as any}
+                  style={[styles.iconContainer]}
                 />
-              </View>
+              {/* </View> */}
               <View style={styles.featureTextContainer}>
                 <ThemedText type="defaultSemiBold" style={styles.title}>
                   {feature.title}
@@ -360,11 +373,6 @@ const styles = StyleSheet.create({
     marginTop: getResponsiveHeight(10),
     marginBottom: getResponsiveHeight(9),
   },
-  screenTitle: {
-    fontSize: getResponsiveFontSize(24),
-    textAlign: "center",
-    marginBottom: getResponsiveHeight(6),
-  },
   featuresContainer: {
     width: "100%",
     gap: getResponsiveHeight(4),
@@ -427,7 +435,7 @@ const styles = StyleSheet.create({
     gap: getResponsiveWidth(1),
   },
   highlightText: {
-    color: "#FFC107", // This was accentColor before, hardcoding for simplicity or ensure accentColor is defined if used
+    color: "#FFC107",
     fontSize: getResponsiveFontSize(12),
     letterSpacing: 0.5,
   },
@@ -439,14 +447,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: getResponsiveFontSize(16),
   },
-  guestButton: { // This style is defined but not used in the provided JSX
-    width: "100%",
-    marginBottom: getResponsiveHeight(2),
-  },
-  guestButtonText: { // This style is defined but not used in the provided JSX
-    fontSize: getResponsiveFontSize(14),
-    opacity: 0.8,
-  },
   metaText: {
     fontSize: getResponsiveFontSize(16),
     opacity: 0.7,
@@ -455,30 +455,42 @@ const styles = StyleSheet.create({
     borderRadius: getResponsiveWidth(4),
     paddingVertical: getResponsiveHeight(1.8),
     paddingHorizontal: getResponsiveWidth(4.8),
+    borderWidth: 1,
+    overflow: "hidden",
+  },
+  defaultOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 0,
   },
   sectionTitle: {
     fontSize: getResponsiveFontSize(16),
     marginBottom: getResponsiveHeight(1.2),
+    zIndex: 1,
   },
   sectionText: {
     fontSize: getResponsiveFontSize(14),
     lineHeight: getResponsiveFontSize(22),
+    zIndex: 1,
   },
   bulletContainer: {
     gap: getResponsiveHeight(1.2),
+    zIndex: 1,
   },
   bulletPoint: {
     flexDirection: "row",
     alignItems: "flex-start",
+    zIndex: 1,
   },
   bulletIcon: {
     fontSize: getResponsiveFontSize(20),
     marginRight: getResponsiveWidth(2.4),
+    zIndex: 1,
   },
   bulletText: {
     flex: 1,
     fontSize: getResponsiveFontSize(14),
     lineHeight: getResponsiveFontSize(22),
+    zIndex: 1,
   },
 });
 

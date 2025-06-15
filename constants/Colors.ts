@@ -5,7 +5,7 @@ const tintColorDark = "#FFA726"; // Restoring the original dark tint
 export const Colors = {
   light: {
     text: "#4D4239",              // A slightly deeper, modern neutral brown
-    background: "#FFFDF9",        // A warm off-white for a clean look
+    background: "#F2F2F7",        // A warm off-white for a clean look
     tint: tintColorLight,
     icon: "#7A5848",              // A refined tone for icons
     inputBackground: "rgba(249, 239, 231, 0.5)",  // Semi-transparent version of your original

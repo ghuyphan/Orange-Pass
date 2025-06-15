@@ -23,7 +23,6 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import "react-native-get-random-values";
 import * as SecureStore from "expo-secure-store";
-import { StatusBar } from "expo-status-bar";
 
 // --- Store ---
 import { store } from "@/store";
@@ -93,6 +92,79 @@ const fontAssets = {
   "Roboto-Bold": require("../assets/fonts/Roboto-Bold.ttf"),
   "Roboto-Italic": require("../assets/fonts/Roboto-Italic.ttf"),
 };
+
+// Database Manager - Singleton to prevent race conditions and database locking
+class DatabaseManager {
+  private static initPromise: Promise<void> | null = null;
+  private static initialized = false;
+  private static isInitializing = false;
+
+  static async initialize(): Promise<void> {
+    if (this.initialized) {
+      console.log('[DatabaseManager] Database already initialized');
+      return;
+    }
+    
+    if (this.initPromise) {
+      console.log('[DatabaseManager] Database initialization in progress, waiting...');
+      return this.initPromise;
+    }
+
+    if (this.isInitializing) {
+      console.log('[DatabaseManager] Database initialization already started');
+      return;
+    }
+
+    this.isInitializing = true;
+    this.initPromise = this.performInitialization();
+    
+    try {
+      await this.initPromise;
+      this.initialized = true;
+      console.log('[DatabaseManager] Database initialization completed successfully');
+    } catch (error) {
+      console.error('[DatabaseManager] Database initialization failed:', error);
+      this.initPromise = null; // Reset so it can be retried
+      throw error;
+    } finally {
+      this.isInitializing = false;
+    }
+  }
+
+  private static async performInitialization(): Promise<void> {
+    try {
+      console.log('[DatabaseManager] Starting database initialization...');
+      
+      // Serialize database operations - create tables one by one to prevent locking
+      console.log('[DatabaseManager] Creating user table...');
+      await createUserTable();
+      console.log('[DatabaseManager] User table created successfully');
+      
+      // Add a small delay to ensure the first operation completes
+      await new Promise(resolve => setTimeout(resolve, 50));
+      
+      console.log('[DatabaseManager] Creating QR table...');
+      await createQrTable();
+      console.log('[DatabaseManager] QR table created successfully');
+      
+      console.log('[DatabaseManager] Database initialization complete');
+    } catch (error) {
+      console.error('[DatabaseManager] Database initialization failed:', error);
+      throw error;
+    }
+  }
+
+  static reset(): void {
+    console.log('[DatabaseManager] Resetting database manager state');
+    this.initialized = false;
+    this.initPromise = null;
+    this.isInitializing = false;
+  }
+
+  static isInitialized(): boolean {
+    return this.initialized;
+  }
+}
 
 // Status Bar Manager - Aggressive approach
 class StatusBarManager {
@@ -309,7 +381,7 @@ export default function RootLayout() {
     useGuestMode: false,
   });
 
-  const initializationPromise = useRef<Promise<void> | null>(null);
+  const initializationInProgress = useRef(false);
   const appStateRef = useRef<AppStateStatus>(AppState.currentState);
   const splashHiddenRef = useRef(false);
   const navigationInProgressRef = useRef(false);
@@ -338,19 +410,6 @@ export default function RootLayout() {
     }
   }, []);
 
-  // Database initialization
-  const initializeDatabase = useCallback(async (): Promise<void> => {
-    try {
-      await Promise.all([createUserTable(), createQrTable()]);
-    } catch (error) {
-      console.error(
-        "[RootLayout] Failed to initialize database tables:",
-        error,
-      );
-      throw error;
-    }
-  }, []);
-
   // Check onboarding status
   const checkOnboardingStatus = useCallback(async (): Promise<boolean> => {
     try {
@@ -363,52 +422,80 @@ export default function RootLayout() {
     }
   }, []);
 
-  // Main app preparation function
+  // Simplified and serialized app preparation
   const prepareApp = useCallback(async (): Promise<void> => {
-    if (initializationPromise.current) {
-      return initializationPromise.current;
+    if (initializationInProgress.current) {
+      console.log('[RootLayout] Initialization already in progress, skipping...');
+      return;
     }
 
-    initializationPromise.current = (async () => {
-      try {
-        await initializeDatabase();
+    initializationInProgress.current = true;
 
-        const [onboardingStatus, quickLoginEnabled, guestModePreference] =
-          await Promise.all([
-            checkOnboardingStatus(),
-            getQuickLoginStatus(),
-            checkGuestModeStatus(),
-          ]);
+    try {
+      console.log('[RootLayout] Starting app preparation...');
 
-        const sessionActive = await checkInitialAuth(!onboardingStatus);
+      // Step 1: Initialize database first (serialized to prevent locking)
+      console.log('[RootLayout] Initializing database...');
+      await DatabaseManager.initialize();
+      console.log('[RootLayout] Database initialization complete');
 
-        setAppState({
-          initializationComplete: true,
-          isAuthenticated: sessionActive,
-          hasSeenOnboarding: onboardingStatus,
-          hasQuickLoginEnabled: quickLoginEnabled,
-          useGuestMode: guestModePreference,
-        });
-      } catch (error) {
-        console.error("[RootLayout] App preparation error:", error);
-        setAppState({
-          initializationComplete: true,
-          isAuthenticated: false,
-          hasSeenOnboarding: false,
-          hasQuickLoginEnabled: false,
-          useGuestMode: false,
-        });
-      }
-    })();
+      // Small delay to ensure database is fully ready
+      await new Promise(resolve => setTimeout(resolve, 100));
 
-    return initializationPromise.current;
-  }, [initializeDatabase, checkOnboardingStatus]);
+      // Step 2: Check app state (after database is ready)
+      console.log('[RootLayout] Checking app state...');
+      const [onboardingStatus, quickLoginEnabled, guestModePreference] =
+        await Promise.all([
+          checkOnboardingStatus(),
+          getQuickLoginStatus(), // This might use database
+          checkGuestModeStatus(),
+        ]);
+
+      console.log('[RootLayout] App state checks complete:', {
+        onboardingStatus,
+        quickLoginEnabled,
+        guestModePreference
+      });
+
+      // Step 3: Check auth (after database and other checks)
+      console.log('[RootLayout] Checking initial auth...');
+      const sessionActive = await checkInitialAuth(!onboardingStatus);
+      console.log('[RootLayout] Auth check complete:', sessionActive);
+
+      setAppState({
+        initializationComplete: true,
+        isAuthenticated: sessionActive,
+        hasSeenOnboarding: onboardingStatus,
+        hasQuickLoginEnabled: quickLoginEnabled,
+        useGuestMode: guestModePreference,
+      });
+
+      console.log('[RootLayout] App preparation complete successfully');
+    } catch (error) {
+      console.error("[RootLayout] App preparation error:", error);
+      
+      // Reset database manager on error so it can be retried
+      DatabaseManager.reset();
+      
+      setAppState({
+        initializationComplete: true,
+        isAuthenticated: false,
+        hasSeenOnboarding: false,
+        hasQuickLoginEnabled: false,
+        useGuestMode: false,
+      });
+    } finally {
+      initializationInProgress.current = false;
+    }
+  }, [checkOnboardingStatus]);
 
   // Handle font loading and app preparation
   useEffect(() => {
-    if (fontsLoaded || fontError) {
+    if ((fontsLoaded || fontError) && !initializationInProgress.current) {
+      console.log('[RootLayout] Fonts loaded, starting app preparation');
       prepareApp().catch((error) => {
         console.error("[RootLayout] App preparation failed:", error);
+        initializationInProgress.current = false;
       });
     }
   }, [fontsLoaded, fontError, prepareApp]);
@@ -492,6 +579,7 @@ export default function RootLayout() {
       targetRoute = "/(public)/login";
     }
 
+    console.log('[RootLayout] Navigating to:', targetRoute);
     navigationInProgressRef.current = true;
     router.replace(targetRoute);
 
@@ -508,13 +596,25 @@ export default function RootLayout() {
         splashHiddenRef.current = true;
         // Force status bar configuration after splash screen is hidden
         StatusBarManager.forceStatusBarConfiguration();
+        console.log('[RootLayout] Splash screen hidden successfully');
       } catch (error) {
         console.error("[RootLayout] Failed to hide splash screen:", error);
       }
     }
   }, [appState.initializationComplete]);
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      console.log('[RootLayout] Component unmounting, cleaning up...');
+      StatusBarManager.cleanup();
+      DatabaseManager.reset();
+      TokenManager.reset();
+    };
+  }, []);
+
   if (!appState.initializationComplete) {
+    console.log('[RootLayout] App initialization not complete, showing nothing');
     return null;
   }
 
@@ -527,7 +627,6 @@ export default function RootLayout() {
               <PaperProvider>
                 <LocaleProvider>
                   <ThemedView style={styles.root} onLayout={onLayoutRootView}>
-                    {/* DON'T use expo-status-bar StatusBar component - it conflicts */}
                     <AppNavigator />
                   </ThemedView>
                 </LocaleProvider>

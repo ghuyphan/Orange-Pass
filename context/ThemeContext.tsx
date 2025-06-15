@@ -97,7 +97,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
         They are not needed with edgeToEdgeEnabled.
         We only need to control the style (icon color).
       */}
-      {/* <StatusBar translucent style={currentTheme === "dark" ? "light" : "dark"} /> */}
+      <StatusBar translucent style={currentTheme === "dark" ? "light" : "dark"} />
       {children}
     </ThemeContext.Provider>
   );

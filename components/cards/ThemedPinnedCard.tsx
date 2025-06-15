@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Image, StyleSheet, View, Platform } from 'react-native';
-import { ThemedText } from '../ThemedText'; // Assuming this is your custom text component
+import { ThemedText } from '../ThemedText';
 import QRCode from 'react-native-qrcode-svg';
 import Barcode from 'react-native-barcode-svg';
 import { getIconPath } from '@/utils/returnIcon';
@@ -9,6 +9,7 @@ import { returnMidpointColors } from '@/utils/returnMidpointColor';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
 import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
+import { useGlassStyle } from '@/hooks/useGlassStyle';
 
 // --- Constants for default colors ---
 const DEFAULT_GRADIENT_START = '#FAF3E7';
@@ -25,7 +26,7 @@ export type ThemedPinnedCardProps = {
   style?: object;
   onAccountPress?: () => void;
   onAccountNumberPress?: () => void;
-  enableGlassmorphism?: boolean; // New prop to toggle glassmorphism
+  enableGlassmorphism?: boolean;
 };
 
 export const ThemedPinnedCard = ({
@@ -38,8 +39,10 @@ export const ThemedPinnedCard = ({
   style,
   onAccountPress,
   onAccountNumberPress,
-  enableGlassmorphism = true, // Default to true for the glass effect
+  enableGlassmorphism = true,
 }: ThemedPinnedCardProps): JSX.Element => {
+  const { overlayColor, borderColor } = useGlassStyle();
+  
   // --- Memoized Calculations ---
   const qrSize = useMemo(() => getResponsiveWidth(42), []);
   const barcodeHeight = useMemo(() => getResponsiveHeight(12), []);
@@ -83,7 +86,7 @@ export const ThemedPinnedCard = ({
   return (
     <View style={[styles.outerContainer, enableGlassmorphism && styles.glassOuterContainer]}>
       <View style={styles.cardWrapper}>
-        {/* Layer 1: Vivid background (only for glassmorphism) */}
+        {/* Background gradient for glassmorphism */}
         {enableGlassmorphism && backgroundGradient && (
           <LinearGradient
             colors={backgroundGradient}
@@ -93,20 +96,21 @@ export const ThemedPinnedCard = ({
           />
         )}
         
-        {/* Layer 2 & 3: Subtle inner glass layers for depth */}
+        {/* Glassmorphism overlay */}
         {enableGlassmorphism && (
-          <>
-            <View style={styles.glassLayer1} />
-            <View style={styles.glassLayer2} />
-          </>
+          <View style={[styles.defaultOverlay, { backgroundColor: overlayColor }]} />
         )}
 
-        {/* Layer 4: Main content with "frosted glass" gradient */}
+        {/* Main content with "frosted glass" gradient */}
         <LinearGradient
           colors={enableGlassmorphism ? glassGradientColors : gradientColors}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={[styles.container, enableGlassmorphism && styles.glassContentContainer, style]}
+          style={[
+            styles.container,
+            enableGlassmorphism && [styles.glassContentContainer, { borderColor }],
+            style
+          ]}
         >
           {/* --- Card Header --- */}
           <View style={styles.headerContainer}>
@@ -197,16 +201,10 @@ const styles = StyleSheet.create({
     top: 0, left: 0, right: 0, bottom: 0,
     opacity: 0.8,
   },
-  glassLayer1: {
+  defaultOverlay: {
     position: 'absolute',
     top: 0, left: 0, right: 0, bottom: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-  },
-  glassLayer2: {
-    position: 'absolute',
-    top: 1, left: 1, right: 1, bottom: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.02)',
-    borderRadius: getResponsiveWidth(3.8),
+    zIndex: 0,
   },
   container: {
     borderRadius: getResponsiveWidth(4),
@@ -217,7 +215,6 @@ const styles = StyleSheet.create({
   },
   glassContentContainer: {
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
     borderTopWidth: 1.5,
     borderLeftWidth: 1.5,
     borderTopColor: 'rgba(255, 255, 255, 0.3)',

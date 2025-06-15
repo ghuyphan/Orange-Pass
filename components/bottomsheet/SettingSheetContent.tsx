@@ -35,6 +35,7 @@ const SettingSheetContent: React.FC<SettingSheetContentProps> = ({
 
   const iconColor =
     currentTheme === "light" ? Colors.light.icon : Colors.dark.icon;
+  const cardBackgroundColor = currentTheme === "dark" ? Colors.dark.cardBackground : Colors.light.cardBackground;
 
   const renderIcon = (
     iconName: React.ComponentProps<typeof MaterialCommunityIcons>["name"],
@@ -51,7 +52,7 @@ const SettingSheetContent: React.FC<SettingSheetContentProps> = ({
   return (
     <View style={[styles.container, { borderColor }, style]}>
       <View
-        style={[styles.defaultOverlay, { backgroundColor: overlayColor }]}
+        style={[styles.defaultOverlay, { backgroundColor: cardBackgroundColor }]}
       />
       <View style={styles.buttonsContainer}>
         <Pressable

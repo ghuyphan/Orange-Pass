@@ -44,11 +44,12 @@ import ColorPicker, {
   HueSlider,
   Panel1,
 } from "reanimated-color-picker";
+import { useGlassStyle } from "@/hooks/useGlassStyle";
 
-// Define proper types for avatar configuration that extends the NiceAvatarConfig
+// --- Types and Constants (No changes needed here) ---
 type CustomAvatarConfig = Omit<NiceAvatarConfig, "sex" | "hairStyle"> & {
-  sex: SexType; // Made non-optional as computeFullConfig will ensure it
-  hairStyle: HairStyleType; // Made non-optional
+  sex: SexType;
+  hairStyle: HairStyleType;
   faceColor: string;
   earSize: "small" | "big";
   hairColor: string;
@@ -68,17 +69,17 @@ const commonOptionMargin = {
 };
 
 const getThemedStyles = (
-  themeColors: typeof Colors.light | typeof Colors.dark
+  themeColors: typeof Colors.light | typeof Colors.dark,
+  borderColor: string
 ) => {
   const baseAvatarSize = getResponsiveWidth(30);
   const avatarInitialOffset = getResponsiveHeight(18);
 
   return StyleSheet.create({
-    // ... (your existing styles)
     container: {
       flex: 1,
       paddingHorizontal: getResponsiveWidth(3.6),
-      backgroundColor: themeColors.background,
+
     },
     headerContainer: {
       position: "absolute",
@@ -119,19 +120,34 @@ const getThemedStyles = (
     avatarPlaceholder: {
       width: baseAvatarSize,
       height: baseAvatarSize,
-      justifyContent: 'center',
-      alignItems: 'center',
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    // --- Glass Wrapper for ScrollView ---
+    optionsWrapper: {
+      flex: 1,
+      marginTop: getResponsiveHeight(3),
+      borderRadius: getResponsiveWidth(4),
+      borderWidth: 1,
+      borderColor: borderColor,
+      overflow: "hidden",
+      marginBottom: getResponsiveHeight(3),
+    },
+    defaultOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      zIndex: 0,
     },
     scrollView: {
       flex: 1,
-      marginTop: getResponsiveHeight(3),
-      paddingHorizontal: getResponsiveWidth(4.8),
-      borderRadius: getResponsiveWidth(4),
-      backgroundColor: themeColors.cardBackground,
+      backgroundColor: "transparent", // Make ScrollView transparent
     },
     scrollContainer: {
+      paddingHorizontal: getResponsiveWidth(4.8),
       paddingTop: getResponsiveHeight(2),
-      paddingBottom: getResponsiveHeight(1.8),
+      paddingBottom: getResponsiveHeight(8),
+      // Increased padding to avoid floating button
+      // paddingBottom: getResponsiveHeight(8),
+      // marginBottom: getResponsiveHeight(10),
     },
     selectorContainer: {
       marginBottom: getResponsiveHeight(2.5),
@@ -155,30 +171,31 @@ const getThemedStyles = (
       borderColor: themeColors.border,
     },
     selectedOption: {
-      borderWidth: 2,
+      borderWidth: 1,
     },
     customOption: {
       borderStyle: "dashed",
     },
     genericOption: {
       ...commonOptionMargin,
-      paddingHorizontal: getResponsiveWidth(3),
+      paddingHorizontal: getResponsiveWidth(4),
       paddingVertical: getResponsiveHeight(1),
       borderWidth: 1,
-      borderColor: themeColors.border,
-      borderRadius: getResponsiveWidth(4),
+      // borderColor: themeColors.border,
+      // borderRadius: getResponsiveWidth(4),
     },
     genericOptionText: {
       fontSize: getResponsiveFontSize(14),
     },
+    // --- Floating Save Button ---
     saveButton: {
-      marginTop: getResponsiveHeight(1.5),
-      marginBottom: getResponsiveHeight(1.5),
+      position: "absolute",
+      bottom: getResponsiveHeight(3),
+      left: getResponsiveWidth(3.6),
+      right: getResponsiveWidth(3.6),
+      zIndex: 10,
     },
     customSheetContent: {
-      flex: 1,
-      paddingHorizontal: getResponsiveWidth(5),
-      paddingVertical: getResponsiveHeight(2),
       alignItems: "center",
     },
     sheetTitle: {
@@ -204,27 +221,25 @@ const getThemedStyles = (
     },
     selectButtonContainer: {
       width: "90%",
-      marginTop: getResponsiveHeight(1),
     },
     selectButton: {},
   });
 };
 
-// --- Avatar Options Arrays (Keep outside component if they don't depend on props/state) ---
+// --- Avatar Options Arrays (No changes needed here) ---
 const faceColors = ["#F5E6CA", "#FFE0BD", "#FFDAB9", "#FFCD94", "#F9C9B6", "#E8BEAC", "#E0CDBA", "#E6D5AE", "#D9B99B", "#EAC086", "#C8B89A", "#BCAFA0", "#D1A17A", "#C68642", "#A1887F", "#8D5524", "#6B4423", "#58331A", "#432616", "#3E271B"];
 const earSizes: Array<'small' | 'big'> = ["small", "big"];
 const maleHairStyles: HairStyleType[] = ["normal", "thick", "mohawk"];
 const femaleHairStyles: HairStyleType[] = ["womanLong", "womanShort"];
-const hairColors = [ "#E6BE8A", "#E79CC2", "#23B5D3", "#C19A6B", "#A67B5B", "#B87333", "#8C5A56", "#652DC1", "#704214", "#4B3621", "#000000" ];
+const hairColors = ["#E6BE8A", "#E79CC2", "#23B5D3", "#C19A6B", "#A67B5B", "#B87333", "#8C5A56", "#652DC1", "#704214", "#4B3621", "#000000"];
 const hatStyles: Array<'none' | 'beanie' | 'turban'> = ["none", "beanie", "turban"];
-const hatColors = [ "#000000", "#FFFFFF", "#8B4513", "#FDFD96", "#B1E693", "#B5EAD7", "#AEC6CF", "#C3B1E1", "#FFB7B2", "#FFD1DC", "#FFC0CB" ];
+const hatColors = ["#000000", "#FFFFFF", "#8B4513", "#FDFD96", "#B1E693", "#B5EAD7", "#AEC6CF", "#C3B1E1", "#FFB7B2", "#FFD1DC", "#FFC0CB"];
 const eyeStyles: Array<'circle' | 'oval' | 'smile'> = ["circle", "oval", "smile"];
 const glassesStyles: Array<'none' | 'round' | 'square'> = ["none", "round", "square"];
 const noseStyles: Array<'short' | 'long' | 'round'> = ["short", "long", "round"];
 const mouthStyles: Array<'laugh' | 'smile' | 'peace'> = ["laugh", "smile", "peace"];
 const shirtStyles: Array<'hoody' | 'short' | 'polo'> = ["hoody", "short", "polo"];
-const shirtColors = [ "#5DADE2", "#CFE8EF", "#B0E0E6", "#58D68D", "#C1E1C1", "#F4D03F", "#F0E6CC", "#F8B195", "#FAE8E0", "#EC7063", "#FFB6C1", "#D3B4AC", "#E8D3EB", "#CBC3E3" ];
-
+const shirtColors = ["#5DADE2", "#CFE8EF", "#B0E0E6", "#58D68D", "#C1E1C1", "#F4D03F", "#F0E6CC", "#F8B195", "#FAE8E0", "#EC7063", "#FFB6C1", "#D3B4AC", "#E8D3EB", "#CBC3E3"];
 
 // Helper function to compute the full configuration with defaults
 const computeFullConfig = (
@@ -251,17 +266,21 @@ const computeFullConfig = (
     mouthStyle: "smile",
     shirtStyle: "short",
     shirtColor: "#5DADE2",
-    ...base, // Spread source config to override defaults
-    sex: sex, // Ensure sex is correctly set
-    hairStyle: hairStyle, // Ensure hairStyle is correctly set
+    ...base,
+    sex: sex,
+    hairStyle: hairStyle,
   };
 };
-
 
 const EditAvatarScreen = () => {
   const { currentTheme } = useTheme();
   const themeColors = Colors[currentTheme];
-  const styles = useMemo(() => getThemedStyles(themeColors), [themeColors]);
+  const { borderColor } = useGlassStyle();
+  const cardBackgroundColor = currentTheme === "dark" ? Colors.dark.cardBackground : Colors.light.cardBackground;
+  const styles = useMemo(
+    () => getThemedStyles(themeColors, borderColor),
+    [themeColors, borderColor]
+  );
 
   const dispatch = useDispatch();
   const reduxAvatarConfig = useSelector(
@@ -270,7 +289,6 @@ const EditAvatarScreen = () => {
   const selectedColor = themeColors.tint;
   const currentUser = useSelector((state: RootState) => state.auth.user);
 
-  // --- State for initial config (to detect changes) ---
   const [initialConfig, setInitialConfig] = useState<CustomAvatarConfig>(() =>
     computeFullConfig(reduxAvatarConfig)
   );
@@ -281,18 +299,16 @@ const EditAvatarScreen = () => {
 
   const [isAvatarPreviewReady, setIsAvatarPreviewReady] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [hasChanges, setHasChanges] = useState(false); // State to track changes
+  const [hasChanges, setHasChanges] = useState(false);
 
-  // --- Constants ---
   const baseAvatarSize = getResponsiveWidth(30);
 
-  // --- Custom Color Bottom Sheet State ---
   const customColorSheetRef = useRef<BottomSheet>(null);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [customColorProperty, setCustomColorProperty] =
     useState<keyof CustomAvatarConfig | null>(null);
   const [temporaryColor, setTemporaryColor] = useState<string>("#ffffff");
 
-  // Effect to defer Avatar rendering
   useEffect(() => {
     let timerId: number | undefined;
     const interactionPromise = InteractionManager.runAfterInteractions(() => {
@@ -306,7 +322,6 @@ const EditAvatarScreen = () => {
     };
   }, []);
 
-  // Effect to check for changes between avatarConfig and initialConfig
   useEffect(() => {
     const configsAreEqual = (
       configA: CustomAvatarConfig,
@@ -327,8 +342,6 @@ const EditAvatarScreen = () => {
     setHasChanges(!configsAreEqual(avatarConfig, initialConfig));
   }, [avatarConfig, initialConfig]);
 
-
-  // Effect to adjust hairStyle when sex changes
   useEffect(() => {
     const currentConfigHairStyle = avatarConfig.hairStyle;
     const isFemale = avatarConfig.sex === "woman";
@@ -343,7 +356,7 @@ const EditAvatarScreen = () => {
         hairStyle: allowedHairStyles[0],
       }));
     }
-  }, [avatarConfig.sex, avatarConfig.hairStyle]); // Dependencies are correct
+  }, [avatarConfig.sex, avatarConfig.hairStyle]);
 
   const handleColorComplete = useCallback(({ hex }: { hex: string }) => {
     setTemporaryColor(hex);
@@ -354,10 +367,16 @@ const EditAvatarScreen = () => {
       setCustomColorProperty(property);
       const currentVal = avatarConfig[property] as string;
       setTemporaryColor(currentVal || "#ffffff");
+      setIsSheetOpen(true); // <-- ADD THIS LINE
       customColorSheetRef.current?.expand();
     },
-    [avatarConfig]
+    [avatarConfig] // Added dependency for correctness
   );
+
+  const handleSheetChange = useCallback((index: number) => {
+    // The sheet is open if its index is > -1, and closed if it's -1
+    setIsSheetOpen(index > -1);
+  }, []);
 
   const handleOptionSelect = useCallback(
     (property: keyof CustomAvatarConfig, option: string | SexType | HairStyleType) => {
@@ -369,6 +388,7 @@ const EditAvatarScreen = () => {
     []
   );
 
+
   const handleConfirmColor = useCallback(() => {
     if (customColorProperty) {
       handleOptionSelect(customColorProperty, temporaryColor);
@@ -377,13 +397,12 @@ const EditAvatarScreen = () => {
   }, [customColorProperty, temporaryColor, handleOptionSelect]);
 
   const handleSave = useCallback(async () => {
-    if (!hasChanges) return; // Should not be callable if no changes, but as a safeguard
+    if (!hasChanges) return;
     setIsSaving(true);
     try {
       dispatch(updateAvatarConfig(avatarConfig));
       if (currentUser?.id) {
         await updateUserAvatarCombined(currentUser.id, avatarConfig);
-         ("Avatar updated successfully in Redux and local DB.");
       }
       router.back();
     } catch (error) {
@@ -395,10 +414,10 @@ const EditAvatarScreen = () => {
 
   const avatarOptions: Array<{
     label: string;
-    options: string[]; // For non-color options, these are keys or simple strings
+    options: string[];
     property: keyof CustomAvatarConfig;
     isColor?: boolean;
-  }> = useMemo(() => [ // useMemo to prevent re-creation if not needed
+  }> = useMemo(() => [
     { label: t("editAvatarScreen.gender"), options: ["man", "woman"], property: "sex" },
     { label: t("editAvatarScreen.faceColor"), options: faceColors, property: "faceColor", isColor: true },
     { label: t("editAvatarScreen.earSize"), options: earSizes, property: "earSize" },
@@ -411,13 +430,13 @@ const EditAvatarScreen = () => {
     { label: t("editAvatarScreen.hatStyle"), options: hatStyles, property: "hatStyle" },
     ...(avatarConfig.hatStyle !== "none"
       ? [
-          {
-            label: t("editAvatarScreen.hatColor"),
-            options: hatColors,
-            property: "hatColor" as keyof CustomAvatarConfig,
-            isColor: true,
-          },
-        ]
+        {
+          label: t("editAvatarScreen.hatColor"),
+          options: hatColors,
+          property: "hatColor" as keyof CustomAvatarConfig,
+          isColor: true,
+        },
+      ]
       : []),
     { label: t("editAvatarScreen.eyeStyle"), options: eyeStyles, property: "eyeStyle" },
     { label: t("editAvatarScreen.glassesStyle"), options: glassesStyles, property: "glassesStyle" },
@@ -425,7 +444,7 @@ const EditAvatarScreen = () => {
     { label: t("editAvatarScreen.mouthStyle"), options: mouthStyles, property: "mouthStyle" },
     { label: t("editAvatarScreen.shirtStyle"), options: shirtStyles, property: "shirtStyle" },
     { label: t("editAvatarScreen.shirtColor"), options: shirtColors, property: "shirtColor", isColor: true },
-  ], [avatarConfig.sex, avatarConfig.hatStyle, t]); // Add t to dependencies if its instance can change
+  ], [avatarConfig.sex, avatarConfig.hatStyle, t]);
 
   const renderOptionSelector = (
     label: string,
@@ -462,22 +481,35 @@ const EditAvatarScreen = () => {
               );
             } else {
               return (
-                <TouchableOpacity
+                // <TouchableOpacity
+                //   key={`${property}-${option}-${index}`}
+                //   onPress={() => handleOptionSelect(property, option)}
+                //   style={[
+                //     styles.genericOption,
+                //     isSelected && [
+                //       styles.selectedOption,
+                //       { borderColor: selectedColor },
+                //     ],
+                //   ]}
+                // >
+                //   <ThemedText style={styles.genericOptionText}>
+                //     {t(`editAvatarScreen.options.${property}.${option}`) ||
+                //       option}
+                //   </ThemedText>
+                // </TouchableOpacity>
+                <ThemedButton
                   key={`${property}-${option}-${index}`}
+                  label={t(`editAvatarScreen.options.${property}.${option}`) || option}
                   onPress={() => handleOptionSelect(property, option)}
                   style={[
                     styles.genericOption,
                     isSelected && [
                       styles.selectedOption,
                       { borderColor: selectedColor },
-                    ],
+
+                    ]
                   ]}
-                >
-                  <ThemedText style={styles.genericOptionText}>
-                    {t(`editAvatarScreen.options.${property}.${option}`) ||
-                      option}
-                  </ThemedText>
-                </TouchableOpacity>
+                  ></ThemedButton>
               );
             }
           })}
@@ -518,7 +550,7 @@ const EditAvatarScreen = () => {
           {t("editAvatarScreen.title")}
         </ThemedText>
       </View>
-      <View style={styles.headerButtonContainer}>
+      <View style={[styles.headerButtonContainer, { zIndex: isSheetOpen ? 0 : 11 }]}>
         <ThemedButton
           iconName="chevron-left"
           style={styles.titleButton}
@@ -546,15 +578,20 @@ const EditAvatarScreen = () => {
         </LinearGradient>
       </View>
 
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}
-      >
-        {avatarOptions.map(({ label, options, property, isColor }) =>
-          renderOptionSelector(label, options, property, isColor)
-        )}
-      </ScrollView>
+      <View style={styles.optionsWrapper}>
+        <View
+          style={[styles.defaultOverlay, { backgroundColor: cardBackgroundColor }]}
+        />
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContainer}
+          showsVerticalScrollIndicator={false}
+        >
+          {avatarOptions.map(({ label, options, property, isColor }) =>
+            renderOptionSelector(label, options, property, isColor)
+          )}
+        </ScrollView>
+      </View>
 
       <ThemedButton
         label={!isSaving ? t("editAvatarScreen.save") : undefined}
@@ -567,9 +604,10 @@ const EditAvatarScreen = () => {
 
       <ThemedReuseableSheet
         ref={customColorSheetRef}
-        snapPoints={["55%", "65%"]}
+        snapPoints={["60%"]}
         title={t("editAvatarScreen.selectCustomColor")}
         contentType="custom"
+        styles={{ customContent: { flex: 1 } }}
         customContent={
           customColorProperty && (
             <View style={styles.customSheetContent}>
@@ -584,7 +622,7 @@ const EditAvatarScreen = () => {
               </ColorPicker>
               <View style={styles.selectButtonContainer}>
                 <ThemedButton
-                  label={t("editAvatarScreen.selectColor")}
+                  label={t("editAvatarScreen.select")}
                   onPress={handleConfirmColor}
                   style={styles.selectButton}
                 />
@@ -592,6 +630,7 @@ const EditAvatarScreen = () => {
             </View>
           )
         }
+        onChange={handleSheetChange}
       />
     </ThemedView>
   );

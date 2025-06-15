@@ -33,6 +33,7 @@ const LinkingSheetContent: React.FC<LinkingSheetContentProps> = ({
   onCopySuccess,
 }) => {
   const { currentTheme } = useTheme();
+    const cardBackgroundColor = currentTheme === "dark" ? Colors.dark.cardBackground : Colors.light.cardBackground;
   const { overlayColor, borderColor } = useGlassStyle();
 
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -103,7 +104,7 @@ const LinkingSheetContent: React.FC<LinkingSheetContentProps> = ({
   return (
     <View style={[styles.container, { borderColor }, style]}>
       <View
-        style={[styles.defaultOverlay, { backgroundColor: overlayColor }]}
+        style={[styles.defaultOverlay, { backgroundColor: cardBackgroundColor }]}
       />
       <View style={styles.contentWrapper}>
         <ThemedModal

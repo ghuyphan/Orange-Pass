@@ -387,7 +387,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   saveButton: {
-    marginTop: getResponsiveHeight(2.4),
+    // marginTop: getResponsiveHeight(2.4),
     marginBottom: getResponsiveHeight(3.6),
   },
   toastContainer: {

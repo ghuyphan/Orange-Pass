@@ -491,7 +491,8 @@ const DetailScreen = () => {
 
   const renderPaymentMethodItem = useCallback(
     ({ item: bankItem }: { item: BankItem }) => (
-      <ThemedButton
+      <Pressable
+        key={bankItem.code}
         style={styles.bankItemPressable}
         onPress={() => handleOpenBank(bankItem.code)}
       >
@@ -505,7 +506,7 @@ const DetailScreen = () => {
         <ThemedText numberOfLines={1} style={styles.bankItemText}>
           {bankItem.name}
         </ThemedText>
-      </ThemedButton>
+      </Pressable>
     ),
     [handleOpenBank],
   );
@@ -935,7 +936,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexDirection: "column",
     gap: getResponsiveHeight(0.36),
-    padding: getResponsiveWidth(1),
+    // padding: getResponsiveWidth(1),
   },
   bankIcon: {
     width: "55%",

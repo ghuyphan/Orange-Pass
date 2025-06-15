@@ -1,8 +1,7 @@
-// services/auth/login.ts
 import pb from "@/services/pocketBase";
 import { Keyboard } from "react-native";
 import * as SecureStore from "expo-secure-store";
-import { mapRecordToUserData } from "../refreshAuth"; // Assuming this path is correct
+import { mapRecordToUserData } from "../refreshAuth";
 import { store } from "@/store";
 import { setAuthData } from "@/store/reducers/authSlice";
 import { t } from "@/i18n";
@@ -46,6 +45,9 @@ export const getPasswordKeyForUserID = (userID: string): string => {
   return `${SECURE_KEYS.PASSWORD_PREFIX}${userID}`;
 };
 
+/**
+ * Clears sensitive authentication data (token, user ID) from SecureStore.
+ */
 const clearStoredAuthData = async () => {
   try {
     const promises = [
@@ -66,7 +68,6 @@ const validateInput = (email: string, password: string) => {
     throw new Error(t("loginScreen.errors.invalidEmail"));
   }
   if (password.length < 8) {
-    // PocketBase default min password length
     throw new Error(t("loginScreen.errors.passwordTooShort"));
   }
 };
@@ -89,18 +90,25 @@ const loginWithTimeout = async (
   });
 
   try {
-    const authData = await Promise.race([loginPromise, timeoutPromise]);
-    return authData;
+    return await Promise.race([loginPromise, timeoutPromise]);
   } catch (error) {
     const loginError = error as LoginError;
     if (attempt < MAX_RETRIES && loginError.isTimeout) {
-       (`Login attempt ${attempt} timed out, retrying...`);
+      console.log(`Login attempt ${attempt} timed out, retrying...`);
       return loginWithTimeout(email, password, attempt + 1);
     }
     throw error;
   }
 };
 
+/**
+ * Authenticates a user with email and password, stores credentials, and updates state.
+ * @param email The user's email address.
+ * @param password The user's password.
+ * @param rememberMe If true, saves the user ID for future "remember me" flows.
+ * @param setupQuickLoginCredentials If true, saves the password securely for quick login.
+ * @returns The PocketBase authentication data record.
+ */
 export const login = async (
   email: string,
   password: string,
@@ -116,13 +124,16 @@ export const login = async (
     }
 
     validateInput(email, password);
-    await clearStoredAuthData();
 
     const authData = await loginWithTimeout(email, password);
 
     if (!authData?.token || !authData?.record?.id) {
       throw new Error(t("loginScreen.errors.invalidResponse"));
     }
+
+    // REFINEMENT: Clear old data only AFTER a successful login attempt.
+    // This prevents wiping a valid session if the login fails temporarily.
+    await clearStoredAuthData();
 
     const userId = authData.record.id;
     const secureWritePromises: Promise<void>[] = [
@@ -131,18 +142,15 @@ export const login = async (
       SecureStore.setItemAsync(SECURE_KEYS.TEMPORARY_PASSWORD, password),
     ];
 
-    if (rememberMe) {
+    // REFINEMENT: Simplified logic for saving user ID.
+    // Save the user ID if either "Remember Me" or "Quick Login" is enabled.
+    if (rememberMe || setupQuickLoginCredentials) {
       secureWritePromises.push(
         SecureStore.setItemAsync(SECURE_KEYS.SAVED_USER_ID, userId),
       );
     }
 
     if (setupQuickLoginCredentials) {
-      if (!rememberMe) {
-        secureWritePromises.push(
-          SecureStore.setItemAsync(SECURE_KEYS.SAVED_USER_ID, userId),
-        );
-      }
       secureWritePromises.push(
         SecureStore.setItemAsync(getPasswordKeyForUserID(userId), password),
       );
@@ -178,7 +186,10 @@ export const login = async (
     console.error("Login error:", error);
     const errorData = error as LoginError;
     let errorMessage = t("loginScreen.errors.unknown");
-    if (error instanceof Error) errorMessage = error.message;
+
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
 
     switch (errorData.status) {
       case 400:
@@ -191,25 +202,36 @@ export const login = async (
         errorMessage = t("loginScreen.errors.500");
         break;
       default:
-        if (errorData.isTimeout) {
-          errorMessage = t("loginScreen.errors.timeout");
-        } else if (error instanceof Error) {
-          errorMessage = error.message;
-        }
+        // The message from validateInput or timeout is already user-friendly.
+        // No need to overwrite it unless it's a generic error.
         break;
     }
     throw new Error(errorMessage);
   }
 };
 
+// --- Helper and Status Functions (with added JSDoc comments) ---
+
+/**
+ * Checks if the "Remember Me" flag is set in storage.
+ * @returns True if "Remember Me" is enabled, otherwise false.
+ */
 export const getRememberMeStatus = (): boolean => {
   return storage.getString(MMKV_KEYS.REMEMBER_ME) === "true";
 };
 
+/**
+ * Checks if the global "Quick Login" flag is set in storage.
+ * @returns True if "Quick Login" is enabled, otherwise false.
+ */
 export const getQuickLoginStatus = (): boolean => {
   return storage.getString(MMKV_KEYS.QUICK_LOGIN_ENABLED) === "true";
 };
 
+/**
+ * Retrieves the saved user ID from SecureStore.
+ * @returns The user ID string, or null if not found or an error occurs.
+ */
 export const getSavedUserID = async (): Promise<string | null> => {
   try {
     return await SecureStore.getItemAsync(SECURE_KEYS.SAVED_USER_ID);
@@ -219,6 +241,11 @@ export const getSavedUserID = async (): Promise<string | null> => {
   }
 };
 
+/**
+ * Retrieves a securely stored password for a given user ID.
+ * @param userID The ID of the user whose password is to be retrieved.
+ * @returns The password string, or null if not found or an error occurs.
+ */
 export const getSavedPasswordForUserID = async (
   userID: string,
 ): Promise<string | null> => {
@@ -231,6 +258,10 @@ export const getSavedPasswordForUserID = async (
   }
 };
 
+/**
+ * Retrieves the temporary password stored during the current session.
+ * @returns The password string, or null if not found or an error occurs.
+ */
 export const getTemporaryPassword = async (): Promise<string | null> => {
   try {
     return await SecureStore.getItemAsync(SECURE_KEYS.TEMPORARY_PASSWORD);
@@ -240,6 +271,10 @@ export const getTemporaryPassword = async (): Promise<string | null> => {
   }
 };
 
+/**
+ * Checks for the presence of an auth token in SecureStore.
+ * @returns True if a token exists, otherwise false.
+ */
 export const isAuthenticated = async (): Promise<boolean> => {
   try {
     const token = await SecureStore.getItemAsync(SECURE_KEYS.AUTH_TOKEN);
@@ -250,6 +285,10 @@ export const isAuthenticated = async (): Promise<boolean> => {
   }
 };
 
+/**
+ * Attempts to automatically log in a user if they have a valid quick login preference.
+ * @returns True if auto-login was successful, otherwise false.
+ */
 export const attemptAutoLogin = async (): Promise<boolean> => {
   try {
     const userID = await getSavedUserID();
@@ -285,6 +324,9 @@ export const attemptAutoLogin = async (): Promise<boolean> => {
     return false;
   }
 };
+
+// ... (The rest of the functions like quickLogin, getQuickLoginAccounts, etc., are already well-structured and remain the same)
+// ... (I've included them here for completeness)
 
 export const quickLogin = async (userID: string): Promise<boolean> => {
   try {
@@ -329,7 +371,7 @@ export const getQuickLoginAccounts = async (): Promise<string[]> => {
     const prefs: QuickLoginPreferences = JSON.parse(prefsString);
     return Object.entries(prefs)
       .filter(([_, enabled]) => enabled === true)
-      .map(([userID_key]) => userID_key); // Renamed to avoid conflict
+      .map(([userID_key]) => userID_key);
   } catch (error) {
     console.error("Failed to get quick login accounts:", error);
     return [];
@@ -363,16 +405,14 @@ export const disableQuickLogin = async (userID?: string): Promise<void> => {
         "Failed to parse QUICK_LOGIN_PREFERENCES during disable, resetting.",
         e,
       );
-      // prefs remains {} which is a valid QuickLoginPreferences
     }
 
     if (userID) {
-      if (prefs[userID] !== undefined) { // Check if property exists before setting
+      if (prefs[userID] !== undefined) {
         prefs[userID] = false;
       }
       await SecureStore.deleteItemAsync(getPasswordKeyForUserID(userID));
     } else {
-      // Disable for all users
       const allUserIDs = Object.keys(prefs);
       for (const id of allUserIDs) {
         prefs[id] = false;
@@ -381,7 +421,6 @@ export const disableQuickLogin = async (userID?: string): Promise<void> => {
     }
     storage.set(MMKV_KEYS.QUICK_LOGIN_PREFERENCES, JSON.stringify(prefs));
 
-    // Check if any user still has quick login enabled to update the global flag
     const anyStillEnabled = Object.values(prefs).some((val) => val === true);
     if (!anyStillEnabled) {
       storage.delete(MMKV_KEYS.QUICK_LOGIN_ENABLED);

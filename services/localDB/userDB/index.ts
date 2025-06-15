@@ -132,7 +132,6 @@ export async function updateUserInTransaction(userId: string, newUsername: strin
         await db.withTransactionAsync(async () => {
             await db.runAsync('UPDATE users SET username = ? WHERE id = ?', [newUsername, userId]);
             const updatedUser = await db.getFirstAsync('SELECT * FROM users WHERE id = ?', [userId]);
-             ('Updated user:', updatedUser);
         });
     } catch (error) {
         console.error('Error updating user in transaction:', error);

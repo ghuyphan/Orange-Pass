@@ -169,8 +169,7 @@ export const ThemedInput = forwardRef<
       const shouldShowError = isError && errorMessage;
       const shouldShowIndividualError =
         shouldShowError &&
-        ((groupPosition === "single") ||
-          (groupPosition !== "single" && showIndividualErrors));
+        (groupPosition === "single" || showIndividualErrors);
 
       if (shouldShowIndividualError) {
         errorTextHeight.value = withTiming(getResponsiveHeight(2.2), {
@@ -324,7 +323,9 @@ export const ThemedInput = forwardRef<
             ? Colors.light.inputBackground
             : Colors.dark.inputBackground),
         borderColor: glassBorderColor,
-        minHeight: label ? getResponsiveHeight(4.8) : getResponsiveHeight(3.8),
+        minHeight: label
+          ? getResponsiveHeight(4.8)
+          : getResponsiveHeight(3.8),
       },
       getGroupedStyles(),
     ];
@@ -484,48 +485,29 @@ export const ThemedInput = forwardRef<
     return (
       <View style={containerStyle}>
         {groupPosition === "single" ? (
+          // This view now ONLY wraps the input content
           <Animated.View
             style={[styles.inputGroupWrapper, animatedSingleWrapperStyle]}
           >
             {InputContent}
-            <Animated.View
-              style={[styles.errorContainer, animatedErrorTextStyle]}
-            >
-              {isError && errorMessage && (
-                <ThemedText
-                  style={[
-                    styles.errorText,
-                    { color: errorColor },
-                    errorTextStyle,
-                  ]}
-                  numberOfLines={2}
-                >
-                  {errorMessage}
-                </ThemedText>
-              )}
-            </Animated.View>
           </Animated.View>
         ) : (
-          <>
-            {InputContent}
-            <Animated.View
-              style={[styles.errorContainer, animatedErrorTextStyle]}
-            >
-              {isError && errorMessage && showIndividualErrors && (
-                <ThemedText
-                  style={[
-                    styles.errorText,
-                    { color: errorColor },
-                    errorTextStyle,
-                  ]}
-                  numberOfLines={2}
-                >
-                  {errorMessage}
-                </ThemedText>
-              )}
-            </Animated.View>
-          </>
+          // Grouped inputs don't need their own wrapper here,
+          // as the InputGroup component provides it.
+          InputContent
         )}
+
+        {/* The error container is now OUTSIDE and AFTER the bordered view */}
+        <Animated.View style={[styles.errorContainer, animatedErrorTextStyle]}>
+          {isError && errorMessage && showIndividualErrors && (
+            <ThemedText
+              style={[styles.errorText, { color: errorColor }, errorTextStyle]}
+              numberOfLines={2}
+            >
+              {errorMessage}
+            </ThemedText>
+          )}
+        </Animated.View>
       </View>
     );
   }

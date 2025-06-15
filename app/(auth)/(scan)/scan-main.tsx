@@ -56,6 +56,7 @@ import { useCameraSetup } from "@/hooks/useCameraSetup";
 import { useFocusGesture } from "@/hooks/useFocusGesture";
 import { useGalleryPicker } from "@/hooks/useGalleryPicker";
 import { getResponsiveHeight, getResponsiveWidth } from "@/utils/responsive";
+import { ThemedDualButton } from "@/components/buttons/ThemedDualButton";
 
 // Create animated camera component
 const ReanimatedCamera = Reanimated.createAnimatedComponent(Camera);
@@ -463,8 +464,8 @@ export default function ScanScreen() {
           {codeMetadata.length > 0 && (
             <QRResult
               codeValue={codeValue}
-              codeType={codeType}
-              iconName={iconName}
+              // codeType={codeType}
+              // iconName={iconName}
               animatedStyle={animatedStyle}
               onNavigateToAdd={onNavigateToAddScreen}
             />
@@ -486,7 +487,7 @@ export default function ScanScreen() {
           <ThemedButton
             iconName="image"
             iconColor="white"
-            underlayColor="#fff"
+            // underlayColor="#fff"
             onPress={onOpenGallery}
             style={styles.bottomButton}
             loading={isDecoding}
@@ -496,7 +497,7 @@ export default function ScanScreen() {
           <ThemedButton
             iconName="cog"
             iconColor="white"
-            underlayColor="#fff"
+            // underlayColor="#fff"
             onPress={() => onOpenSheet("setting")}
             style={styles.bottomButton}
             variant="glass"
@@ -512,14 +513,37 @@ export default function ScanScreen() {
           iconName="chevron-left"
           variant="glass"
         />
-        <ThemedButton
-          underlayColor="#fff"
+        <ThemedDualButton
+          // --- Global Props ---
+          variant="glass"
+          style={styles.headerButton}
+          iconColor="#fff"
+          rightIconColor={torch === "on" ? "#FFCC00" : "#fff"}
+          //  iconColor={torch === "on" ? "#FFCC00" : "#fff"}
+          // disabled={currentIsSyncingOp || currentIsLoading || isOffline}
+          // --- Left Button Config ---
+          leftButton={{
+            
+            iconName: showIndicator ? "scan-helper" : "scan-helper-off",
+            onPress: toggleShowIndicator
+          }}
+          // --- Right Button Config ---
+          rightButton={{
+            iconName: torch === "on" ? "flash" : "flash-off",
+            onPress: toggleFlash,
+            // onPress: onScan,
+          }}
+        // --- Active State Example ---
+        // activeSide={currentIsSyncingOp ? 'left' : 'none'}
+        />
+        {/* <ThemedButton
+          // underlayColor="#fff"
           iconColor={torch === "on" ? "#FFCC00" : "#fff"}
           style={styles.headerButton}
           onPress={toggleFlash}
           iconName={torch === "on" ? "flash" : "flash-off"}
           variant="glass"
-        />
+        /> */}
       </View>
 
       <ThemedStatusToast
@@ -529,7 +553,7 @@ export default function ScanScreen() {
         style={styles.toastContainer}
       />
 
-      {/* <StatusBar barStyle="light-content" /> */}
+      <StatusBar barStyle="light-content" />
 
       {isCameraReady && (
         <Suspense fallback={null}>

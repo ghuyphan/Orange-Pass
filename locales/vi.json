@@ -548,7 +548,9 @@
     },
     "customColor": "Màu tùy chỉnh",
     "enterCustomHexCode": "Nhập mã màu hex tùy chỉnh",
-    "hexCode": "Mã hex"
+    "hexCode": "Mã hex",
+    "selectCustomColor": "Chọn màu tùy chỉnh",
+    "select": "Chọn"
   },
   "languageScreen": {
     "title": "Ngôn ngữ",

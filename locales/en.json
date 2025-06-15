@@ -548,7 +548,9 @@
     },
     "customColor": "Custom Color",
     "enterCustomHexCode": "Enter custom hex code",
-    "hexCode": "Hex code"
+    "hexCode": "Hex code",
+    "selectCustomColor": "Select Custom Color",
+    "select": "Select"
   },
   "languageScreen": {
     "title": "Language",

@@ -1,14 +1,25 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { StyleSheet, StyleProp, ViewStyle, useWindowDimensions } from 'react-native'; // Import useWindowDimensions
+import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import {
+  StyleSheet,
+  StyleProp,
+  ViewStyle,
+  useWindowDimensions,
+} from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
-} from 'react-native-reanimated';
-import { ThemedText } from '../ThemedText';
-import { Colors } from '@/constants/Colors';
-import { useTheme } from '@/context/ThemeContext';
-import { getResponsiveFontSize, getResponsiveWidth, getResponsiveHeight } from '@/utils/responsive';
+  runOnJS,
+} from "react-native-reanimated";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import { ThemedText } from "../ThemedText";
+import { Colors } from "@/constants/Colors";
+import { useTheme } from "@/context/ThemeContext";
+import {
+  getResponsiveFontSize,
+  getResponsiveWidth,
+  getResponsiveHeight,
+} from "@/utils/responsive";
 
 // Define a type for valid Reanimated maxWidth values
 type ReanimatedMaxWidth = number | `${number}%`;
@@ -26,7 +37,7 @@ export interface ThemedTopToastProps {
 }
 
 /**
- * A themed top toast component.
+ * A themed top toast component with slide-up-to-dismiss gesture.
  */
 export function ThemedTopToast({
   lightColor,
@@ -39,38 +50,37 @@ export function ThemedTopToast({
   maxWidth,
 }: ThemedTopToastProps) {
   const { currentTheme } = useTheme();
-  const { width: windowWidth } = useWindowDimensions(); // Get window width
+  const { width: windowWidth } = useWindowDimensions();
 
   const [localVisible, setLocalVisible] = useState(false);
+  const hideTimerRef = useRef<number | null>(null);
 
   // Preprocess maxWidth
   const processedMaxWidth = useMemo(() => {
-    if (typeof maxWidth === 'string') {
-      if (maxWidth.endsWith('%')) {
+    if (typeof maxWidth === "string") {
+      if (maxWidth.endsWith("%")) {
         return maxWidth as ReanimatedMaxWidth; // It's a valid percentage
-      } else if (maxWidth.endsWith('vw')) {
+      } else if (maxWidth.endsWith("vw")) {
         const vwValue = parseFloat(maxWidth.slice(0, -2));
         return (vwValue / 100) * windowWidth; // Convert vw to pixels
       }
-      // Handle other string formats or invalid strings as needed (e.g., return a default)
       return getResponsiveWidth(90);
     }
     return maxWidth ?? getResponsiveWidth(90);
   }, [maxWidth, windowWidth]);
 
-    const maxWidthStyle = useMemo(() => {
+  const maxWidthStyle = useMemo(() => {
     return {
-      maxWidth: processedMaxWidth, // Use the processed value
+      maxWidth: processedMaxWidth,
     };
-  }, [processedMaxWidth, currentTheme]);
-
+  }, [processedMaxWidth]);
 
   const toastStyle = useMemo(
     () => [
       styles.toastContainer,
       {
         backgroundColor:
-          currentTheme === 'light'
+          currentTheme === "light"
             ? Colors.light.toastBackground
             : Colors.dark.toastBackground,
       },
@@ -82,37 +92,42 @@ export function ThemedTopToast({
 
   const opacity = useSharedValue(0);
   const translateY = useSharedValue(-getResponsiveHeight(10));
+  const dragContext = useSharedValue({ startY: 0 });
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
     transform: [{ translateY: translateY.value }],
   }));
 
+  const hideToast = useCallback(() => {
+    if (hideTimerRef.current) {
+      clearTimeout(hideTimerRef.current);
+    }
+    opacity.value = withTiming(0, { duration: 300 });
+    translateY.value = withTiming(-getResponsiveHeight(12), { duration: 300 });
+
+    setTimeout(() => {
+      setLocalVisible(false);
+    }, 300);
+  }, [opacity, translateY]);
+
+  const handleDismiss = useCallback(() => {
+    onVisibilityToggle?.(false);
+    hideToast();
+  }, [onVisibilityToggle, hideToast]);
+
   useEffect(() => {
-    let showTimer: NodeJS.Timeout;
-    let hideTimer: NodeJS.Timeout;
-
     const showToast = () => {
-      clearTimeout(hideTimer);
-
+      if (hideTimerRef.current) {
+        clearTimeout(hideTimerRef.current);
+      }
       setLocalVisible(true);
       opacity.value = withTiming(1, { duration: 300 });
       translateY.value = withTiming(10, { duration: 300 });
 
-      showTimer = setTimeout(() => {
-        hideToast();
-        onVisibilityToggle?.(false);
+      hideTimerRef.current = setTimeout(() => {
+        handleDismiss();
       }, duration);
-    };
-
-    const hideToast = () => {
-      clearTimeout(showTimer);
-      opacity.value = withTiming(0, { duration: 300 });
-      translateY.value = withTiming(-getResponsiveHeight(12), { duration: 300 });
-
-      hideTimer = setTimeout(() => {
-        setLocalVisible(false);
-      }, 300);
     };
 
     if (isVisible) {
@@ -122,26 +137,51 @@ export function ThemedTopToast({
     }
 
     return () => {
-      clearTimeout(showTimer);
-      clearTimeout(hideTimer);
+      if (hideTimerRef.current) {
+        clearTimeout(hideTimerRef.current);
+      }
     };
-  }, [isVisible, duration, onVisibilityToggle]);
+  }, [isVisible, duration, localVisible, handleDismiss, hideToast, opacity, translateY]);
+
+  const panGesture = Gesture.Pan()
+    .onStart(() => {
+      // Cancel auto-hide timer when user interacts
+      if (hideTimerRef.current) {
+        runOnJS(clearTimeout)(hideTimerRef.current);
+      }
+      dragContext.value = { startY: translateY.value };
+    })
+    .onUpdate((event) => {
+      // Allow dragging upwards
+      translateY.value = dragContext.value.startY + event.translationY;
+    })
+    .onEnd((event) => {
+      // Dismiss if swiped up with enough velocity or distance
+      if (event.translationY < -20 || event.velocityY < -500) {
+        runOnJS(handleDismiss)();
+      } else {
+        // Otherwise, snap back to the original position
+        translateY.value = withTiming(10, { duration: 300 });
+      }
+    });
 
   if (!localVisible) {
     return null;
   }
 
   return (
-    <Animated.View style={[toastStyle, animatedStyle]}>
-      <ThemedText
-        style={styles.toastText}
-        numberOfLines={1}
-        ellipsizeMode="tail"
-        type="defaultSemiBold"
-      >
-        {message}
-      </ThemedText>
-    </Animated.View>
+    <GestureDetector gesture={panGesture}>
+      <Animated.View style={[toastStyle, animatedStyle]}>
+        <ThemedText
+          style={styles.toastText}
+          numberOfLines={1}
+          ellipsizeMode="tail"
+          type="defaultSemiBold"
+        >
+          {message}
+        </ThemedText>
+      </Animated.View>
+    </GestureDetector>
   );
 }
 
@@ -150,15 +190,15 @@ const styles = StyleSheet.create({
     borderRadius: getResponsiveWidth(4),
     paddingVertical: getResponsiveHeight(1.5),
     paddingHorizontal: getResponsiveWidth(4),
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'absolute',
+    alignItems: "center",
+    justifyContent: "center",
+    position: "absolute",
     top: getResponsiveHeight(7),
     zIndex: 1000,
-    alignSelf: 'center',
+    alignSelf: "center",
   },
   toastText: {
     fontSize: getResponsiveFontSize(14),
-    textAlign: 'center',
+    textAlign: "center",
   },
 });
