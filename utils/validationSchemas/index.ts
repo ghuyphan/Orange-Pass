@@ -123,6 +123,16 @@ export const qrCodeSchema = Yup.object({
   }),
 });
 
+export const editProfileSchema = Yup.object().shape({
+  name: Yup.string()
+    .matches(
+      /^[\w'\-,.][^0-9_!¡?÷?¿/\\+=@#$%ˆ&*(){}|~<>;:[\]]{1,}$/i,
+      "nameInvalid"
+    )
+    .required("nameRequired"),
+  email: Yup.string().email("invalidEmail").required("emailRequired"),
+});
+
 export const profileSchema = Yup.object().shape({
   name: Yup.string()
     .matches(
@@ -158,9 +168,13 @@ export const profileSchema = Yup.object().shape({
 export const passwordChangeSchema = Yup.object().shape({
   currentPassword: Yup.string().required("currentPasswordRequired"),
   newPassword: Yup.string()
-    .min(8, "passwordTooShort")
+    .min(8, "invalidPasswordLength")
+    .matches(/[a-z]/, "invalidPasswordLowerCase")
+    .matches(/[A-Z]/, "invalidPasswordUpperCase")
+    .matches(/\d/, "invalidPasswordNumber")
+    .matches(/[@$!%*?&_]/, "invalidPasswordSpecialChar")
     .required("newPasswordRequired"),
   confirmNewPassword: Yup.string()
-    .oneOf([Yup.ref("newPassword")], "passwordsMustMatch")
+    .oneOf([Yup.ref("newPassword")], "passwordsDontMatch") // Use a consistent error key
     .required("confirmNewPasswordRequired"),
 });

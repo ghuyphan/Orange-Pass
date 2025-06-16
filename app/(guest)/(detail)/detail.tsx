@@ -469,7 +469,8 @@ const GuestDetailScreen = () => {
 
   const renderPaymentMethodItem = useCallback(
     ({ item: bankItem }: { item: BankItem }) => (
-      <ThemedButton
+      <Pressable
+        key={bankItem.code}
         style={styles.bankItemPressable}
         onPress={() => handleOpenBank(bankItem.code)}
       >
@@ -483,7 +484,7 @@ const GuestDetailScreen = () => {
         <ThemedText numberOfLines={1} style={styles.bankItemText}>
           {bankItem.name}
         </ThemedText>
-      </ThemedButton>
+      </Pressable>
     ),
     [handleOpenBank]
   );

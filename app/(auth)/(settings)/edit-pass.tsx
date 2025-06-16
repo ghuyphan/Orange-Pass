@@ -31,10 +31,13 @@ import { STATUSBAR_HEIGHT } from "@/constants/Statusbar";
 import { RootState } from "@/store/rootReducer";
 import { setAuthData } from "@/store/reducers/authSlice";
 
+// Types
+import UserRecord from "@/types/userType";
+
 const ChangePasswordScreen = () => {
   const { currentTheme: theme } = useTheme();
   const dispatch = useDispatch();
-  const token = useSelector((state: RootState) => state.auth.token);
+  const { user, token } = useSelector((state: RootState) => state.auth);
 
   const [isToastVisible, setIsToastVisible] = useState(false);
   const [toastIcon, setToastIcon] = useState<"error" | "check">("error");
@@ -49,7 +52,7 @@ const ChangePasswordScreen = () => {
       newPassword: "",
       confirmNewPassword: "",
     }),
-    []
+    [],
   );
 
   return (
@@ -59,7 +62,7 @@ const ChangePasswordScreen = () => {
       onSubmit={async (values, { setSubmitting }) => {
         setSubmitting(true);
         try {
-          if (!token) {
+          if (!token || !user) {
             setToastIcon("error");
             setIsToastVisible(true);
             setErrorMessage(t("authRefresh.errors.invalidToken"));
@@ -72,8 +75,16 @@ const ChangePasswordScreen = () => {
             newPassword: values.newPassword,
           };
 
-          const updatedUser = await updateUserProfile(updateData, token);
-          dispatch(setAuthData({ token, user: updatedUser }));
+          const response = await updateUserProfile(updateData, token);
+
+          // Safely merge user data. This prevents wiping out user details
+          // if the API returns an empty object or minimal success message.
+          const userRecord: UserRecord = {
+            ...user,
+            ...(response || {}),
+          };
+
+          dispatch(setAuthData({ token, user: userRecord }));
 
           setToastIcon("check");
           setIsToastVisible(true);
@@ -85,7 +96,7 @@ const ChangePasswordScreen = () => {
           setToastIcon("error");
           setIsToastVisible(true);
           setErrorMessage(
-            error instanceof Error ? error.message : String(error)
+            error instanceof Error ? error.message : String(error),
           );
         } finally {
           setSubmitting(false);
@@ -160,7 +171,7 @@ const ChangePasswordScreen = () => {
                   <ThemedInput
                     label={t("changePasswordScreen.currentPassword")}
                     placeholder={t(
-                      "changePasswordScreen.currentPasswordPlaceholder"
+                      "changePasswordScreen.currentPasswordPlaceholder",
                     )}
                     secureTextEntry
                     onChangeText={handleChange("currentPassword")}
@@ -173,7 +184,7 @@ const ChangePasswordScreen = () => {
                   <ThemedInput
                     label={t("changePasswordScreen.newPassword")}
                     placeholder={t(
-                      "changePasswordScreen.newPasswordPlaceholder"
+                      "changePasswordScreen.newPasswordPlaceholder",
                     )}
                     secureTextEntry
                     onChangeText={handleChange("newPassword")}
@@ -186,7 +197,7 @@ const ChangePasswordScreen = () => {
                   <ThemedInput
                     label={t("changePasswordScreen.confirmNewPassword")}
                     placeholder={t(
-                      "changePasswordScreen.confirmNewPasswordPlaceholder"
+                      "changePasswordScreen.confirmNewPasswordPlaceholder",
                     )}
                     secureTextEntry
                     onChangeText={handleChange("confirmNewPassword")}
@@ -266,7 +277,6 @@ const styles = StyleSheet.create({
     marginTop: getResponsiveHeight(2),
   },
   saveButton: {
-    // marginTop: getResponsiveHeight(2.4),
     marginBottom: getResponsiveHeight(3.6),
   },
   toastContainer: {

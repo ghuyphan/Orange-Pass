@@ -10,23 +10,24 @@ import {
   Platform,
 } from "react-native";
 import { useThemeColor } from "@/hooks/useThemeColor";
-import { useTheme } from "@/context/ThemeContext";
 import { Colors } from "@/constants/Colors";
 import Animated from "react-native-reanimated";
 import {
   getResponsiveFontSize,
   getResponsiveWidth,
-  getResponsiveHeight,
 } from "@/utils/responsive";
 import { useGlassStyle, GlassIntensity } from "@/hooks/useGlassStyle";
+// --- UPDATED ---: Make sure the path is correct for your project structure
+import { AnimatedSlashedIcon } from "../SlashedIcon.tsx";
 
 // --- Type Definitions ---
 
 type ButtonConfig = {
   iconName: keyof typeof MaterialCommunityIcons.glyphMap;
   onPress: () => void;
-  // --- ADDED ---: Allow individual buttons to be disabled
   disabled?: boolean;
+  // --- NEW ---: Add a prop to control the animated slash for each button
+  isSlashed?: boolean;
 };
 
 export type ThemedDualButtonProps = {
@@ -49,7 +50,7 @@ export type ThemedDualButtonProps = {
   activeColor?: string;
 };
 
-// --- The New Component ---
+// --- The Updated Component ---
 
 export function ThemedDualButton({
   leftButton,
@@ -99,19 +100,12 @@ export function ThemedDualButton({
     };
   }, []);
 
-  // --- MODIFIED ---: Calculate disabled state for each button individually
   const isGloballyDisabled = disabled || loading;
   const isLeftDisabled = isGloballyDisabled || leftButton.disabled;
   const isRightDisabled = isGloballyDisabled || rightButton.disabled;
 
-  // --- Memoized Values for Performance ---
-
   const containerStyle = useMemo<StyleProp<ViewStyle>>(() => {
-    // --- MODIFIED ---: Removed opacity from the container style
-    const baseStyle: ViewStyle = {
-      ...styles.container,
-    };
-
+    const baseStyle: ViewStyle = { ...styles.container };
     switch (variant) {
       case "solid":
         return [baseStyle, { backgroundColor: themeSolidBg }, style];
@@ -152,8 +146,6 @@ export function ThemedDualButton({
   const rightIconColor = rightIconColorProp || iconColor || themeIconColor;
   const finalActiveColor = activeColor || themeSolidBg;
 
-  // --- Handlers ---
-
   const handleLeftPress = useCallback(() => {
     if (isLeftDebouncing) return;
     leftButton.onPress();
@@ -191,20 +183,20 @@ export function ThemedDualButton({
           {/* Left Button Part */}
           <Pressable
             onPress={handleLeftPress}
-            // --- MODIFIED ---: Use individual disabled state
             disabled={isLeftDisabled || isLeftDebouncing}
             style={[
               styles.buttonPart,
               activeSide === "left" && { backgroundColor: finalActiveColor },
-              // --- MODIFIED ---: Apply opacity based on individual state
               { opacity: isLeftDisabled ? 0.5 : 1 },
             ]}
             hitSlop={10}
           >
-            <MaterialCommunityIcons
+            {/* --- UPDATED --- */}
+            <AnimatedSlashedIcon
               name={leftButton.iconName}
               size={iconSize}
               color={leftIconColor}
+              isSlashed={leftButton.isSlashed ?? false}
             />
           </Pressable>
 
@@ -219,20 +211,20 @@ export function ThemedDualButton({
           {/* Right Button Part */}
           <Pressable
             onPress={handleRightPress}
-            // --- MODIFIED ---: Use individual disabled state
             disabled={isRightDisabled || isRightDebouncing}
             style={[
               styles.buttonPart,
               activeSide === "right" && { backgroundColor: finalActiveColor },
-              // --- MODIFIED ---: Apply opacity based on individual state
               { opacity: isRightDisabled ? 0.5 : 1 },
             ]}
             hitSlop={10}
           >
-            <MaterialCommunityIcons
+            {/* --- UPDATED --- */}
+            <AnimatedSlashedIcon
               name={rightButton.iconName}
               size={iconSize}
               color={rightIconColor}
+              isSlashed={rightButton.isSlashed ?? false}
             />
           </Pressable>
         </>
@@ -244,9 +236,9 @@ export function ThemedDualButton({
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
-    borderRadius: 100, // Pill shape
+    borderRadius: 100,
     overflow: "hidden",
-    alignSelf: "flex-start", // Shrink-wrap to content
+    alignSelf: "flex-start",
     alignItems: "center",
   },
   defaultOverlay: {

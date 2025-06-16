@@ -156,6 +156,7 @@ function HomeScreen() {
   // --- Core Logic Functions (Unchanged) ---
   const syncWithServer = useCallback(
     async (userIdToSync: string) => {
+      console.log(`HomeScreen: Attempting to sync with server...`);
       if (isOffline || isSyncing) return;
 
       console.log(

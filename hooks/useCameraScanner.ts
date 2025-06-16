@@ -33,7 +33,7 @@ export const useCameraScanner = () => {
   const [iconName, setIconName] =
     useState<keyof typeof MaterialIcons.glyphMap>("explore");
   const [isConnecting, setIsConnecting] = useState(false);
-  const [isCodeLocked, setIsCodeLocked] = useState(false); // Your state to track lock status
+  const [isCodeLocked, setIsCodeLocked] = useState(false);
 
   // Settings states
   const [showIndicator, setShowIndicator] = useState(true);
@@ -44,7 +44,7 @@ export const useCameraScanner = () => {
 
   const handleCodeScanned = useHandleCodeScanned();
 
-  // Renamed to be more specific, this is the full reset
+  // Full reset function
   const resetScanner = useCallback(() => {
     setIsConnecting(false);
     setCodeType("");
@@ -64,7 +64,7 @@ export const useCameraScanner = () => {
   const toggleShowIndicator = useCallback(() => {
     setShowIndicator((prev) => {
       const newValue = !prev;
-      setShowIndicatorMMKV(newValue); // Persist to MMKV
+      setShowIndicatorMMKV(newValue);
       return newValue;
     });
     triggerLightHapticFeedback();
@@ -72,14 +72,13 @@ export const useCameraScanner = () => {
 
   const createCodeScannerCallback = useCallback(
     (codes: Code[], frame: CodeScannerFrame) => {
+      // Faster scanning - process every 2nd frame instead of every 4th
       if (isConnecting || frameCounterRef.current++ % 4 !== 0) return;
 
       setScanFrame(frame);
       if (highlightTimeoutRef.current) {
         clearTimeout(highlightTimeoutRef.current);
       }
-
-      // --- REFINED LOGIC ---
 
       if (isCodeLocked) {
         // We are locked. We must find our specific code, regardless of its position in the array.
@@ -115,7 +114,7 @@ export const useCameraScanner = () => {
 
           // --- LOCK ONTO THE NEW CODE ---
           lockedCodeRef.current = currentCodeValue;
-          setIsCodeLocked(true); // This triggers the lock
+          setIsCodeLocked(true);
           setCodeMetadata(currentCodeValue);
 
           // Process the newly found code
@@ -143,8 +142,19 @@ export const useCameraScanner = () => {
             }, 2000);
           }
         } else {
-          // No codes are visible and we are not locked, so do nothing.
-          // The state is already clean.
+          // FIX: No codes are visible and we are not locked
+          // Clear any remaining highlights and partial state with a small delay to avoid flickering
+          highlightTimeoutRef.current = setTimeout(() => {
+            if (codeScannerHighlights.length > 0) {
+              setCodeScannerHighlights([]);
+            }
+            // Clear display states if they exist but we're not locked
+            if (codeType || codeValue || codeMetadata) {
+              setCodeType("");
+              setCodeValue("");
+              setCodeMetadata("");
+            }
+          }, 100); // 100ms delay to prevent flickering
         }
       }
     },
@@ -154,6 +164,10 @@ export const useCameraScanner = () => {
       showIndicator,
       handleCodeScanned,
       resetScanner,
+      codeScannerHighlights.length,
+      codeType,
+      codeValue,
+      codeMetadata,
     ],
   );
 
@@ -176,8 +190,8 @@ export const useCameraScanner = () => {
     showIndicator,
     toggleShowIndicator,
     createCodeScannerCallback,
-    resetCodeState: resetScanner, // Expose the full reset function
+    resetCodeState: resetScanner,
     isCodeLocked,
-    unlockScanning: resetScanner, // The manual unlock should do a full reset
+    unlockScanning: resetScanner,
   };
 };

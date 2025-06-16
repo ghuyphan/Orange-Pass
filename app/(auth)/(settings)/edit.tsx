@@ -39,16 +39,10 @@ import {
 import { STATUSBAR_HEIGHT } from "@/constants/Statusbar";
 import { RootState } from "@/store/rootReducer";
 import { setAuthData } from "@/store/reducers/authSlice";
+import { editProfileSchema } from "@/utils/validationSchemas";
 
 // Types
 import UserRecord from "@/types/userType";
-
-// Simplified validation schema for profile editing
-const editProfileSchema = Yup.object().shape({
-  name: Yup.string().required("nameRequired"),
-  email: Yup.string().email("invalidEmail").required("emailRequired"),
-});
-
 const EditProfileScreen = () => {
   const { currentTheme: theme } = useTheme();
   const dispatch = useDispatch();
@@ -346,9 +340,6 @@ const styles = StyleSheet.create({
   toastContainer: {
     position: "absolute",
     bottom: getResponsiveHeight(3.6),
-    left: 0,
-    right: 0,
-    marginHorizontal: getResponsiveWidth(3.6),
   },
 });
 

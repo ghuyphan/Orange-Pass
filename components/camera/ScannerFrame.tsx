@@ -5,7 +5,7 @@ import Animated, {
   withSpring,
   withTiming,
   useSharedValue,
-  interpolateColor, // Import interpolateColor
+  interpolateColor,
 } from "react-native-reanimated";
 
 // Centralized configuration for styling and animations
@@ -83,6 +83,9 @@ export const ScannerFrame: React.FC<ScannerFrameProps> = ({
 }) => {
   const dimensions = useDimensions();
   const [layoutReady, setLayoutReady] = useState(false);
+  
+  // Add a state to track if we have an active highlight
+  const [hasActiveHighlight, setHasActiveHighlight] = useState(false);
 
   const centerPosition = useMemo(() => {
     if (layout.width && layout.height) {
@@ -219,6 +222,14 @@ export const ScannerFrame: React.FC<ScannerFrameProps> = ({
     [animatedBorderStyle, cornerStyles]
   );
 
+  // Update center position when layout changes
+  useEffect(() => {
+    if (layout.width && layout.height) {
+      frameX.value = centerPosition.x;
+      frameY.value = centerPosition.y;
+    }
+  }, [centerPosition.x, centerPosition.y]);
+
   useEffect(() => {
     if (layout.width && layout.height && !layoutReady) {
       setLayoutReady(true);
@@ -229,8 +240,17 @@ export const ScannerFrame: React.FC<ScannerFrameProps> = ({
 
     if (!layoutReady) return;
 
-    if (highlight && scanFrame) {
+    // Check if we have a valid highlight
+    const hasValidHighlight = highlight && 
+      scanFrame && 
+      scanFrame.width > 0 && 
+      scanFrame.height > 0 &&
+      highlight.width > 0 && 
+      highlight.height > 0;
+
+    if (hasValidHighlight) {
       // Animate to active state
+      setHasActiveHighlight(true);
       isActive.value = withTiming(1, CONFIG.timing);
 
       const scaled = calculateScaledValues(highlight, scanFrame, layout);
@@ -248,8 +268,12 @@ export const ScannerFrame: React.FC<ScannerFrameProps> = ({
         dimensions.initialCornerBorderWidth * scalingFactor,
         CONFIG.cornerSpring
       );
-    } else {
-      // Animate to inactive state
+    } else if (hasActiveHighlight) {
+      // Only animate back to center if we previously had an active highlight
+      // This prevents unnecessary animations on initial load
+      setHasActiveHighlight(false);
+      
+      // Animate to inactive state (back to center)
       isActive.value = withTiming(0, CONFIG.timing);
 
       frameX.value = withTiming(centerPosition.x, CONFIG.timing);
@@ -273,6 +297,7 @@ export const ScannerFrame: React.FC<ScannerFrameProps> = ({
     layoutReady,
     centerPosition,
     dimensions,
+    hasActiveHighlight,
   ]);
 
   if (!layoutReady) {

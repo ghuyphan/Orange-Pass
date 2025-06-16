@@ -375,9 +375,9 @@ export default function GuestScanScreen() {
       return (
         cameraStatus === "granted" &&
         locationStatus["android.permission.ACCESS_FINE_LOCATION"] ===
-          "granted" &&
+        "granted" &&
         locationStatus["android.permission.ACCESS_COARSE_LOCATION"] ===
-          "granted"
+        "granted"
       );
     } catch (error) {
       console.error("Error requesting permissions:", error);
@@ -428,10 +428,10 @@ export default function GuestScanScreen() {
     sheetType === "setting"
       ? t("scanScreen.settings")
       : sheetType === "wifi"
-      ? t("scanScreen.wifi")
-      : sheetType === "linking"
-      ? t("scanScreen.linking")
-      : t("scanScreen.settings");
+        ? t("scanScreen.wifi")
+        : sheetType === "linking"
+          ? t("scanScreen.linking")
+          : t("scanScreen.settings");
 
   return (
     <View style={styles.container}>
@@ -516,9 +516,11 @@ export default function GuestScanScreen() {
             variant="glass"
           />
           <ThemedButton
-            iconName="cog"
+            iconName="history"
             iconColor="white"
-            onPress={() => onOpenSheet("setting")}
+            // Navigate to a new history screen
+            // onPress={() => router.push("/(guest)/scan/history")}
+            onPress={() => { }}
             style={styles.bottomButton}
             variant="glass"
           />
@@ -539,12 +541,14 @@ export default function GuestScanScreen() {
           iconColor="#fff"
           rightIconColor={torch === "on" ? "#FFCC00" : "#fff"}
           leftButton={{
-            iconName: showIndicator ? "scan-helper" : "scan-helper-off",
+            iconName: "scan-helper",
             onPress: toggleShowIndicator,
+            isSlashed: !showIndicator,
           }}
           rightButton={{
-            iconName: torch === "on" ? "flash" : "flash-off",
+            iconName: "flash",
             onPress: toggleFlash,
+            isSlashed: torch === "off",
           }}
         />
       </View>
@@ -566,12 +570,12 @@ export default function GuestScanScreen() {
               sheetType === "setting"
                 ? ["35%"]
                 : sheetType === "wifi"
-                ? wifiPassword
-                  ? ["45%"]
-                  : ["38%"]
-                : sheetType === "linking"
-                ? ["35%"]
-                : ["35%"]
+                  ? wifiPassword
+                    ? ["45%"]
+                    : ["38%"]
+                  : sheetType === "linking"
+                    ? ["35%"]
+                    : ["35%"]
             }
             styles={{
               customContent: {

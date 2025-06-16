@@ -34,7 +34,7 @@ import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import QRRecord from "@/types/qrType";
 import { height } from "@/constants/Constants";
 import { RootState } from "@/store/rootReducer";
-import { setQrData } from "@/store/reducers/qrSlice"; // To update Redux state
+import { setQrData } from "@/store/reducers/qrSlice";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { triggerHapticFeedback } from "@/utils/haptic";
 import { useGalleryPicker } from "@/hooks/useGalleryPicker";
@@ -64,8 +64,7 @@ import {
   getResponsiveFontSize,
 } from "@/utils/responsive";
 import { t } from "@/i18n";
-// import { exitGuestMode } from "@/services/auth"; // Assuming this is from your auth service
-import { deleteQrCode, updateQrIndexes } from "@/services/localDB/qrDB"; // Import DB functions
+import { deleteQrCode, updateQrIndexes } from "@/services/localDB/qrDB";
 
 const GUEST_USER_ID = ""; // Consistent with AuthService
 
@@ -80,13 +79,12 @@ function GuestHomeScreen() {
   const color = useThemeColor({ light: "#3A2E24", dark: "#FFF5E1" }, "text");
 
   // Loading and Syncing
-  const [isLoading, setIsLoading] = useState(true); // Start as true
-  const [isProcessing, setIsProcessing] = useState(false); // For local DB operations
+  const [isLoading, setIsLoading] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
   const isEmpty = useMemo(() => qrData.length === 0, [qrData]);
   const [initialAnimationsDone, setInitialAnimationsDone] = useState(false);
 
   // UI State
-  const [isActive, setIsActive] = useState(false); // For drag
   const [toastMessage, setToastMessage] = useState("");
   const [isToastVisible, setIsToastVisible] = useState(false);
   const [topToastMessage, setTopToastMessage] = useState("");
@@ -96,7 +94,6 @@ function GuestHomeScreen() {
   const [bottomToastIcon, setBottomToastIcon] = useState("");
   const [bottomToastMessage, setBottomToastMessage] = useState("");
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [fabOpen, setFabOpen] = useState(false);
   const [sheetType, setSheetType] = useState<SheetType>(null);
   const [linkingUrl, setLinkingUrl] = useState<string | null>(null);
@@ -110,7 +107,9 @@ function GuestHomeScreen() {
   // Refs
   const flatListRef = useRef<FlatList<QRRecord> | null>(null);
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const timeoutRefs = useRef<{ [key: string]: ReturnType<typeof setTimeout> | null }>({
+  const timeoutRefs = useRef<{
+    [key: string]: ReturnType<typeof setTimeout> | null;
+  }>({
     processing: null,
     idle: null,
     edit: null,
@@ -121,10 +120,12 @@ function GuestHomeScreen() {
   });
 
   // Shared Values (Reanimated)
-  const isEmptyShared = useSharedValue(qrData.length === 0 ? 1 : 0);
-  const emptyCardOffset = useSharedValue(350); // For EmptyListItem slide-in
-  const listOpacity = useSharedValue(0); // For DraggableFlatList fade-in
   const scrollY = useSharedValue(0);
+  const isActive = useSharedValue(false); // <-- REFACTORED from useState
+  const isSheetOpen = useSharedValue(false); // <-- REFACTORED from useState
+  const isEmptyShared = useSharedValue(qrData.length === 0 ? 1 : 0);
+  const emptyCardOffset = useSharedValue(350);
+  const listOpacity = useSharedValue(0);
 
   // Clear all timeouts on unmount
   useEffect(() => {
@@ -135,20 +136,20 @@ function GuestHomeScreen() {
     };
   }, []);
 
-  // Handle initial loading state based on guest user setup
+  // Handle initial loading state (Unchanged)
   useEffect(() => {
     if (guestUser && guestUser.id === GUEST_USER_ID) {
       InteractionManager.runAfterInteractions(() => {
         setIsLoading(false);
-        setInitialAnimationsDone(true); // Allow animations after interactions
+        setInitialAnimationsDone(true);
       });
     } else {
-      setIsLoading(true); // Should ideally not happen if this screen is only for guests
-      setInitialAnimationsDone(false); // Reset if guestUser changes
+      setIsLoading(true);
+      setInitialAnimationsDone(false);
     }
   }, [guestUser]);
 
-  // Network status toasts
+  // Network status toasts (Unchanged)
   const prevIsOffline = useRef(isOffline);
   useEffect(() => {
     if (isOffline) {
@@ -166,7 +167,7 @@ function GuestHomeScreen() {
           clearTimeout(timeoutRefs.current.network);
         timeoutRefs.current.network = setTimeout(
           () => setIsBottomToastVisible(false),
-          2000,
+          2000
         );
       } else {
         setIsBottomToastVisible(false);
@@ -179,21 +180,21 @@ function GuestHomeScreen() {
     };
   }, [isOffline]);
 
+  // Animation logic (Unchanged)
   const animateEmptyCard = useCallback(() => {
     emptyCardOffset.value = withSpring(0, { damping: 30, stiffness: 150 });
   }, [emptyCardOffset]);
 
-  // Animate empty card or list appearance
   useEffect(() => {
     isEmptyShared.value = isEmpty ? 1 : 0;
     if (initialAnimationsDone) {
       if (isEmpty) {
-        listOpacity.value = 0; // Hide list
-        emptyCardOffset.value = 350; // Reset for slide-in animation
-        animateEmptyCard(); // Slide in EmptyListItem
+        listOpacity.value = 0;
+        emptyCardOffset.value = 350;
+        animateEmptyCard();
       } else {
-        emptyCardOffset.value = 350; // Ensure EmptyListItem is "off-screen"
-        listOpacity.value = withTiming(1, { duration: 300 }); // Fade in list
+        emptyCardOffset.value = 350;
+        listOpacity.value = withTiming(1, { duration: 300 });
       }
     }
   }, [
@@ -213,34 +214,36 @@ function GuestHomeScreen() {
       scrollY.value,
       [SCROLL_THRESHOLD, SCROLL_THRESHOLD + ANIMATION_RANGE],
       [1, 0],
-      Extrapolation.CLAMP,
+      Extrapolation.CLAMP
     );
     const translateY = interpolate(
       scrollY.value,
       [0, SCROLL_THRESHOLD],
       [0, -35],
-      Extrapolation.CLAMP,
+      Extrapolation.CLAMP
     );
-    const shouldReduceZIndex = scrollY.value > 120 || isActive || isSheetOpen;
+    // *** OPTIMIZED ***: Reads shared values directly on the UI thread
+    const shouldReduceZIndex =
+      scrollY.value > SCROLL_THRESHOLD || isActive.value || isSheetOpen.value;
     return {
       opacity,
       transform: [{ translateY }],
       zIndex: shouldReduceZIndex ? 0 : 1,
     };
-  }, [isActive, isSheetOpen]);
+  }, []); // *** OPTIMIZED ***: Removed JS state dependencies
 
   const listHeaderStyle = useAnimatedStyle(() => {
     const opacity = withTiming(
       interpolate(scrollY.value, [0, 50], [1, 0], Extrapolation.CLAMP),
-      { duration: 200, easing: Easing.out(Easing.ease) },
+      { duration: 200, easing: Easing.out(Easing.ease) }
     );
     const scale = withTiming(
       interpolate(scrollY.value, [0, 50], [1, 0.95], Extrapolation.CLAMP),
-      { duration: 150, easing: Easing.out(Easing.ease) },
+      { duration: 150, easing: Easing.out(Easing.ease) }
     );
     const translateY = withTiming(
       interpolate(scrollY.value, [0, 50], [0, -5], Extrapolation.CLAMP),
-      { duration: 150, easing: Easing.out(Easing.ease) },
+      { duration: 150, easing: Easing.out(Easing.ease) }
     );
     return { opacity, transform: [{ scale }, { translateY }] };
   }, []);
@@ -248,48 +251,53 @@ function GuestHomeScreen() {
   const fabStyle = useAnimatedStyle(() => {
     const marginBottom = withTiming(
       isBottomToastVisible ? 30 : isToastVisible ? 80 : 10,
-      { duration: 200, easing: Easing.bezier(0.25, 0.1, 0.25, 1) },
+      { duration: 200, easing: Easing.bezier(0.25, 0.1, 0.25, 1) }
     );
     return { marginBottom };
-  });
+  }, [isBottomToastVisible, isToastVisible]);
 
-  const emptyCardStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: emptyCardOffset.value }],
-    flex: 1, // Ensure EmptyListItem takes space if it's a ScrollView
-  }));
+  const emptyCardStyle = useAnimatedStyle(
+    () => ({
+      transform: [{ translateY: emptyCardOffset.value }],
+      flex: 1,
+    }),
+    []
+  );
 
-  const listContainerAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: listOpacity.value,
-    flex: 1,
-  }));
+  const listContainerAnimatedStyle = useAnimatedStyle(
+    () => ({
+      opacity: listOpacity.value,
+      flex: 1,
+    }),
+    []
+  );
 
-  // Navigation handlers
+  // Navigation handlers (Unchanged)
   const onNavigateToEmptyScreen = useCallback(
     () => router.push("/(guest)/empty-guest"),
-    [],
+    []
   );
   const onNavigateToDetailScreen = useCallback(
     throttle((item: QRRecord) => {
       router.push({
-        pathname: `/detail`, // Assuming guest detail is same or handled by params
+        pathname: `/detail`,
         params: {
           id: item.id,
           item: encodeURIComponent(JSON.stringify(item)),
-          isGuest: "true", // Optional: flag for detail screen
+          isGuest: "true",
         },
       });
     }, 300),
-    [],
+    []
   );
   const onNavigateToScanScreen = useCallback(
     () => router.push("/(guest)/(scan)/scan-main"),
-    [],
+    []
   );
   const onNavigateToSettingsScreen = useCallback(
     () => router.push("/(guest)/(settings)/settings-guest"),
-    [],
+    []
   );
-
   const onNavigateToAddScreen = useCallback(
     throttle(
       (
@@ -297,7 +305,7 @@ function GuestHomeScreen() {
         codeValue?: string,
         bin?: string,
         codeType?: string,
-        codeProvider?: string,
+        codeProvider?: string
       ) => {
         router.push({
           pathname: `/(guest)/add-guest`,
@@ -310,9 +318,9 @@ function GuestHomeScreen() {
           },
         });
       },
-      300,
+      300
     ),
-    [],
+    []
   );
   const onNavigateToEditScreen = useCallback(
     throttle(() => {
@@ -326,7 +334,7 @@ function GuestHomeScreen() {
         });
       }, 200);
     }, 300),
-    [selectedItemId],
+    [selectedItemId]
   );
 
   // Sheet handlers
@@ -338,10 +346,9 @@ function GuestHomeScreen() {
       ssid?: string,
       password?: string,
       isWep?: boolean,
-      isHidden?: boolean,
+      isHidden?: boolean
     ) => {
       setSheetType(type);
-      setIsSheetOpen(true);
       setSelectedItemId(id || null);
       if (type === "wifi" && ssid && password) {
         setWifiSsid(ssid);
@@ -353,7 +360,15 @@ function GuestHomeScreen() {
       }
       bottomSheetRef.current?.snapToIndex(0);
     },
-    [],
+    []
+  );
+
+  // *** NEW ***: Callback to handle bottom sheet state changes
+  const handleSheetChange = useCallback(
+    (index: number) => {
+      isSheetOpen.value = index > -1;
+    },
+    [isSheetOpen]
   );
 
   const onOpenGallery = useGalleryPicker({
@@ -361,45 +376,37 @@ function GuestHomeScreen() {
     onNavigateToAddScreen,
   });
 
-  // Scroll handler
+  // *** OPTIMIZED ***: Removed state setting from scroll handler
   const scrollHandler = useAnimatedScrollHandler((event) => {
     scrollY.value = event.contentOffset.y;
-    if (event.contentOffset.y > 50 && fabOpen) {
-      setFabOpen(false);
-    } else if (event.contentOffset.y <= 50 && !fabOpen) {
-      setFabOpen(true);
-    }
   });
 
   const onScrollOffsetChange = useCallback(
     (offset: number) => {
       scrollY.value = offset;
     },
-    [scrollY],
+    [scrollY]
   );
 
-  // Drag handlers
+  // *** OPTIMIZED ***: Update shared value instead of state
   const onDragBegin = useCallback(() => {
     triggerHapticFeedback();
-    setIsActive(true);
-  }, []);
+    isActive.value = true;
+  }, [isActive]);
 
-  // Memoize filtered data
+  // Other handlers (Unchanged logic, updated state setters)
   const filteredData = useMemo(() => {
     if (filter === "all") return qrData;
     return qrData.filter((item) => item.type === filter);
   }, [qrData, filter]);
-
-  const handleFilterChange = useCallback((newFilter: string) => {
-    setFilter(newFilter);
-  }, []);
-
-  // Delete handlers
+  const handleFilterChange = useCallback(
+    (newFilter: string) => setFilter(newFilter),
+    []
+  );
   const onDeleteSheetPress = useCallback(() => {
     bottomSheetRef.current?.close();
     setIsModalVisible(true);
   }, []);
-
   const onDeletePress = useCallback(async () => {
     if (!selectedItemId) return;
     try {
@@ -412,7 +419,7 @@ function GuestHomeScreen() {
         ...item,
         qr_index: index,
         updated: new Date().toISOString(),
-        is_synced: true, // For guest mode, local changes are "synced" locally
+        is_synced: true,
       }));
       dispatch(setQrData(reindexedData));
 
@@ -434,12 +441,10 @@ function GuestHomeScreen() {
       if (timeoutRefs.current.delete) clearTimeout(timeoutRefs.current.delete);
       timeoutRefs.current.delete = setTimeout(
         () => setIsProcessing(false),
-        400,
+        400
       );
     }
   }, [selectedItemId, qrData, dispatch, t]);
-
-  // Optimize renderItem
   const renderItem = useCallback(
     ({
       item,
@@ -465,28 +470,21 @@ function GuestHomeScreen() {
         />
       </ScaleDecorator>
     ),
-    [onNavigateToDetailScreen, onOpenSheet],
+    [onNavigateToDetailScreen, onOpenSheet]
   );
-
-  // Toast handler
   const showToast = useCallback((message: string) => {
     setTopToastMessage(message);
     setIsTopToastVisible(true);
   }, []);
-
   const handleCopySuccess = useCallback(
     () => showToast(t("homeScreen.copied")),
-    [showToast, t],
+    [showToast, t]
   );
-
-  // Optimize onDragEnd
   const onDragEnd = useCallback(
     async ({ data: reorderedData }: { data: QRRecord[] }) => {
       triggerHapticFeedback();
-      setIsActive(false);
+      isActive.value = false; // *** OPTIMIZED ***
       setIsProcessing(true);
-      // setToastMessage(t("homeScreen.reordering"));
-      // setIsToastVisible(true);
 
       let finalDataToSave: QRRecord[];
 
@@ -495,29 +493,27 @@ function GuestHomeScreen() {
           ...item,
           qr_index: index,
           updated: new Date().toISOString(),
-          is_synced: true, // For guest mode
+          is_synced: true,
         }));
         dispatch(setQrData(finalDataToSave));
       } else {
         const reorderedItemsMap = new Map(
-          reorderedData.map((item) => [item.id, item]),
+          reorderedData.map((item) => [item.id, item])
         );
         const filteredItemIds = new Set(reorderedData.map((item) => item.id));
         let currentIndex = 0;
         const newFullList = qrData
           .map((item) => {
             if (filteredItemIds.has(item.id)) {
-              // Use the reordered item from the filtered list
               return reorderedItemsMap.get(item.id)!;
             }
-            return item; // Keep non-filtered items as they are
+            return item;
           })
           .map((item) => ({
-            // Re-index the entire list based on the new order
             ...item,
             qr_index: currentIndex++,
             updated: new Date().toISOString(),
-            is_synced: true, // For guest mode
+            is_synced: true,
           }));
         finalDataToSave = newFullList;
         dispatch(setQrData(finalDataToSave));
@@ -527,30 +523,19 @@ function GuestHomeScreen() {
         if (finalDataToSave.length > 0) {
           await updateQrIndexes(finalDataToSave, GUEST_USER_ID);
         }
-        // setIsToastVisible(false); // Clear "reordering" toast
-        // setTopToastMessage(t("homeScreen.reordered"));
-        // setIsTopToastVisible(true);
       } catch (error) {
         console.error("Error reordering QR for guest:", error);
-        // setToastMessage(t("homeScreen.reorderError"));
-        // Keep isToastVisible true to show the error
       } finally {
         if (timeoutRefs.current.processing)
           clearTimeout(timeoutRefs.current.processing);
         timeoutRefs.current.processing = setTimeout(() => {
           setIsProcessing(false);
-          // Only hide toast if it wasn't an error message
-          if (!toastMessage.toLowerCase().includes("error")) {
-            setIsToastVisible(false);
-          }
         }, 400);
       }
     },
-    [dispatch, qrData, filter, t, toastMessage], // Added toastMessage
+    [dispatch, qrData, filter, isActive]
   );
-
-  // Padding values
-  const paddingValues = useMemo(() => {
+  const listContainerPadding = useMemo(() => {
     switch (qrData.length) {
       case 0:
         return 0;
@@ -564,9 +549,6 @@ function GuestHomeScreen() {
         return 100;
     }
   }, [qrData.length]);
-  const listContainerPadding = useMemo(() => paddingValues, [paddingValues]);
-
-  // Sheet content
   const renderSheetContent = () => {
     switch (sheetType) {
       case "wifi":
@@ -600,38 +582,33 @@ function GuestHomeScreen() {
   // Memoized components
   const HeaderComponent = React.memo(
     ({
-      titleContainerStyle,
       onScan,
       onSettings,
     }: {
-      titleContainerStyle: any;
       onScan: () => void;
       onSettings: () => void;
     }) => (
-      <Animated.View style={[styles.titleContainer, titleContainerStyle]}>
-        <View style={styles.headerContainer}>
-          <ThemedText style={styles.titleText} type="title">
-            {t("homeScreen.title")}
-          </ThemedText>
-          <View style={styles.titleButtonContainer}>
-            <ThemedButton
-              iconName="camera"
-              style={styles.titleButton}
-              onPress={onScan}
-              disabled={isLoading} // Disable if still loading
-            />
-            <ThemedButton
-              iconName="cog"
-              style={styles.titleButton}
-              onPress={onSettings}
-              disabled={isLoading} // Disable if still loading
-            />
-          </View>
+      <View style={styles.headerContainer}>
+        <ThemedText style={styles.titleText} type="title">
+          {t("homeScreen.title")}
+        </ThemedText>
+        <View style={styles.titleButtonContainer}>
+          <ThemedButton
+            iconName="camera"
+            style={styles.titleButton}
+            onPress={onScan}
+            disabled={isLoading}
+          />
+          <ThemedButton
+            iconName="cog"
+            style={styles.titleButton}
+            onPress={onSettings}
+            disabled={isLoading}
+          />
         </View>
-      </Animated.View>
-    ),
+      </View>
+    )
   );
-
   const LoadingComponent = React.memo(() => (
     <View style={styles.loadingContainer}>
       <View style={{ marginBottom: 20 }}>
@@ -642,7 +619,6 @@ function GuestHomeScreen() {
       ))}
     </View>
   ));
-
   const ListHeaderComponent = React.memo(
     ({
       listHeaderStyle,
@@ -661,9 +637,8 @@ function GuestHomeScreen() {
           onFilterChange={onFilterChange}
         />
       </Animated.View>
-    ),
+    )
   );
-
   const EmptyItemComponent = React.memo(({ color }: { color: string }) => (
     <View style={styles.emptyItem}>
       <MaterialIcons color={color} name="search" size={50} />
@@ -675,18 +650,20 @@ function GuestHomeScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <HeaderComponent
-        titleContainerStyle={titleContainerStyle}
-        onScan={onNavigateToScanScreen}
-        onSettings={onNavigateToSettingsScreen}
-      />
+      {/* *** OPTIMIZED ***: Animated.View wraps the memoized component */}
+      <Animated.View style={[styles.titleContainer, titleContainerStyle]}>
+        <HeaderComponent
+          onScan={onNavigateToScanScreen}
+          onSettings={onNavigateToSettingsScreen}
+        />
+      </Animated.View>
 
       {isLoading ? (
         <LoadingComponent />
       ) : isEmpty ? (
         <EmptyListItem
           scrollHandler={scrollHandler}
-          emptyCardStyle={emptyCardStyle} // Apply slide-in animation here
+          emptyCardStyle={emptyCardStyle}
           onNavigateToEmptyScreen={onNavigateToEmptyScreen}
           onNavigateToScanScreen={onNavigateToScanScreen}
           dropdownOptions={[
@@ -705,7 +682,6 @@ function GuestHomeScreen() {
           ]}
         />
       ) : (
-        // Apply fade-in animation here
         <Animated.View style={listContainerAnimatedStyle}>
           <DraggableFlatList
             ref={flatListRef}
@@ -727,7 +703,9 @@ function GuestHomeScreen() {
             containerStyle={{ flex: 1 }}
             contentContainerStyle={[
               styles.listContainer,
-              filteredData.length > 0 && { paddingBottom: listContainerPadding },
+              filteredData.length > 0 && {
+                paddingBottom: listContainerPadding,
+              },
             ]}
             scrollEventThrottle={16}
             showsVerticalScrollIndicator={false}
@@ -740,7 +718,7 @@ function GuestHomeScreen() {
         </Animated.View>
       )}
 
-      {!isLoading && ( // Show FAB even if list is empty for guests
+      {!isLoading && (
         <ThemedFAB
           actions={[
             {
@@ -769,7 +747,7 @@ function GuestHomeScreen() {
         message={toastMessage}
         onDismiss={() => setIsToastVisible(false)}
         style={styles.toastContainer}
-        isSyncing={isProcessing} // Use isProcessing for guest mode
+        isSyncing={isProcessing}
       />
       <ThemedTopToast
         message={topToastMessage}
@@ -797,14 +775,7 @@ function GuestHomeScreen() {
                 ? t("homeScreen.linking")
                 : t("homeScreen.settings")
         }
-        onClose={() => {
-          if (timeoutRefs.current.sheet)
-            clearTimeout(timeoutRefs.current.sheet);
-          timeoutRefs.current.sheet = setTimeout(
-            () => setIsSheetOpen(false),
-            50,
-          );
-        }}
+        onChange={handleSheetChange} // *** UPDATED ***
         snapPoints={
           sheetType === "setting"
             ? ["25%"]
@@ -851,6 +822,7 @@ const styles = StyleSheet.create({
     right: 0,
     flexDirection: "column",
     gap: 15,
+    zIndex: 1, // Keep zIndex to ensure it's on top initially
   },
   headerContainer: {
     flexDirection: "row",
@@ -868,7 +840,7 @@ const styles = StyleSheet.create({
   },
   titleButton: {},
   listContainer: {
-    paddingTop: getResponsiveHeight(18.1),
+    paddingTop: getResponsiveHeight(18.4),
     flexGrow: 1,
   },
   emptyItem: {
@@ -877,18 +849,22 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 10,
     opacity: 0.7,
+    paddingHorizontal: getResponsiveWidth(5),
+    minHeight: getResponsiveHeight(30),
   },
   toastContainer: {
     position: "absolute",
     bottom: 15,
     left: 15,
     right: 15,
+    zIndex: 10,
   },
   bottomToastContainer: {
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
+    zIndex: 9,
   },
   fab: {
     bottom: getResponsiveHeight(2),
@@ -900,5 +876,6 @@ const styles = StyleSheet.create({
     paddingTop: getResponsiveHeight(18),
     paddingHorizontal: 15,
     flex: 1,
+    justifyContent: "flex-start",
   },
 });
