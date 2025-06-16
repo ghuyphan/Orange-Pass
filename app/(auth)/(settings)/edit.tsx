@@ -13,6 +13,7 @@ import Animated, {
   Extrapolation,
   useAnimatedScrollHandler,
 } from "react-native-reanimated";
+import * as Yup from "yup";
 
 // Components
 import { ThemedText } from "@/components/ThemedText";
@@ -28,7 +29,6 @@ import { ThemedToast } from "@/components/toast/ThemedToast";
 // Utils and hooks
 import { Colors } from "@/constants/Colors";
 import { t } from "@/i18n";
-import { profileSchema } from "@/utils/validationSchemas";
 import { updateUserProfile } from "@/services/auth";
 import { useTheme } from "@/context/ThemeContext";
 import {
@@ -42,6 +42,12 @@ import { setAuthData } from "@/store/reducers/authSlice";
 
 // Types
 import UserRecord from "@/types/userType";
+
+// Simplified validation schema for profile editing
+const editProfileSchema = Yup.object().shape({
+  name: Yup.string().required("nameRequired"),
+  email: Yup.string().email("invalidEmail").required("emailRequired"),
+});
 
 const EditProfileScreen = () => {
   const { currentTheme: theme } = useTheme();
@@ -102,9 +108,6 @@ const EditProfileScreen = () => {
     () => ({
       name: user?.name || "",
       email: user?.email || "",
-      currentPassword: "",
-      newPassword: "",
-      confirmNewPassword: "",
     }),
     [user]
   );
@@ -112,26 +115,17 @@ const EditProfileScreen = () => {
   return (
     <Formik
       initialValues={initialValues}
-      validationSchema={profileSchema}
+      validationSchema={editProfileSchema}
       onSubmit={async (values, { setSubmitting }) => {
         setSubmitting(true);
         try {
-          const updateData: {
-            name?: string;
-            email?: string;
-            currentPassword?: string;
-            newPassword?: string;
-          } = {};
+          const updateData: { name?: string; email?: string } = {};
 
           if (values.name !== user?.name) {
             updateData.name = values.name;
           }
           if (values.email !== user?.email) {
             updateData.email = values.email;
-          }
-          if (values.newPassword) {
-            updateData.currentPassword = values.currentPassword;
-            updateData.newPassword = values.newPassword;
           }
 
           if (Object.keys(updateData).length === 0) {
@@ -191,13 +185,7 @@ const EditProfileScreen = () => {
       }) => {
         const getGroupErrors = (): InputGroupError[] => {
           const activeErrors: InputGroupError[] = [];
-          const fieldOrder: (keyof typeof values)[] = [
-            "name",
-            "email",
-            "currentPassword",
-            "newPassword",
-            "confirmNewPassword",
-          ];
+          const fieldOrder: (keyof typeof values)[] = ["name", "email"];
 
           for (const field of fieldOrder) {
             if (touched[field] && errors[field]) {
@@ -273,44 +261,9 @@ const EditProfileScreen = () => {
                     value={values.email}
                     disabled={isSubmitting}
                     disableOpacityChange={false}
-                    groupPosition="middle"
-                  />
-                  <ThemedInput
-                    label={t("editProfileScreen.currentPassword")}
-                    placeholder={t(
-                      "editProfileScreen.currentPasswordPlaceholder"
-                    )}
-                    secureTextEntry
-                    onChangeText={handleChange("currentPassword")}
-                    onBlur={handleBlur("currentPassword")}
-                    value={values.currentPassword}
-                    disabled={isSubmitting}
-                    disableOpacityChange={false}
-                    groupPosition="middle"
-                  />
-                  <ThemedInput
-                    label={t("editProfileScreen.newPassword")}
-                    placeholder={t("editProfileScreen.newPasswordPlaceholder")}
-                    secureTextEntry
-                    onChangeText={handleChange("newPassword")}
-                    onBlur={handleBlur("newPassword")}
-                    value={values.newPassword}
-                    disabled={isSubmitting}
-                    disableOpacityChange={false}
-                    groupPosition="middle"
-                  />
-                  <ThemedInput
-                    label={t("editProfileScreen.confirmNewPassword")}
-                    placeholder={t(
-                      "editProfileScreen.confirmNewPasswordPlaceholder"
-                    )}
-                    secureTextEntry
-                    onChangeText={handleChange("confirmNewPassword")}
-                    onBlur={handleBlur("confirmNewPassword")}
-                    value={values.confirmNewPassword}
-                    disabled={isSubmitting}
-                    disableOpacityChange={false}
                     groupPosition="bottom"
+                    keyboardType="email-address"
+
                   />
                 </InputGroup>
               </View>
@@ -385,9 +338,9 @@ const styles = StyleSheet.create({
   sectionContainer: {
     borderRadius: getResponsiveWidth(4),
     overflow: "hidden",
+    // marginBottom: getResponsiveHeight(2.4),
   },
   saveButton: {
-    // marginTop: getResponsiveHeight(2.4),
     marginBottom: getResponsiveHeight(3.6),
   },
   toastContainer: {

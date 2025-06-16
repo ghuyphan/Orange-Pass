@@ -98,7 +98,6 @@ function HomeScreen() {
 
   // --- UI States ---
   const isEmpty = useMemo(() => qrData.length === 0, [qrData]);
-  const [isActive, setIsActive] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [isToastVisible, setIsToastVisible] = useState(false);
   const [topToastMessage, setTopToastMessage] = useState("");
@@ -108,8 +107,7 @@ function HomeScreen() {
   const [bottomToastIcon, setBottomToastIcon] = useState("");
   const [bottomToastMessage, setBottomToastMessage] = useState("");
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [fabOpen, setFabOpen] = useState(false);
+  const [fabOpen, setFabOpen] = useState(false); // This state is for FAB actions, not a performance issue
   const [sheetType, setSheetType] = useState<SheetType>(null);
   const [linkingUrl, setLinkingUrl] = useState<string | null>(null);
   const [wifiSsid, setWifiSsid] = useState<string | null>(null);
@@ -136,10 +134,12 @@ function HomeScreen() {
   const prevIsOffline = useRef(isOffline);
 
   // --- Shared Values (Reanimated) ---
+  const scrollY = useSharedValue(0);
+  const isActive = useSharedValue(false); // <-- REFACTORED from useState
+  const isSheetOpen = useSharedValue(false); // <-- REFACTORED from useState
   const isEmptyShared = useSharedValue(qrData.length === 0 ? 1 : 0);
   const emptyCardOffset = useSharedValue(350);
   const listOpacity = useSharedValue(0);
-  const scrollY = useSharedValue(0);
 
   useEffect(() => {
     syncStatusRef.current = syncStatus;
@@ -153,7 +153,7 @@ function HomeScreen() {
     };
   }, []);
 
-  // --- Core Logic Functions ---
+  // --- Core Logic Functions (Unchanged) ---
   const syncWithServer = useCallback(
     async (userIdToSync: string) => {
       if (isOffline || isSyncing) return;
@@ -203,7 +203,7 @@ function HomeScreen() {
     [dispatch, isOffline, isSyncing]
   );
 
-  // --- EFFECT 1: Initial Data Load & First-Time Sync ---
+  // --- EFFECT 1: Initial Data Load & First-Time Sync (Unchanged) ---
   useEffect(() => {
     if (!isFocused) {
       if (userId && initialLoadAttemptedForUser !== userId && isLoading) {
@@ -288,7 +288,7 @@ function HomeScreen() {
     initialAnimationsDone,
   ]);
 
-  // --- EFFECT 2: Network Status Toasts ---
+  // --- EFFECT 2: Network Status Toasts (Unchanged) ---
   useEffect(() => {
     if (isOffline) {
       setBottomToastIcon("wifi-off");
@@ -323,34 +323,26 @@ function HomeScreen() {
     };
   }, [isOffline, isFocused, bottomToastMessage, isBottomToastVisible]);
 
-  // --- EFFECT 3: Animations ---
+  // --- EFFECT 3: Animations (Unchanged) ---
   const animateEmptyCard = useCallback(() => {
     emptyCardOffset.value = withSpring(0, { damping: 30, stiffness: 150 });
   }, [emptyCardOffset]);
 
-  // Updated animation effect to prevent re-animation on focus
   useEffect(() => {
     if (!initialAnimationsDone) return;
-
     isEmptyShared.value = isEmpty ? 1 : 0;
-
     if (isEmpty) {
       listOpacity.value = 0;
-
-      // Only animate if we haven't performed the empty animation yet
       if (!emptyAnimationPerformed) {
         emptyCardOffset.value = 350;
         animateEmptyCard();
         setEmptyAnimationPerformed(true);
-      }
-      // If animation was already performed, just ensure it's in the correct position
-      else {
+      } else {
         emptyCardOffset.value = 0;
       }
     } else {
       emptyCardOffset.value = 350;
       listOpacity.value = withTiming(1, { duration: 300 });
-      // Reset the empty animation flag when we have data
       if (emptyAnimationPerformed) {
         setEmptyAnimationPerformed(false);
       }
@@ -365,12 +357,10 @@ function HomeScreen() {
     emptyAnimationPerformed,
   ]);
 
-  // Handle focus changes separately for list opacity
   useEffect(() => {
     if (!isFocused) {
       listOpacity.value = 0;
     } else if (isFocused && initialAnimationsDone && !isEmpty) {
-      // Only restore list opacity if we have data
       listOpacity.value = withTiming(1, { duration: 300 });
     }
   }, [isFocused, initialAnimationsDone, isEmpty, listOpacity]);
@@ -391,14 +381,15 @@ function HomeScreen() {
       [0, -35],
       Extrapolation.CLAMP
     );
+    // *** OPTIMIZED ***: Reads shared values directly on the UI thread
     const shouldReduceZIndex =
-      scrollY.value > SCROLL_THRESHOLD || isActive || isSheetOpen;
+      scrollY.value > SCROLL_THRESHOLD || isActive.value || isSheetOpen.value;
     return {
       opacity,
       transform: [{ translateY }],
       zIndex: shouldReduceZIndex ? 0 : 1,
     };
-  }, [isActive, isSheetOpen, scrollY]);
+  }, []); // *** OPTIMIZED ***: Removed JS state dependencies
 
   const listHeaderStyle = useAnimatedStyle(() => {
     const opacity = withTiming(
@@ -414,7 +405,7 @@ function HomeScreen() {
       { duration: 150, easing: Easing.out(Easing.ease) }
     );
     return { opacity, transform: [{ scale }, { translateY }] };
-  }, [scrollY]);
+  }, []); // scrollY is a shared value, no need for dependency array
 
   const fabStyle = useAnimatedStyle(() => {
     const marginBottom = withTiming(
@@ -429,7 +420,7 @@ function HomeScreen() {
       transform: [{ translateY: emptyCardOffset.value }],
       flex: 1,
     }),
-    [emptyCardOffset]
+    []
   );
 
   const listContainerAnimatedStyle = useAnimatedStyle(
@@ -437,10 +428,10 @@ function HomeScreen() {
       opacity: listOpacity.value,
       flex: 1,
     }),
-    [listOpacity]
+    []
   );
 
-  // --- Navigation and Action Handlers ---
+  // --- Navigation and Action Handlers (Unchanged logic, updated state setters) ---
   const onNavigateToEmptyScreen = useCallback(() => router.push("/empty"), []);
   const onNavigateToDetailScreen = useCallback(
     throttle((item: QRRecord) => {
@@ -515,8 +506,6 @@ function HomeScreen() {
       isHidden?: boolean
     ) => {
       setSheetType(type);
-      setIsSheetOpen(true);
-      // setIsSheetOpen is now handled by handleSheetChange
       setSelectedItemId(id || null);
       if (type === "wifi" && ssid && password) {
         setWifiSsid(ssid);
@@ -531,29 +520,22 @@ function HomeScreen() {
     []
   );
 
-  // *** NEW ***: Callback to handle bottom sheet state changes
-  const handleSheetChange = useCallback((index: number) => {
-    // Sheet is open if index is 0 or greater, closed if -1
-    setIsSheetOpen(index > -1);
-  }, []);
+  // *** OPTIMIZED ***: Update shared value instead of state
+  const handleSheetChange = useCallback(
+    (index: number) => {
+      isSheetOpen.value = index > -1;
+    },
+    [isSheetOpen]
+  );
 
   const onOpenGallery = useGalleryPicker({
     onOpenSheet,
     onNavigateToAddScreen,
   });
 
+  // *** OPTIMIZED ***: Removed state setting from scroll handler
   const scrollHandler = useAnimatedScrollHandler((event) => {
     scrollY.value = event.contentOffset.y;
-    if (event.contentOffset.y > 50 && fabOpen) {
-      setFabOpen(false);
-    } else if (
-      event.contentOffset.y <= 50 &&
-      !fabOpen &&
-      !isLoading &&
-      initialAnimationsDone
-    ) {
-      setFabOpen(true);
-    }
   });
 
   const onScrollOffsetChange = useCallback(
@@ -563,10 +545,11 @@ function HomeScreen() {
     [scrollY]
   );
 
+  // *** OPTIMIZED ***: Update shared value instead of state
   const onDragBegin = useCallback(() => {
     triggerHapticFeedback();
-    setIsActive(true);
-  }, []);
+    isActive.value = true;
+  }, [isActive]);
 
   const filteredData = useMemo(() => {
     if (filter === "all") return qrData;
@@ -620,10 +603,11 @@ function HomeScreen() {
     [onNavigateToDetailScreen, onOpenSheet]
   );
 
+  // *** OPTIMIZED ***: Update shared value instead of state
   const onDragEnd = useCallback(
     ({ data: reorderedData }: { data: QRRecord[] }) => {
       triggerHapticFeedback();
-      setIsActive(false);
+      isActive.value = false;
       if (!userId) return;
       console.log("HomeScreen: Drag ended, reordering items.");
 
@@ -681,24 +665,22 @@ function HomeScreen() {
           );
       });
     },
-    [dispatch, qrData, filter, userId]
+    [dispatch, qrData, filter, userId, isActive]
   );
 
+  // --- Other handlers (Unchanged) ---
   const showToast = useCallback((message: string) => {
     setTopToastMessage(message);
     setIsTopToastVisible(true);
   }, []);
-
   const handleCopySuccess = useCallback(
     () => showToast(t("homeScreen.copied")),
     [showToast, t]
   );
-
   const onDeleteSheetPress = useCallback(() => {
     bottomSheetRef.current?.close();
     setIsModalVisible(true);
   }, []);
-
   const onDeletePress = useCallback(async () => {
     if (!selectedItemId || !userId) return;
     setIsModalVisible(false);
@@ -737,7 +719,6 @@ function HomeScreen() {
       }
     }
   }, [selectedItemId, qrData, dispatch, t, userId, isSyncing]);
-
   const listContainerPadding = useMemo(() => {
     switch (qrData.length) {
       case 0:
@@ -752,7 +733,6 @@ function HomeScreen() {
         return 100;
     }
   }, [qrData.length]);
-
   const renderSheetContent = () => {
     switch (sheetType) {
       case "wifi":
@@ -783,10 +763,9 @@ function HomeScreen() {
     }
   };
 
-  // --- Memoized Components ---
+  // --- Memoized Components (Unchanged) ---
   const HeaderComponent = React.memo(
     ({
-      titleContainerStyle: localTitleContainerStyle,
       syncStatus: currentSyncStatus,
       isLoading: currentIsLoading,
       isSyncing: currentIsSyncingOp,
@@ -794,7 +773,6 @@ function HomeScreen() {
       onScan,
       onSettings,
     }: {
-      titleContainerStyle: any;
       syncStatus: "idle" | "syncing" | "synced" | "error";
       isLoading: boolean;
       isSyncing: boolean;
@@ -802,41 +780,33 @@ function HomeScreen() {
       onScan: () => void;
       onSettings: () => void;
     }) => (
-      <Animated.View style={[styles.titleContainer, localTitleContainerStyle]}>
-        <View style={styles.headerContainer}>
-          <ThemedText style={styles.titleText} type="title">
-            {t("homeScreen.title")}
-          </ThemedText>
-          <View style={styles.titleButtonContainer}>
-            <ThemedDualButton
-              // --- Global Props ---
-              style={styles.titleButton}
-              // --- Left Button Config ---
-              leftButton={{
-                iconName: "cloud-sync", // Note: syncStatus is not part of this component
-                onPress: onSync,
-                disabled: currentIsSyncingOp || currentIsLoading || isOffline,
-              }}
-              // --- Right Button Config ---
-              rightButton={{
-                iconName: "camera",
-                onPress: onScan,
-              }}
-              // --- Active State Example ---
-              // activeSide={currentIsSyncingOp ? 'left' : 'none'}
-            />
-            <ThemedButton
-              iconName="cog"
-              style={styles.titleButton}
-              onPress={onSettings}
-              disabled={currentIsLoading}
-            />
-          </View>
+      <View style={styles.headerContainer}>
+        <ThemedText style={styles.titleText} type="title">
+          {t("homeScreen.title")}
+        </ThemedText>
+        <View style={styles.titleButtonContainer}>
+          <ThemedDualButton
+            style={styles.titleButton}
+            leftButton={{
+              iconName: "cloud-sync",
+              onPress: onSync,
+              disabled: currentIsSyncingOp || currentIsLoading || isOffline,
+            }}
+            rightButton={{
+              iconName: "camera",
+              onPress: onScan,
+            }}
+          />
+          <ThemedButton
+            iconName="cog"
+            style={styles.titleButton}
+            onPress={onSettings}
+            disabled={currentIsLoading}
+          />
         </View>
-      </Animated.View>
+      </View>
     )
   );
-
   const LoadingComponent = React.memo(() => (
     <View style={styles.loadingContainer}>
       <View style={{ marginBottom: 20 }}>
@@ -847,7 +817,6 @@ function HomeScreen() {
       ))}
     </View>
   ));
-
   const ListHeaderComponent = React.memo(
     ({
       listHeaderStyle: localListHeaderStyle,
@@ -871,7 +840,6 @@ function HomeScreen() {
       </Animated.View>
     )
   );
-
   const EmptyItemComponent = React.memo(
     ({ color: itemColor }: { color: string }) => (
       <View style={styles.emptyItem}>
@@ -889,15 +857,17 @@ function HomeScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <HeaderComponent
-        titleContainerStyle={titleContainerStyle}
-        syncStatus={syncStatus}
-        isLoading={isLoading}
-        isSyncing={isSyncing}
-        onSync={handleSync}
-        onScan={onNavigateToScanScreen}
-        onSettings={onNavigateToSettingsScreen}
-      />
+      {/* *** OPTIMIZED ***: Animated.View wraps the memoized component */}
+      <Animated.View style={[styles.titleContainer, titleContainerStyle]}>
+        <HeaderComponent
+          syncStatus={syncStatus}
+          isLoading={isLoading}
+          isSyncing={isSyncing}
+          onSync={handleSync}
+          onScan={onNavigateToScanScreen}
+          onSettings={onNavigateToSettingsScreen}
+        />
+      </Animated.View>
 
       {showActualLoadingScreen ? (
         <LoadingComponent />
@@ -1007,7 +977,7 @@ function HomeScreen() {
                 ? t("homeScreen.linking")
                 : t("homeScreen.settings")
         }
-        onChange={handleSheetChange} // <-- *** UPDATED ***
+        onChange={handleSheetChange}
         snapPoints={
           sheetType === "setting"
             ? ["25%"]

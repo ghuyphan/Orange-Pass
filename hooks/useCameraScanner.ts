@@ -16,7 +16,7 @@ interface CameraHighlight {
 
 export const useCameraScanner = () => {
   const frameCounterRef = useRef(0);
-  const highlightTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const highlightTimeoutRef = useRef<number | null>(null);
   const lockedCodeRef = useRef<string | null>(null);
 
   // Scanner-related states

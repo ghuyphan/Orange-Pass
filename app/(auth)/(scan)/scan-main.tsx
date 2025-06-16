@@ -1,3 +1,4 @@
+// src/screens/(auth)/scan.tsx
 import React, {
   useEffect,
   useState,
@@ -40,7 +41,10 @@ import SheetType from "@/types/sheetType";
 import { ThemedButton } from "@/components/buttons/ThemedButton";
 import { ScannerFrame } from "@/components/camera/ScannerFrame";
 import { FocusIndicator } from "@/components/camera/FocusIndicator";
-import { ZoomControl } from "@/components/camera/ZoomControl";
+import {
+  ZoomControl,
+  ZoomControlHandle,
+} from "@/components/camera/ZoomControl";
 import { QRResult } from "@/components/camera/CodeResult";
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedStatusToast } from "@/components/toast/ThemedStatusToast";
@@ -70,15 +74,17 @@ export default function ScanScreen() {
 
   // Camera Ref and Setup
   const cameraRef = useRef<Camera>(null as unknown as Camera);
+  const zoomControlRef = useRef<ZoomControlHandle>(null);
   const [setupCamera, setSetupCamera] = useState(false);
-  const { device, hasPermission, torch, toggleFlash } = useCameraSetup(cameraRef);
+  const { device, hasPermission, torch, toggleFlash } =
+    useCameraSetup(cameraRef);
   const bottomSheetRef = useRef<BottomSheet>(null);
 
   const [allPermissionsGranted, setAllPermissionsGranted] = useState<
     boolean | null
   >(null);
 
-  // --- NEW: Zoom and Focus Setup ---
+  // Zoom and Focus Setup
   const zoom = useSharedValue(1);
   const minZoom = device?.minZoom ?? 1;
   const maxZoom = Math.min(device?.maxZoom ?? 1, MAX_ZOOM_FACTOR);
@@ -90,11 +96,12 @@ export default function ScanScreen() {
     [maxZoom, minZoom, zoom]
   );
 
-  const { gesture, focusPoint, animatedFocusStyle } = useFocusGesture(
+  // Initialize focus gesture with zoom control ref
+  const { gesture, animatedFocusStyle } = useFocusGesture(
     cameraRef,
-    zoom
+    zoom,
+    zoomControlRef
   );
-  // --- END NEW ---
 
   // Defer camera setup
   useEffect(() => {
@@ -102,7 +109,7 @@ export default function ScanScreen() {
       if (isMounted.current) {
         setSetupCamera(true);
       }
-    }, 150);
+    }, 100);
 
     return () => {
       clearTimeout(timer);
@@ -192,13 +199,12 @@ export default function ScanScreen() {
     onCodeScanned: createCodeScannerCallback,
   });
 
-  // --- KEPT ORIGINAL: Navigation handler for authenticated users ---
   const onNavigateToAddScreen = useCallback(
     throttle(
       (codeFormat, codeValue, bin, codeType, codeProvider) => {
         if (isMounted.current) {
           router.push({
-            pathname: `/(auth)/(add)/add-new`, // This path is specific to ScanScreen
+            pathname: `/(auth)/(add)/add-new`,
             params: {
               codeFormat,
               codeValue,
@@ -359,9 +365,9 @@ export default function ScanScreen() {
       return (
         cameraStatus === "granted" &&
         locationStatus["android.permission.ACCESS_FINE_LOCATION"] ===
-        "granted" &&
+          "granted" &&
         locationStatus["android.permission.ACCESS_COARSE_LOCATION"] ===
-        "granted"
+          "granted"
       );
     } catch (error) {
       console.error("Error requesting permissions:", error);
@@ -410,10 +416,10 @@ export default function ScanScreen() {
     sheetType === "setting"
       ? t("scanScreen.settings")
       : sheetType === "wifi"
-        ? t("scanScreen.wifi")
-        : sheetType === "linking"
-          ? t("scanScreen.linking")
-          : t("scanScreen.settings");
+      ? t("scanScreen.wifi")
+      : sheetType === "linking"
+      ? t("scanScreen.linking")
+      : t("scanScreen.settings");
 
   return (
     <View style={styles.container}>
@@ -437,10 +443,7 @@ export default function ScanScreen() {
                   animatedProps={cameraAnimatedProps}
                 />
                 <View>
-                  <FocusIndicator
-                    focusPoint={focusPoint}
-                    animatedFocusStyle={animatedFocusStyle}
-                  />
+                  <FocusIndicator animatedFocusStyle={animatedFocusStyle} />
                   {showIndicator && (
                     <ScannerFrame
                       highlight={codeScannerHighlights[0]}
@@ -460,20 +463,21 @@ export default function ScanScreen() {
             )}
           </Reanimated.View>
         </GestureDetector>
+        
         <View style={styles.qrResultContainer}>
           {codeMetadata.length > 0 && (
             <QRResult
               codeValue={codeValue}
-              // codeType={codeType}
-              // iconName={iconName}
               animatedStyle={animatedStyle}
               onNavigateToAdd={onNavigateToAddScreen}
             />
           )}
         </View>
+        
         {device && (
           <View style={styles.zoomControlContainer}>
             <ZoomControl
+              ref={zoomControlRef}
               zoom={zoom}
               minZoom={Number(minZoom.toFixed(2))}
               maxZoom={maxZoom}
@@ -487,7 +491,6 @@ export default function ScanScreen() {
           <ThemedButton
             iconName="image"
             iconColor="white"
-            // underlayColor="#fff"
             onPress={onOpenGallery}
             style={styles.bottomButton}
             loading={isDecoding}
@@ -497,7 +500,6 @@ export default function ScanScreen() {
           <ThemedButton
             iconName="cog"
             iconColor="white"
-            // underlayColor="#fff"
             onPress={() => onOpenSheet("setting")}
             style={styles.bottomButton}
             variant="glass"
@@ -514,36 +516,19 @@ export default function ScanScreen() {
           variant="glass"
         />
         <ThemedDualButton
-          // --- Global Props ---
           variant="glass"
           style={styles.headerButton}
           iconColor="#fff"
           rightIconColor={torch === "on" ? "#FFCC00" : "#fff"}
-          //  iconColor={torch === "on" ? "#FFCC00" : "#fff"}
-          // disabled={currentIsSyncingOp || currentIsLoading || isOffline}
-          // --- Left Button Config ---
           leftButton={{
-            
             iconName: showIndicator ? "scan-helper" : "scan-helper-off",
-            onPress: toggleShowIndicator
+            onPress: toggleShowIndicator,
           }}
-          // --- Right Button Config ---
           rightButton={{
             iconName: torch === "on" ? "flash" : "flash-off",
             onPress: toggleFlash,
-            // onPress: onScan,
           }}
-        // --- Active State Example ---
-        // activeSide={currentIsSyncingOp ? 'left' : 'none'}
         />
-        {/* <ThemedButton
-          // underlayColor="#fff"
-          iconColor={torch === "on" ? "#FFCC00" : "#fff"}
-          style={styles.headerButton}
-          onPress={toggleFlash}
-          iconName={torch === "on" ? "flash" : "flash-off"}
-          variant="glass"
-        /> */}
       </View>
 
       <ThemedStatusToast
@@ -565,12 +550,12 @@ export default function ScanScreen() {
               sheetType === "setting"
                 ? ["35%"]
                 : sheetType === "wifi"
-                  ? wifiPassword
-                    ? ["45%"]
-                    : ["38%"]
-                  : sheetType === "linking"
-                    ? ["35%"]
-                    : ["35%"]
+                ? wifiPassword
+                  ? ["45%"]
+                  : ["38%"]
+                : sheetType === "linking"
+                ? ["35%"]
+                : ["35%"]
             }
             styles={{
               customContent: {
@@ -589,7 +574,6 @@ export default function ScanScreen() {
   );
 }
 
-// --- NEW: Styles adopted from GuestScanScreen ---
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -599,7 +583,6 @@ const styles = StyleSheet.create({
     marginTop: STATUSBAR_HEIGHT + getResponsiveHeight(11),
     flex: getResponsiveHeight(0.35),
     backgroundColor: "black",
-
     overflow: "hidden",
   },
   loader: {

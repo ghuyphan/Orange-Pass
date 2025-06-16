@@ -187,9 +187,6 @@ const OnBoardScreen = () => {
 
         initializeGuestMode()
           .then(() => {
-            console.log(
-              "[OnBoardScreen] Background guest mode initialization successful."
-            );
           })
           .catch((err) => {
             console.error(
@@ -266,6 +263,7 @@ const OnBoardScreen = () => {
                   onPress={() => {}}
                   iconName={feature.icon as any}
                   style={[styles.iconContainer]}
+                  iconSize={getResponsiveFontSize(20)}
                 />
               {/* </View> */}
               <View style={styles.featureTextContainer}>
@@ -384,8 +382,8 @@ const styles = StyleSheet.create({
     gap: getResponsiveWidth(4),
   },
   iconContainer: {
-    width: getResponsiveWidth(12),
-    height: getResponsiveWidth(12),
+    width: getResponsiveWidth(13),
+    height: getResponsiveWidth(13),
     borderRadius: getResponsiveWidth(6),
     justifyContent: "center",
     alignItems: "center",

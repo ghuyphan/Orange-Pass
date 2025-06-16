@@ -100,8 +100,8 @@ export function ThemedStatusToast({
 
   // Visibility and animation management
 useEffect(() => {
-    let timer: NodeJS.Timeout | undefined;
-    let animationTimeout: NodeJS.Timeout | undefined;
+    let timer: number | undefined;
+    let animationTimeout: number | undefined;
 
     if (isVisible) {
         opacity.value = withTiming(1, { duration: 300 });

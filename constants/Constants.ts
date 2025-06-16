@@ -1,5 +1,5 @@
 import { Dimensions } from "react-native"
-export const MAX_ZOOM_FACTOR = 10
+export const MAX_ZOOM_FACTOR = 5
 export const GUEST_MODE_KEY = "useGuestMode";
 export const GUEST_USER_ID = ""; // 
 

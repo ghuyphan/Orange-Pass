@@ -266,6 +266,10 @@
     "qrCodeDataLabel": "Данные QR-кода",
     "qrLoadingPlaceholder": "Загрузка данных QR...",
     "qrGeneratedPlaceholder": "Данные QR будут сгенерированы автоматически",
+    "categoryLabel": "Категория",
+    "brandLabel": "Бренд",
+    "accountNameLabel": "Имя владельца",
+    "accountNumberLabel": "Номер счета/карты",
     "errors": {
       "categoryRequired": "Выберите тип карты.",
       "brandRequired": "Укажите бренд карты.",
@@ -320,6 +324,10 @@
     "accountNumberTitle": "Номер счета/карты",
     "accountNumberPlaceholder": "Введите номер счета/карты",
     "saving": "Сохранение...",
+    "categoryLabel": "Категория",
+    "brandLabel": "Бренд",
+    "accountNameLabel": "Имя владельца",
+    "accountNumberLabel": "Номер счета/карты",
     "errors": {
       "categoryRequired": "Выберите тип карты.",
       "brandRequired": "Укажите бренд карты.",

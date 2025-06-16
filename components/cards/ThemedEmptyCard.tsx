@@ -372,13 +372,13 @@ const createThemedEmptyCardStyles = (paddingTop?: number) =>
     },
     menuContent: {
       borderRadius: getResponsiveWidth(6),
-      paddingHorizontal: getResponsiveWidth(2.4)
+      paddingHorizontal: getResponsiveWidth(2.4),
     },
     glassMenuContent: {
-      backgroundColor: "rgba(120, 120, 120, 0.7)",
-      borderWidth: 1,
-      borderColor: "rgba(255, 255, 255, 0.3)",
-      paddingHorizontal: getResponsiveWidth(2.4)
+      backgroundColor: "rgba(120, 120, 120, 1)",
+      // borderWidth: 1,
+      // borderColor: "rgba(255, 255, 255, 0.3)",
+      // paddingHorizontal: getResponsiveWidth(2.4)
     },
     dropdownItem: {
       gap: getResponsiveWidth(2),

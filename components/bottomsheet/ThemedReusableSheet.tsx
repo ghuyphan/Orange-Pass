@@ -32,6 +32,7 @@ import {
   getResponsiveHeight,
 } from "@/utils/responsive";
 import { ThemedInput } from "../Inputs";
+import { useGlassStyle } from "@/hooks/useGlassStyle";
 
 export interface BottomSheetAction {
   icon?: React.ComponentProps<
@@ -115,6 +116,7 @@ const ThemedReuseableSheet = forwardRef<BottomSheet, ReuseableSheetProps>(
     ref
   ) => {
     const { currentTheme } = useTheme();
+    const { overlayColor, borderColor } = useGlassStyle();
     const bottomSheetRef = useRef<BottomSheet>(null);
     const isSheetVisible = useRef(false);
     const [searchQuery, setSearchQuery] = useState("");
@@ -133,25 +135,22 @@ const ThemedReuseableSheet = forwardRef<BottomSheet, ReuseableSheetProps>(
       );
     }, [searchQuery, contentProps.flatListProps?.data, contentType]);
 
-    // --- FIX IS HERE ---
     useFocusEffect(
       useCallback(() => {
         const onBackPress = () => {
           if (isSheetVisible.current) {
             bottomSheetRef.current?.close();
             onClose?.();
-            return true; // Prevents default behavior (exiting app)
+            return true;
           }
-          return false; // Allows default behavior
+          return false;
         };
 
-        // The addEventListener now returns a subscription object
         const subscription = BackHandler.addEventListener(
           "hardwareBackPress",
           onBackPress
         );
 
-        // The cleanup function calls .remove() on the subscription
         return () => subscription.remove();
       }, [onClose])
     );
@@ -284,7 +283,16 @@ const ThemedReuseableSheet = forwardRef<BottomSheet, ReuseableSheetProps>(
       <>
         {customContent}
         {actions && (
-          <View style={[styles.buttonsContainer, customStyles.buttonsContainer]}>
+          <View
+            style={[
+              styles.buttonsContainer,
+              { borderColor },
+              customStyles.buttonsContainer,
+            ]}
+          >
+            <View
+              style={[styles.defaultOverlay, { backgroundColor: overlayColor }]}
+            />
             {actions.map((action, index) => (
               <Pressable
                 key={index}
@@ -351,7 +359,7 @@ const ThemedReuseableSheet = forwardRef<BottomSheet, ReuseableSheetProps>(
                   ]}
                   {...contentProps.flatListProps}
                   renderItem={contentProps.flatListProps?.renderItem}
-                  data={filteredData} // Use filteredData here!
+                  data={filteredData}
                   keyExtractor={contentProps.flatListProps?.keyExtractor}
                 />
               </View>
@@ -474,9 +482,16 @@ const styles = StyleSheet.create({
     marginTop: getResponsiveHeight(0.6),
   },
   buttonsContainer: {
-    flexDirection: "column",
-    gap: getResponsiveHeight(0.6),
-    marginTop: getResponsiveHeight(1),
+    marginTop: getResponsiveHeight(1.8),
+    marginHorizontal: getResponsiveWidth(3.6),
+    borderRadius: getResponsiveWidth(4),
+    borderWidth: 1,
+    overflow: "hidden",
+    padding: getResponsiveWidth(1.2),
+  },
+  defaultOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 0,
   },
   button: {
     flexDirection: "row",
@@ -486,6 +501,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: getResponsiveWidth(2.4),
     borderRadius: getResponsiveWidth(4),
     overflow: "hidden",
+    zIndex: 1,
   },
   buttonText: {
     fontSize: getResponsiveFontSize(16),

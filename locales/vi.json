@@ -266,6 +266,10 @@
     "qrCodeDataLabel": "Dữ liệu mã QR",
     "qrLoadingPlaceholder": "Đang tải dữ liệu QR...",
     "qrGeneratedPlaceholder": "Dữ liệu QR sẽ được tạo tự động",
+    "categoryLabel": "Loại thẻ",
+    "brandLabel": "Thương hiệu",
+    "accountNameLabel": "Tên chủ tài khoản",
+    "accountNumberLabel": "Số tài khoản/Số thẻ",
     "errors": {
       "categoryRequired": "Vui lòng chọn loại thẻ.",
       "brandRequired": "Vui lòng nhập thương hiệu của thẻ.",
@@ -320,6 +324,10 @@
     "accountNumberTitle": "Số tài khoản/Số thẻ",
     "accountNumberPlaceholder": "Nhập số tài khoản/số thẻ",
     "saving": "Đang lưu thay đổi...",
+    "categoryLabel": "Loại thẻ",
+    "brandLabel": "Thương hiệu",
+    "accountNameLabel": "Tên chủ tài khoản",
+    "accountNumberLabel": "Số tài khoản/Số thẻ",
     "errors": {
       "categoryRequired": "Vui lòng chọn loại thẻ.",
       "brandRequired": "Vui lòng nhập thương hiệu của thẻ.",

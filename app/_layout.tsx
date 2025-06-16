@@ -101,17 +101,14 @@ class DatabaseManager {
 
   static async initialize(): Promise<void> {
     if (this.initialized) {
-      console.log('[DatabaseManager] Database already initialized');
       return;
     }
     
     if (this.initPromise) {
-      console.log('[DatabaseManager] Database initialization in progress, waiting...');
       return this.initPromise;
     }
 
     if (this.isInitializing) {
-      console.log('[DatabaseManager] Database initialization already started');
       return;
     }
 
@@ -121,7 +118,6 @@ class DatabaseManager {
     try {
       await this.initPromise;
       this.initialized = true;
-      console.log('[DatabaseManager] Database initialization completed successfully');
     } catch (error) {
       console.error('[DatabaseManager] Database initialization failed:', error);
       this.initPromise = null; // Reset so it can be retried
@@ -133,21 +129,13 @@ class DatabaseManager {
 
   private static async performInitialization(): Promise<void> {
     try {
-      console.log('[DatabaseManager] Starting database initialization...');
-      
-      // Serialize database operations - create tables one by one to prevent locking
-      console.log('[DatabaseManager] Creating user table...');
       await createUserTable();
-      console.log('[DatabaseManager] User table created successfully');
       
       // Add a small delay to ensure the first operation completes
       await new Promise(resolve => setTimeout(resolve, 50));
       
-      console.log('[DatabaseManager] Creating QR table...');
       await createQrTable();
-      console.log('[DatabaseManager] QR table created successfully');
       
-      console.log('[DatabaseManager] Database initialization complete');
     } catch (error) {
       console.error('[DatabaseManager] Database initialization failed:', error);
       throw error;
@@ -155,7 +143,6 @@ class DatabaseManager {
   }
 
   static reset(): void {
-    console.log('[DatabaseManager] Resetting database manager state');
     this.initialized = false;
     this.initPromise = null;
     this.isInitializing = false;
@@ -425,25 +412,22 @@ export default function RootLayout() {
   // Simplified and serialized app preparation
   const prepareApp = useCallback(async (): Promise<void> => {
     if (initializationInProgress.current) {
-      console.log('[RootLayout] Initialization already in progress, skipping...');
+
       return;
     }
 
     initializationInProgress.current = true;
 
     try {
-      console.log('[RootLayout] Starting app preparation...');
+
 
       // Step 1: Initialize database first (serialized to prevent locking)
-      console.log('[RootLayout] Initializing database...');
       await DatabaseManager.initialize();
-      console.log('[RootLayout] Database initialization complete');
 
       // Small delay to ensure database is fully ready
       await new Promise(resolve => setTimeout(resolve, 100));
 
       // Step 2: Check app state (after database is ready)
-      console.log('[RootLayout] Checking app state...');
       const [onboardingStatus, quickLoginEnabled, guestModePreference] =
         await Promise.all([
           checkOnboardingStatus(),
@@ -451,16 +435,8 @@ export default function RootLayout() {
           checkGuestModeStatus(),
         ]);
 
-      console.log('[RootLayout] App state checks complete:', {
-        onboardingStatus,
-        quickLoginEnabled,
-        guestModePreference
-      });
-
       // Step 3: Check auth (after database and other checks)
-      console.log('[RootLayout] Checking initial auth...');
       const sessionActive = await checkInitialAuth(!onboardingStatus);
-      console.log('[RootLayout] Auth check complete:', sessionActive);
 
       setAppState({
         initializationComplete: true,
@@ -470,7 +446,6 @@ export default function RootLayout() {
         useGuestMode: guestModePreference,
       });
 
-      console.log('[RootLayout] App preparation complete successfully');
     } catch (error) {
       console.error("[RootLayout] App preparation error:", error);
       
@@ -492,7 +467,6 @@ export default function RootLayout() {
   // Handle font loading and app preparation
   useEffect(() => {
     if ((fontsLoaded || fontError) && !initializationInProgress.current) {
-      console.log('[RootLayout] Fonts loaded, starting app preparation');
       prepareApp().catch((error) => {
         console.error("[RootLayout] App preparation failed:", error);
         initializationInProgress.current = false;
@@ -578,8 +552,6 @@ export default function RootLayout() {
     } else {
       targetRoute = "/(public)/login";
     }
-
-    console.log('[RootLayout] Navigating to:', targetRoute);
     navigationInProgressRef.current = true;
     router.replace(targetRoute);
 
@@ -596,7 +568,6 @@ export default function RootLayout() {
         splashHiddenRef.current = true;
         // Force status bar configuration after splash screen is hidden
         StatusBarManager.forceStatusBarConfiguration();
-        console.log('[RootLayout] Splash screen hidden successfully');
       } catch (error) {
         console.error("[RootLayout] Failed to hide splash screen:", error);
       }
@@ -606,7 +577,6 @@ export default function RootLayout() {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      console.log('[RootLayout] Component unmounting, cleaning up...');
       StatusBarManager.cleanup();
       DatabaseManager.reset();
       TokenManager.reset();
@@ -614,7 +584,6 @@ export default function RootLayout() {
   }, []);
 
   if (!appState.initializationComplete) {
-    console.log('[RootLayout] App initialization not complete, showing nothing');
     return null;
   }
 

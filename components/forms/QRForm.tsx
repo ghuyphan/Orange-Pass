@@ -283,7 +283,6 @@ const QRForm: React.FC<QRFormProps> = ({
   const [hasMoreBrandItems, setHasMoreBrandItems] = useState<boolean>(true);
   const [isFetchingNextBrandBatch, setIsFetchingNextBrandBatch] =
     useState<boolean>(false);
-  // --- MODIFICATION 1: Add new state for sheet content loading ---
   const [isSheetContentLoading, setIsSheetContentLoading] =
     useState<boolean>(false);
 
@@ -484,7 +483,6 @@ const QRForm: React.FC<QRFormProps> = ({
     showToast(t("addScreen.errors.emptyInputMessage"));
   }, [showToast]);
 
-  // --- MODIFICATION 2: Update onOpenSheet to be instant ---
   const onOpenSheet = useCallback(
     (type: SheetType, currentCategoryFromForm: CategoryItem | null) => {
       if (isMetadataLoading) return;
@@ -499,7 +497,6 @@ const QRForm: React.FC<QRFormProps> = ({
       Keyboard.dismiss();
       setSheetType(type);
 
-      // If brand sheet needs initial data, set loading state.
       if (type === "brand" && currentCategoryFromForm?.value) {
         const needsLoading =
           lastLoadedBrandCategoryValueRef.current !==
@@ -509,7 +506,6 @@ const QRForm: React.FC<QRFormProps> = ({
         }
       }
 
-      // Open the sheet immediately.
       if (openSheetTimeoutRef.current) {
         clearTimeout(openSheetTimeoutRef.current);
       }
@@ -517,14 +513,13 @@ const QRForm: React.FC<QRFormProps> = ({
         setIsSheetOpen(true);
         openSheetTimeoutRef.current = setTimeout(
           () => bottomSheetRef.current?.snapToIndex(0),
-          50 // Small delay for animation smoothness
+          50
         );
       });
     },
     [isMetadataLoading, showToast, displayedBrandItems.length]
   );
 
-  // --- MODIFICATION 3: Add a useEffect to handle data loading when the sheet opens ---
   useEffect(() => {
     if (isSheetOpen && isSheetContentLoading && sheetType === "brand") {
       const categoryValue =
@@ -533,7 +528,6 @@ const QRForm: React.FC<QRFormProps> = ({
           : null;
 
       if (categoryValue) {
-        // Reset state before loading new data
         setDisplayedBrandItems([]);
         setBrandItemsOffset(0);
         setHasMoreBrandItems(true);
@@ -542,12 +536,11 @@ const QRForm: React.FC<QRFormProps> = ({
           try {
             await loadBrandItems(categoryValue as DataType, 0, true);
           } finally {
-            setIsSheetContentLoading(false); // Turn off loading indicator
+            setIsSheetContentLoading(false);
           }
         };
         loadData();
       } else {
-        // Should not happen due to checks in onOpenSheet, but as a safeguard:
         setIsSheetContentLoading(false);
       }
     }
@@ -605,7 +598,6 @@ const QRForm: React.FC<QRFormProps> = ({
     isSheetVisible.current = index !== -1;
     const sheetIsOpen = index !== -1;
     setIsSheetOpen(sheetIsOpen);
-    // If sheet is closed, reset loading state
     if (!sheetIsOpen) {
       setIsSheetContentLoading(false);
     }
@@ -896,14 +888,16 @@ const QRForm: React.FC<QRFormProps> = ({
           mainInfoErrors.push({
             inputId: "category",
             message: String(errors.category),
-            label: "Category",
+            // --- FIX ---
+            label: t("addScreen.categoryLabel"),
           });
         }
         if (touched.brand && errors.brand) {
           mainInfoErrors.push({
             inputId: "brand",
             message: String(errors.brand),
-            label: "Brand",
+            // --- FIX ---
+            label: t("addScreen.brandLabel"),
           });
         }
         if (touched.metadata && errors.metadata) {
@@ -919,14 +913,16 @@ const QRForm: React.FC<QRFormProps> = ({
           accountInfoErrors.push({
             inputId: "account name",
             message: String(errors.accountName),
-            label: "Account Name",
+            // --- FIX ---
+            label: t("addScreen.accountNameLabel"),
           });
         }
         if (touched.accountNumber && errors.accountNumber) {
           accountInfoErrors.push({
             inputId: "account number",
             message: String(errors.accountNumber),
-            label: "Account Number",
+            // --- FIX ---
+            label: t("addScreen.accountNumberLabel"),
           });
         }
 
@@ -989,7 +985,8 @@ const QRForm: React.FC<QRFormProps> = ({
                   errors={mainInfoErrors}
                 >
                   <ThemedDisplayInput
-                    label="Category"
+                    // --- FIX ---
+                    label={t("addScreen.categoryLabel")}
                     placeholder={t("addScreen.categoryPlaceholder")}
                     value={values.category?.display}
                     onPress={() => onOpenSheet("category", values.category)}
@@ -998,7 +995,8 @@ const QRForm: React.FC<QRFormProps> = ({
                     groupPosition="top"
                   />
                   <ThemedDisplayInput
-                    label="Brand"
+                    // --- FIX ---
+                    label={t("addScreen.brandLabel")}
                     placeholder={t("addScreen.brandPlaceholder")}
                     logoCode={codeProvider || values.brand?.code}
                     value={values.brand?.full_name}
@@ -1077,7 +1075,8 @@ const QRForm: React.FC<QRFormProps> = ({
                     errors={accountInfoErrors}
                   >
                     <ThemedInput
-                      label="Account Name"
+                      // --- FIX ---
+                      label={t("addScreen.accountNameLabel")}
                       placeholder={t("addScreen.accountNamePlaceholder")}
                       value={values.accountName}
                       onChangeText={handleChange("accountName")}
@@ -1088,7 +1087,8 @@ const QRForm: React.FC<QRFormProps> = ({
                       groupPosition="top"
                     />
                     <ThemedInput
-                      label="Account Number"
+                      // --- FIX ---
+                      label={t("addScreen.accountNumberLabel")}
                       placeholder={t("addScreen.accountNumberPlaceholder")}
                       value={values.accountNumber}
                       onChangeText={handleChange("accountNumber")}
@@ -1158,7 +1158,6 @@ const QRForm: React.FC<QRFormProps> = ({
                     onEndReached:
                       sheetType === "brand" ? handleLoadMoreBrands : undefined,
                     onEndReachedThreshold: 0.5,
-                    // --- MODIFICATION 4: Add loading indicators ---
                     ListEmptyComponent:
                       isSheetContentLoading && sheetType === "brand" ? (
                         <View style={styles.sheetLoadingContainer}>
@@ -1193,7 +1192,6 @@ const QRForm: React.FC<QRFormProps> = ({
   );
 };
 
-// --- MODIFICATION 5: Add the new style for the loading container ---
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scrollViewContent: {

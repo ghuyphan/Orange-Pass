@@ -266,6 +266,10 @@
     "qrCodeDataLabel": "QR Code Data",
     "qrLoadingPlaceholder": "Loading QR data...",
     "qrGeneratedPlaceholder": "QR data will be auto-generated",
+    "categoryLabel": "Category",
+    "brandLabel": "Brand",
+    "accountNameLabel": "Account Name",
+    "accountNumberLabel": "Account Number",
     "errors": {
       "categoryRequired": "You need to select a card type first!",
       "brandRequired": "Please provide the brand of the card.",
@@ -320,6 +324,10 @@
     "accountNumberTitle": "Account Number/Card Number",
     "accountNumberPlaceholder": "Enter account number/card number",
     "saving": "Saving changes...",
+    "categoryLabel": "Category",
+    "brandLabel": "Brand",
+    "accountNameLabel": "Account Name",
+    "accountNumberLabel": "Account Number",
     "errors": {
       "categoryRequired": "You need to select a card type first!",
       "brandRequired": "Please provide the brand of the card.",
@@ -410,7 +418,7 @@
   },
   "settingsScreen": {
     "title": "Settings",
-"guestLoginPrompt": "Guest (Tap to Sign In)",
+    "guestLoginPrompt": "Guest (Tap to Sign In)",
     "language": "Language",
     "about": "About Orange Pass",
     "editProfile": "Edit profile",
