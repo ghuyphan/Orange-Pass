@@ -12,7 +12,6 @@ import {
   Text,
   ActivityIndicator,
   SafeAreaView,
-  StatusBar,
   AppState,
   PermissionsAndroid,
   LayoutChangeEvent,
@@ -28,7 +27,7 @@ import { useUnmountBrightness } from "@reeq/react-native-device-brightness";
 import { Redirect, useRouter } from "expo-router";
 import { GestureDetector } from "react-native-gesture-handler";
 import { throttle } from "lodash";
-import BottomSheet from "@gorhom/bottom-sheet";
+import BottomSheet, { TouchableWithoutFeedback } from "@gorhom/bottom-sheet";
 
 // Local imports
 import { t } from "@/i18n";
@@ -57,7 +56,7 @@ import ScanSettingsSheetContent from "@/components/bottomsheet/ScanSettingsSheet
 import { useLocale } from "@/context/LocaleContext";
 import { useCameraScanner } from "@/hooks/useCameraScanner";
 import { useCameraSetup } from "@/hooks/useCameraSetup";
-import { useFocusGesture } from "@/hooks/useFocusGesture";
+import { useCameraGestures } from "@/hooks/useCameraGestures"; // 👈 1. Import the new hook
 import { useGalleryPicker } from "@/hooks/useGalleryPicker";
 import { getResponsiveHeight, getResponsiveWidth } from "@/utils/responsive";
 import { ThemedDualButton } from "@/components/buttons/ThemedDualButton";
@@ -96,10 +95,12 @@ export default function ScanScreen() {
     [maxZoom, minZoom, zoom]
   );
 
-  // Initialize focus gesture with zoom control ref
-  const { gesture, animatedFocusStyle } = useFocusGesture(
+  // 👇 2. Use the new combined gesture hook
+  const { gesture, animatedFocusStyle } = useCameraGestures(
     cameraRef,
     zoom,
+    minZoom,
+    maxZoom,
     zoomControlRef
   );
 
@@ -161,7 +162,7 @@ export default function ScanScreen() {
   }, []);
 
   useEffect(() => {
-    let toastTimeoutId: NodeJS.Timeout | null = null;
+    let toastTimeoutId: number | null = null;
     return () => {
       if (toastTimeoutId) clearTimeout(toastTimeoutId);
     };
@@ -178,6 +179,12 @@ export default function ScanScreen() {
       triggerLightHapticFeedback();
     }
   }, [codeValue]);
+
+  const handleBackgroundTap = useCallback(() => {
+    // The deactivateSlider function is safe to call even if the slider is closed,
+    // as it has an internal check.
+    zoomControlRef.current?.deactivateSlider();
+  }, []);
 
   const onLayout = useCallback((event: LayoutChangeEvent) => {
     setLayout(event.nativeEvent.layout);
@@ -318,14 +325,20 @@ export default function ScanScreen() {
 
   useEffect(() => {
     const handleAppStateChange = (nextAppState: string) => {
-      setCameraIsActive(nextAppState === "active");
+      const isActive = nextAppState === "active";
+      setCameraIsActive(isActive);
+
+      if (isActive) {
+        zoom.value = 1;
+        zoomControlRef.current?.deactivateSlider();
+      }
     };
     const subscription = AppState.addEventListener(
       "change",
       handleAppStateChange
     );
     return () => subscription.remove();
-  }, []);
+  }, [zoom]);
 
   useEffect(() => {
     if (device && setupCamera) {
@@ -432,6 +445,11 @@ export default function ScanScreen() {
             {isCameraReady ? (
               <>
                 <ReanimatedCamera
+                  // ⛔️ 3. Remove enableZoomGesture prop
+                  enableDepthData = {true}
+                  enableLocation = {true}
+                  enablePortraitEffectsMatteDelivery = {true}
+                  enableBufferCompression = {true}
                   ref={cameraRef}
                   torch={torch}
                   style={StyleSheet.absoluteFill}
@@ -485,29 +503,33 @@ export default function ScanScreen() {
           </View>
         )}
       </SafeAreaView>
-
       <View style={styles.bottomContainer}>
-        <View style={styles.bottomButtonsContainer}>
-          <ThemedButton
-            iconName="image"
-            iconColor="white"
-            onPress={onOpenGallery}
-            style={styles.bottomButton}
-            loading={isDecoding}
-            loadingColor="#fff"
-            variant="glass"
-          />
-          <ThemedButton
-            iconName="history"
-            iconColor="white"
-            // Navigate to a new history screen
-            // onPress={() => router.push("/(guest)/scan/history")}
-            onPress={() => { }}
-            style={styles.bottomButton}
-            variant="glass"
-          />
-        </View>
+        <TouchableWithoutFeedback
+          onPress={handleBackgroundTap}
+        >
+          <View style={styles.bottomButtonsContainer}>
+            <ThemedButton
+              iconName="image"
+              iconColor="white"
+              onPress={onOpenGallery}
+              style={styles.bottomButton}
+              loading={isDecoding}
+              loadingColor="#fff"
+              variant="glass"
+            />
+            <ThemedButton
+              iconName="history"
+              iconColor="white"
+              // Navigate to a new history screen
+              // onPress={() => router.push("/(guest)/scan/history")}
+              onPress={() => { }}
+              style={styles.bottomButton}
+              variant="glass"
+            />
+          </View>
+        </TouchableWithoutFeedback>
       </View>
+
 
       <View style={styles.headerContainer}>
         <ThemedButton
@@ -522,6 +544,7 @@ export default function ScanScreen() {
           style={styles.headerButton}
           iconColor="#fff"
           rightIconColor={torch === "on" ? "#FFCC00" : "#fff"}
+          leftIconColor={showIndicator ? "#FFCC00" : "#fff"}
           leftButton={{
             iconName: "scan-helper",
             onPress: toggleShowIndicator,
@@ -541,8 +564,6 @@ export default function ScanScreen() {
         onDismiss={() => setIsToastVisible(false)}
         style={styles.toastContainer}
       />
-
-      {/* <StatusBar barStyle="light-content" /> */}
 
       {isCameraReady && (
         <Suspense fallback={null}>
