@@ -16,6 +16,7 @@ import {
   AppState,
   PermissionsAndroid,
   LayoutChangeEvent,
+  TouchableWithoutFeedback
 } from "react-native";
 import { Camera, useCodeScanner } from "react-native-vision-camera";
 import Reanimated, {
@@ -57,7 +58,7 @@ import ScanSettingsSheetContent from "@/components/bottomsheet/ScanSettingsSheet
 import { useLocale } from "@/context/LocaleContext";
 import { useCameraScanner } from "@/hooks/useCameraScanner";
 import { useCameraSetup } from "@/hooks/useCameraSetup";
-import { useFocusGesture } from "@/hooks/useFocusGesture";
+import { useCameraGestures } from "@/hooks/useCameraGestures";
 import { useGalleryPicker } from "@/hooks/useGalleryPicker";
 import { getResponsiveHeight, getResponsiveWidth } from "@/utils/responsive";
 import { ThemedDualButton } from "@/components/buttons/ThemedDualButton";
@@ -74,7 +75,6 @@ export default function GuestScanScreen() {
 
   // Camera Ref and Setup
   const cameraRef = useRef<Camera>(null as unknown as Camera);
-  // --- POINT 1: Create a ref for the ZoomControl component ---
   const zoomControlRef = useRef<ZoomControlHandle>(null);
   const [setupCamera, setSetupCamera] = useState(false);
   const { device, hasPermission, torch, toggleFlash } =
@@ -109,11 +109,12 @@ export default function GuestScanScreen() {
     };
   }, []);
 
-  // --- POINT 2: Pass the new ref to the useFocusGesture hook ---
-  const { gesture, animatedFocusStyle } = useFocusGesture(
+  const { gesture, animatedFocusStyle } = useCameraGestures(
     cameraRef,
     zoom,
-    zoomControlRef // Pass the ref here
+    minZoom,
+    maxZoom,
+    zoomControlRef
   );
 
   const {
@@ -157,7 +158,7 @@ export default function GuestScanScreen() {
   }, []);
 
   useEffect(() => {
-    let toastTimeoutId: NodeJS.Timeout | null = null;
+    let toastTimeoutId: number | null = null;
     return () => {
       if (toastTimeoutId) clearTimeout(toastTimeoutId);
     };
@@ -174,6 +175,12 @@ export default function GuestScanScreen() {
       triggerLightHapticFeedback();
     }
   }, [codeValue]);
+
+  const handleBackgroundTap = useCallback(() => {
+    // The deactivateSlider function is safe to call even if the slider is closed,
+    // as it has an internal check.
+    zoomControlRef.current?.deactivateSlider();
+  }, []);
 
   const onLayout = useCallback((event: LayoutChangeEvent) => {
     setLayout(event.nativeEvent.layout);
@@ -315,22 +322,20 @@ export default function GuestScanScreen() {
 
   useEffect(() => {
     const handleAppStateChange = (nextAppState: string) => {
-      if (nextAppState === "active") {
-        setCameraIsActive(true);
-      } else {
-        setCameraIsActive(false);
+      const isActive = nextAppState === "active";
+      setCameraIsActive(isActive);
+
+      if (isActive) {
+        zoom.value = 1;
+        zoomControlRef.current?.deactivateSlider();
       }
     };
-
     const subscription = AppState.addEventListener(
       "change",
       handleAppStateChange
     );
-
-    return () => {
-      subscription.remove();
-    };
-  }, []);
+    return () => subscription.remove();
+  }, [zoom]);
 
   useEffect(() => {
     if (device && setupCamera) {
@@ -475,14 +480,7 @@ export default function GuestScanScreen() {
             )}
           </Reanimated.View>
         </GestureDetector>
-        <View
-          style={{
-            position: "absolute",
-            bottom: 60,
-            left: 0,
-            right: 0,
-          }}
-        >
+        <View style={styles.qrResultContainer}>
           {codeMetadata.length > 0 && (
             <QRResult
               codeValue={codeValue}
@@ -493,7 +491,6 @@ export default function GuestScanScreen() {
         </View>
         {device && (
           <View style={styles.zoomControlContainer}>
-            {/* --- POINT 3: Attach the ref to the ZoomControl component --- */}
             <ZoomControl
               ref={zoomControlRef}
               zoom={zoom}
@@ -505,26 +502,30 @@ export default function GuestScanScreen() {
       </SafeAreaView>
 
       <View style={styles.bottomContainer}>
-        <View style={styles.bottomButtonsContainer}>
-          <ThemedButton
-            iconName="image"
-            iconColor="white"
-            onPress={onOpenGallery}
-            style={styles.bottomButton}
-            loading={isDecoding}
-            loadingColor="#fff"
-            variant="glass"
-          />
-          <ThemedButton
-            iconName="history"
-            iconColor="white"
-            // Navigate to a new history screen
-            // onPress={() => router.push("/(guest)/scan/history")}
-            onPress={() => { }}
-            style={styles.bottomButton}
-            variant="glass"
-          />
-        </View>
+        <TouchableWithoutFeedback
+          onPress={handleBackgroundTap}
+        >
+          <View style={styles.bottomButtonsContainer}>
+            <ThemedButton
+              iconName="image"
+              iconColor="white"
+              onPress={onOpenGallery}
+              style={styles.bottomButton}
+              loading={isDecoding}
+              loadingColor="#fff"
+              variant="glass"
+            />
+            <ThemedButton
+              iconName="history"
+              iconColor="white"
+              // Navigate to a new history screen
+              // onPress={() => router.push("/(guest)/scan/history")}
+              onPress={() => { }}
+              style={styles.bottomButton}
+              variant="glass"
+            />
+          </View>
+        </TouchableWithoutFeedback>
       </View>
 
       <View style={styles.headerContainer}>
@@ -540,6 +541,7 @@ export default function GuestScanScreen() {
           style={styles.headerButton}
           iconColor="#fff"
           rightIconColor={torch === "on" ? "#FFCC00" : "#fff"}
+          leftIconColor={showIndicator ? "#FFCC00" : "#fff"}
           leftButton={{
             iconName: "scan-helper",
             onPress: toggleShowIndicator,
@@ -648,6 +650,12 @@ const styles = StyleSheet.create({
     bottom: 10,
     right: 0,
     left: 0,
+  },
+  qrResultContainer: {
+    position: "absolute",
+    bottom: 60,
+    left: 0,
+    right: 0,
   },
   bottomButtonsContainer: {
     flexDirection: "row",

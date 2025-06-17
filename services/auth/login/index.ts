@@ -10,7 +10,9 @@ import {
   insertUser,
   getEmailByUserID,
 } from "@/services/localDB/userDB";
+import { transferGuestDataToUser } from "@/services/localDB/qrDB"; // <-- ADDED
 import { storage } from "@/utils/storage";
+import { GUEST_USER_ID } from "@/constants/Constants"; // <-- ADDED
 
 const LOGIN_TIMEOUT = 30000; // 30 seconds timeout
 const MAX_RETRIES = 3;
@@ -75,13 +77,13 @@ const validateInput = (email: string, password: string) => {
 const loginWithTimeout = async (
   email: string,
   password: string,
-  attempt = 1,
+  attempt = 1
 ): Promise<any> => {
   const loginPromise = pb.collection("users").authWithPassword(email, password);
   const timeoutPromise = new Promise((_, reject) => {
     const timer = setTimeout(() => {
       const timeoutError = new Error(
-        t("loginScreen.errors.timeout"),
+        t("loginScreen.errors.timeout")
       ) as LoginError;
       timeoutError.isTimeout = true;
       reject(timeoutError);
@@ -113,7 +115,7 @@ export const login = async (
   email: string,
   password: string,
   rememberMe = false,
-  setupQuickLoginCredentials = false,
+  setupQuickLoginCredentials = false
 ) => {
   Keyboard.dismiss();
 
@@ -125,34 +127,44 @@ export const login = async (
 
     validateInput(email, password);
 
+    // --- *** NEW LOGIC: Check if current user is a guest *** ---
+    const previousUser = store.getState().auth.user;
+    const isGuestLoggingIn = previousUser?.id === GUEST_USER_ID;
+    // ---
+
     const authData = await loginWithTimeout(email, password);
 
     if (!authData?.token || !authData?.record?.id) {
       throw new Error(t("loginScreen.errors.invalidResponse"));
     }
 
-    // REFINEMENT: Clear old data only AFTER a successful login attempt.
-    // This prevents wiping a valid session if the login fails temporarily.
     await clearStoredAuthData();
 
     const userId = authData.record.id;
+
+    // --- *** NEW LOGIC: Transfer data if guest was logging in *** ---
+    if (isGuestLoggingIn) {
+      console.log("Guest is logging in. Transferring local data...");
+      await transferGuestDataToUser(userId);
+      console.log("Guest data transfer complete.");
+    }
+    // ---
+
     const secureWritePromises: Promise<void>[] = [
       SecureStore.setItemAsync(SECURE_KEYS.AUTH_TOKEN, authData.token),
       SecureStore.setItemAsync(SECURE_KEYS.USER_ID, userId),
       SecureStore.setItemAsync(SECURE_KEYS.TEMPORARY_PASSWORD, password),
     ];
 
-    // REFINEMENT: Simplified logic for saving user ID.
-    // Save the user ID if either "Remember Me" or "Quick Login" is enabled.
     if (rememberMe || setupQuickLoginCredentials) {
       secureWritePromises.push(
-        SecureStore.setItemAsync(SECURE_KEYS.SAVED_USER_ID, userId),
+        SecureStore.setItemAsync(SECURE_KEYS.SAVED_USER_ID, userId)
       );
     }
 
     if (setupQuickLoginCredentials) {
       secureWritePromises.push(
-        SecureStore.setItemAsync(getPasswordKeyForUserID(userId), password),
+        SecureStore.setItemAsync(getPasswordKeyForUserID(userId), password)
       );
     }
 
@@ -176,6 +188,7 @@ export const login = async (
     }
 
     const userData = mapRecordToUserData(authData.record);
+    // This dispatch will now set the `justLoggedIn` flag to true
     store.dispatch(setAuthData({ token: authData.token, user: userData }));
 
     await createTable();
@@ -202,16 +215,14 @@ export const login = async (
         errorMessage = t("loginScreen.errors.500");
         break;
       default:
-        // The message from validateInput or timeout is already user-friendly.
-        // No need to overwrite it unless it's a generic error.
         break;
     }
     throw new Error(errorMessage);
   }
 };
 
-// --- Helper and Status Functions (with added JSDoc comments) ---
-
+// --- Helper and Status Functions (Unchanged) ---
+// ... (The rest of your file remains the same)
 /**
  * Checks if the "Remember Me" flag is set in storage.
  * @returns True if "Remember Me" is enabled, otherwise false.
@@ -247,7 +258,7 @@ export const getSavedUserID = async (): Promise<string | null> => {
  * @returns The password string, or null if not found or an error occurs.
  */
 export const getSavedPasswordForUserID = async (
-  userID: string,
+  userID: string
 ): Promise<string | null> => {
   if (!userID) return null;
   try {
@@ -304,7 +315,7 @@ export const attemptAutoLogin = async (): Promise<boolean> => {
         const email = await getEmailByUserID(userID);
         if (!email) {
           console.error(
-            `Auto-login: Email not found for userID ${userID}. Clearing saved credentials.`,
+            `Auto-login: Email not found for userID ${userID}. Clearing saved credentials.`
           );
           await disableQuickLogin(userID);
           return false;
@@ -313,7 +324,7 @@ export const attemptAutoLogin = async (): Promise<boolean> => {
         return true;
       } else {
         console.warn(
-          `Auto-login: Password not found for userID ${userID} with quick login pref. Disabling.`,
+          `Auto-login: Password not found for userID ${userID} with quick login pref. Disabling.`
         );
         await disableQuickLogin(userID);
       }
@@ -324,9 +335,6 @@ export const attemptAutoLogin = async (): Promise<boolean> => {
     return false;
   }
 };
-
-// ... (The rest of the functions like quickLogin, getQuickLoginAccounts, etc., are already well-structured and remain the same)
-// ... (I've included them here for completeness)
 
 export const quickLogin = async (userID: string): Promise<boolean> => {
   try {
@@ -341,7 +349,7 @@ export const quickLogin = async (userID: string): Promise<boolean> => {
     const password = await getSavedPasswordForUserID(userID);
     if (!password) {
       console.warn(
-        `Password not found for quick login userID: ${userID}. Disabling.`,
+        `Password not found for quick login userID: ${userID}. Disabling.`
       );
       await disableQuickLogin(userID);
       return false;
@@ -350,7 +358,7 @@ export const quickLogin = async (userID: string): Promise<boolean> => {
     const email = await getEmailByUserID(userID);
     if (!email) {
       console.error(
-        `Email not found for quick login userID: ${userID}. Disabling.`,
+        `Email not found for quick login userID: ${userID}. Disabling.`
       );
       await disableQuickLogin(userID);
       return false;
@@ -379,7 +387,7 @@ export const getQuickLoginAccounts = async (): Promise<string[]> => {
 };
 
 export const hasQuickLoginPreference = async (
-  userID: string,
+  userID: string
 ): Promise<boolean> => {
   if (!userID) return false;
   try {
@@ -403,7 +411,7 @@ export const disableQuickLogin = async (userID?: string): Promise<void> => {
     } catch (e) {
       console.error(
         "Failed to parse QUICK_LOGIN_PREFERENCES during disable, resetting.",
-        e,
+        e
       );
     }
 

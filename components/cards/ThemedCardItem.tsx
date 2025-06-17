@@ -24,7 +24,6 @@ import Animated, {
   useAnimatedStyle,
   withTiming
 } from "react-native-reanimated";
-import { useGlassStyle } from "@/hooks/useGlassStyle";
 
 // Constants
 const MIDPOINT_COUNT = 6;
@@ -61,7 +60,7 @@ export type ThemedCardItemProps = {
   onMoreButtonPress?: () => void;
   onDrag?: () => void;
   cardHolderStyle?: object;
-  enableGlassmorphism?: boolean;
+  enableGlassmorphism?: boolean; // New prop to toggle glassmorphism
 };
 
 const ThemedCardItem = memo(function ThemedCardItem({
@@ -80,8 +79,6 @@ const ThemedCardItem = memo(function ThemedCardItem({
   cardHolderStyle,
   enableGlassmorphism = true
 }: ThemedCardItemProps): JSX.Element {
-  const { overlayColor, borderColor } = useGlassStyle();
-  
   const code = useMemo(() => (rawCode === null ? "" : rawCode), [rawCode]);
 
   const isCodeEmptyOrPlaceholder = useMemo(
@@ -136,7 +133,7 @@ const ThemedCardItem = memo(function ThemedCardItem({
     return "";
   }, [iconPath, cardType, displayMetadata, accountDisplayName]);
 
-  // Reanimated shared values for QR/Barcode placeholder dimensions
+  // Reanimated shared values for QR/Barcode placeholder dimensions.
   const placeholderWidth = useSharedValue(QR_SIZE);
   const placeholderHeight = useSharedValue(QR_SIZE);
 
@@ -198,9 +195,13 @@ const ThemedCardItem = memo(function ThemedCardItem({
   // Background gradient for glassmorphism effect
   const backgroundGradient = useMemo(() => {
     if (!enableGlassmorphism) return null;
+
     return gradientColors;
   }, [enableGlassmorphism, gradientColors]);
 
+  // --- CORRECTED PART ---
+  // The wrapping Animated.View is removed. The animatedStyle is applied
+  // directly to the ReanimatedLinearGradient.
   const cardContent = (
     <View style={styles.cardWrapper}>
       {/* Background gradient for glassmorphism */}
@@ -213,9 +214,12 @@ const ThemedCardItem = memo(function ThemedCardItem({
         />
       )}
 
-      {/* Glassmorphism overlay */}
+      {/* Glassmorphism overlay layers */}
       {enableGlassmorphism && (
-        <View style={[styles.defaultOverlay, { backgroundColor: overlayColor }]} />
+        <>
+          <View style={styles.glassLayer1} />
+          <View style={styles.glassLayer2} />
+        </>
       )}
 
       <ReanimatedLinearGradient
@@ -224,9 +228,9 @@ const ThemedCardItem = memo(function ThemedCardItem({
         end={{ x: 1, y: 1 }}
         style={[
           styles.cardContainer,
-          enableGlassmorphism && [styles.glassCard, { borderColor }],
+          enableGlassmorphism && styles.glassCard,
           style,
-          animatedStyle
+          animatedStyle // This is the correct and only place it should be
         ]}
       >
         {/* Card Header */}
@@ -334,6 +338,7 @@ const ThemedCardItem = memo(function ThemedCardItem({
       </ReanimatedLinearGradient>
     </View>
   );
+  // --- END OF CORRECTION ---
 
   return (
     <View
@@ -366,6 +371,7 @@ const ThemedCardItem = memo(function ThemedCardItem({
   );
 });
 
+// Styles remain the same
 const styles = StyleSheet.create({
   outerContainer: {
     marginHorizontal: getResponsiveWidth(3.6),
@@ -396,13 +402,22 @@ const styles = StyleSheet.create({
     bottom: 0,
     opacity: 0.8
   },
-  defaultOverlay: {
+  glassLayer1: {
     position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    zIndex: 0
+    backgroundColor: "rgba(255, 255, 255, 0.05)"
+  },
+  glassLayer2: {
+    position: "absolute",
+    top: 1,
+    left: 1,
+    right: 1,
+    bottom: 1,
+    backgroundColor: "rgba(255, 255, 255, 0.02)",
+    borderRadius: getResponsiveWidth(3.5)
   },
   cardContainer: {
     borderRadius: getResponsiveWidth(4),
@@ -415,6 +430,7 @@ const styles = StyleSheet.create({
   },
   glassCard: {
     borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.2)",
     // Enhanced border highlight for glassmorphism
     borderTopWidth: 1.5,
     borderLeftWidth: 1.5,

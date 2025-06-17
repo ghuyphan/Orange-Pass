@@ -17,11 +17,7 @@ import {
 import { GlassIntensity } from "@/hooks/useGlassStyle";
 import { ThemedButton } from "./buttons";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-} from "react-native-reanimated";
+// No longer need reanimated imports here!
 
 type ThemedFilterProps = {
   selectedFilter: string;
@@ -37,9 +33,9 @@ interface FilterItemType {
   iconName: keyof typeof MaterialCommunityIcons.glyphMap;
 }
 
-// --- Filter Button with Animation ---
-// Memoized component for performance within FlatList.
-// It handles its own press animation state.
+// --- Filter Button (Now Simplified) ---
+// This component is now just a simple wrapper that configures ThemedButton.
+// The press animation is handled internally by ThemedButton.
 const FilterButton = React.memo(
   ({
     item,
@@ -56,26 +52,6 @@ const FilterButton = React.memo(
     glassIntensity: GlassIntensity;
     isDarkMode: boolean;
   }) => {
-    const scale = useSharedValue(1);
-
-    // Create the animated style for the button's scale transform
-    const animatedScaleStyle = useAnimatedStyle(() => {
-      return {
-        transform: [{ scale: scale.value }],
-      };
-    });
-
-    // Press handler that triggers animation and calls the parent handler
-    const handlePress = () => {
-      // Animate the button press with a spring effect
-      scale.value = withSpring(0.9, { damping: 15, stiffness: 400 }, () => {
-        // Spring back to the original size after the press-in animation
-        scale.value = withSpring(1);
-      });
-      // Execute the original onPress function to change the filter
-      onPress(item.key);
-    };
-
     // Define colors and styles based on the selection state
     const selectedStyle = {
       backgroundColor: isDarkMode ? Colors.dark.icon : Colors.light.icon,
@@ -89,14 +65,13 @@ const FilterButton = React.memo(
 
     return (
       <ThemedButton
-        onPress={handlePress} // Use the new animated press handler
+        onPress={() => onPress(item.key)} // Directly call the handler
         iconName={item.iconName}
         variant={isSelected ? "solid" : variant}
         iconColor={isSelected ? selectedIconColor : unselectedIconColor}
         style={[styles.filterButton, isSelected && selectedStyle]}
-        animatedStyle={animatedScaleStyle} // Apply the scale animation here
         glassIntensity={glassIntensity}
-        // Disable debounce to ensure animation is always responsive.
+        // Set debounce to 0 for instant feedback on filter taps
         debounceTime={0}
       />
     );
@@ -156,7 +131,6 @@ const ThemedFilter = ({
     return Math.min(Math.max(calculatedGap, 8), getResponsiveWidth(8));
   }, [screenWidth, filters.length]);
 
-  // Use useCallback for FlatList's renderItem for performance
   const renderFilterItem = useCallback(
     ({ item }: { item: FilterItemType }) => {
       const isSelected = selectedFilter === item.key;

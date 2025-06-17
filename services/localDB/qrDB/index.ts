@@ -8,25 +8,16 @@ import { returnItems } from "@/utils/returnItemData";
 import { GUEST_USER_ID } from "@/constants/Constants";
 const ITEMS_PER_PAGE = 50;
 
-/**
- * Create the QR table and its indexes within one transaction.
- * IMPORTANT: The FOREIGN KEY (user_id) REFERENCES users(id) constraint
- * means that if you strictly enforce foreign keys (e.g., with PRAGMA foreign_keys = ON),
- * you must have a user record in the 'users' table with id = GUEST_USER_ID (i.e., id = "")
- * for guest QR codes to be inserted. SQLite by default does NOT enforce foreign keys
- * unless explicitly enabled per-connection.
- */
 export async function createQrTable(): Promise<void> {
   const db = await openDatabase();
   try {
     await db.runAsync("BEGIN TRANSACTION;");
 
-    // Added NOT NULL constraints where applicable for data integrity
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS qrcodes (
         id TEXT PRIMARY KEY NOT NULL,
         qr_index INTEGER NOT NULL,
-        user_id TEXT NOT NULL, -- Empty string "" for guest user_id
+        user_id TEXT NOT NULL,
         code TEXT NOT NULL,
         metadata TEXT NOT NULL,
         metadata_type TEXT NOT NULL,
@@ -49,23 +40,19 @@ export async function createQrTable(): Promise<void> {
     );
     await db.execAsync(
       "CREATE INDEX IF NOT EXISTS idx_qr_is_synced ON qrcodes(is_synced);"
-    ); // Added index for is_synced
+    );
     await db.execAsync(
       "CREATE INDEX IF NOT EXISTS idx_qr_index ON qrcodes(qr_index);"
     );
 
     await db.runAsync("COMMIT;");
-     ("[qrDB] qrcodes table created/verified successfully.");
   } catch (error) {
     await db.runAsync("ROLLBACK;");
     console.error("[qrDB] Error creating qr table or indexes:", error);
-    throw error; // Re-throw to allow caller to handle
+    throw error;
   }
 }
 
-/**
- * Retrieve a QR code by ID for a specific user (or guest).
- */
 export async function getQrCodeById(
   id: string,
   userId: string
@@ -85,9 +72,6 @@ export async function getQrCodeById(
   }
 }
 
-/**
- * Retrieve QR codes by user ID (or guest), ordered by qr_index.
- */
 export async function getQrCodesByUserId(userId: string): Promise<QRRecord[]> {
   const db = await openDatabase();
   try {
@@ -104,9 +88,6 @@ export async function getQrCodesByUserId(userId: string): Promise<QRRecord[]> {
   }
 }
 
-/**
- * Check if any non-deleted local data exists for the given user (or guest).
- */
 export async function hasLocalData(userId: string): Promise<boolean> {
   const db = await openDatabase();
   try {
@@ -124,16 +105,10 @@ export async function hasLocalData(userId: string): Promise<boolean> {
   }
 }
 
-/**
- * Soft-delete a QR code for a specific user (or guest).
- * For guests, is_synced remains 1 (true). For logged-in users, is_synced becomes 0 (false).
- */
 export async function deleteQrCode(id: string, userId: string): Promise<void> {
   const db = await openDatabase();
   try {
     const updatedAt = new Date().toISOString();
-    // Guest items are "synced" locally as they don't go to a server.
-    // User items need to sync their deletion.
     const isSyncedValue = userId === GUEST_USER_ID ? 1 : 0;
     await db.runAsync(
       `
@@ -143,7 +118,6 @@ export async function deleteQrCode(id: string, userId: string): Promise<void> {
     `,
       [updatedAt, isSyncedValue, id, userId]
     );
-     (`[qrDB] Soft-deleted QR code ${id} for user ${userId}.`);
   } catch (error) {
     console.error(
       `[qrDB] Failed to soft-delete QR code ${id} for user ${userId}:`,
@@ -153,11 +127,6 @@ export async function deleteQrCode(id: string, userId: string): Promise<void> {
   }
 }
 
-/**
- * Bulk insert QR codes using transactions. Allows GUEST_USER_ID.
- * Assumes incoming qrData.is_synced is set correctly.
- * (e.g., true for new guest items, false for new user items needing sync).
- */
 export async function insertQrCodesBulk(
   qrDataArray: QRRecord[]
 ): Promise<void> {
@@ -171,17 +140,17 @@ export async function insertQrCodesBulk(
   const values: any[] = qrDataArray.flatMap((qrData) => [
     qrData.id,
     qrData.qr_index,
-    qrData.user_id, // Can be GUEST_USER_ID
+    qrData.user_id,
     qrData.code,
     qrData.metadata,
     qrData.metadata_type,
-    qrData.account_name || null, // Use null for empty optional strings
-    qrData.account_number || null, // Use null for empty optional strings
+    qrData.account_name || null,
+    qrData.account_number || null,
     qrData.type,
     qrData.created,
     qrData.updated,
     qrData.is_deleted ? 1 : 0,
-    qrData.is_synced ? 1 : 0, // Honor incoming is_synced status
+    qrData.is_synced ? 1 : 0,
   ]);
 
   try {
@@ -193,7 +162,6 @@ export async function insertQrCodesBulk(
       values
     );
     await db.runAsync("COMMIT;");
-     (`[qrDB] Bulk inserted ${qrDataArray.length} QR codes.`);
   } catch (error) {
     await db.runAsync("ROLLBACK;");
     console.error("[qrDB] Failed to insert bulk QR codes:", error);
@@ -201,13 +169,9 @@ export async function insertQrCodesBulk(
   }
 }
 
-/**
- * Get unsynced (is_synced = 0) and not deleted QR codes for a user.
- * Returns empty array for guests (as they don't sync with a server this way).
- */
 export async function getUnsyncedQrCodes(userId: string): Promise<QRRecord[]> {
   if (userId === GUEST_USER_ID) {
-    return []; // Guests don't have "unsynced" items in the server sense
+    return [];
   }
   const db = await openDatabase();
   try {
@@ -224,19 +188,14 @@ export async function getUnsyncedQrCodes(userId: string): Promise<QRRecord[]> {
   }
 }
 
-/**
- * Retrieve locally soft-deleted QR codes that need their deletion synced to the server.
- * Returns empty array for guests.
- */
 export async function getLocallyDeletedQrCodes(
   userId: string
 ): Promise<QRRecord[]> {
   if (userId === GUEST_USER_ID) {
-    return []; // Guest deletions are local only
+    return [];
   }
   const db = await openDatabase();
   try {
-    // These are items marked as deleted locally but the deletion hasn't been synced.
     return await db.getAllAsync<QRRecord>(
       "SELECT * FROM qrcodes WHERE user_id = ? AND is_deleted = 1 AND is_synced = 0",
       userId
@@ -250,40 +209,22 @@ export async function getLocallyDeletedQrCodes(
   }
 }
 
-/**
- * Synchronize local QR code changes (creations, updates, deletions) with the server for a specific user.
- * No-op for guests or invalid userId.
- */
 export async function syncQrCodes(userId: string): Promise<void> {
   if (userId === GUEST_USER_ID || !userId) {
-     (
-      "[qrDB] syncQrCodes: Skipped for guest or invalid userId."
-    );
     return;
   }
-   (`[qrDB] syncQrCodes: Starting sync for userId: ${userId}`);
   const db = await openDatabase();
 
   try {
     const unsyncedChanges = await getUnsyncedQrCodes(userId);
     const locallyDeleted = await getLocallyDeletedQrCodes(userId);
 
-     (
-      `[qrDB] syncQrCodes: Found ${unsyncedChanges.length} unsynced changes to potentially create/update.`
-    );
-     (
-      `[qrDB] syncQrCodes: Found ${locallyDeleted.length} locally deleted items to delete/mark on server.`
-    );
-
     // --- Handle Deletions on Server ---
     if (locallyDeleted.length > 0) {
-       (
-        `[qrDB] syncQrCodes: Processing ${locallyDeleted.length} locally deleted records for server.`
-      );
       const serverDeletionPromises = locallyDeleted.map((qr) =>
         pb
           .collection("qr")
-          .update(qr.id, { is_deleted: true, updated: new Date().toISOString() }) // Also update server 'updated'
+          .update(qr.id, { is_deleted: true, updated: new Date().toISOString() })
       );
       const results = await Promise.allSettled(serverDeletionPromises);
 
@@ -305,19 +246,12 @@ export async function syncQrCodes(userId: string): Promise<void> {
           .join(",");
         await db.runAsync(
           `UPDATE qrcodes SET is_synced = 1, updated = ? WHERE id IN (${placeholders}) AND user_id = ?`,
-          [
-            new Date().toISOString(),
-            ...successfullyDeletedServerIds,
-            userId,
-          ]
-        );
-         (
-          `[qrDB] syncQrCodes: Marked ${successfullyDeletedServerIds.length} server-deleted records as synced locally.`
+          [new Date().toISOString(), ...successfullyDeletedServerIds, userId]
         );
       }
     }
 
-    // --- Handle Creations/Updates on Server for items NOT marked as deleted locally ---
+    // --- Handle Creations/Updates on Server ---
     if (unsyncedChanges.length > 0) {
       const itemsToUpsertOnServer = unsyncedChanges;
       const localIdsForUpsert = itemsToUpsertOnServer.map((qr) => qr.id);
@@ -340,7 +274,6 @@ export async function syncQrCodes(userId: string): Promise<void> {
             "[qrDB] syncQrCodes: Could not fetch server records for upsert check:",
             e.message
           );
-          // Potentially treat all as creates if this fails, or handle error more gracefully
         }
       }
       const serverRecordMap = new Map(
@@ -350,13 +283,12 @@ export async function syncQrCodes(userId: string): Promise<void> {
         ])
       );
 
-      // Type fix: payload can include is_synced if server schema has it
       const recordsToCreatePayloads: {
         localId: string;
-        payload: Omit<QRRecord, "id">; // Server generates ID, payload contains other fields
+        payload: Omit<QRRecord, "id">;
       }[] = [];
       const recordsToUpdatePayloads: {
-        id: string; // This is the server ID
+        id: string;
         data: Partial<Omit<QRRecord, "id" | "is_synced">>;
       }[] = [];
 
@@ -366,52 +298,30 @@ export async function syncQrCodes(userId: string): Promise<void> {
         const payloadWithUser = { ...dataForServer, user_id: userId };
 
         if (serverInfo) {
-          // Record with this ID exists on server
           if (
             !serverInfo.is_deleted &&
             new Date(qrCode.updated) > new Date(serverInfo.updated)
           ) {
-             (
-              `[qrDB] syncQrCodes: Preparing UPDATE for server record ID ${localId}.`
-            );
             recordsToUpdatePayloads.push({
               id: localId,
               data: payloadWithUser,
             });
           } else if (serverInfo.is_deleted) {
-             (
-              `[qrDB] syncQrCodes: Server record ID ${localId} is marked deleted. Local is not. Potential conflict/resurrection.`
-            );
             if (new Date(qrCode.updated) > new Date(serverInfo.updated)) {
-               (
-                `[qrDB] syncQrCodes: Preparing UPDATE (to undelete) for server record ID ${localId}.`
-              );
               recordsToUpdatePayloads.push({
                 id: localId,
                 data: { ...payloadWithUser, is_deleted: false },
               });
             }
           } else {
-             (
-              `[qrDB] syncQrCodes: Server record ID ${localId} is newer or same and not deleted. Marking local as synced.`
-            );
             await db.runAsync(
               `UPDATE qrcodes SET is_synced = 1, updated = ? WHERE id = ? AND user_id = ?`,
               [serverInfo.updated, localId, userId]
             );
           }
         } else {
-          // Record with this localId does NOT exist on server, so create it
-           (
-            `[qrDB] syncQrCodes: Preparing CREATE for local record ID ${localId}.`
-          );
-          // Payload for server creation:
-          // - Does NOT include 'localId' (server generates its own ID)
-          // - Includes 'is_deleted: false' (it's a new, active record)
-          // - Includes 'is_synced: true' IF your server schema has this field and you want to set it.
-          //   Otherwise, remove 'is_synced' from this payload.
           recordsToCreatePayloads.push({
-            localId, // Keep localId to update the correct local record later
+            localId,
             payload: { ...payloadWithUser, is_deleted: false, is_synced: true },
           });
         }
@@ -419,41 +329,31 @@ export async function syncQrCodes(userId: string): Promise<void> {
 
       // Perform Creations
       if (recordsToCreatePayloads.length > 0) {
-         (
-          `[qrDB] syncQrCodes: Creating ${recordsToCreatePayloads.length} records on server for user ${userId}.`
-        );
         for (const itemToCreate of recordsToCreatePayloads) {
           try {
-            // itemToCreate.payload does NOT include an 'id' field if server generates it
             const serverRecord = await pb
               .collection("qr")
               .create<ServerRecord>(itemToCreate.payload);
 
-            // IMPORTANT: Update the local record with the new server-generated ID
-            // and mark it as synced.
             await db.runAsync(
               `UPDATE qrcodes
                SET id = ?, is_synced = 1, updated = ?, qr_index = ?, created = ?, metadata = ?, metadata_type = ?, account_name = ?, account_number = ?, type = ?, code = ?, is_deleted = ?
                WHERE id = ? AND user_id = ?`,
               [
-                serverRecord.id, // New server ID
+                serverRecord.id,
                 serverRecord.updated,
-                serverRecord.qr_index, // Use server's qr_index if it's authoritative
+                serverRecord.qr_index,
                 serverRecord.created,
-                serverRecord.metadata, // Assuming serverRecord contains all necessary fields
-                                       // matching QRRecord after creation
+                serverRecord.metadata,
                 serverRecord.metadata_type,
                 serverRecord.account_name,
                 serverRecord.account_number,
                 serverRecord.type,
                 serverRecord.code,
-                serverRecord.is_deleted, // Should be false from payload
-                itemToCreate.localId, // Old local ID to find the record
+                serverRecord.is_deleted,
+                itemToCreate.localId,
                 userId,
               ]
-            );
-             (
-              `[qrDB] syncQrCodes: Successfully created server record (new ID: ${serverRecord.id}) for local ID ${itemToCreate.localId}. Local record updated and synced.`
             );
           } catch (e: any) {
             console.error(
@@ -466,9 +366,6 @@ export async function syncQrCodes(userId: string): Promise<void> {
 
       // Perform Updates
       if (recordsToUpdatePayloads.length > 0) {
-         (
-          `[qrDB] syncQrCodes: Updating ${recordsToUpdatePayloads.length} records on server for user ${userId}.`
-        );
         for (const itemToUpdate of recordsToUpdatePayloads) {
           try {
             const updatedRecord = await pb
@@ -477,9 +374,6 @@ export async function syncQrCodes(userId: string): Promise<void> {
             await db.runAsync(
               `UPDATE qrcodes SET is_synced = 1, updated = ? WHERE id = ? AND user_id = ?`,
               [updatedRecord.updated, itemToUpdate.id, userId]
-            );
-             (
-              `[qrDB] syncQrCodes: Successfully updated server record ${itemToUpdate.id}. Marked local as synced.`
             );
           } catch (e: any) {
             console.error(
@@ -490,50 +384,69 @@ export async function syncQrCodes(userId: string): Promise<void> {
         }
       }
     }
-     (`[qrDB] Sync completed for user: ${userId}`);
   } catch (error) {
     console.error(`[qrDB] Error during sync for user ${userId}:`, error);
-    // Do not re-throw here if you want the calling function (e.g., in HomeScreen)
-    // to handle UI updates like setting syncStatus to 'error' without crashing.
-    // Or re-throw if the caller is prepared to catch it.
-    // For now, let's re-throw as per original structure.
     throw error;
   }
 }
 
 /**
- * Fetch new or updated server data for a specific user since the last local update.
- * No-op for guests or invalid userId.
+ * NEW HELPER FUNCTION
+ * Gets the timestamp of the most recently synced item for a user.
  */
-export async function fetchServerData(userId: string): Promise<QRRecord[]> {
+export async function getLatestSyncedTimestamp(
+  userId: string
+): Promise<string | null> {
+  if (userId === GUEST_USER_ID || !userId) {
+    return null;
+  }
+  const db = await openDatabase();
+  try {
+    const result = await db.getFirstAsync<{ updated: string }>(
+      "SELECT MAX(updated) as updated FROM qrcodes WHERE user_id = ? AND is_synced = 1",
+      userId
+    );
+    return result?.updated || null;
+  } catch (error) {
+    console.error(
+      `[qrDB] Error getting latest synced timestamp for user ${userId}:`,
+      error
+    );
+    return null;
+  }
+}
+
+/**
+ * Fetch new or updated server data for a specific user.
+ *
+ * *** REFACTORED ***
+ * Now accepts an optional `sinceTimestamp` to allow the caller to control
+ * the time window, preventing the push/pull race condition.
+ */
+export async function fetchServerData(
+  userId: string,
+  sinceTimestamp: string | null = null
+): Promise<QRRecord[]> {
   if (userId === GUEST_USER_ID || !userId) {
     return [];
   }
 
   try {
-    const db = await openDatabase();
-    const latestLocalUpdateResult = await db.getFirstAsync<{
-      updated: string;
-    }>("SELECT MAX(updated) as updated FROM qrcodes WHERE user_id = ? AND is_synced = 1", userId);
-    const latestLocalUpdate = latestLocalUpdateResult?.updated || null;
-
-    let filter = `user_id = '${userId}'`; // Ensure userId is properly escaped if it can contain special chars, though PB SDK might handle this.
-    if (latestLocalUpdate) {
-      const formattedTimestamp = new Date(latestLocalUpdate)
+    let filter = `user_id = '${userId}'`;
+    if (sinceTimestamp) {
+      const formattedTimestamp = new Date(sinceTimestamp)
         .toISOString()
         .replace("T", " ")
-        .substring(0, 19); // PocketBase specific format
+        .substring(0, 19);
       filter += ` && updated > '${formattedTimestamp}'`;
     }
-     // Fetch non-deleted items primarily, or handle deletions based on is_deleted flag
     filter += ` && is_deleted = false`;
 
+    console.log(`[qrDB] fetchServerData: Fetching with filter: ${filter}`);
 
     let allServerItems: ServerRecord[] = [];
     let currentPage = 1;
     let totalPages = 1;
-
-     (`[qrDB] fetchServerData: Fetching with filter: ${filter}`);
 
     do {
       const serverDataPage = await pb
@@ -550,20 +463,21 @@ export async function fetchServerData(userId: string): Promise<QRRecord[]> {
       currentPage++;
     } while (currentPage <= totalPages);
 
-     (`[qrDB] fetchServerData: Fetched ${allServerItems.length} items from server.`);
-
+    console.log(
+      `[qrDB] fetchServerData: Fetched ${allServerItems.length} items from server.`
+    );
 
     return allServerItems.map((item): QRRecord => {
       if (
         !item.id ||
         typeof item.qr_index !== "number" ||
-        !item.user_id || // This should match the userId we are fetching for
+        !item.user_id ||
         !item.code ||
         !item.metadata ||
         !item.metadata_type ||
         !item.type ||
         !item.created ||
-        !item.updated // is_deleted can be false
+        !item.updated
       ) {
         console.warn("[qrDB] Invalid server data format for item:", item);
         throw new Error(
@@ -582,7 +496,7 @@ export async function fetchServerData(userId: string): Promise<QRRecord[]> {
         type: item.type as "bank" | "store" | "ewallet",
         created: item.created,
         updated: item.updated,
-        is_deleted: item.is_deleted, // This will be false due to filter, or server's current state
+        is_deleted: item.is_deleted,
         is_synced: true,
       };
     });
@@ -595,10 +509,6 @@ export async function fetchServerData(userId: string): Promise<QRRecord[]> {
   }
 }
 
-/**
- * Insert or update QR codes in the local database. Allows GUEST_USER_ID.
- * Honors incoming is_synced status.
- */
 export async function insertOrUpdateQrCodes(
   qrDataArray: QRRecord[]
 ): Promise<void> {
@@ -609,16 +519,12 @@ export async function insertOrUpdateQrCodes(
     await db.runAsync("BEGIN TRANSACTION;");
 
     for (const qrData of qrDataArray) {
-      // Check if record exists
       const existingRecord = await db.getFirstAsync<QRRecord>(
-        "SELECT id, updated, user_id FROM qrcodes WHERE id = ?",
+        "SELECT id, updated, user_id, is_deleted FROM qrcodes WHERE id = ?",
         qrData.id
       );
 
       if (existingRecord) {
-        // Record exists: update if incoming data is newer OR if user_id is changing
-        // (e.g., guest data being assigned to a real user after migration)
-        // OR if the deletion status is different (server undeleted an item)
         if (
           new Date(qrData.updated) > new Date(existingRecord.updated) ||
           qrData.user_id !== existingRecord.user_id ||
@@ -641,19 +547,12 @@ export async function insertOrUpdateQrCodes(
               qrData.type,
               qrData.updated,
               qrData.is_deleted ? 1 : 0,
-              qrData.is_synced ? 1 : 0, // Data from server or being bulk inserted is considered synced
+              qrData.is_synced ? 1 : 0,
               qrData.id,
             ]
           );
-        } else {
-          // If local is_deleted is true, but server data (qrData) has is_deleted false
-          // and server data is newer, it's an undelete. The above condition handles it.
-          // If server data is older or same, and local is_deleted is true, do nothing to preserve local deletion
-          // unless explicitly told server version is authoritative for is_deleted status.
-          // The current logic: if server data (qrData) is newer, it overwrites.
         }
       } else {
-        // Record does not exist: insert
         await db.runAsync(
           `INSERT INTO qrcodes
           (id, qr_index, user_id, code, metadata, metadata_type, account_name,
@@ -672,13 +571,12 @@ export async function insertOrUpdateQrCodes(
             qrData.created,
             qrData.updated,
             qrData.is_deleted ? 1 : 0,
-            qrData.is_synced ? 1 : 0, // Data from server or being bulk inserted is considered synced
+            qrData.is_synced ? 1 : 0,
           ]
         );
       }
     }
     await db.runAsync("COMMIT;");
-    //  (`[qrDB] Inserted/Updated ${qrDataArray.length} QR codes.`);
   } catch (error) {
     await db.runAsync("ROLLBACK;");
     console.error("[qrDB] Failed to insert/update QR codes:", error);
@@ -686,9 +584,6 @@ export async function insertOrUpdateQrCodes(
   }
 }
 
-/**
- * Search QR codes for a specific user (or guest) based on a query string.
- */
 export async function searchQrCodes(
   userId: string,
   searchQuery: string = ""
@@ -734,9 +629,6 @@ export async function searchQrCodes(
   }
 }
 
-/**
- * Filter QR codes by type for a specific user (or guest).
- */
 export async function filterQrCodesByType(
   userId: string,
   filter: string = "all"
@@ -762,11 +654,6 @@ export async function filterQrCodesByType(
   }
 }
 
-/**
- * Update the qr_index values and the 'updated' timestamp for an array of QR codes
- * belonging to a specific user (or guest).
- * Sets is_synced to 0 for users, 1 for guests, as reordering is a local change needing sync for users.
- */
 export async function updateQrIndexes(
   qrDataArray: QRRecord[],
   userId: string
@@ -810,9 +697,6 @@ export async function updateQrIndexes(
   }
 }
 
-/**
- * Get the next available QR index for a user (or guest).
- */
 export async function getNextQrIndex(userId: string): Promise<number> {
   const db = await openDatabase();
   try {
@@ -832,9 +716,13 @@ export async function getNextQrIndex(userId: string): Promise<number> {
 
 /**
  * Transfers QR codes from the guest account to a newly logged-in user.
+ * This function NO LONGER assigns a new index. It simply re-assigns the
+ * user_id and marks the records as unsynced. The `syncWithServer` process
+ * will handle creating these records on the server and receiving the correct,
+ * authoritative index from the server.
  */
 export async function transferGuestDataToUser(newUserId: string): Promise<void> {
-   (
+  console.log(
     `[qrDB] transferGuestDataToUser: Called for newUserId: ${newUserId}`
   );
   if (!newUserId || newUserId === GUEST_USER_ID) {
@@ -847,46 +735,36 @@ export async function transferGuestDataToUser(newUserId: string): Promise<void> 
   const db = await openDatabase();
   try {
     await db.runAsync("BEGIN TRANSACTION;");
-     ("[qrDB] transferGuestDataToUser: Transaction started.");
+    console.log("[qrDB] transferGuestDataToUser: Transaction started.");
 
     const guestQrRecords = await db.getAllAsync<QRRecord>(
-      "SELECT * FROM qrcodes WHERE user_id = ? AND is_deleted = 0 ORDER BY qr_index ASC",
+      "SELECT * FROM qrcodes WHERE user_id = ? AND is_deleted = 0",
       GUEST_USER_ID
     );
-     (
-      `[qrDB] transferGuestDataToUser: Found ${guestQrRecords.length} guest records.`
+    console.log(
+      `[qrDB] transferGuestDataToUser: Found ${guestQrRecords.length} guest records to migrate.`
     );
 
     if (!guestQrRecords.length) {
-       ("[qrDB] transferGuestDataToUser: No guest data to migrate.");
-      await db.runAsync("COMMIT;"); // Commit even if no data to ensure transaction is closed
+      console.log("[qrDB] transferGuestDataToUser: No guest data to migrate.");
+      await db.runAsync("COMMIT;");
       return;
     }
 
-    const nextUserStartIndex = await getNextQrIndex(newUserId);
-     (
-      `[qrDB] transferGuestDataToUser: Next user start index: ${nextUserStartIndex}`
-    );
     const now = new Date().toISOString();
 
-    for (let i = 0; i < guestQrRecords.length; i++) {
-      const guestRecord = guestQrRecords[i];
-      const newQrIndex = nextUserStartIndex + i;
-       (
-        `[qrDB] transferGuestDataToUser: Migrating guest record ID ${guestRecord.id} to user ${newUserId}, new index ${newQrIndex}`
-      );
-      // When transferring, the item becomes unsynced for the new user
-      await db.runAsync(
-        `UPDATE qrcodes
-         SET user_id = ?, qr_index = ?, is_synced = 0, updated = ?
-         WHERE id = ? AND user_id = ?`, // Ensure we only update the specific guest record
-        [newUserId, newQrIndex, now, guestRecord.id, GUEST_USER_ID]
-      );
-    }
+    // Re-assign all guest records to the new user and mark them for sync.
+    // We DO NOT change the qr_index here. The server will assign the correct index.
+    await db.runAsync(
+      `UPDATE qrcodes
+       SET user_id = ?, is_synced = 0, updated = ?
+       WHERE user_id = ?`,
+      [newUserId, now, GUEST_USER_ID]
+    );
 
     await db.runAsync("COMMIT;");
-     (
-      `[qrDB] transferGuestDataToUser: Successfully migrated ${guestQrRecords.length} guest QR records to user ${newUserId}. Transaction committed.`
+    console.log(
+      `[qrDB] transferGuestDataToUser: Successfully re-assigned ${guestQrRecords.length} guest records to user ${newUserId}. They are now marked for sync.`
     );
   } catch (error) {
     await db.runAsync("ROLLBACK;");
@@ -898,14 +776,10 @@ export async function transferGuestDataToUser(newUserId: string): Promise<void> 
   }
 }
 
-/**
- * Close the database connection.
- */
 export async function closeDatabase(): Promise<void> {
   const db = await openDatabase();
   try {
     await db.closeAsync();
-     ("[qrDB] Database connection closed.");
   } catch (error) {
     console.error("[qrDB] Error closing the database:", error);
   }

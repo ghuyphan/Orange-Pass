@@ -8,9 +8,9 @@ interface AuthState {
   user: UserRecord | null;
   isAuthenticated: boolean;
   avatarConfig: AvatarConfig | null;
-  // Store dates as strings for Redux serialization
   isSyncing: boolean;
   lastSynced: string | null; // ISO string instead of Date
+  justLoggedIn: boolean; // <-- ADDED: Flag for initial sync logic
 }
 
 const initialState: AuthState = {
@@ -20,6 +20,7 @@ const initialState: AuthState = {
   avatarConfig: null,
   isSyncing: false,
   lastSynced: null,
+  justLoggedIn: false, // <-- ADDED: Initial state
 };
 
 const authSlice = createSlice({
@@ -33,6 +34,7 @@ const authSlice = createSlice({
       state.token = action.payload.token;
       state.user = action.payload.user;
       state.isAuthenticated = true;
+      state.justLoggedIn = true; // <-- MODIFIED: Set flag on login
 
       // Parse avatar config from the user record.
       try {
@@ -55,21 +57,15 @@ const authSlice = createSlice({
       state.user = null;
       state.isAuthenticated = false;
       state.avatarConfig = null;
-      // Keep sync information when clearing auth
       state.lastSynced = null;
+      state.justLoggedIn = false; // <-- MODIFIED: Reset flag on logout
     },
-    updateAvatarConfig: (
-      state,
-      action: PayloadAction<AvatarConfig>
-    ) => {
-      // Update the avatarConfig in the global state.
+    updateAvatarConfig: (state, action: PayloadAction<AvatarConfig>) => {
       state.avatarConfig = action.payload;
-      // Also update the user record with the new avatar configuration as an object.
       if (state.user) {
         state.user.avatar = action.payload;
       }
     },
-    // Modified to accept string instead of Date
     setSyncStatus: (
       state,
       action: PayloadAction<{ isSyncing: boolean; lastSynced?: string }>
@@ -79,14 +75,19 @@ const authSlice = createSlice({
         state.lastSynced = action.payload.lastSynced;
       }
     },
+    // --- NEW REDUCER ---
+    resetJustLoggedInFlag: (state) => {
+      state.justLoggedIn = false;
+    },
   },
 });
 
-export const { 
-  setAuthData, 
-  clearAuthData, 
+export const {
+  setAuthData,
+  clearAuthData,
   updateAvatarConfig,
-  setSyncStatus 
+  setSyncStatus,
+  resetJustLoggedInFlag, // <-- ADDED: Export the new action
 } = authSlice.actions;
 
 export default authSlice.reducer;

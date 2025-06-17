@@ -96,7 +96,7 @@ function SettingsGuestScreen() {
   );
 
   useEffect(() => {
-    let timerId: NodeJS.Timeout | undefined;
+    let timerId: number | undefined;
     const interactionPromise = InteractionManager.runAfterInteractions(() => {
       timerId = setTimeout(() => {
         setIsAvatarReady(true);

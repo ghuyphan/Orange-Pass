@@ -75,13 +75,17 @@ function GuestHomeScreen() {
   const isOffline = useSelector((state: RootState) => state.network.isOffline);
   const guestUser = useSelector((state: RootState) => state.auth.user);
 
+  // --- FIX: Add local state for the list's UI ---
+  const [localQrData, setLocalQrData] = useState<QRRecord[]>(qrData);
+
   // Theme and Appearance
   const color = useThemeColor({ light: "#3A2E24", dark: "#FFF5E1" }, "text");
 
   // Loading and Syncing
   const [isLoading, setIsLoading] = useState(true);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const isEmpty = useMemo(() => qrData.length === 0, [qrData]);
+  const [isProcessing, setIsProcessing] = useState(false); // Kept for delete operation
+  // --- FIX: isEmpty now depends on the local state for immediate UI feedback ---
+  const isEmpty = useMemo(() => localQrData.length === 0, [localQrData]);
   const [initialAnimationsDone, setInitialAnimationsDone] = useState(false);
 
   // UI State
@@ -94,7 +98,6 @@ function GuestHomeScreen() {
   const [bottomToastIcon, setBottomToastIcon] = useState("");
   const [bottomToastMessage, setBottomToastMessage] = useState("");
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [fabOpen, setFabOpen] = useState(false);
   const [sheetType, setSheetType] = useState<SheetType>(null);
   const [linkingUrl, setLinkingUrl] = useState<string | null>(null);
   const [wifiSsid, setWifiSsid] = useState<string | null>(null);
@@ -111,19 +114,16 @@ function GuestHomeScreen() {
     [key: string]: ReturnType<typeof setTimeout> | null;
   }>({
     processing: null,
-    idle: null,
     edit: null,
     delete: null,
-    sheet: null,
-    toast: null,
     network: null,
   });
 
   // Shared Values (Reanimated)
   const scrollY = useSharedValue(0);
-  const isActive = useSharedValue(false); // <-- REFACTORED from useState
-  const isSheetOpen = useSharedValue(false); // <-- REFACTORED from useState
-  const isEmptyShared = useSharedValue(qrData.length === 0 ? 1 : 0);
+  const isActive = useSharedValue(false);
+  const isSheetOpen = useSharedValue(false);
+  const isEmptyShared = useSharedValue(localQrData.length === 0 ? 1 : 0);
   const emptyCardOffset = useSharedValue(350);
   const listOpacity = useSharedValue(0);
 
@@ -136,7 +136,35 @@ function GuestHomeScreen() {
     };
   }, []);
 
-  // Handle initial loading state (Unchanged)
+  // --- FIX: Keep local state in sync with Redux for external changes (e.g., add/delete) ---
+  useEffect(() => {
+    setLocalQrData(qrData);
+  }, [qrData]);
+
+  // --- FIX: This new useEffect handles persisting the changes in the background ---
+  useEffect(() => {
+    // Guard against running on initial mount or if data is unchanged from Redux
+    if (JSON.stringify(localQrData) === JSON.stringify(qrData)) {
+      return;
+    }
+
+    const finalDataToSave = localQrData.map((item, index) => ({
+      ...item,
+      qr_index: index,
+      updated: new Date().toISOString(),
+      is_synced: true,
+    }));
+
+    dispatch(setQrData(finalDataToSave));
+
+    if (finalDataToSave.length > 0) {
+      updateQrIndexes(finalDataToSave, GUEST_USER_ID).catch((error) => {
+        console.error("Error reordering QR for guest:", error);
+      });
+    }
+  }, [localQrData, qrData, dispatch]);
+
+  // Handle initial loading state
   useEffect(() => {
     if (guestUser && guestUser.id === GUEST_USER_ID) {
       InteractionManager.runAfterInteractions(() => {
@@ -149,7 +177,7 @@ function GuestHomeScreen() {
     }
   }, [guestUser]);
 
-  // Network status toasts (Unchanged)
+  // Network status toasts
   const prevIsOffline = useRef(isOffline);
   useEffect(() => {
     if (isOffline) {
@@ -180,7 +208,7 @@ function GuestHomeScreen() {
     };
   }, [isOffline]);
 
-  // Animation logic (Unchanged)
+  // Animation logic
   const animateEmptyCard = useCallback(() => {
     emptyCardOffset.value = withSpring(0, { damping: 30, stiffness: 150 });
   }, [emptyCardOffset]);
@@ -197,14 +225,7 @@ function GuestHomeScreen() {
         listOpacity.value = withTiming(1, { duration: 300 });
       }
     }
-  }, [
-    isEmpty,
-    initialAnimationsDone,
-    animateEmptyCard,
-    listOpacity,
-    emptyCardOffset,
-    isEmptyShared,
-  ]);
+  }, [isEmpty, initialAnimationsDone, animateEmptyCard]);
 
   // Animated styles
   const titleContainerStyle = useAnimatedStyle(() => {
@@ -222,7 +243,6 @@ function GuestHomeScreen() {
       [0, -35],
       Extrapolation.CLAMP
     );
-    // *** OPTIMIZED ***: Reads shared values directly on the UI thread
     const shouldReduceZIndex =
       scrollY.value > SCROLL_THRESHOLD || isActive.value || isSheetOpen.value;
     return {
@@ -230,7 +250,7 @@ function GuestHomeScreen() {
       transform: [{ translateY }],
       zIndex: shouldReduceZIndex ? 0 : 1,
     };
-  }, []); // *** OPTIMIZED ***: Removed JS state dependencies
+  }, []);
 
   const listHeaderStyle = useAnimatedStyle(() => {
     const opacity = withTiming(
@@ -272,7 +292,7 @@ function GuestHomeScreen() {
     []
   );
 
-  // Navigation handlers (Unchanged)
+  // Navigation handlers
   const onNavigateToEmptyScreen = useCallback(
     () => router.push("/(guest)/empty-guest"),
     []
@@ -363,7 +383,6 @@ function GuestHomeScreen() {
     []
   );
 
-  // *** NEW ***: Callback to handle bottom sheet state changes
   const handleSheetChange = useCallback(
     (index: number) => {
       isSheetOpen.value = index > -1;
@@ -376,7 +395,6 @@ function GuestHomeScreen() {
     onNavigateToAddScreen,
   });
 
-  // *** OPTIMIZED ***: Removed state setting from scroll handler
   const scrollHandler = useAnimatedScrollHandler((event) => {
     scrollY.value = event.contentOffset.y;
   });
@@ -388,17 +406,17 @@ function GuestHomeScreen() {
     [scrollY]
   );
 
-  // *** OPTIMIZED ***: Update shared value instead of state
   const onDragBegin = useCallback(() => {
     triggerHapticFeedback();
     isActive.value = true;
   }, [isActive]);
 
-  // Other handlers (Unchanged logic, updated state setters)
+  // --- FIX: Use localQrData for UI rendering ---
   const filteredData = useMemo(() => {
-    if (filter === "all") return qrData;
-    return qrData.filter((item) => item.type === filter);
-  }, [qrData, filter]);
+    if (filter === "all") return localQrData;
+    return localQrData.filter((item) => item.type === filter);
+  }, [localQrData, filter]);
+
   const handleFilterChange = useCallback(
     (newFilter: string) => setFilter(newFilter),
     []
@@ -414,6 +432,8 @@ function GuestHomeScreen() {
       setIsToastVisible(true);
       setToastMessage(t("homeScreen.deleting"));
 
+      // This part is correct: it gets the latest from Redux, dispatches the change,
+      // and the useEffect will sync localQrData automatically.
       const updatedData = qrData.filter((item) => item.id !== selectedItemId);
       const reindexedData = updatedData.map((item, index) => ({
         ...item,
@@ -444,7 +464,8 @@ function GuestHomeScreen() {
         400
       );
     }
-  }, [selectedItemId, qrData, dispatch, t]);
+  }, [selectedItemId, qrData, dispatch]);
+
   const renderItem = useCallback(
     ({
       item,
@@ -478,65 +499,41 @@ function GuestHomeScreen() {
   }, []);
   const handleCopySuccess = useCallback(
     () => showToast(t("homeScreen.copied")),
-    [showToast, t]
+    [showToast]
   );
+
+  // --- FIX: onDragEnd now only updates local state for a smooth UI. ---
   const onDragEnd = useCallback(
-    async ({ data: reorderedData }: { data: QRRecord[] }) => {
+    ({ data: reorderedData }: { data: QRRecord[] }) => {
       triggerHapticFeedback();
-      isActive.value = false; // *** OPTIMIZED ***
-      setIsProcessing(true);
+      isActive.value = false;
 
-      let finalDataToSave: QRRecord[];
-
+      let finalData;
       if (filter === "all") {
-        finalDataToSave = reorderedData.map((item, index) => ({
-          ...item,
-          qr_index: index,
-          updated: new Date().toISOString(),
-          is_synced: true,
-        }));
-        dispatch(setQrData(finalDataToSave));
+        finalData = reorderedData;
       } else {
-        const reorderedItemsMap = new Map(
-          reorderedData.map((item) => [item.id, item])
-        );
-        const filteredItemIds = new Set(reorderedData.map((item) => item.id));
-        let currentIndex = 0;
-        const newFullList = qrData
-          .map((item) => {
-            if (filteredItemIds.has(item.id)) {
-              return reorderedItemsMap.get(item.id)!;
+        const newOrderedFullList: QRRecord[] = [];
+        let reorderedDataIndex = 0;
+        localQrData.forEach((originalItem) => {
+          if (originalItem.type === filter) {
+            if (reorderedData[reorderedDataIndex]) {
+              newOrderedFullList.push(reorderedData[reorderedDataIndex]);
+              reorderedDataIndex++;
             }
-            return item;
-          })
-          .map((item) => ({
-            ...item,
-            qr_index: currentIndex++,
-            updated: new Date().toISOString(),
-            is_synced: true,
-          }));
-        finalDataToSave = newFullList;
-        dispatch(setQrData(finalDataToSave));
+          } else {
+            newOrderedFullList.push(originalItem);
+          }
+        });
+        finalData = newOrderedFullList;
       }
-
-      try {
-        if (finalDataToSave.length > 0) {
-          await updateQrIndexes(finalDataToSave, GUEST_USER_ID);
-        }
-      } catch (error) {
-        console.error("Error reordering QR for guest:", error);
-      } finally {
-        if (timeoutRefs.current.processing)
-          clearTimeout(timeoutRefs.current.processing);
-        timeoutRefs.current.processing = setTimeout(() => {
-          setIsProcessing(false);
-        }, 400);
-      }
+      setLocalQrData(finalData);
     },
-    [dispatch, qrData, filter, isActive]
+    [filter, localQrData]
   );
+
+  // --- FIX: Use localQrData for UI calculations ---
   const listContainerPadding = useMemo(() => {
-    switch (qrData.length) {
+    switch (localQrData.length) {
       case 0:
         return 0;
       case 1:
@@ -548,7 +545,8 @@ function GuestHomeScreen() {
       default:
         return 100;
     }
-  }, [qrData.length]);
+  }, [localQrData.length]);
+
   const renderSheetContent = () => {
     switch (sheetType) {
       case "wifi":
@@ -650,7 +648,6 @@ function GuestHomeScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      {/* *** OPTIMIZED ***: Animated.View wraps the memoized component */}
       <Animated.View style={[styles.titleContainer, titleContainerStyle]}>
         <HeaderComponent
           onScan={onNavigateToScanScreen}
@@ -697,7 +694,7 @@ function GuestHomeScreen() {
             initialNumToRender={10}
             maxToRenderPerBatch={5}
             windowSize={5}
-            data={[...filteredData]}
+            data={filteredData} // --- FIX: Use data derived from local state
             renderItem={renderItem}
             keyExtractor={(item) => `draggable-item-${item.id}`}
             containerStyle={{ flex: 1 }}
@@ -775,7 +772,7 @@ function GuestHomeScreen() {
                 ? t("homeScreen.linking")
                 : t("homeScreen.settings")
         }
-        onChange={handleSheetChange} // *** UPDATED ***
+        onChange={handleSheetChange}
         snapPoints={
           sheetType === "setting"
             ? ["25%"]
@@ -822,7 +819,7 @@ const styles = StyleSheet.create({
     right: 0,
     flexDirection: "column",
     gap: 15,
-    zIndex: 1, // Keep zIndex to ensure it's on top initially
+    zIndex: 1,
   },
   headerContainer: {
     flexDirection: "row",
