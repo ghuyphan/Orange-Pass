@@ -51,7 +51,8 @@
     "saveDescription": "Chúng tôi sẽ lưu thông tin đăng nhập của bạn một cách an toàn trong thiết bị này, để bạn có thể đăng nhập nhanh chóng mà không cần nhập lại mật khẩu trong những lần sau.",
     "save": "Lưu",
     "saving": "Đang lưu...",
-    "notNow": "Để sau"
+    "notNow": "Để sau",
+    "redirecting": "Đang chuyển hướng..."
   },
   "loginScreen": {
     "selectLanguage": "Chọn ngôn ngữ",
@@ -80,7 +81,8 @@
       "storageError": "Đã xảy ra lỗi khi lưu thông tin đăng nhập. Vui lòng thử lại.",
       "databaseError": "Đã xảy ra lỗi cơ sở dữ liệu. Vui lòng thử lại sau.",
       "invalidCredentials": "Thông tin đăng nhập không chính xác. Vui lòng kiểm tra email và mật khẩu.",
-      "tooManyAttempts": "Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau."
+      "tooManyAttempts": "Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau.",
+      "unknown": "Đã xảy ra lỗi không xác định. Vui lòng thử lại."
     }
   },
   "registerScreen": {
@@ -103,11 +105,11 @@
       "emailRequired": "Vui lòng nhập email.",
       "invalidPassword": "Mật khẩu không hợp lệ.",
       "invalidPasswordLength": "Mật khẩu phải tối thiểu 8 ký tự.",
+      "passwordRequired": "Vui lòng nhập mật khẩu.",
       "invalidPasswordLowerCase": "Mật khẩu cần có chữ thường.",
       "invalidPasswordUpperCase": "Mật khẩu cần có chữ hoa.",
       "invalidPasswordNumber": "Mật khẩu cần có số.",
       "invalidPasswordSpecialChar": "Mật khẩu cần có ký tự đặc biệt (ví dụ: !@#$%^&*()_).",
-      "passwordRequired": "Vui lòng nhập mật khẩu.",
       "passwordsDontMatch": "Hai mật khẩu không khớp.",
       "confirmPasswordRequired": "Vui lòng xác nhận lại mật khẩu.",
       "offlineNotice": "Bạn đang ngoại tuyến. Vui lòng kết nối mạng.",
@@ -121,13 +123,7 @@
     "email": "Email",
     "emailPlaceholder": "Nhập email",
     "sendResetLink": "Tiếp tục",
-    "sendingResetLink": "Đang gửi...",
-    "successMessage": "Đã gửi liên kết đặt lại mật khẩu đến email của bạn. Vui lòng kiểm tra hộp thư.",
-    "errors": {
-      "emailRequired": "Vui lòng nhập email.",
-      "invalidEmail": "Email không hợp lệ.",
-      "500": "Đã xảy ra lỗi máy chủ. Vui lòng thử lại sau."
-    }
+    "sendingResetLink": "Đang gửi..."
   },
   "homeScreen": {
     "title": "Orange Pass",
@@ -171,16 +167,22 @@
     },
     "fab": {
       "add": "Thêm thẻ",
-      "scan": "Quét mã",
-      "gallery": "Chọn ảnh"
+      "scan": "Quét mã"
     },
     "linkingSheet": {
       "title": "Liên kết thẻ",
       "share": "Chia sẻ",
       "open": "Mở",
       "copy": "Sao chép",
-      "warning": "Liên kết này không bảo mật"
-    }
+      "warning": "Liên kết này không bảo mật",
+      "securityWarningTitle": "Liên kết không an toàn",
+      "securityWarningMessage": "Liên kết này không an toàn (HTTP). Chúng tôi khuyên bạn chỉ nên mở các liên kết bắt đầu bằng HTTPS."
+    },
+    "connectingButton": "Đang kết nối...",
+    "deleteSuccess": "Thẻ đã được chuyển vào thùng rác.",
+    "deleted": "Thẻ đã được chuyển vào thùng rác.",
+    "offlineNoSync": "Bạn đang ngoại tuyến. Không thể đồng bộ.",
+    "syncInProgress": "Đang đồng bộ."
   },
   "locationPermission": {
     "title": "Yêu cầu Quyền Vị trí",
@@ -289,8 +291,12 @@
       "emptyInputMessage": "Vui lòng nhập thông tin.",
       "submissionErrorTitle": "Lỗi Lưu Thẻ",
       "submissionErrorMessage": "Không thể lưu thông tin thẻ. Vui lòng thử lại.",
-      "ok": "OK"
-    }
+      "ok": "OK",
+      "accountNumberNumeric": "Số tài khoản phải là số.",
+      "submitFailed": "Gửi biểu mẫu thất bại. Vui lòng thử lại."
+    },
+    "vietQrGenerationError": "Tạo mã VietQR thất bại. Vui lòng kiểm tra lại thông tin và thử lại.",
+    "vietQrLoadingSubmitError": "Dữ liệu VietQR đang được tải, vui lòng đợi trước khi gửi."
   },
   "editScreen": {
     "title": "Chỉnh sửa thẻ",
@@ -360,7 +366,9 @@
     "wifi": "Mạng Wifi",
     "linking": "Liên kết",
     "showIndicator": "Hiển thị chỉ báo vùng quét",
-    "appSettings": "Cài đặt ứng dụng"
+    "appSettings": "Cài đặt ứng dụng",
+    "cameraLoading": "Đang tải máy ảnh...",
+    "zalopayPayment": "Mã QR ZaloPay"
   },
   "permissionScreen": {
     "cameraTitle": "Cho phép truy cập máy ảnh",
@@ -414,7 +422,8 @@
     "cannotOpenBankApp": "Không thể mở ứng dụng ngân hàng.",
     "failedToOpenBankApp": "Lỗi khi mở ứng dụng ngân hàng.",
     "generateError": "Lỗi khi tạo mã QR.",
-    "offlineMessage": "Bạn đang ngoại tuyến."
+    "offlineMessage": "Bạn đang ngoại tuyến.",
+    "loadMore": "Tải thêm"
   },
   "settingsScreen": {
     "title": "Cài đặt",
@@ -451,10 +460,7 @@
     "updateSuccess": "Cập nhật hồ sơ thành công!",
     "noChanges": "Không có thay đổi nào để lưu.",
     "errors": {
-      "nameRequired": "Vui lòng nhập họ và tên.",
-      "nameInvalid": "Họ và tên không hợp lệ.",
       "invalidEmail": "Email không hợp lệ.",
-      "emailRequired": "Vui lòng nhập email.",
       "currentPasswordRequired": "Vui lòng nhập mật khẩu hiện tại.",
       "invalidPasswordLength": "Mật khẩu phải tối thiểu 8 ký tự.",
       "invalidPasswordLowerCase": "Mật khẩu cần có chữ thường.",
@@ -463,7 +469,14 @@
       "invalidPasswordSpecialChar": "Mật khẩu cần có ký tự đặc biệt (ví dụ: !@#$%^&*()_).",
       "passwordRequired": "Vui lòng nhập mật khẩu.",
       "confirmNewPasswordRequired": "Vui lòng xác nhận lại mật khẩu mới.",
-      "passwordsDontMatch": "Hai mật khẩu không khớp."
+      "passwordsDontMatch": "Hai mật khẩu không khớp.",
+      "400": "Dữ liệu cung cấp không hợp lệ. Vui lòng kiểm tra và thử lại.",
+      "403": "Bạn không có quyền thực hiện hành động này.",
+      "500": "Đã xảy ra lỗi không mong muốn trên máy chủ. Vui lòng thử lại sau.",
+      "emailRequired": "Email là bắt buộc.",
+      "nameInvalid": "Tên không hợp lệ.",
+      "nameRequired": "Tên là bắt buộc.",
+      "unknown": "Đã xảy ra lỗi không xác định. Vui lòng thử lại."
     }
   },
   "changePasswordScreen": {
@@ -558,7 +571,8 @@
     "enterCustomHexCode": "Nhập mã màu hex tùy chỉnh",
     "hexCode": "Mã hex",
     "selectCustomColor": "Chọn màu tùy chỉnh",
-    "select": "Chọn"
+    "select": "Chọn",
+    "savingLabel": "Đang lưu..."
   },
   "languageScreen": {
     "title": "Ngôn ngữ",

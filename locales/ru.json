@@ -51,7 +51,8 @@
     "saveDescription": "Мы надежно сохраним ваши данные для входа на этом устройстве, чтобы в следующий раз вы могли войти быстро, не вводя пароль.",
     "save": "Сохранить",
     "saving": "Сохранение...",
-    "notNow": "Не сейчас"
+    "notNow": "Не сейчас",
+    "redirecting": "Перенаправление..."
   },
   "loginScreen": {
     "selectLanguage": "Выберите язык",
@@ -80,7 +81,8 @@
       "storageError": "Не удалось сохранить данные. Попробуйте позже.",
       "databaseError": "Ошибка базы данных. Попробуйте позже.",
       "invalidCredentials": "Неверные учетные данные. Проверьте email и пароль.",
-      "tooManyAttempts": "Слишком много попыток входа. Попробуйте позже."
+      "tooManyAttempts": "Слишком много попыток входа. Попробуйте позже.",
+      "unknown": "Неизвестная ошибка. Попробуйте снова."
     }
   },
   "registerScreen": {
@@ -179,8 +181,15 @@
       "share": "Поделиться",
       "open": "Открыть",
       "copy": "Копировать",
-      "warning": "Эта ссылка небезопасна"
-    }
+      "warning": "Эта ссылка небезопасна",
+      "securityWarningTitle": "Небезопасная ссылка",
+      "securityWarningMessage": "Ссылка не защищена (HTTP). Рекомендуется открывать только HTTPS-ссылки."
+    },
+    "connectingButton": "Подключение...",
+    "deleteSuccess": "Карта в корзине.",
+    "deleted": "Карта в корзине.",
+    "offlineNoSync": "Оффлайн. Синхронизация недоступна.",
+    "syncInProgress": "Идет синхронизация."
   },
   "locationPermission": {
     "title": "Требуется доступ к местоположению",
@@ -289,8 +298,12 @@
       "emptyInputMessage": "Введите данные.",
       "submissionErrorTitle": "Ошибка сохранения",
       "submissionErrorMessage": "Не удалось сохранить. Попробуйте снова.",
-      "ok": "OK"
-    }
+      "ok": "OK",
+      "accountNumberNumeric": "Счет должен быть числом.",
+      "submitFailed": "Не удалось отправить форму. Попробуйте снова."
+    },
+    "vietQrGenerationError": "Не удалось сгенерировать VietQR. Проверьте данные и попробуйте снова.",
+    "vietQrLoadingSubmitError": "Данные VietQR загружаются, подождите."
   },
   "editScreen": {
     "title": "Редактировать карту",
@@ -360,7 +373,9 @@
     "wifi": "Сеть Wi-Fi",
     "linking": "Ссылка",
     "showIndicator": "Показать область сканирования",
-    "appSettings": "Настройки приложения"
+    "appSettings": "Настройки приложения",
+    "cameraLoading": "Загрузка камеры...",
+    "zalopayPayment": "QR-код ZaloPay"
   },
   "permissionScreen": {
     "cameraTitle": "Доступ к камере",
@@ -414,7 +429,8 @@
     "cannotOpenBankApp": "Не удается открыть приложение банка.",
     "failedToOpenBankApp": "Ошибка при открытии приложения банка.",
     "generateError": "Ошибка генерации QR-кода.",
-    "offlineMessage": "Вы оффлайн."
+    "offlineMessage": "Вы оффлайн.",
+    "loadMore": "Еще"
   },
   "settingsScreen": {
     "title": "Настройки",
@@ -451,10 +467,10 @@
     "updateSuccess": "Профиль успешно обновлен!",
     "noChanges": "Нет изменений для сохранения.",
     "errors": {
-      "nameRequired": "Введите ваше имя.",
-      "nameInvalid": "Некорректное имя.",
+      "nameRequired": "Имя обязательно.",
+      "nameInvalid": "Неверное имя.",
       "invalidEmail": "Некорректный email.",
-      "emailRequired": "Введите ваш email.",
+      "emailRequired": "Email обязателен.",
       "currentPasswordRequired": "Введите текущий пароль.",
       "invalidPasswordLength": "Пароль должен быть не менее 8 символов.",
       "invalidPasswordLowerCase": "Пароль должен содержать строчную букву.",
@@ -463,7 +479,11 @@
       "invalidPasswordSpecialChar": "Пароль должен содержать спецсимвол (н-р, !@#$%).",
       "passwordRequired": "Введите ваш пароль.",
       "confirmNewPasswordRequired": "Подтвердите новый пароль.",
-      "passwordsDontMatch": "Пароли не совпадают."
+      "passwordsDontMatch": "Пароли не совпадают.",
+      "400": "Неверные данные. Проверьте и попробуйте снова.",
+      "403": "Нет прав на это действие.",
+      "500": "Ошибка сервера. Попробуйте позже.",
+      "unknown": "Неизвестная ошибка. Попробуйте снова."
     }
   },
   "changePasswordScreen": {
@@ -574,6 +594,6 @@
     "light": "Светлая тема",
     "dark": "Темная тема",
     "system": "Как в системе",
-    "successMessage": "Пожалуйста, перезапустите приложение, чтобы увидеть изменения."
+    "successMessage": "Перезапустите приложение для применения изменений."
   }
 }

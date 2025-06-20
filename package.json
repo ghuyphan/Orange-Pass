@@ -22,6 +22,7 @@
     "@react-native-ml-kit/barcode-scanning": "^1.4.1",
     "@reduxjs/toolkit": "^2.2.7",
     "@reeq/react-native-device-brightness": "^1.0.6",
+    "@sbaiahmed1/react-native-blur": "^0.1.2",
     "@zamplyy/react-native-nice-avatar": "^1.1.2",
     "axios": "^1.9.0",
     "expo": "^53.0.11",

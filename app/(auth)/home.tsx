@@ -90,7 +90,8 @@ function HomeScreen() {
   >("idle");
 
   // --- Animation States ---
-  const [emptyAnimationPerformed, setEmptyAnimationPerformed] = useState(false);
+  const emptyAnimationPerformed = useRef(false);
+  // const [emptyAnimationPerformed, setEmptyAnimationPerformed] = useState(false);
 
   // --- Efficiency States ---
   const [initialLoadAttemptedForUser, setInitialLoadAttemptedForUser] =
@@ -107,7 +108,6 @@ function HomeScreen() {
   const [bottomToastIcon, setBottomToastIcon] = useState("");
   const [bottomToastMessage, setBottomToastMessage] = useState("");
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [fabOpen, setFabOpen] = useState(false); // This state is for FAB actions, not a performance issue
   const [sheetType, setSheetType] = useState<SheetType>(null);
   const [linkingUrl, setLinkingUrl] = useState<string | null>(null);
   const [wifiSsid, setWifiSsid] = useState<string | null>(null);
@@ -201,7 +201,7 @@ function HomeScreen() {
         setIsSyncing(false);
       }
     },
-    [dispatch, isOffline, isSyncing]
+    [dispatch, isOffline]
   );
 
   // --- EFFECT 1: Initial Data Load & First-Time Sync (Unchanged) ---
@@ -285,8 +285,8 @@ function HomeScreen() {
     dispatch,
     isOffline,
     syncWithServer,
-    isLoading,
-    initialAnimationsDone,
+    // isLoading,
+    // initialAnimationsDone,
   ]);
 
   // --- EFFECT 2: Network Status Toasts (Unchanged) ---
@@ -322,7 +322,7 @@ function HomeScreen() {
       if (timeoutRefs.current.network)
         clearTimeout(timeoutRefs.current.network);
     };
-  }, [isOffline, isFocused, bottomToastMessage, isBottomToastVisible]);
+  }, [isOffline, isFocused]);
 
   // --- EFFECT 3: Animations (Unchanged) ---
   const animateEmptyCard = useCallback(() => {
@@ -331,13 +331,14 @@ function HomeScreen() {
 
   useEffect(() => {
     if (!initialAnimationsDone) return;
+
     isEmptyShared.value = isEmpty ? 1 : 0;
     if (isEmpty) {
       listOpacity.value = 0;
-      if (!emptyAnimationPerformed) {
+      if (!emptyAnimationPerformed.current) {
         emptyCardOffset.value = 350;
         animateEmptyCard();
-        setEmptyAnimationPerformed(true);
+        emptyAnimationPerformed.current = true;
       } else {
         emptyCardOffset.value = 0;
       }
@@ -345,7 +346,7 @@ function HomeScreen() {
       emptyCardOffset.value = 350;
       listOpacity.value = withTiming(1, { duration: 300 });
       if (emptyAnimationPerformed) {
-        setEmptyAnimationPerformed(false);
+        emptyAnimationPerformed.current = false;
       }
     }
   }, [
@@ -585,7 +586,7 @@ function HomeScreen() {
       drag: () => void;
       isActive: boolean;
     }) => (
-      <ScaleDecorator activeScale={0.9}>
+      // <ScaleDecorator activeScale={0.9}>
         <ThemedCardItem
           isActive={itemIsActive}
           onItemPress={() => onNavigateToDetailScreen(item)}
@@ -599,7 +600,7 @@ function HomeScreen() {
           onDrag={drag}
           enableGlassmorphism
         />
-      </ScaleDecorator>
+      // </ScaleDecorator>
     ),
     [onNavigateToDetailScreen, onOpenSheet]
   );

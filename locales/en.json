@@ -51,7 +51,8 @@
     "saveDescription": "We will securely save your login info on this device, so you can log in quickly without entering your password again next time.",
     "save": "Save",
     "saving": "Saving...",
-    "notNow": "Not now"
+    "notNow": "Not now",
+    "redirecting": "Redirecting..."
   },
   "loginScreen": {
     "selectLanguage": "Select language",
@@ -80,7 +81,8 @@
       "storageError": "Failed to store authentication data. Please try again later.",
       "databaseError": "Failed to set up the local database. Please try again later.",
       "invalidCredentials": "Invalid credentials. Please check your email and password.",
-      "tooManyAttempts": "Too many login attempts. Please try again later."
+      "tooManyAttempts": "Too many login attempts. Please try again later.",
+      "unknown": "An unknown error occurred. Please try again."
     }
   },
   "registerScreen": {
@@ -179,8 +181,15 @@
       "share": "Share",
       "open": "Open",
       "copy": "Copy",
-      "warning": "This link is not secure"
-    }
+      "warning": "This link is not secure",
+      "securityWarningTitle": "Insecure Link",
+      "securityWarningMessage": "This link is not secure (HTTP). It's recommended to only open links that start with HTTPS."
+    },
+    "connectingButton": "Connecting...",
+    "deleteSuccess": "Card moved to trash.",
+    "deleted": "Card has been moved to trash.",
+    "offlineNoSync": "You are offline. Sync is unavailable.",
+    "syncInProgress": "Sync is already in progress."
   },
   "locationPermission": {
     "title": "Location Permission Required",
@@ -289,8 +298,12 @@
       "emptyInputMessage": "Please enter information here.",
       "submissionErrorTitle": "Oops, there was an error!",
       "submissionErrorMessage": "Couldn't save the information. Please try again!",
-      "ok": "OK"
-    }
+      "ok": "OK",
+      "accountNumberNumeric": "Account number must be numeric.",
+      "submitFailed": "Failed to submit the form. Please try again."
+    },
+    "vietQrGenerationError": "Failed to generate VietQR code. Please check the details and try again.",
+    "vietQrLoadingSubmitError": "VietQR data is loading, please wait before submitting."
   },
   "editScreen": {
     "title": "Edit Card",
@@ -360,7 +373,9 @@
     "wifi": "Wi-Fi Network",
     "linking": "Link",
     "showIndicator": "Show scan area indicator",
-    "appSettings": "App Settings"
+    "appSettings": "App Settings",
+    "cameraLoading": "Camera is loading...",
+    "zalopayPayment": "ZaloPay QR Code"
   },
   "permissionScreen": {
     "cameraTitle": "Allow Camera Access",
@@ -414,7 +429,8 @@
     "cannotOpenBankApp": "Cannot open bank app.",
     "failedToOpenBankApp": "Failed to open bank app.",
     "generateError": "Error generating QR code.",
-    "offlineMessage": "You are offline."
+    "offlineMessage": "You are offline.",
+    "loadMore": "Load More"
   },
   "settingsScreen": {
     "title": "Settings",
@@ -463,7 +479,11 @@
       "invalidPasswordSpecialChar": "Password must contain a special character (e.g., !@#$%^&*()_).",
       "passwordRequired": "Please enter your password.",
       "confirmNewPasswordRequired": "Please confirm your new password.",
-      "passwordsDontMatch": "Passwords do not match."
+      "passwordsDontMatch": "Passwords do not match.",
+      "400": "The provided data is invalid. Please check and try again.",
+      "403": "You do not have permission to perform this action.",
+      "500": "An unexpected error occurred on the server. Please try again later.",
+      "unknown": "An unknown error occurred. Please try again."
     }
   },
   "changePasswordScreen": {
@@ -558,7 +578,8 @@
     "enterCustomHexCode": "Enter custom hex code",
     "hexCode": "Hex code",
     "selectCustomColor": "Select Custom Color",
-    "select": "Select"
+    "select": "Select",
+    "savingLabel": "Saving..."
   },
   "languageScreen": {
     "title": "Language",
@@ -572,6 +593,6 @@
     "light": "Light mode",
     "dark": "Dark mode",
     "system": "Follow system",
-    "successMessage": "Please restart the app to see the changes."
+    "successMessage": "Please restart the app to apply the changes."
   }
 }

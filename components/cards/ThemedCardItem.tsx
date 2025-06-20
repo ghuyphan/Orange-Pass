@@ -26,6 +26,10 @@ import Animated, {
 } from "react-native-reanimated";
 import { useGlassStyle } from "@/hooks/useGlassStyle";
 
+// --- BLURVIEW INTEGRATION ---
+import { BlurView } from "@sbaiahmed1/react-native-blur";
+import { useTheme } from "@/context/ThemeContext";
+
 // Constants
 const MIDPOINT_COUNT = 6;
 const QR_SIZE = getResponsiveWidth(16.8);
@@ -33,6 +37,21 @@ const BARCODE_WIDTH = getResponsiveWidth(33.6);
 const BARCODE_HEIGHT = getResponsiveWidth(16.8);
 const DEFAULT_GRADIENT_START = "#FAF3E7";
 const DEFAULT_GRADIENT_END = "#D6C4AF";
+
+// --- HELPER FUNCTION ---
+// Converts a HEX color string to an RGBA string with a specified alpha.
+const hexToRgba = (hex, alpha = 1) => {
+    if (!hex || !/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)) {
+        return `rgba(255, 255, 255, ${alpha})`; // Return fallback for invalid hex
+    }
+    let c = hex.substring(1).split('');
+    if (c.length === 3) {
+        c = [c[0], c[0], c[1], c[1], c[2], c[2]];
+    }
+    c = '0x' + c.join('');
+    return `rgba(${[(c>>16)&255, (c>>8)&255, c&255].join(',')},${alpha})`;
+};
+
 
 // Create animated component once outside of component
 const ReanimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
@@ -80,6 +99,7 @@ const ThemedCardItem = memo(function ThemedCardItem({
   cardHolderStyle,
   enableGlassmorphism = true
 }: ThemedCardItemProps): JSX.Element {
+  const { currentTheme } = useTheme();
   const { overlayColor, borderColor } = useGlassStyle();
   
   const code = useMemo(() => (rawCode === null ? "" : rawCode), [rawCode]);
@@ -136,7 +156,6 @@ const ThemedCardItem = memo(function ThemedCardItem({
     return "";
   }, [iconPath, cardType, displayMetadata, accountDisplayName]);
 
-  // Reanimated shared values for QR/Barcode placeholder dimensions
   const placeholderWidth = useSharedValue(QR_SIZE);
   const placeholderHeight = useSharedValue(QR_SIZE);
 
@@ -181,42 +200,25 @@ const ThemedCardItem = memo(function ThemedCardItem({
       ) || [color.light, accent_color.light],
     [color, accent_color]
   );
+  
+  // --- GRADIENT FIX ---
+  // Create a semi-transparent version of the original gradient colors
+  // to use as a colored tint on top of the BlurView.
+  const glassGradientColors = useMemo(() => 
+    gradientColors.map(hex => hexToRgba(hex, 0.4)), // 40% opacity tint
+    [gradientColors]
+  );
 
-  // Glassmorphism gradient colors (more transparent)
-  const glassGradientColors = useMemo(() => {
-    if (!enableGlassmorphism) return gradientColors;
-
-    // Create glassmorphism colors with transparency
-    return [
-      "rgba(255, 255, 255, 0.25)",
-      "rgba(255, 255, 255, 0.15)",
-      "rgba(255, 255, 255, 0.1)",
-      "rgba(255, 255, 255, 0.08)"
-    ];
-  }, [enableGlassmorphism, gradientColors]);
-
-  // Background gradient for glassmorphism effect
-  const backgroundGradient = useMemo(() => {
-    if (!enableGlassmorphism) return null;
-    return gradientColors;
-  }, [enableGlassmorphism, gradientColors]);
 
   const cardContent = (
     <View style={styles.cardWrapper}>
-      {/* Background gradient for glassmorphism */}
-      {enableGlassmorphism && backgroundGradient && (
-        <LinearGradient
-          colors={backgroundGradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.backgroundGradient}
+      {enableGlassmorphism ? (
+        <BlurView
+          blurType={currentTheme === "dark" ? "dark" : "light"}
+          blurAmount={15}
+          style={styles.absoluteFill}
         />
-      )}
-
-      {/* Glassmorphism overlay */}
-      {enableGlassmorphism && (
-        <View style={[styles.defaultOverlay, { backgroundColor: overlayColor }]} />
-      )}
+      ) : null}
 
       <ReanimatedLinearGradient
         colors={enableGlassmorphism ? glassGradientColors : gradientColors}
@@ -367,6 +369,13 @@ const ThemedCardItem = memo(function ThemedCardItem({
 });
 
 const styles = StyleSheet.create({
+  absoluteFill: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
   outerContainer: {
     marginHorizontal: getResponsiveWidth(3.6),
     marginBottom: getResponsiveHeight(2),
@@ -388,22 +397,6 @@ const styles = StyleSheet.create({
     borderRadius: getResponsiveWidth(4),
     overflow: "hidden"
   },
-  backgroundGradient: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    opacity: 0.8
-  },
-  defaultOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 0
-  },
   cardContainer: {
     borderRadius: getResponsiveWidth(4),
     paddingVertical: getResponsiveHeight(1.8),
@@ -411,11 +404,11 @@ const styles = StyleSheet.create({
     aspectRatio: 1.65,
     justifyContent: "space-between",
     position: "relative",
-    zIndex: 1
+    zIndex: 1,
+    backgroundColor: 'transparent', // Ensure gradient on top of blur is see-through
   },
   glassCard: {
     borderWidth: 1,
-    // Enhanced border highlight for glassmorphism
     borderTopWidth: 1.5,
     borderLeftWidth: 1.5,
     borderTopColor: "rgba(255, 255, 255, 0.3)",
